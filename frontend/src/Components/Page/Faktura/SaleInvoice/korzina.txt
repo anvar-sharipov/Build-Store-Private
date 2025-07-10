@@ -1,0 +1,93 @@
+<select
+                    className="border px-2 py-1 rounded"
+                    ref={(el) => (unitSelectRefs.current[p.id] = el)}
+                    value={p.selected_unit?.id ?? ""}
+                    onChange={(e) => {
+                      const newUnitId = parseInt(e.target.value);
+
+                      const selected = p.units.find(
+                        (u) => u.unit === newUnitId
+                      ) || {
+                        unit: p.base_unit.id,
+                        unit_name: p.base_unit.name,
+                        conversion_factor: 1,
+                      };
+
+                      const factor = selected.conversion_factor || 1;
+                      const quantity = parseFloat(p.selected_quantity) || 0;
+                      const newBaseQuantity = quantity * factor;
+
+                      const new_purchase_price_summ =
+                        p.purchase_price_1pc * newBaseQuantity;
+
+                      let new_price_summ;
+                      let new_wholesale_price_1pc;
+                      let new_retail_price_1pc;
+                      let new_difference_price;
+                      let new_difference_price_summ;
+                      let new_difference_discount_price = 0
+                      let new_difference_discount_price_summ = 0
+                      if (priceType === "wholesale") {
+                        new_wholesale_price_1pc =
+                          factor * p.original_wholesale_price_1pc;
+                        new_retail_price_1pc = p.original_wholesale_price_1pc;
+                        new_price_summ = quantity * new_wholesale_price_1pc;
+                        new_difference_price =
+                          ((parseFloat(p.original_wholesale_price_1pc) || 0) -
+                            (parseFloat(p.purchase_price_1pc) || 0)) *
+                          factor;
+                        new_difference_price_summ =
+                          new_difference_price * quantity;
+                      } else {
+                        new_retail_price_1pc =
+                          factor * p.original_retail_price_1pc;
+                        new_wholesale_price_1pc = p.original_retail_price_1pc;
+                        new_price_summ = quantity * new_retail_price_1pc;
+                          ((parseFloat(p.original_retail_price_1pc) || 0) -
+                            (parseFloat(p.purchase_price_1pc) || 0)) *
+                          factor;
+                        new_difference_price_summ =
+                          new_difference_price * quantity;
+                          console.log('newBaseQuantity', newBaseQuantity);
+                          
+                        new_difference_discount_price = factor * parseFloat(p.original_discount_difference_price)
+                        new_difference_discount_price_summ = new_difference_discount_price * parseFloat(p.selected_quantity)
+                      }
+
+                      const priceFieldSumm =
+                        priceType === "wholesale"
+                          ? "wholesale_price_summ"
+                          : "retail_price_summ";
+
+                      const updatedTable = invoiceTable.map((item) =>
+                        item.id === p.id
+                          ? {
+                              ...item,
+                              selected_unit: {
+                                id: selected.unit,
+                                name: selected.unit_name,
+                                conversion_factor: factor,
+                              },
+                              base_quantity: newBaseQuantity,
+                              wholesale_price_1pc: new_wholesale_price_1pc,
+                              retail_price_1pc: new_retail_price_1pc,
+                              [priceFieldSumm]: new_price_summ,
+                              purchase_price_summ: new_purchase_price_summ,
+                              difference_price: new_difference_price,
+                              difference_price_summ: new_difference_price_summ,
+                              discount_difference_price: new_difference_discount_price,
+                              discount_difference_price_summ: new_difference_discount_price_summ
+                            }
+                          : item
+                      );
+
+                      setInvoiceTable(updatedTable);
+                    }}
+                  >
+                    <option value={p.base_unit.id}>{p.base_unit.name}</option>
+                    {p.units.map((u) => (
+                      <option key={u.unit} value={u.unit}>
+                        {u.unit_name} ({u.conversion_factor})
+                      </option>
+                    ))}
+                  </select>

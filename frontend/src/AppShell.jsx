@@ -12,6 +12,7 @@ import Partner from "./Components/Page/Partner/Partner";
 import Agent from "./Components/Page/Agent/Agent";
 import PriceChangeReport from "./Components/Page/Reports/PriceChangeReport/PriceChangeReport";
 import AddPurchaseInvoicePage from "./Components/Page/Faktura/PuchaseInvoice/AddPurchaseInvoicePage";
+import AddSaleInvoicePage from "./Components/Page/Faktura/SaleInvoice/AddSaleInvoicePage";
 
 
 import { AuthProvider } from "./AuthContext";
@@ -19,7 +20,7 @@ import { SearchProvider } from "./Components/context/SearchContext";
 
 function AppShell() {
   const location = useLocation();
-  const isFullScreenPage = location.pathname === "/purchase-invoices/new";
+  const isFullScreenPage = location.pathname === "/purchase-invoices/new" || location.pathname === "/sale-invoices/new" ;
 
   return (
     <>
@@ -37,6 +38,7 @@ function AppShell() {
               <Routes>
                 <Route path={ROUTES.MAIN} element={<ProductList />} />
                 <Route path="/purchase-invoices/new" element={<AddPurchaseInvoicePage />} />
+                <Route path="/sale-invoices/new" element={<AddSaleInvoicePage /> } />
                 <Route path={ROUTES.REGISTER} element={<Register />} />
                 <Route path={ROUTES.LOGIN} element={<Login />} />
                 <Route path={ROUTES.HARYTLAR} element={<Harytlar />} />

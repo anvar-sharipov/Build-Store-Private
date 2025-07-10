@@ -10,16 +10,16 @@ import { handleProductKeyDown } from "./handleProductKeyDown";
 import Notification from "../../../Notification";
 
 const AddPurchaseInvoicePage = () => {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
+  const [query, setQuery] = useState(""); // poisk producta s servera
+  const [results, setResults] = useState([]); // spisok sowpadayushih po imeni productow pri poiske
   const [loading, setLoading] = useState(false);
-  const [focusedIndex, setFocusedIndex] = useState(-1);
-  const inputRef = useRef(null);
-  const resultRefs = useRef([]);
-  const resultQuantityRefs = useRef([]);
+  const [focusedIndex, setFocusedIndex] = useState(-1); // fiksiruem index elementa w splywayushemsya okne results pri focus
+  const inputRef = useRef(null); // search input ref
+  const resultRefs = useRef([]); // ref dlya results list 
+  const resultQuantityRefs = useRef([]); // ref dlya inputs quantity for selectedProduct list 
   const navigate = useNavigate();
-  const [selectedProducts, setSelectedProducts] = useState([]);
-  const [giftProducts, setGiftProducts] = useState([]); // {product_id: 1, quantityPerItem: 2, name: Polisem, base_unit_name: shtuk, free_for_product_id: 8 }
+  const [selectedProducts, setSelectedProducts] = useState([]); // smotri json_examples.txt
+  const [giftProducts, setGiftProducts] = useState([]); // smotri json_examples.txt
   const [selectedId, setSelectedId] = useState(null);
   const { t } = useTranslation();
   const [notification, setNotification] = useState({ message: "", type: "" });
@@ -70,17 +70,17 @@ const AddPurchaseInvoicePage = () => {
   }, [query]);
 
   useEffect(() => {
-    if (focusedIndex >= 0 && resultRefs.current[focusedIndex]) {
-      resultRefs.current[focusedIndex].scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
+    if (focusedIndex >= 0 && resultRefs.current[focusedIndex]) { // У тебя есть список из 100 элементов. Пользователь нажал стрелку вниз 5 раз — focusedIndex = 5. Если 5-й элемент в данный момент не виден (ниже экрана), код автоматически прокрутит список вниз до него. 
+      resultRefs.current[focusedIndex].scrollIntoView({ // Это встроенный метод DOM, который прокручивает страницу так, чтобы указанный элемент был виден.
+        behavior: "smooth", // плавная прокрутка.
+        block: "nearest", // прокрутит так, чтобы элемент оказался рядом, не обязательно в центре.
       });
     }
   }, [focusedIndex]);
 
-  useEffect(() => {
+  useEffect(() => { // focus na input quantity posle wybora produkta iz wsplywayushegosya okna
     if (selectedId !== null) {
-      const index = selectedProducts.findIndex((p) => p.id === selectedId);
+      const index = selectedProducts.findIndex((p) => p.id === selectedId); // Метод findIndex() ищет первый элемент в массиве, который удовлетворяет переданному условию, и возвращает его индекс. Если ничего не нашёл — возвращает -1.
       if (index !== -1 && resultQuantityRefs.current[index]) {
         resultQuantityRefs.current[index].focus();
         resultQuantityRefs.current[index].select();

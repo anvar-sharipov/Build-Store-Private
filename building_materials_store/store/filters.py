@@ -43,7 +43,7 @@ class ProductFilter(django_filters.FilterSet):
 
         return queryset.annotate(
             similarity=TrigramSimilarity('name', Func(Value(value), function='CAST', template='%(function)s(%(expressions)s AS TEXT)'))
-        ).filter(similarity__gt=0.3).order_by('-similarity')
+        ).filter(similarity__gt=0.1).order_by('-similarity')
 
     class Meta:
         model = Product

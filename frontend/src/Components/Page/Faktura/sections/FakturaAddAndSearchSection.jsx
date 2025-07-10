@@ -50,7 +50,7 @@ const FakturaAddAndSearchSection = ({
             <button
               ref={addSalesIconRef}
               className={myClass.addButtonIndogo}
-            //   onClick={() => setOpenAddSalesModal(true)}
+            onClick={() => navigate("/sale-invoices/new")}
               onKeyDown={(e) => {
                 if (e.key === "ArrowDown") {
                   e.preventDefault();

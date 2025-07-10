@@ -1,4 +1,4 @@
-// utils/handleProductKeyDown.js
+// list of searched products  
 
 export const handleProductKeyDown = ({
   e,
@@ -40,7 +40,7 @@ export const handleProductKeyDown = ({
 
     const alreadySelected = selectedProducts.some((p) => p.id === product.id);
     if (!alreadySelected) {
-      if (product.free_items.length > 0) {
+      if (product.free_items.length > 0) { // berem gifts esli est
         const newGifts = product.free_items.map((gift) => ({
           gift_product_id: gift.gift_product,
           quantityPerItem: parseFloat(gift.quantity_per_unit) || 0,
@@ -54,9 +54,9 @@ export const handleProductKeyDown = ({
         }));
 
         setGiftProducts((prev) => {
-          const newGiftsFiltered = newGifts.filter(
+          const newGiftsFiltered = newGifts.filter( // 🧠 Что происходит? Мы создаём отфильтрованный список новых подарков, исключая дубликаты, которые уже есть в prev.
             (newGift) =>
-              !prev.some(
+              !prev.some( // ⛔ Только те подарки из newGifts, которых ещё нет в prev
                 (gift) =>
                   gift.gift_product_id === newGift.gift_product_id &&
                   gift.main_product_id === newGift.main_product_id

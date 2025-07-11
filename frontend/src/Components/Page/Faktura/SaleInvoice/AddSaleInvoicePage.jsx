@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import SearchedPartnerList from "./SearchedPartnerList";
 import Notification from "../../../Notification";
 import { Weight } from "lucide-react";
+import SearchInputLikeRezka from "../../../UI/SearchInputLikeRezka";
 
 const userVisibleColumns = {
   qr_code: false,
@@ -216,32 +217,36 @@ const AddSaleInvoicePage = () => {
           }
         }}
       >
-        <div className="flex items-center print:hidden">
+        <div className="flex items-center gap-2 print:hidden">
+          
+          <div className="flex-grow">
+            <SearchInputLikeRezka 
+              id="partner-search"
+              ref={searchPartnerInputRef}
+              value={partnerQuery}
+              autoComplete="off"
+              onChange={(e) => setPartnerQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  if (filteredPartners.length > 0) {
+                    resultPartenrRefs.current[0]?.focus();
+                  } else {
+                    inputRef.current?.focus();
+                    inputRef.current?.select();
+                  }
+                }
+              }}
+            />
+          </div>
           <label
             htmlFor="partner-search"
             className="block font-semibold text-gray-700 dark:text-gray-400 mb-1 w-24"
           >
             Партнеры
           </label>
-          <MySearchInput
-            id="partner-search"
-            ref={searchPartnerInputRef}
-            value={partnerQuery}
-            autoComplete="off"
-            onChange={(e) => setPartnerQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-                if (filteredPartners.length > 0) {
-                  resultPartenrRefs.current[0]?.focus();
-                } else {
-                  inputRef.current?.focus();
-                  inputRef.current?.select();
-                }
-              }
-            }}
-          />
         </div>
+
         <div className="ml-20">
           {filteredPartners.length > 0 && (
             <div className="absolute bg-gray-300 p-2 mt-1 border border-gray-500 rounded-md dark:bg-gray-700 z-20">
@@ -269,14 +274,49 @@ const AddSaleInvoicePage = () => {
           }
         }}
       >
-        <div className="flex items-center print:hidden">
+        <div className="flex items-center gap-2 print:hidden">
+          
+          <div className="flex-grow">
+            <SearchInputLikeRezka 
+              id="product-search"
+              ref={inputRef}
+              value={query}
+              autoComplete="off"
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Поиск товара..."
+              onKeyDown={(e) => {
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  if (results.length > 0) {
+                    resultRefs.current[focusedIndex]?.focus();
+                  } else if (invoiceTable.length > 0) {
+                    const firstNormalProduct = invoiceTable.find(
+                      (item) => item.is_gift === false
+                    );
+                    if (firstNormalProduct) {
+                      const firstProductId = firstNormalProduct.id;
+                      setTimeout(() => {
+                        quantityInputRefs.current[firstProductId]?.focus();
+                        quantityInputRefs.current[firstProductId]?.select();
+                      }, 0);
+                    }
+                  }
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  searchPartnerInputRef.current?.focus();
+                  searchPartnerInputRef.current?.select();
+                }
+              }}
+            />
+          </div>
           <label
             htmlFor="product-search"
             className="block font-semibold text-gray-700 dark:text-gray-400 mb-1 w-24"
           >
             Продукты
           </label>
-          <MySearchInput
+          
+          {/* <MySearchInput
             id="product-search"
             ref={inputRef}
             value={query}
@@ -306,7 +346,7 @@ const AddSaleInvoicePage = () => {
                 searchPartnerInputRef.current?.select();
               }
             }}
-          />
+          /> */}
         </div>
         <div className="ml-20">
           {results.length > 0 &&

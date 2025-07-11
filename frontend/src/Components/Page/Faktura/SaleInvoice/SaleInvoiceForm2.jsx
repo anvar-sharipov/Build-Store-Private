@@ -139,7 +139,36 @@ const SaleInvoiceForm2 = ({
                 value="wholesale"
                 onChange={(e) => {
                   setPriceType(e.target.value);
-                  // твой update invoiceTable
+                  setInvoiceTable((prev) =>
+                    prev.map((item) => {
+                      return {
+                        ...item,
+                        selected_quantity: item.selected_quantity,
+                        base_quantity: 1,
+                        wholesale_price_1pc: item.original_wholesale_price_1pc,
+                        wholesale_price_summ:
+                          item.original_wholesale_price_1pc *
+                          item.selected_quantity,
+                        retail_price_1pc: item.original_retail_price_1pc,
+                        retail_price_summ: item.original_retail_price_1pc,
+                        purchase_price_summ:
+                          item.purchase_price_1pc * item.selected_quantity,
+                        difference_price: item.original_difference_price_wholesale,
+                        difference_price_summ:
+                          item.original_difference_price_wholesale *
+                          item.selected_quantity,
+                        discount_difference_price:
+                          item.original_discount_difference_price_wholesale,
+                        discount_difference_price_summ:
+                          item.original_discount_difference_price_wholesale *
+                          item.selected_quantity,
+                        manually_changed_fields: {
+                          ...item.manually_changed_fields,
+                          price: false,
+                        },
+                      };
+                    })
+                  );
                 }}
                 checked={priceType === "wholesale"}
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"
@@ -153,7 +182,35 @@ const SaleInvoiceForm2 = ({
                 value="retail"
                 onChange={(e) => {
                   setPriceType(e.target.value);
-                  // твой update invoiceTable
+                  setInvoiceTable((prev) =>
+                    prev.map((item) => {
+                      return {
+                        ...item,
+                        selected_quantity: item.selected_quantity,
+                        base_quantity: 1,
+                        wholesale_price_1pc: item.original_wholesale_price_1pc,
+                        wholesale_price_summ: item.original_wholesale_price_1pc,
+                        retail_price_1pc: item.original_retail_price_1pc,
+                        retail_price_summ:
+                          item.original_retail_price_1pc * item.selected_quantity,
+                        purchase_price_summ:
+                          item.purchase_price_1pc * item.selected_quantity,
+                        difference_price: item.original_difference_price_retail,
+                        difference_price_summ:
+                          item.original_difference_price_retail *
+                          item.selected_quantity,
+                        discount_difference_price:
+                          item.original_discount_difference_price_retail,
+                        discount_difference_price_summ:
+                          item.original_discount_difference_price_retail *
+                          item.selected_quantity,
+                        manually_changed_fields: {
+                          ...item.manually_changed_fields,
+                          price: false,
+                        },
+                      };
+                    })
+                  );
                 }}
                 checked={priceType === "retail"}
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"

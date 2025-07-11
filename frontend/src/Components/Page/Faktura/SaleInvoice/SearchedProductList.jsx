@@ -5,8 +5,10 @@ import { myClass } from "../../../tailwindClasses";
 import myAxios from "../../../axios";
 import { Volume } from "lucide-react";
 import { motion } from "framer-motion";
+import { message } from "antd";
 
 const SearchedProductList = ({
+  t,
   results,
   setResults,
   resultRefs,
@@ -16,6 +18,13 @@ const SearchedProductList = ({
   setInvoiceTable,
   priceType,
   setPriceType,
+  inputRef,
+  quantityInputRefs,
+  setQuery,
+  setNotification,
+  showNotification,
+  notification,
+  Notification,
   // setFreeProducts,
   // freeProducts,
 }) => {
@@ -132,6 +141,7 @@ const SearchedProductList = ({
             gift_for_product_id: gift.gift_for_product_id,
 
             volume: gift.volume,
+            weight: gift.weight,
             length: gift.length,
             width: gift.width,
             height: gift.height,
@@ -144,63 +154,56 @@ const SearchedProductList = ({
   }
 
   return (
-    <motion.ul
-      initial="hidden"
-      animate="visible"
-      variants={{
-        hidden: {},
-        visible: {
-          transition: {
-            staggerChildren: 0.1,
-          },
-        },
-      }}
-      className="print:hidden"
-    >
-      {results.length > 0 &&
-        results.map((product, index) => (
-          <motion.li
-            variants={{
-              hidden: { opacity: 0, y: 10 },
-              visible: { opacity: 1, y: 0 },
-            }}
-            className=""
-            key={product.id}
-            ref={(el) => (resultRefs.current[index] = el)}
-            tabIndex={0}
-            onKeyDown={async (e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                // Проверка: есть ли уже такой продукт в selectedProducts
-                // const alreadyExists = selectedProducts.some(
-                //   (p) => p.id === product.id
-                // );
+    <div>
+      <ul className="print:hidden">
+        {results.length > 0 &&
+          results.map((product, index) => (
+            <li
+              className={myClass.li}
+              key={product.id}
+              ref={(el) => (resultRefs.current[index] = el)}
+              tabIndex={0}
+              onKeyDown={async (e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  // Проверка: есть ли уже такой продукт в selectedProducts
+                  // const alreadyExists = selectedProducts.some(
+                  //   (p) => p.id === product.id
+                  // );
 
-                // if (alreadyExists) {
-                //   alert("Продукт уже добавлен");
-                // } else {
-                //   setSelectedProducts((prev) => [...prev, product]);
-                //   setResults("");
-                // }
+                  // if (alreadyExists) {
+                  //   alert("Продукт уже добавлен");
+                  // } else {
+                  //   setSelectedProducts((prev) => [...prev, product]);
+                  //   setResults("");
+                  // }
 
-                const alreadyExists = invoiceTable.some(
-                  (p) => p.id === product.id
-                );
+                  const alreadyExists = invoiceTable.some(
+                    (p) => p.id === product.id
+                  );
 
-                if (alreadyExists) {
-                  alert("Продукт уже добавлен");
-                } else {
-                  let selected_unit = null;
-                  if (product.units.length > 0) {
-                    const defaultUnit = product.units.find(
-                      (u) => u.is_default_for_sale
-                    );
-                    if (defaultUnit) {
-                      selected_unit = {
-                        id: defaultUnit.unit,
-                        name: defaultUnit.unit_name,
-                        conversion_factor: defaultUnit.conversion_factor,
-                      };
+                  if (alreadyExists) {
+                    // alert("Продукт уже добавлен");
+                    showNotification("Продукт уже добавлен", "error");
+                  } else {
+                    let selected_unit = null;
+                    if (product.units.length > 0) {
+                      const defaultUnit = product.units.find(
+                        (u) => u.is_default_for_sale
+                      );
+                      if (defaultUnit) {
+                        selected_unit = {
+                          id: defaultUnit.unit,
+                          name: defaultUnit.unit_name,
+                          conversion_factor: defaultUnit.conversion_factor,
+                        };
+                      } else {
+                        selected_unit = {
+                          id: product.base_unit_obj.id,
+                          name: product.base_unit_obj.name,
+                          conversion_factor: 1,
+                        };
+                      }
                     } else {
                       selected_unit = {
                         id: product.base_unit_obj.id,
@@ -208,136 +211,156 @@ const SearchedProductList = ({
                         conversion_factor: 1,
                       };
                     }
-                  } else {
-                    selected_unit = {
-                      id: product.base_unit_obj.id,
-                      name: product.base_unit_obj.name,
-                      conversion_factor: 1,
-                    };
-                  }
 
-                  let difference_price;
-                  let discount_difference_price;
-                  const original_difference_price_wholesale =
-                    (product.wholesale_price - product.purchase_price) *
-                    selected_unit.conversion_factor;
-                  const original_difference_price_retail =
-                    (product.retail_price - product.purchase_price) *
-                    selected_unit.conversion_factor;
-                  const original_discount_difference_price_wholesale = 0;
-                  const original_discount_difference_price_retail =
-                    (product.retail_price -
-                      product.purchase_price -
-                      (product.wholesale_price - product.purchase_price)) *
-                    selected_unit.conversion_factor;
-
-                  if (priceType === "wholesale") {
-                    difference_price =
+                    let difference_price;
+                    let discount_difference_price;
+                    const original_difference_price_wholesale =
                       (product.wholesale_price - product.purchase_price) *
                       selected_unit.conversion_factor;
-                    discount_difference_price = 0;
-                  } else {
-                    difference_price =
+                    const original_difference_price_retail =
                       (product.retail_price - product.purchase_price) *
                       selected_unit.conversion_factor;
-                    discount_difference_price =
+                    const original_discount_difference_price_wholesale = 0;
+                    const original_discount_difference_price_retail =
                       (product.retail_price -
                         product.purchase_price -
                         (product.wholesale_price - product.purchase_price)) *
                       selected_unit.conversion_factor;
-                  }
 
-                  const wholesale_price_1pc =
-                    selected_unit.conversion_factor * product.wholesale_price;
-                  const retail_price_1pc =
-                    selected_unit.conversion_factor * product.retail_price;
+                    if (priceType === "wholesale") {
+                      difference_price =
+                        (product.wholesale_price - product.purchase_price) *
+                        selected_unit.conversion_factor;
+                      discount_difference_price = 0;
+                    } else {
+                      difference_price =
+                        (product.retail_price - product.purchase_price) *
+                        selected_unit.conversion_factor;
+                      discount_difference_price =
+                        (product.retail_price -
+                          product.purchase_price -
+                          (product.wholesale_price - product.purchase_price)) *
+                        selected_unit.conversion_factor;
+                    }
 
-                  const purchase_price_1pc =
-                    selected_unit.conversion_factor * product.purchase_price;
+                    const wholesale_price_1pc =
+                      selected_unit.conversion_factor * product.wholesale_price;
+                    const retail_price_1pc =
+                      selected_unit.conversion_factor * product.retail_price;
 
-                  // const quantity_in_stok =
-                  //   selected_unit.conversion_factor / product.quantity;
+                    const purchase_price_1pc =
+                      selected_unit.conversion_factor * product.purchase_price;
 
-                  console.log("product", product);
+                    // const quantity_in_stok =
+                    //   selected_unit.conversion_factor / product.quantity;
 
-                  // Получаем бесплатные продукты по их ID
-                  await handleFreeProducts(product);
+                    console.log("product", product);
 
-                  setInvoiceTable((prev) => [
-                    ...prev,
-                    {
-                      id: product.id,
-                      qr_code: product.qr_code,
-                      name: product.name,
-                      quantity_in_stok: product.quantity,
+                    // Получаем бесплатные продукты по их ID
+                    await handleFreeProducts(product);
 
-                      // selected_unit: {
-                      //   id: product.base_unit_obj.id,
-                      //   name: product.base_unit_obj.name,
-                      //   conversion_factor: 1,
-                      // },
-                      selected_unit: selected_unit,
+                    setInvoiceTable((prev) => [
+                      ...prev,
+                      {
+                        id: product.id,
+                        qr_code: product.qr_code,
+                        name: product.name,
+                        quantity_in_stok: product.quantity,
 
-                      selected_quantity: 1,
-                      base_quantity: 1,
+                        // selected_unit: {
+                        //   id: product.base_unit_obj.id,
+                        //   name: product.base_unit_obj.name,
+                        //   conversion_factor: 1,
+                        // },
+                        selected_unit: selected_unit,
 
-                      wholesale_price_1pc: wholesale_price_1pc, // opt
-                      original_wholesale_price_1pc: wholesale_price_1pc,
-                      wholesale_price_summ: wholesale_price_1pc,
+                        selected_quantity: 1,
+                        base_quantity: 1,
 
-                      purchase_price_1pc: purchase_price_1pc, // prihod
-                      purchase_price_summ: purchase_price_1pc,
+                        wholesale_price_1pc: wholesale_price_1pc, // opt
+                        original_wholesale_price_1pc: wholesale_price_1pc,
+                        wholesale_price_summ: wholesale_price_1pc,
 
-                      retail_price_1pc: retail_price_1pc, // roz
-                      original_retail_price_1pc: retail_price_1pc,
-                      retail_price_summ: retail_price_1pc,
+                        purchase_price_1pc: purchase_price_1pc, // prihod
+                        purchase_price_summ: purchase_price_1pc,
 
-                      difference_price: difference_price, // raznisa
-                      difference_price_summ: difference_price,
+                        retail_price_1pc: retail_price_1pc, // roz
+                        original_retail_price_1pc: retail_price_1pc,
+                        retail_price_summ: retail_price_1pc,
 
-                      original_difference_price_retail:
-                        original_difference_price_retail,
-                      original_difference_price_wholesale:
-                        original_difference_price_wholesale,
+                        difference_price: difference_price, // raznisa
+                        difference_price_summ: difference_price,
 
-                      original_discount_difference_price_retail:
-                        original_discount_difference_price_retail,
-                      original_discount_difference_price_wholesale:
-                        original_discount_difference_price_wholesale,
+                        original_difference_price_retail:
+                          original_difference_price_retail,
+                        original_difference_price_wholesale:
+                          original_difference_price_wholesale,
 
-                      discount_difference_price: discount_difference_price, // raznisa pri ruchnom wwode ili esli roznissa
-                      original_discount_difference_price:
-                        discount_difference_price,
-                      discount_difference_price_summ: discount_difference_price,
+                        original_discount_difference_price_retail:
+                          original_discount_difference_price_retail,
+                        original_discount_difference_price_wholesale:
+                          original_discount_difference_price_wholesale,
 
-                      units: product.units,
-                      base_unit: product.base_unit_obj,
-                      quantity_in_stock: product.quantity,
+                        discount_difference_price: discount_difference_price, // raznisa pri ruchnom wwode ili esli roznissa
+                        original_discount_difference_price:
+                          discount_difference_price,
+                        discount_difference_price_summ:
+                          discount_difference_price,
 
-                      manually_changed_fields: {
-                        price: false,
-                        quantity: false,
-                        not_enough: false,
+                        units: product.units,
+                        base_unit: product.base_unit_obj,
+                        quantity_in_stock: product.quantity,
+
+                        manually_changed_fields: {
+                          price: false,
+                          quantity: false,
+                          not_enough: false,
+                        },
+                        is_gift: false,
+                        volume: product.volume || 0,
+                        weight: product.weight || 0,
+                        length: product.length || 0,
+                        width: product.width || 0,
+                        height: product.height || 0,
                       },
-                      is_gift: false,
-                      volume: product.volume || 0,
-                      length: product.length || 0,
-                      width: product.width || 0,
-                      height: product.height || 0,
-                    },
-                  ]);
-                  setResults("");
+                    ]);
+                    setResults("");
+                    setTimeout(() => {
+                      quantityInputRefs.current[product.id]?.focus();
+                      quantityInputRefs.current[product.id]?.select();
+                    }, 0);
+                    setQuery("");
+                  }
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  if (index === 0) {
+                    inputRef.current?.focus();
+                    inputRef.current?.select();
+                  } else {
+                    resultRefs.current[index - 1]?.focus();
+                  }
+                } else if (
+                  e.key === "ArrowDown" &&
+                  index + 1 < results.length
+                ) {
+                  e.preventDefault();
+                  resultRefs.current[index + 1]?.focus();
                 }
-              }
-            }}
-          >
-            <div className="flex justify-between w-full">
-              <div>{product.name}</div>
-              <div>{product.quantity}</div>
-            </div>
-          </motion.li>
-        ))}
-    </motion.ul>
+              }}
+            >
+              <div className="flex justify-between w-full">
+                <div>{product.name}</div>
+                {/* <div>{product.quantity}</div> */}
+              </div>
+            </li>
+          ))}
+      </ul>
+      <Notification
+        message={t(notification.message)}
+        type={notification.type}
+        onClose={() => setNotification({ message: "", type: "" })}
+      />
+    </div>
   );
 };
 

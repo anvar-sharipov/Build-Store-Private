@@ -1,5 +1,5 @@
-export function formatNumber(value) {
-  const number = Number(parseFloat(value).toFixed(2));
+export function formatNumber(value, fixed=2) {
+  const number = Number(parseFloat(value).toFixed(fixed));
   if (isNaN(number)) return "";
 
   const parts = number.toString().split(".");

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import SmartTooltip from "../../../SmartTooltip";
 import QRDisplay from "../../../UI/QRDisplay";
 import React from "react";
+import { input } from "framer-motion/client";
 
 const columnAnim = {
   initial: { opacity: 0, scale: 0.95 },
@@ -15,7 +16,6 @@ const columnAnim = {
 const SaleInvoiceForm2 = ({
   visibleColumns,
   setVisibleColumns,
-  defaultVisibleColumns,
   invoiceTable,
   setInvoiceTable,
   priceType,
@@ -23,12 +23,91 @@ const SaleInvoiceForm2 = ({
   priceInputRefs,
   quantityInputRefs,
   unitSelectRefs,
+  inputRef,
+  adminVisibleColumns,
+  userVisibleColumns,
 }) => {
+  const [isOpen, setIsOpen] = useState(false); // dlya galochek
   const [showStockMessageIds, setShowStockMessageIds] = useState([]);
   const [numerateRow, setNumerateRow] = useState(1);
 
+  // dlya tfoot summ START
   const products = invoiceTable.filter((p) => !p.is_gift);
   const gifts = invoiceTable.filter((p) => p.is_gift);
+
+  const totalPurchaseSum = products.reduce(
+    (sum, p) => sum + (p.purchase_price_summ || 0),
+    0
+  );
+  const totalIncomeSum = products.reduce(
+    (sum, p) => sum + (p.difference_price_summ || 0),
+    0
+  );
+  const totalDiscountSum = products.reduce(
+    (sum, p) => sum + (p.discount_difference_price_summ || 0),
+    0
+  );
+  const totalMainSum = products.reduce((sum, p) => {
+    return (
+      sum +
+      (priceType === "wholesale"
+        ? p.wholesale_price_summ
+        : p.retail_price_summ || 0)
+    );
+  }, 0);
+
+  const totalMainVolume = products.reduce(
+    (sum, p) => sum + (p.volume * p.selected_quantity || 0),
+    0
+  );
+  const totalGiftVolume = gifts.reduce(
+    (sum, p) => sum + (p.volume * p.selected_quantity || 0),
+    0
+  );
+  const totalVolume = totalMainVolume + totalGiftVolume;
+
+  const totalMainLength = products.reduce(
+    (sum, p) => sum + (p.length * p.selected_quantity || 0),
+    0
+  );
+  const totalGiftLength = gifts.reduce(
+    (sum, p) => sum + (p.length * p.selected_quantity || 0),
+    0
+  );
+  const totalLength = totalMainLength + totalGiftLength;
+
+  const totalMainWidth = products.reduce(
+    (sum, p) => sum + (p.width * p.selected_quantity || 0),
+    0
+  );
+  const totalGiftWidth = gifts.reduce(
+    (sum, p) => sum + (p.width * p.selected_quantity || 0),
+    0
+  );
+  const totalWidth = totalMainWidth + totalGiftWidth;
+
+  const totalMainHeight = products.reduce(
+    (sum, p) => sum + (p.height * p.selected_quantity || 0),
+    0
+  );
+  const totalGiftHeight = gifts.reduce(
+    (sum, p) => sum + (p.height * p.selected_quantity || 0),
+    0
+  );
+  const totalHeight = totalMainHeight + totalGiftHeight;
+
+  // ####
+  const totalMainWeight = products.reduce(
+    (sum, p) => sum + (p.weight * p.selected_quantity || 0),
+    0
+  );
+  const totalGiftWeight = gifts.reduce(
+    (sum, p) => sum + (p.weight * p.selected_quantity || 0),
+    0
+  );
+  const totalWeight = totalMainWeight + totalGiftWeight;
+
+  // dlya tfoot summ END
 
   const calcGiftColSpan = () => {
     let span = 2; // цена и сумма
@@ -40,189 +119,98 @@ const SaleInvoiceForm2 = ({
 
   return (
     <>
-      {/* radio input opt/roznisa */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex items-center gap-4 print:hidden"
+        className="print:hidden p-4 border rounded-md dark:border-gray-700 shadow-sm bg-white dark:bg-gray-800 max-w-full flex flex-col gap-4 mt-2"
       >
-        <label className="font-semibold">Тип цены:</label>
+        {/* Тип цены и чекбоксы в одной строке, wrap для чекбоксов */}
+        <div className="flex flex-wrap items-center gap-6">
+          {/* Тип цены */}
+          <div className="flex items-center gap-3 min-w-[180px]">
+            <span className="font-semibold text-gray-700 dark:text-gray-300">
+              Тип цены:
+            </span>
+            <label className="flex items-center gap-1 cursor-pointer select-none text-gray-800 dark:text-gray-200">
+              <input
+                type="radio"
+                name="priceType"
+                value="wholesale"
+                onChange={(e) => {
+                  setPriceType(e.target.value);
+                  // твой update invoiceTable
+                }}
+                checked={priceType === "wholesale"}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"
+              />
+              <span>Опт</span>
+            </label>
+            <label className="flex items-center gap-1 cursor-pointer select-none text-gray-800 dark:text-gray-200">
+              <input
+                type="radio"
+                name="priceType"
+                value="retail"
+                onChange={(e) => {
+                  setPriceType(e.target.value);
+                  // твой update invoiceTable
+                }}
+                checked={priceType === "retail"}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"
+              />
+              <span>Розница</span>
+            </label>
+          </div>
 
-        <label className="flex items-center gap-1">
-          <input
-            type="radio"
-            name="priceType"
-            value="wholesale"
-            onChange={(e) => {
-              setPriceType(e.target.value);
-              setInvoiceTable((prev) =>
-                prev.map((item) => {
-                  return {
-                    ...item,
-                    selected_quantity: item.selected_quantity,
-                    base_quantity: 1,
-                    wholesale_price_1pc: item.original_wholesale_price_1pc,
-                    wholesale_price_summ:
-                      item.original_wholesale_price_1pc *
-                      item.selected_quantity,
-                    retail_price_1pc: item.original_retail_price_1pc,
-                    retail_price_summ: item.original_retail_price_1pc,
-                    purchase_price_summ:
-                      item.purchase_price_1pc * item.selected_quantity,
-                    difference_price: item.original_difference_price_wholesale,
-                    difference_price_summ:
-                      item.original_difference_price_wholesale *
-                      item.selected_quantity,
-                    discount_difference_price:
-                      item.original_discount_difference_price_wholesale,
-                    discount_difference_price_summ:
-                      item.original_discount_difference_price_wholesale *
-                      item.selected_quantity,
-                    manually_changed_fields: {
-                      ...item.manually_changed_fields,
-                      price: false,
-                    },
-                  };
-                })
-              );
-            }}
-            checked={priceType === "wholesale"}
-          />
-          <span>Опт</span>
-        </label>
-        <label className="flex items-center gap-1">
-          <input
-            type="radio"
-            name="priceType"
-            value="retail"
-            onChange={(e) => {
-              setPriceType(e.target.value);
+          {/* Чекбоксы */}
+          <div className="flex flex-wrap gap-4 flex-1 min-w-[300px]">
+            {[
+              { key: "qr_code", label: "QR code" },
+              { key: "purchase", label: "Приход" },
+              { key: "income", label: "Доход" },
+              { key: "discount", label: "Скидка" },
+              { key: "volume", label: "Объём (м³)" },
+              { key: "weight", label: "Вес (кг)" },
+              { key: "dimensions", label: "Размеры" },
+            ].map(({ key, label }) => (
+              <label
+                key={key}
+                className="flex items-center gap-2 cursor-pointer select-none text-gray-800 dark:text-gray-200"
+              >
+                <input
+                  type="checkbox"
+                  checked={visibleColumns[key]}
+                  onChange={(e) =>
+                    setVisibleColumns((prev) => ({
+                      ...prev,
+                      [key]: e.target.checked,
+                    }))
+                  }
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+        </div>
 
-              setInvoiceTable((prev) =>
-                prev.map((item) => {
-                  return {
-                    ...item,
-                    selected_quantity: item.selected_quantity,
-                    base_quantity: 1,
-                    wholesale_price_1pc: item.original_wholesale_price_1pc,
-                    wholesale_price_summ: item.original_wholesale_price_1pc,
-                    retail_price_1pc: item.original_retail_price_1pc,
-                    retail_price_summ:
-                      item.original_retail_price_1pc * item.selected_quantity,
-                    purchase_price_summ:
-                      item.purchase_price_1pc * item.selected_quantity,
-                    difference_price: item.original_difference_price_retail,
-                    difference_price_summ:
-                      item.original_difference_price_retail *
-                      item.selected_quantity,
-                    discount_difference_price:
-                      item.original_discount_difference_price_retail,
-                    discount_difference_price_summ:
-                      item.original_discount_difference_price_retail *
-                      item.selected_quantity,
-                    manually_changed_fields: {
-                      ...item.manually_changed_fields,
-                      price: false,
-                    },
-                  };
-                })
-              );
-            }}
-            checked={priceType === "retail"}
-          />
-          <span>Розница</span>
-        </label>
-      </motion.div>
-
-      {/* 3. Галочки для UI: */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex gap-4 my-2 print:hidden"
-      >
-        <label className="flex items-center gap-1">
-          <input
-            type="checkbox"
-            checked={visibleColumns.qr_code}
-            onChange={(e) =>
-              setVisibleColumns((prev) => ({
-                ...prev,
-                qr_code: e.target.checked,
-              }))
-            }
-          />
-          QR code
-        </label>
-
-        <label className="flex items-center gap-1">
-          <input
-            type="checkbox"
-            checked={visibleColumns.purchase}
-            onChange={(e) =>
-              setVisibleColumns((prev) => ({
-                ...prev,
-                purchase: e.target.checked,
-              }))
-            }
-          />
-          Приход
-        </label>
-
-        <label className="flex items-center gap-1">
-          <input
-            type="checkbox"
-            checked={visibleColumns.income}
-            onChange={(e) =>
-              setVisibleColumns((prev) => ({
-                ...prev,
-                income: e.target.checked,
-              }))
-            }
-          />
-          Доход
-        </label>
-
-        <label className="flex items-center gap-1">
-          <input
-            type="checkbox"
-            checked={visibleColumns.discount}
-            onChange={(e) =>
-              setVisibleColumns((prev) => ({
-                ...prev,
-                discount: e.target.checked,
-              }))
-            }
-          />
-          Скидка
-        </label>
-        <label className="flex items-center gap-1">
-          <input
-            type="checkbox"
-            checked={visibleColumns.volume}
-            onChange={(e) =>
-              setVisibleColumns((prev) => ({
-                ...prev,
-                volume: e.target.checked,
-              }))
-            }
-          />
-          Объём (м³)
-        </label>
-        <label className="flex items-center gap-1">
-          <input
-            type="checkbox"
-            checked={visibleColumns.dimensions}
-            onChange={(e) =>
-              setVisibleColumns((prev) => ({
-                ...prev,
-                dimensions: e.target.checked,
-              }))
-            }
-          />
-          Размеры
-        </label>
+        {/* Кнопки управления галочками с меньшими размерами */}
+        <div className="flex gap-3">
+          <button
+            onClick={() => setVisibleColumns(userVisibleColumns)}
+            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 text-white rounded text-sm transition"
+            type="button"
+          >
+            Снять все галочки
+          </button>
+          <button
+            onClick={() => setVisibleColumns(adminVisibleColumns)}
+            className="px-3 py-1.5 bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-400 text-white rounded text-sm transition"
+            type="button"
+          >
+            Вставить все галочки
+          </button>
+        </div>
       </motion.div>
 
       <div className="overflow-x-auto w-full max-w-full">
@@ -230,11 +218,13 @@ const SaleInvoiceForm2 = ({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="table-auto border border-gray-300 border-collapse w-full print:border-black print:text-black print:text-[10px] print:leading-tight"
+          className="table-auto border border-gray-300 border-collapse w-full print:border-black print:text-black print:text-[10px] print:leading-tight mt-2"
         >
-          <thead className="bg-gray-100 print:bg-white">
-            <tr className="bg-gray-100">
-              <th className="p-2 border border-gray-300">№</th>
+          <thead className="bg-gray-100 dark:bg-gray-900 print:bg-white print:dark:bg-white">
+            <tr className="bg-gray-100 dark:bg-gray-900">
+              <th className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200">
+                №
+              </th>
 
               <AnimatePresence>
                 {/* QR колонка */}
@@ -242,7 +232,7 @@ const SaleInvoiceForm2 = ({
                   <motion.th
                     key="qr_code"
                     {...columnAnim}
-                    className="p-2 border border-gray-300"
+                    className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
                   >
                     QR
                   </motion.th>
@@ -250,110 +240,127 @@ const SaleInvoiceForm2 = ({
               </AnimatePresence>
 
               {/* Статичные колонки */}
-              <th className="p-2 border border-gray-300">Товар</th>
-              <th className="p-2 border border-gray-300">Ед. изм</th>
-              <th className="p-2 border border-gray-300">Кол-во</th>
-              <th className="p-2 border border-gray-300">
+              <th className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200">
+                Товар
+              </th>
+              <th className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200">
+                Ед. изм
+              </th>
+              <th className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200">
+                Кол-во
+              </th>
+              <th className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200">
                 Цена {priceType === "wholesale" ? "опт" : "розн"} за шт.
               </th>
-              <th className="p-2 border border-gray-300">
+              <th className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200">
                 Цена {priceType === "wholesale" ? "опт" : "розн"} сумма
               </th>
 
               {/* Динамические колонки с анимацией */}
               <AnimatePresence>
-                {/* Группа колонок Purchase */}
+                {/* Purchase */}
                 {visibleColumns.purchase && (
                   <React.Fragment key="purchase-group">
                     <motion.th
                       key="purchase_price"
                       {...columnAnim}
-                      className="p-2 border border-gray-300"
+                      className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
                     >
                       Цена прих. за шт.
                     </motion.th>
                     <motion.th
                       key="purchase_sum"
                       {...columnAnim}
-                      className="p-2 border border-gray-300"
+                      className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
                     >
                       Сумма прих.
                     </motion.th>
                   </React.Fragment>
                 )}
 
-                {/* Группа колонок Income */}
+                {/* Income */}
                 {visibleColumns.income && (
                   <React.Fragment key="income-group">
                     <motion.th
                       key="income_price"
                       {...columnAnim}
-                      className="p-2 border border-gray-300"
+                      className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
                     >
                       Доход. за шт.
                     </motion.th>
                     <motion.th
                       key="income_sum"
                       {...columnAnim}
-                      className="p-2 border border-gray-300"
+                      className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
                     >
                       Доход. сумма
                     </motion.th>
                   </React.Fragment>
                 )}
 
-                {/* Группа колонок Discount */}
+                {/* Discount */}
                 {visibleColumns.discount && (
                   <React.Fragment key="discount-group">
                     <motion.th
                       key="discount_price"
                       {...columnAnim}
-                      className="p-2 border border-gray-300"
+                      className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
                     >
                       Скидка за шт.
                     </motion.th>
                     <motion.th
                       key="discount_sum"
                       {...columnAnim}
-                      className="p-2 border border-gray-300"
+                      className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
                     >
                       Скидка сумма
                     </motion.th>
                   </React.Fragment>
                 )}
 
-                {/* Колонка Volume */}
+                {/* Volume */}
                 {visibleColumns.volume && (
                   <motion.th
                     key="volume"
                     {...columnAnim}
-                    className="p-2 border border-gray-300"
+                    className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
                   >
                     Объём (м³)
                   </motion.th>
                 )}
 
-                {/* Группа колонок Dimensions */}
+                {/* Weight */}
+                {visibleColumns.weight && (
+                  <motion.th
+                    key="weight"
+                    {...columnAnim}
+                    className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
+                  >
+                    Вес (кг)
+                  </motion.th>
+                )}
+
+                {/* Dimensions */}
                 {visibleColumns.dimensions && (
                   <React.Fragment key="dimensions-group">
                     <motion.th
                       key="dimensions_length"
                       {...columnAnim}
-                      className="p-2 border border-gray-300"
+                      className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
                     >
                       Длина (см)
                     </motion.th>
                     <motion.th
                       key="dimensions_width"
                       {...columnAnim}
-                      className="p-2 border border-gray-300"
+                      className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
                     >
                       Ширина (см)
                     </motion.th>
                     <motion.th
                       key="dimensions_height"
                       {...columnAnim}
-                      className="p-2 border border-gray-300"
+                      className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
                     >
                       Высота (см)
                     </motion.th>
@@ -362,19 +369,20 @@ const SaleInvoiceForm2 = ({
               </AnimatePresence>
             </tr>
           </thead>
+
           <tbody>
             {/* Основные продукты */}
             {products.map((p, idx) => {
               return (
                 <tr key={p.id}>
-                  <td className="p-2 border border-gray-300">{idx + 1}</td>
+                  <td className="p-2 border border-gray-300 dark:border-gray-700">{idx + 1}</td>
 
                   <AnimatePresence>
                     {visibleColumns.qr_code && (
                       <motion.td
                         key={`qr-${p.id}`}
                         {...columnAnim}
-                        className="p-2 border border-gray-300"
+                        className="p-2 border border-gray-300 dark:border-gray-700"
                       >
                         <QRDisplay
                           code={p.qr_code}
@@ -385,24 +393,25 @@ const SaleInvoiceForm2 = ({
                     )}
                   </AnimatePresence>
 
-                  <td className="p-2 border border-gray-300">{p.name}</td>
-                  <td className="p-2 border border-gray-300">
+                  <td className="p-2 border border-gray-300 dark:border-gray-700">{p.name}</td>
+                  <td className="p-2 border border-gray-300 dark:border-gray-700">
                     {p.selected_unit.name}
                   </td>
 
-                  {/* quantity input */}
-                  <td className="p-2 border border-gray-300">
+                  {/* quantity input ############################################### */}
+                  <td className="p-2 border border-gray-300 dark:border-gray-700">
                     <input
                       type="number"
-                      className={`border px-2 py-1 rounded w-20 
-                  ${
-                    p.manually_changed_fields.not_enough
-                      ? "bg-red-100 border-red-500"
-                      : p.manually_changed_fields.quantity
-                      ? "bg-yellow-100 border-yellow-500"
-                      : ""
-                  }
-                `}
+                      className={`border px-2 py-1 rounded w-20
+                        ${
+                          p.manually_changed_fields.not_enough
+                            ? "bg-red-100 border-red-500 dark:bg-red-900 dark:border-red-700 dark:text-red-300"
+                            : p.manually_changed_fields.quantity
+                            ? "bg-yellow-100 border-yellow-500 dark:bg-yellow-900 dark:border-yellow-700 dark:text-yellow-300"
+                            : "bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-gray-200"
+                        }
+                        border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
+                      `}
                       ref={(el) => (quantityInputRefs.current[p.id] = el)}
                       value={
                         p.selected_quantity
@@ -514,6 +523,45 @@ const SaleInvoiceForm2 = ({
 
                         setInvoiceTable(updatedTable);
                       }}
+                      onKeyDown={(e) => {
+                        // Получаем список обычных товаров (не подарков)
+                        const normalProducts = invoiceTable.filter(
+                          (item) => item.is_gift === false
+                        );
+
+                        // Находим индекс текущего товара по id
+                        const currentIndex = normalProducts.findIndex(
+                          (item) => item.id === p.id
+                        );
+                        if (e.key === "ArrowUp") {
+                          e.preventDefault();
+
+                          if (currentIndex === 0) {
+                            // Если это первый обычный товар — уходим в поле поиска
+                            inputRef.current?.focus();
+                            inputRef.current?.select();
+                          } else if (currentIndex > 0) {
+                            const prevId = normalProducts[currentIndex - 1].id;
+                            setTimeout(() => {
+                              quantityInputRefs.current[prevId]?.focus();
+                              quantityInputRefs.current[prevId]?.select();
+                            }, 0);
+                          }
+                        } else if (e.key === "ArrowDown") {
+                          e.preventDefault();
+                          const nextId = normalProducts[currentIndex + 1]?.id;
+                          if (nextId) {
+                            setTimeout(() => {
+                              quantityInputRefs.current[nextId]?.focus();
+                              quantityInputRefs.current[nextId]?.select();
+                            }, 0);
+                          }
+                        } else if (e.key === "ArrowRight") {
+                          e.preventDefault();
+                          priceInputRefs.current[p.id]?.focus();
+                          priceInputRefs.current[p.id]?.select();
+                        }
+                      }}
                     />
                     {showStockMessageIds.includes(p.id) && (
                       <div className="text-sm text-red-600 mt-1 animate-pulse italic font-medium text-center">
@@ -530,15 +578,18 @@ const SaleInvoiceForm2 = ({
                     )}
                   </td>
 
-                  {/* price 1pc input */}
-                  <td className="p-2 border border-gray-300">
+                  {/* price 1pc input ############################################## */}
+                  <td className="p-2 border border-gray-300 dark:border-gray-700">
                     <input
                       type="number"
-                      className={`border px-2 py-1 rounded w-20 ${
-                        p.manually_changed_fields.price
-                          ? "bg-yellow-100 border-yellow-500"
-                          : ""
-                      }`}
+                      className={`border px-2 py-1 rounded w-20
+                        ${
+                          p.manually_changed_fields.price
+                            ? "bg-yellow-100 border-yellow-500 dark:bg-yellow-900 dark:border-yellow-700 dark:text-yellow-300"
+                            : "bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-gray-200"
+                        }
+                        border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
+                      `}
                       value={
                         priceType === "wholesale"
                           ? p.wholesale_price_1pc
@@ -607,10 +658,49 @@ const SaleInvoiceForm2 = ({
                         );
                         setInvoiceTable(updatedTable);
                       }}
+                      onKeyDown={(e) => {
+                        // Получаем список обычных товаров (не подарков)
+                        const normalProducts = invoiceTable.filter(
+                          (item) => item.is_gift === false
+                        );
+
+                        // Находим индекс текущего товара по id
+                        const currentIndex = normalProducts.findIndex(
+                          (item) => item.id === p.id
+                        );
+                        if (e.key === "ArrowUp") {
+                          e.preventDefault();
+
+                          if (currentIndex === 0) {
+                            // Если это первый обычный товар — уходим в поле поиска
+                            inputRef.current?.focus();
+                            inputRef.current?.select();
+                          } else if (currentIndex > 0) {
+                            const prevId = normalProducts[currentIndex - 1].id;
+                            setTimeout(() => {
+                              priceInputRefs.current[prevId]?.focus();
+                              priceInputRefs.current[prevId]?.select();
+                            }, 0);
+                          }
+                        } else if (e.key === "ArrowDown") {
+                          e.preventDefault();
+                          const nextId = normalProducts[currentIndex + 1]?.id;
+                          if (nextId) {
+                            setTimeout(() => {
+                              priceInputRefs.current[nextId]?.focus();
+                              priceInputRefs.current[nextId]?.select();
+                            }, 0);
+                          }
+                        } else if (e.key === "ArrowLeft") {
+                          e.preventDefault();
+                          quantityInputRefs.current[p.id]?.focus();
+                          quantityInputRefs.current[p.id]?.select();
+                        }
+                      }}
                     />
                   </td>
 
-                  <td className="p-2 border border-gray-300">
+                  <td className="p-2 border border-gray-300 dark:border-gray-700">
                     {formatNumber(
                       priceType === "wholesale"
                         ? p.wholesale_price_summ
@@ -625,14 +715,14 @@ const SaleInvoiceForm2 = ({
                         <motion.td
                           key={`purchase-price-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300"
+                          className="p-2 border border-gray-300 dark:border-gray-700"
                         >
                           {formatNumber(p.purchase_price_1pc)}
                         </motion.td>
                         <motion.td
                           key={`purchase-sum-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300"
+                          className="p-2 border border-gray-300 dark:border-gray-700"
                         >
                           {formatNumber(p.purchase_price_summ)}
                         </motion.td>
@@ -645,14 +735,14 @@ const SaleInvoiceForm2 = ({
                         <motion.td
                           key={`income-price-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300"
+                          className="p-2 border border-gray-300 dark:border-gray-700"
                         >
                           {formatNumber(p.difference_price)}
                         </motion.td>
                         <motion.td
                           key={`income-sum-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300"
+                          className="p-2 border border-gray-300 dark:border-gray-700"
                         >
                           {formatNumber(p.difference_price_summ)}
                         </motion.td>
@@ -665,14 +755,14 @@ const SaleInvoiceForm2 = ({
                         <motion.td
                           key={`discount-price-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300"
+                          className="p-2 border border-gray-300 dark:border-gray-700"
                         >
                           {formatNumber(p.discount_difference_price)}
                         </motion.td>
                         <motion.td
                           key={`discount-sum-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300"
+                          className="p-2 border border-gray-300 dark:border-gray-700"
                         >
                           {formatNumber(p.discount_difference_price_summ)}
                         </motion.td>
@@ -684,9 +774,20 @@ const SaleInvoiceForm2 = ({
                       <motion.td
                         key={`volume-${p.id}`}
                         {...columnAnim}
-                        className="p-2 border border-gray-300"
+                        className="p-2 border border-gray-300 dark:border-gray-700"
                       >
-                        {p.volume * p.selected_quantity}
+                        {formatNumber(p.volume * p.selected_quantity, 4)}
+                      </motion.td>
+                    )}
+
+                    {/* weight колонка */}
+                    {visibleColumns.weight && (
+                      <motion.td
+                        key={`weight-${p.id}`}
+                        {...columnAnim}
+                        className="p-2 border border-gray-300 dark:border-gray-700"
+                      >
+                        {formatNumber(p.weight * p.selected_quantity)}
                       </motion.td>
                     )}
 
@@ -696,23 +797,23 @@ const SaleInvoiceForm2 = ({
                         <motion.td
                           key={`length-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300"
+                          className="p-2 border border-gray-300 dark:border-gray-700"
                         >
-                          {p.length * p.selected_quantity}
+                          {formatNumber(p.length * p.selected_quantity)}
                         </motion.td>
                         <motion.td
                           key={`width-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300"
+                          className="p-2 border border-gray-300 dark:border-gray-700"
                         >
-                          {p.width * p.selected_quantity}
+                          {formatNumber(p.width * p.selected_quantity)}
                         </motion.td>
                         <motion.td
                           key={`height-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300"
+                          className="p-2 border border-gray-300 dark:border-gray-700"
                         >
-                          {p.height * p.selected_quantity}
+                          {formatNumber(p.height * p.selected_quantity)}
                         </motion.td>
                       </React.Fragment>
                     )}
@@ -725,8 +826,11 @@ const SaleInvoiceForm2 = ({
             {gifts.map((p, idx) => {
               if (p.is_gift === true) {
                 return (
-                  <tr key={p.id}>
-                    <td className="p-2 border bg-indigo-100 border-gray-300">
+                  <tr
+                    key={p.id}
+                    className={idx === 0 ? "border-t-4 border-gray-300  dark:border-gray-700" : ""}
+                  >
+                    <td className="p-2 border border-gray-300 dark:border-gray-700">
                       {products.length + idx + 1}
                     </td>
 
@@ -735,7 +839,7 @@ const SaleInvoiceForm2 = ({
                         <motion.td
                           key={`qr-gift-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300 bg-indigo-100"
+                          className="p-2 border border-gray-300 dark:border-gray-700"
                         >
                           <QRDisplay
                             code={p.qr_code}
@@ -746,20 +850,14 @@ const SaleInvoiceForm2 = ({
                       )}
                     </AnimatePresence>
 
-                    <td className="p-2 border bg-indigo-100 border-gray-300">
-                      {p.name}
-                    </td>
-                    <td className="p-2 border bg-indigo-100 border-gray-300">
+                    <td className="p-2 border border-gray-300 dark:border-gray-700">{p.name}</td>
+                    <td className="p-2 border border-gray-300 dark:border-gray-700">
                       {p.selected_unit.name}
                     </td>
 
                     <td
-                      className={`border px-2 py-1 rounded w-20 border-gray-300
-                  ${
-                    p.manually_changed_fields.not_enough
-                      ? "bg-red-100"
-                      : "bg-indigo-100"
-                  }
+                      className={`border px-2 py-1 rounded w-20 border-gray-300 dark:border-gray-700
+                  ${p.manually_changed_fields.not_enough ? "bg-red-100" : ""}
                 `}
                     >
                       {p.selected_quantity}
@@ -779,7 +877,7 @@ const SaleInvoiceForm2 = ({
                     </td>
 
                     <td
-                      className="p-3 border bg-indigo-100 text-indigo-800 italic font-medium border-gray-300"
+                      className="p-3 border text-indigo-800 italic font-medium border-gray-300 dark:border-gray-700 dark:text-gray-400"
                       colSpan={calcGiftColSpan()}
                     >
                       🎁 Бесплатно для{" "}
@@ -793,9 +891,19 @@ const SaleInvoiceForm2 = ({
                         <motion.td
                           key={`volume-gift-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border bg-indigo-100 border-gray-300"
+                          className="p-2 border border-gray-300 dark:border-gray-700"
                         >
-                          {p.volume * p.selected_quantity}
+                          {formatNumber(p.volume * p.selected_quantity, 4)}
+                        </motion.td>
+                      )}
+
+                      {visibleColumns.weight && (
+                        <motion.td
+                          key={`weight-gift-${p.id}`}
+                          {...columnAnim}
+                          className="p-2 border border-gray-300 dark:border-gray-700"
+                        >
+                          {formatNumber(p.weight * p.selected_quantity, 4)}
                         </motion.td>
                       )}
 
@@ -804,23 +912,23 @@ const SaleInvoiceForm2 = ({
                           <motion.td
                             key={`length-gift-${p.id}`}
                             {...columnAnim}
-                            className="p-2 border bg-indigo-100 border-gray-300"
+                            className="p-2 border border-gray-300 dark:border-gray-700"
                           >
-                            {p.length * p.selected_quantity}
+                            {formatNumber(p.length * p.selected_quantity)}
                           </motion.td>
                           <motion.td
                             key={`width-gift-${p.id}`}
                             {...columnAnim}
-                            className="p-2 border bg-indigo-100 border-gray-300"
+                            className="p-2 border border-gray-300 dark:border-gray-700"
                           >
-                            {p.width * p.selected_quantity}
+                            {formatNumber(p.width * p.selected_quantity)}
                           </motion.td>
                           <motion.td
                             key={`height-gift-${p.id}`}
                             {...columnAnim}
-                            className="p-2 border bg-indigo-100 border-gray-300"
+                            className="p-2 border border-gray-300 dark:border-gray-700"
                           >
-                            {p.height * p.selected_quantity}
+                            {formatNumber(p.height * p.selected_quantity)}
                           </motion.td>
                         </React.Fragment>
                       )}
@@ -830,6 +938,78 @@ const SaleInvoiceForm2 = ({
               }
             })}
           </tbody>
+          <tfoot className="bg-gray-200 dark:bg-gray-800 font-semibold print:bg-white print:dark:bg-white">
+            <tr>
+              <td
+                className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200 text-right"
+                colSpan={visibleColumns.qr_code ? 6 : 5}
+              >
+                Итого:
+              </td>
+
+              <td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200">
+                {formatNumber(totalMainSum)}
+              </td>
+
+              <AnimatePresence>
+                {visibleColumns.purchase && (
+                  <React.Fragment key="purchase-fragment">
+                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700" />
+                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200">
+                      {formatNumber(totalPurchaseSum)}
+                    </motion.td>
+                  </React.Fragment>
+                )}
+
+                {visibleColumns.income && (
+                  <React.Fragment key="income-fragment">
+                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700" />
+                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200">
+                      {formatNumber(totalIncomeSum)}
+                    </motion.td>
+                  </React.Fragment>
+                )}
+
+                {visibleColumns.discount && (
+                  <React.Fragment key="discount-fragment">
+                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700" />
+                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200">
+                      {formatNumber(totalDiscountSum)}
+                    </motion.td>
+                  </React.Fragment>
+                )}
+
+                {visibleColumns.volume && (
+                  <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200">
+                    {formatNumber(totalVolume, 4)}
+                  </motion.td>
+                )}
+
+                {visibleColumns.weight && (
+                  <motion.td
+                    key="weight"
+                    className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200"
+                  >
+                    {formatNumber(totalWeight)}
+                  </motion.td>
+                )}
+
+                {visibleColumns.dimensions && (
+                  <React.Fragment key="dimensions-fragment">
+                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200">
+                      {formatNumber(totalLength)}
+                    </motion.td>
+                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200">
+                      {formatNumber(totalWidth)}
+                    </motion.td>
+                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200">
+                      {formatNumber(totalHeight)}
+                    </motion.td>
+                  </React.Fragment>
+                )}
+              </AnimatePresence>
+            </tr>
+          </tfoot>
         </motion.table>
       </div>
     </>

@@ -9,6 +9,7 @@ const SearchedPartnerList = ({
   searchPartnerInputRef,
   setPartnerQuery,
   inputRef,
+  setSelectedPartner,
 }) => {
   //   React.useEffect(() => {
   //     resultPartenrRefs.current = [];
@@ -21,29 +22,36 @@ const SearchedPartnerList = ({
           key={p.id}
           ref={(el) => (resultPartenrRefs.current[index] = el)}
           tabIndex={0}
+          onClick={() => {
+            setSelectedPartner(p.name);
+            setPartnerQuery(p.name);
+            setTimeout(() => {
+              setFilteredPartners("");
+            }, 0);
+            inputRef.current?.focus();
+          }}
           onKeyDown={(e) => {
             if (e.key == "ArrowUp") {
-                e.preventDefault();
+              e.preventDefault();
               if (index === 0) {
                 searchPartnerInputRef.current?.focus();
               } else {
                 resultPartenrRefs.current[index - 1]?.focus();
               }
             } else if (e.key == "ArrowDown") {
-                e.preventDefault();
+              e.preventDefault();
               if (index + 1 < filteredPartners.length) {
                 resultPartenrRefs.current[index + 1]?.focus();
               }
             } else if (e.key === "Enter") {
-                e.preventDefault();
-             
-                
-                setPartnerQuery(e.target.innerHTML)
-                setFilteredPartners("")
-                inputRef.current?.focus();
-
-
-
+              e.preventDefault();
+              // e.target.innerHTML
+              setSelectedPartner(p.name);
+              setPartnerQuery(p.name);
+              setTimeout(() => {
+                setFilteredPartners("");
+              }, 0);
+              inputRef.current?.focus();
             }
           }}
         >

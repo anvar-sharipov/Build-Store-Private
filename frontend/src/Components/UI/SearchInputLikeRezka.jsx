@@ -116,7 +116,7 @@ const SearchInputLikeRezka = forwardRef((props, ref) => {
         </button>
       </div>
       {isExpanded && (
-        <div className="absolute inset-0 bg-blue-500 opacity-20 rounded blur-xl animate-pulse" />
+        <div className="absolute inset-0 bg-blue-500 opacity-20 rounded blur-xl animate-pulse"  />
       )}
     </div>
   );

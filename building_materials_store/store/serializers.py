@@ -185,7 +185,10 @@ class ProductSerializer(serializers.ModelSerializer):
 
     
 
-
+class WarehouseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Warehouse
+        fields = ['id', 'name', 'location']
     
 
 class PriceChangeReportSerializer(serializers.ModelSerializer):

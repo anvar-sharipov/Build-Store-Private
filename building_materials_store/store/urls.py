@@ -18,6 +18,7 @@ router.register(r'models', ModelViewSet)
 router.register(r'tags', TagViewSet)
 router.register(r'product-images', ProductImageViewSet)
 router.register(r'product-units', ProductUnitViewSet)
+router.register(r'warehouses', WarehouseViewSet)
 
 # faktura START
 router.register(r'purchase-invoices', PurchaseInvoiceViewSet, basename='purchaseinvoice')

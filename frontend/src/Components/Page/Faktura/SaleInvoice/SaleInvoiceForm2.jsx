@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { formatNumber } from "../../../UI/formatNumber";
 import { motion, AnimatePresence } from "framer-motion";
 import SmartTooltip from "../../../SmartTooltip";
 import QRDisplay from "../../../UI/QRDisplay";
 import React from "react";
 import { input } from "framer-motion/client";
+import { AiOutlineClose } from "react-icons/ai";
 
 const columnAnim = {
   initial: { opacity: 0, scale: 0.95 },
@@ -26,10 +27,13 @@ const SaleInvoiceForm2 = ({
   inputRef,
   adminVisibleColumns,
   userVisibleColumns,
+  handleDeleteProduct,
 }) => {
   const [isOpen, setIsOpen] = useState(false); // dlya galochek
   const [showStockMessageIds, setShowStockMessageIds] = useState([]);
   const [numerateRow, setNumerateRow] = useState(1);
+
+    
 
   // dlya tfoot summ START
   const products = invoiceTable.filter((p) => !p.is_gift);
@@ -153,7 +157,8 @@ const SaleInvoiceForm2 = ({
                         retail_price_summ: item.original_retail_price_1pc,
                         purchase_price_summ:
                           item.purchase_price_1pc * item.selected_quantity,
-                        difference_price: item.original_difference_price_wholesale,
+                        difference_price:
+                          item.original_difference_price_wholesale,
                         difference_price_summ:
                           item.original_difference_price_wholesale *
                           item.selected_quantity,
@@ -192,7 +197,8 @@ const SaleInvoiceForm2 = ({
                         wholesale_price_summ: item.original_wholesale_price_1pc,
                         retail_price_1pc: item.original_retail_price_1pc,
                         retail_price_summ:
-                          item.original_retail_price_1pc * item.selected_quantity,
+                          item.original_retail_price_1pc *
+                          item.selected_quantity,
                         purchase_price_summ:
                           item.purchase_price_1pc * item.selected_quantity,
                         difference_price: item.original_difference_price_retail,
@@ -432,7 +438,20 @@ const SaleInvoiceForm2 = ({
             {products.map((p, idx) => {
               return (
                 <tr key={p.id}>
-                  <td className="p-2 border border-gray-300 dark:border-gray-700">{idx + 1}</td>
+                  <td className="p-2 border border-gray-300 dark:border-gray-700">
+                    <span className="print:hidden">
+                      <button
+                        onClick={() => handleDeleteProduct(p.id)}
+                        className="group relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-red-100 dark:hover:bg-red-900 transition-colors duration-200"
+                      >
+                        <AiOutlineClose className="text-gray-600 dark:text-gray-300 group-hover:text-red-500 transform transition-transform duration-300 group-hover:rotate-90 text-xl" />
+                        <span className="sr-only">Удалить</span>
+                      </button>
+                    </span>
+                    <span className="relative flex items-center justify-center w-10 h-10">
+                      {idx + 1}
+                    </span>
+                  </td>
 
                   <AnimatePresence>
                     {visibleColumns.qr_code && (
@@ -450,7 +469,9 @@ const SaleInvoiceForm2 = ({
                     )}
                   </AnimatePresence>
 
-                  <td className="p-2 border border-gray-300 dark:border-gray-700">{p.name}</td>
+                  <td className="p-2 border border-gray-300 dark:border-gray-700">
+                    {p.name}
+                  </td>
                   <td className="p-2 border border-gray-300 dark:border-gray-700">
                     {p.selected_unit.name}
                   </td>
@@ -885,10 +906,16 @@ const SaleInvoiceForm2 = ({
                 return (
                   <tr
                     key={p.id}
-                    className={idx === 0 ? "border-t-4 border-gray-300  dark:border-gray-700" : ""}
+                    className={
+                      idx === 0
+                        ? "border-t-4 border-gray-300  dark:border-gray-700"
+                        : ""
+                    }
                   >
-                    <td className="p-2 border border-gray-300 dark:border-gray-700">
-                      {products.length + idx + 1}
+                    <td className="p-2 border border-gray-300 dark:border-gray-700 ">
+                      <span className="relative flex items-center justify-center w-10 h-10">
+                        {products.length + idx + 1}
+                      </span>
                     </td>
 
                     <AnimatePresence>
@@ -907,7 +934,9 @@ const SaleInvoiceForm2 = ({
                       )}
                     </AnimatePresence>
 
-                    <td className="p-2 border border-gray-300 dark:border-gray-700">{p.name}</td>
+                    <td className="p-2 border border-gray-300 dark:border-gray-700">
+                      {p.name}
+                    </td>
                     <td className="p-2 border border-gray-300 dark:border-gray-700">
                       {p.selected_unit.name}
                     </td>

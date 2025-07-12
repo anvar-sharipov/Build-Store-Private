@@ -124,6 +124,23 @@ class ProductAdmin(admin.ModelAdmin):
 
 
 
+@admin.register(Warehouse)
+class WarehouseAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "location")         # отображаемые поля в списке
+    list_display_links = ("id", "name")               # по каким полям можно кликать
+    search_fields = ("name", "location")              # поля для поиска
+    list_filter = ("location",)                       # боковая фильтрация
+    ordering = ("name",)                              # сортировка по умолчанию
+    list_per_page = 25                                # пагинация
+
+    fieldsets = (
+        (None, {
+            "fields": ("name", "location")
+        }),
+    )
+
+
+
 @admin.register(PriceChangeHistory)
 class PriceChangeHistoryAdmin(admin.ModelAdmin):
     list_display = (

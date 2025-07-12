@@ -9,7 +9,7 @@ const MySearchInput = React.forwardRef((props, ref) => {
       <input
         ref={ref}
         {...props}
-        placeholder="Поиск..."
+        placeholder={props.placeholder}
         className="w-full h-9 pl-9 pr-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-300 dark:focus:border-blue-500 transition-all duration-300 ease-out transform focus:scale-[1.02]"
       />
     </div>

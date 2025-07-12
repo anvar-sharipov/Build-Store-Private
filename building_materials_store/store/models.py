@@ -90,8 +90,6 @@ class Product(models.Model):
         self._original_wholesale_price = self.wholesale_price
         self._original_discount_price = self.discount_price
 
-        
-
 
     def save(self, *args, user=None, **kwargs):
         self._current_user = user
@@ -128,7 +126,17 @@ class Product(models.Model):
 
 
 
+class Warehouse(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name="Название склада")
+    location = models.CharField(max_length=255, blank=True, verbose_name="Адрес (необязательно)")
+   
+    class Meta:
+        verbose_name = "Склад"
+        verbose_name_plural = "Склады"
 
+    def __str__(self):
+        return self.name
+    
 
 class PriceChangeHistory(models.Model):
     PRICE_TYPE_CHOICES = [

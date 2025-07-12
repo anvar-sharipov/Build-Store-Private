@@ -171,7 +171,9 @@ class PartnerViewSet(viewsets.ModelViewSet):
     
 
         
-
+class WarehouseViewSet(viewsets.ModelViewSet):
+    queryset = Warehouse.objects.all()
+    serializer_class = WarehouseSerializer
 
 
 class RegisterView(APIView):

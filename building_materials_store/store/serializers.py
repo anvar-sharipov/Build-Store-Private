@@ -417,9 +417,12 @@ class PurchaseInvoiceSerializer(serializers.ModelSerializer):
                 )
         return instance
 
-
+############################################################################################################################################################################################################
+############################################################################################################################################################################################################
+############################################################################################################################################################################################################
+############################################################################################################################################################################################################
 ####################################################################
-# SalesInvoice и Items
+# SalesInvoice и Items START
 ####################################################################
 
 class SalesInvoiceItemSerializer(serializers.ModelSerializer):
@@ -446,48 +449,58 @@ class SalesInvoiceItemSerializer(serializers.ModelSerializer):
 
 class SalesInvoiceSerializer(serializers.ModelSerializer):
     buyer = PartnerSerializer(read_only=True)
-    buyer_id = serializers.PrimaryKeyRelatedField(
-        queryset=Partner.objects.all(), write_only=True
-    )
-
+    buyer_id = serializers.PrimaryKeyRelatedField(queryset=Partner.objects.all(), write_only=True, source='buyer')
+    
     delivered_by = EmployeeSerializer(read_only=True)
-    delivered_by_id = serializers.PrimaryKeyRelatedField(
-        queryset=Employee.objects.all(), write_only=True, required=False, allow_null=True
-    )
-
+    delivered_by_id = serializers.PrimaryKeyRelatedField(queryset=Employee.objects.all(), write_only=True, required=False, allow_null=True)
+    
     created_by = serializers.StringRelatedField(read_only=True)
     canceled_by = serializers.StringRelatedField(read_only=True)
+    
+    currency = serializers.StringRelatedField(read_only=True)
+    currency_id = serializers.PrimaryKeyRelatedField(queryset=Currency.objects.all(), write_only=True, source='currency')
 
+    warehouse = WarehouseSerializer(read_only=True)
+    warehouse_id = serializers.PrimaryKeyRelatedField(queryset=Warehouse.objects.all(), write_only=True, source='warehouse', required=False, allow_null=True)
+    
     items = SalesInvoiceItemSerializer(many=True)
-
+    
     class Meta:
         model = SalesInvoice
         fields = [
-            'id', 'buyer', 'buyer_id', 'delivered_by', 'delivered_by_id',
+            'id', 'status', 'currency', 'currency_id',
+            'buyer', 'buyer_id', 'delivered_by', 'delivered_by_id',
             'created_by', 'created_at', 'total_amount',
+            'note',
             'is_canceled', 'canceled_at', 'canceled_by', 'cancel_reason',
-            'items'
+            'items',
+            'warehouse', 'warehouse_id',
         ]
-
+    
     def validate(self, data):
         if data.get('is_canceled') and not data.get('cancel_reason'):
             raise serializers.ValidationError("При отмене накладной нужно указать причину отмены")
         return data
-
+    
     @transaction.atomic
     def create(self, validated_data):
         items_data = validated_data.pop('items', [])
-        buyer = validated_data.pop('buyer_id')
+        buyer = validated_data.pop('buyer')
         delivered_by = validated_data.pop('delivered_by_id', None)
+        currency = validated_data.pop('currency')
         user = self.context['request'].user
 
+        # Создаем накладную без вызова calculate_total
         invoice = SalesInvoice.objects.create(
             buyer=buyer,
             delivered_by=delivered_by,
+            currency=currency,
             created_by=user,
+            total_amount=0,  # временно 0
             **validated_data
         )
 
+        # Создаем все позиции
         for item in items_data:
             product = item.pop('product_id')
             SalesInvoiceItem.objects.create(
@@ -495,23 +508,32 @@ class SalesInvoiceSerializer(serializers.ModelSerializer):
                 product=product,
                 **item
             )
-        return invoice
 
+        # Обновляем total_amount после добавления всех позиций
+        invoice.total_amount = invoice.calculate_total()
+        invoice.save(update_fields=['total_amount'])
+
+        return invoice
+    
     @transaction.atomic
     def update(self, instance, validated_data):
         items_data = validated_data.pop('items', None)
-        buyer = validated_data.pop('buyer_id', None)
-        delivered_by = validated_data.pop('delivered_by_id', None)
-
+        buyer = validated_data.pop('buyer', None)
+        delivered_by = validated_data.pop('delivered_by', None)
+        currency = validated_data.pop('currency', None)
+        
         if buyer:
             instance.buyer = buyer
-        instance.delivered_by = delivered_by
-
+        if delivered_by is not None:
+            instance.delivered_by = delivered_by
+        if currency:
+            instance.currency = currency
+        
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
-
+        
         instance.save()
-
+        
         if items_data is not None:
             instance.items.all().delete()
             for item in items_data:
@@ -522,91 +544,6 @@ class SalesInvoiceSerializer(serializers.ModelSerializer):
                     **item
                 )
         return instance
-
-
-####################################################################
-# PurchaseReturnInvoice и Items
-####################################################################
-
-class PurchaseReturnItemSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True)
-    product_id = serializers.PrimaryKeyRelatedField(
-        queryset=Product.objects.all(), write_only=True
-    )
-    invoice = serializers.PrimaryKeyRelatedField(read_only=True)
-
-    class Meta:
-        model = PurchaseReturnItem
-        fields = ['id', 'product', 'product_id', 'quantity', 'purchase_price', 'invoice']
-
-    def validate_quantity(self, value):
-        if value <= 0:
-            raise serializers.ValidationError("Количество должно быть положительным")
-        return value
-
-
-class PurchaseReturnInvoiceSerializer(serializers.ModelSerializer):
-    original_invoice = PurchaseInvoiceSerializer(read_only=True)
-    original_invoice_id = serializers.PrimaryKeyRelatedField(
-        queryset=PurchaseInvoice.objects.all(), write_only=True, source='original_invoice'
-    )
-
-    created_by = serializers.StringRelatedField(read_only=True)
-    items = PurchaseReturnItemSerializer(many=True)
-
-    class Meta:
-        model = PurchaseReturnInvoice
-        fields = [
-            'id', 'original_invoice', 'original_invoice_id',
-            'created_by', 'created_at', 'reason', 'total_amount',
-            'items'
-        ]
-
-    @transaction.atomic
-    def create(self, validated_data):
-        items_data = validated_data.pop('items', [])
-        original_invoice = validated_data.pop('original_invoice')
-        user = self.context['request'].user
-
-        return_invoice = PurchaseReturnInvoice.objects.create(
-            original_invoice=original_invoice,
-            created_by=user,
-            **validated_data
-        )
-
-        for item in items_data:
-            product = item.pop('product_id')
-            PurchaseReturnItem.objects.create(
-                invoice=return_invoice,
-                product=product,
-                **item
-            )
-        return return_invoice
-
-    @transaction.atomic
-    def update(self, instance, validated_data):
-        items_data = validated_data.pop('items', None)
-        original_invoice = validated_data.pop('original_invoice', None)
-
-        if original_invoice:
-            instance.original_invoice = original_invoice
-
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-
-        instance.save()
-
-        if items_data is not None:
-            instance.items.all().delete()
-            for item in items_data:
-                product = item.pop('product_id')
-                PurchaseReturnItem.objects.create(
-                    invoice=instance,
-                    product=product,
-                    **item
-                )
-        return instance
-
 
 ####################################################################
 # SalesReturnInvoice и Items
@@ -690,8 +627,206 @@ class SalesReturnInvoiceSerializer(serializers.ModelSerializer):
                     **item
                 )
         return instance
+    
+####################################################################
+# SalesInvoice и Items START
+####################################################################
+############################################################################################################################################################################################################
+############################################################################################################################################################################################################
+############################################################################################################################################################################################################
+############################################################################################################################################################################################################
+############################################################################################################################################################################################################
+
+
+
+####################################################################
+# PurchaseReturnInvoice и Items
+####################################################################
+
+class PurchaseReturnItemSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+    product_id = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all(), write_only=True
+    )
+    invoice = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = PurchaseReturnItem
+        fields = ['id', 'product', 'product_id', 'quantity', 'purchase_price', 'invoice']
+
+    def validate_quantity(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Количество должно быть положительным")
+        return value
+
+
+class CurrencySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Currency
+        fields = ['id', 'code', 'name', 'symbol']
+    
+
+class PurchaseReturnInvoiceSerializer(serializers.ModelSerializer):
+    original_invoice = PurchaseInvoiceSerializer(read_only=True)
+    original_invoice_id = serializers.PrimaryKeyRelatedField(
+        queryset=PurchaseInvoice.objects.all(), write_only=True, source='original_invoice'
+    )
+
+    created_by = serializers.StringRelatedField(read_only=True)
+    items = PurchaseReturnItemSerializer(many=True)
+
+    class Meta:
+        model = PurchaseReturnInvoice
+        fields = [
+            'id', 'original_invoice', 'original_invoice_id',
+            'created_by', 'created_at', 'reason', 'total_amount',
+            'items'
+        ]
+
+    @transaction.atomic
+    def create(self, validated_data):
+        items_data = validated_data.pop('items', [])
+        original_invoice = validated_data.pop('original_invoice')
+        user = self.context['request'].user
+
+        return_invoice = PurchaseReturnInvoice.objects.create(
+            original_invoice=original_invoice,
+            created_by=user,
+            **validated_data
+        )
+
+        for item in items_data:
+            product = item.pop('product_id')
+            PurchaseReturnItem.objects.create(
+                invoice=return_invoice,
+                product=product,
+                **item
+            )
+        return return_invoice
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop('items', None)
+        original_invoice = validated_data.pop('original_invoice', None)
+
+        if original_invoice:
+            instance.original_invoice = original_invoice
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+
+        if items_data is not None:
+            instance.items.all().delete()
+            for item in items_data:
+                product = item.pop('product_id')
+                PurchaseReturnItem.objects.create(
+                    invoice=instance,
+                    product=product,
+                    **item
+                )
+        return instance
+
+
 
 ######################################################################################################################### Faktura END
+
+
+
+
+##################################################################################################################################################################################################################################################
+##################################################################################################################################################################################################################################################
+##################################################################################################################################################################################################################################################
+##################################################################################################################################################################################################################################################
+##################################################################################################################################################################################################################################################
+##################################################################################################################################################################################################################################################
+####################################################################################################################### Entries START
+
+class CurrencySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Currency
+        fields = '__all__'
+
+
+class CurrencyRateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CurrencyRate
+        fields = '__all__'
+
+
+class AccountSerializer(serializers.ModelSerializer):
+    currency = CurrencySerializer(read_only=True)
+    currency_id = serializers.PrimaryKeyRelatedField(
+        queryset=Currency.objects.all(),
+        source='currency',
+        write_only=True
+    )
+
+    class Meta:
+        model = Account
+        fields = ['id', 'number', 'name', 'type', 'currency', 'currency_id']
+
+# dlya wywoda date w EntrySerializer
+class TransactionSimpleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = ['id', 'date', 'description']
+
+
+class EntrySerializer(serializers.ModelSerializer):
+    account = AccountSerializer(read_only=True)
+    account_id = serializers.PrimaryKeyRelatedField(
+        queryset = Account.objects.all(), source='account', write_only=True
+    )
+
+    transaction_obj = TransactionSimpleSerializer(source='transaction', read_only=True)
+
+    class Meta:
+        model = Entry
+        fields = ['id', 'transaction', 'transaction_obj', 'account', 'account_id', 'debit', 'credit']
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    entries = EntrySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Transaction
+        fields = ['id', 'date', 'description', 'partner', 'entries']
+
+
+class EntryWriteSerializer(serializers.ModelSerializer):
+    account_id = serializers.PrimaryKeyRelatedField(
+        queryset=Account.objects.all(), source='account'
+    )
+
+    class Meta:
+        model = Entry
+        fields = ['account_id', 'debit', 'credit']
+
+
+class TransactionWriteSerializer(serializers.ModelSerializer):
+    entries = EntryWriteSerializer(many=True)
+
+    class Meta:
+        model = Transaction
+        fields = ['description', 'partner', 'entries']
+
+    def create(self, validated_data):
+        entries_data = validated_data.pop('entries')
+        transaction = Transaction.objects.create(**validated_data)
+        for entry_data in entries_data:
+            Entry.objects.create(transaction=transaction, **entry_data)
+        return transaction
+    
+####################################################################################################################### Entries END
+##################################################################################################################################################################################################################################################
+##################################################################################################################################################################################################################################################
+##################################################################################################################################################################################################################################################
+##################################################################################################################################################################################################################################################
+##################################################################################################################################################################################################################################################
+##################################################################################################################################################################################################################################################
+
 
 
 

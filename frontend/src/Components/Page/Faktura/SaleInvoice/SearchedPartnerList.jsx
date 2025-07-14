@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { myClass } from "../../../tailwindClasses";
 
 const SearchedPartnerList = ({
+  setSelectedPartnerId,
   filteredPartners,
   setFilteredPartners,
   resultPartenrRefs,
@@ -25,6 +26,7 @@ const SearchedPartnerList = ({
           onClick={() => {
             setSelectedPartner(p.name);
             setPartnerQuery(p.name);
+            setSelectedPartnerId(p.id)
             setTimeout(() => {
               setFilteredPartners("");
             }, 0);
@@ -48,6 +50,7 @@ const SearchedPartnerList = ({
               // e.target.innerHTML
               setSelectedPartner(p.name);
               setPartnerQuery(p.name);
+              setSelectedPartnerId(p.id)
               setTimeout(() => {
                 setFilteredPartners("");
               }, 0);

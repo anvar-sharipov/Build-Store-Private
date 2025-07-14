@@ -18,7 +18,7 @@ router.register(r'models', ModelViewSet)
 router.register(r'tags', TagViewSet)
 router.register(r'product-images', ProductImageViewSet)
 router.register(r'product-units', ProductUnitViewSet)
-router.register(r'warehouses', WarehouseViewSet)
+router.register(r'currencys', CurrencyViewSet)
 
 # faktura START
 router.register(r'purchase-invoices', PurchaseInvoiceViewSet, basename='purchaseinvoice')
@@ -26,6 +26,15 @@ router.register(r'sales-invoices', SalesInvoiceViewSet, basename='salesinvoice')
 router.register(r'purchase-return-invoices', PurchaseReturnInvoiceViewSet, basename='purchasereturninvoice')
 router.register(r'sales-return-invoices', SalesReturnInvoiceViewSet, basename='salesreturninvoice')
 # faktura END
+
+# Entries START
+router.register(r'accounts', AccountViewSet)
+router.register(r'transactions', TransactionViewSet)
+router.register(r'entries', EntryViewSet)
+router.register(r'warehouses', WarehouseViewSet)
+# router.register(r'currencies', CurrencyViewSet)
+router.register(r'currency-rates', CurrencyRateViewSet)
+# Entries START
 
 # path('groups/', GroupViewSet.as_view()),
 

@@ -5,6 +5,7 @@ import myAxios from "../../../axios";
 import MySearchInput from "../../../UI/MySearchInput";
 import SearchedProductList from "./SearchedProductList";
 import MyLoading from "../../../UI/MyLoading";
+import MyButton from "../../../UI/MyButton";
 import Fuse from "fuse.js";
 import { div } from "framer-motion/client";
 import { myClass } from "../../../tailwindClasses";
@@ -41,6 +42,7 @@ const AddSaleInvoicePage = () => {
   const [query, setQuery] = useState("");
   const [partnerQuery, setPartnerQuery] = useState("");
   const [warehouseQuery, setWarehouseQuery] = useState("");
+  const [currencyQuery, setCurrencyQuery] = useState("");
   const [awtoQuery, setAwtoQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
@@ -48,10 +50,12 @@ const AddSaleInvoicePage = () => {
   const inputRef = useRef(null);
   const searchPartnerInputRef = useRef(null);
   const searchWarehouseInputRef = useRef(null);
+  const searchCurrencyInputRef = useRef(null);
   const searchAwtoInputRef = useRef(null);
   const resultRefs = useRef([]);
   const resultPartenrRefs = useRef([]);
   const resultWarehouseRefs = useRef([]);
+  const resultCurrencyRefs = useRef([]);
   const resultAwtoRefs = useRef([]);
   const backBtn = useRef(null);
   const priceInputRefs = useRef({});
@@ -60,17 +64,28 @@ const AddSaleInvoicePage = () => {
   const [allPartners, setAllPartners] = useState([]);
   const [allWarehouses, setAllWarehouses] = useState([]);
   const [allAwto, setAllAwto] = useState([]);
+  const [allCurrency, setAllCurrency] = useState([]);
   const [filteredPartners, setFilteredPartners] = useState([]);
   const [filteredWarehouse, setFilteredWarehouse] = useState([]);
+  const [filteredCurrency, setFilteredCurrency] = useState([]);
   const [filteredAwto, setFilteredAwto] = useState([]);
   const [firstElementRef, setFirstElementRef] = useState(null);
   const [selectedPartner, setSelectedPartner] = useState("");
   const [selectedWarehouse, setSelectedWarehouse] = useState("");
+  const [selectedCurrency, setSelectedCurrency] = useState("");
   const [selectedAwto, setSelectedAwto] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState("");
 
+  // for json for save
+  // const [sendDataForSave, setSendDataForSave] = useState({});
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState(null);
+  const [selectedCurrencyId, setSelectedCurrencyId] = useState(null);
+  const [selectedAwtoId, setSelectedAwtoId] = useState(null);
+  const [selectedPartnerId, setSelectedPartnerId] = useState(null);
+
   // chtoby pri awtowstawke perwogo sklada w inpt ne wywodilsya wsplywayusheesya okno
   const [isAutoSelect, setIsAutoSelect] = useState(true);
+  const [isAutoSelectCurrency, setIsAutoSelectCurrency] = useState(true);
 
   const [notification, setNotification] = useState({ message: "", type: "" });
   const showNotification = (message, type) => {
@@ -215,6 +230,47 @@ const AddSaleInvoicePage = () => {
     setFilteredPartners(matched);
   }, [partnerQuery, allPartners]);
 
+  // get all currency (valuta) START
+  useEffect(() => {
+    async function fetchCurrencys() {
+      try {
+        const res = await myAxios.get("currencys/");
+        setAllCurrency(res.data);
+      } catch (error) {
+        console.error("Ошибка при загрузке valyut", error);
+      }
+    }
+    fetchCurrencys();
+  }, []);
+  useEffect(() => {
+    if (allCurrency.length > 0) {
+      setSelectedCurrency(
+        `${allCurrency[0].code} ${allCurrency[0].name} ${allCurrency[0].symbol}`
+      );
+      setCurrencyQuery(
+        `${allCurrency[0].code} ${allCurrency[0].name} ${allCurrency[0].symbol}`
+      );
+      setSelectedCurrencyId(allCurrency[0].id);
+      setIsAutoSelectCurrency(true); // это автоматическая установка
+      setFilteredCurrency([]);
+    }
+  }, [allCurrency]);
+
+  const fuseCurrency = new Fuse(allCurrency, {
+    keys: ["name", "code", "symbol"],
+    threshold: 0.3,
+  });
+  useEffect(() => {
+    if (!currencyQuery || isAutoSelectCurrency) {
+      setFilteredCurrency([]);
+      return;
+    }
+    const currencyResults = fuseCurrency.search(currencyQuery);
+    const matched = currencyResults.map((result) => result.item);
+    setFilteredCurrency(matched);
+  }, [currencyQuery, allCurrency]);
+  // get all currency (valuta) END
+
   // get all partners
   useEffect(() => {
     async function fetchPartners() {
@@ -245,6 +301,7 @@ const AddSaleInvoicePage = () => {
     if (allWarehouses.length > 0) {
       setSelectedWarehouse(allWarehouses[0].name);
       setWarehouseQuery(allWarehouses[0].name);
+      setSelectedWarehouseId(allWarehouses[0].id);
       setIsAutoSelect(true); // это автоматическая установка
       setFilteredWarehouse([]);
     }
@@ -311,6 +368,44 @@ const AddSaleInvoicePage = () => {
     );
   }
 
+  const handleSaveInvoice = async () => {
+    const items = invoiceTable.map((item) => {
+      let productId;
+      if (typeof item.id === "string" && item.id.includes("-gift-")) {
+        productId = parseInt(item.id.split("-gift-")[0]);
+      } else {
+        productId = parseInt(item.id);
+      }
+      return {
+        product_id: productId,
+        quantity: item.selected_quantity,
+        sale_price: item.wholesale_price_1pc,
+      };
+    });
+
+    const dataToSend = {
+      buyer_id: selectedPartnerId,
+      currency_id: selectedCurrencyId,
+      status: "draft",
+      warehouse_id: selectedWarehouseId,
+      delivered_by_id: selectedAwtoId,
+      items: items,
+    };
+
+    console.log('dataToSend', dataToSend);
+    
+
+    try {
+      const res = await myAxios.post("sales-invoices/", dataToSend);
+      console.log("Успешно сохранено:", res.data);
+    } catch (error) {
+      console.error("Ошибка при сохранении:", error);
+    }
+
+    // // (опционально) сохранить в стейт
+    // setSendDataForSave(dataToSend);
+  };
+
   return (
     <div className="p-4 w-full mx-auto">
       <div className="flex justify-between items-center mb-4 print:border-b print:border-gray-700">
@@ -343,8 +438,101 @@ const AddSaleInvoicePage = () => {
         </SmartTooltip>
       </div>
 
+      {/* search currency */}
+      <div
+        tabIndex={-1}
+        onBlur={(e) => {
+          // Проверим, ушёл ли фокус с блока и его дочерних элементов
+          if (!e.currentTarget.contains(e.relatedTarget)) {
+            setFilteredCurrency([]);
+          }
+        }}
+      >
+        <div className="flex items-center gap-2 print:hidden">
+          <div className="flex-grow">
+            <MySearchInput
+              placeholder="Поиск walyut..."
+              id="currency-search"
+              value={currencyQuery}
+              ref={searchCurrencyInputRef}
+              autoComplete="off"
+              onChange={(e) => setCurrencyQuery(e.target.value)}
+              onKeyDown={(e) => {
+                setIsAutoSelectCurrency(false);
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  if (filteredCurrency.length > 0) {
+                    resultCurrencyRefs.current[0]?.focus();
+                  } else {
+                    searchWarehouseInputRef.current?.focus();
+                    searchWarehouseInputRef.current?.select();
+                  }
+                }
+              }}
+            />
+          </div>
+          <label
+            htmlFor="partner-search"
+            className="block font-semibold text-gray-700 dark:text-gray-400 mb-1 w-24"
+          >
+            Walyuta
+          </label>
+        </div>
+        <div className="ml-20">
+          {filteredCurrency.length > 0 && (
+            <div className="absolute bg-gray-300 p-2 mt-1 border border-gray-500 rounded-md dark:bg-gray-700 z-20">
+              <ul className="print:hidden">
+                {filteredCurrency.map((p, index) => (
+                  <li
+                    className={myClass.li}
+                    key={p.id}
+                    ref={(el) => (resultCurrencyRefs.current[index] = el)}
+                    tabIndex={0}
+                    onClick={() => {
+                      setSelectedCurrency(`${p.code} ${p.name} ${p.symbol}`);
+                      setCurrencyQuery(`${p.code} ${p.name} ${p.symbol}`);
+                      setTimeout(() => {
+                        setFilteredCurrency("");
+                      }, 0);
+                      searchWarehouseInputRef.current?.focus();
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key == "ArrowUp") {
+                        e.preventDefault();
+                        if (index === 0) {
+                          searchCurrencyInputRef.current?.focus();
+                        } else {
+                          resultCurrencyRefs.current[index - 1]?.focus();
+                        }
+                      } else if (e.key == "ArrowDown") {
+                        e.preventDefault();
+                        if (index + 1 < filteredCurrency.length) {
+                          resultCurrencyRefs.current[index + 1]?.focus();
+                        }
+                      } else if (e.key === "Enter") {
+                        e.preventDefault();
+                        setSelectedCurrency(`${p.code} ${p.name} ${p.symbol}`);
+                        setCurrencyQuery(`${p.code} ${p.name} ${p.symbol}`);
+                        setSelectedCurrencyId(p.id);
+                        setTimeout(() => {
+                          setFilteredCurrency("");
+                        }, 0);
+                        searchWarehouseInputRef.current?.focus();
+                      }
+                    }}
+                  >
+                    {p.code} {p.name} {p.symbol}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* search warehouse */}
       <div
+        className="mt-2"
         tabIndex={-1}
         onBlur={(e) => {
           // Проверим, ушёл ли фокус с блока и его дочерних элементов
@@ -372,6 +560,9 @@ const AddSaleInvoicePage = () => {
                     searchAwtoInputRef.current?.focus();
                     searchAwtoInputRef.current?.select();
                   }
+                } else if (e.key === "ArrowUp") {
+                  searchCurrencyInputRef.current?.focus();
+                  searchCurrencyInputRef.current?.select();
                 }
               }}
             />
@@ -396,6 +587,7 @@ const AddSaleInvoicePage = () => {
                     onClick={() => {
                       setSelectedWarehouse(p.name);
                       setWarehouseQuery(p.name);
+                      setSelectedWarehouseId(p.id);
                       setTimeout(() => {
                         setFilteredWarehouse("");
                       }, 0);
@@ -418,6 +610,7 @@ const AddSaleInvoicePage = () => {
                         e.preventDefault();
                         setSelectedWarehouse(p.name);
                         setWarehouseQuery(p.name);
+                        setSelectedWarehouseId(p.id);
                         setTimeout(() => {
                           setFilteredWarehouse("");
                         }, 0);
@@ -490,6 +683,7 @@ const AddSaleInvoicePage = () => {
                     onClick={() => {
                       setSelectedAwto(p.name);
                       setAwtoQuery(p.name);
+                      setSelectedAwtoId(p.id);
                       setTimeout(() => {
                         setFilteredAwto("");
                       }, 0);
@@ -512,6 +706,7 @@ const AddSaleInvoicePage = () => {
                         e.preventDefault();
                         setSelectedAwto(p.name);
                         setAwtoQuery(p.name);
+                        setSelectedAwtoId(p.id);
                         setTimeout(() => {
                           setFilteredAwto("");
                         }, 0);
@@ -577,6 +772,7 @@ const AddSaleInvoicePage = () => {
           {filteredPartners.length > 0 && (
             <div className="absolute bg-gray-300 p-2 mt-1 border border-gray-500 rounded-md dark:bg-gray-700 z-20">
               <SearchedPartnerList
+                setSelectedPartnerId={setSelectedPartnerId}
                 filteredPartners={filteredPartners}
                 setFilteredPartners={setFilteredPartners}
                 resultPartenrRefs={resultPartenrRefs}
@@ -744,6 +940,10 @@ const AddSaleInvoicePage = () => {
           {selectedAwto}
         </div>
       )}
+
+      <MyButton variant="blue" onClick={handleSaveInvoice}>
+        Save
+      </MyButton>
     </div>
   );
 };

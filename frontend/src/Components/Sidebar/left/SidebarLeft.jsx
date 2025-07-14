@@ -69,6 +69,8 @@ export default function SidebarLeft() {
           { to: ROUTES.EMPLOYEERS, label: t("employeers"), key: "F3" },
           { to: ROUTES.PARTNERS, label: t("partners"), key: "F4" },
           { to: ROUTES.AGENTS, label: t("agents"), key: "F5" },
+          { to: ROUTES.ENTRIES, label: t("entries"), key: "F6" },
+          { to: ROUTES.ACCOUNT, label: t("account"), key: "F7" },
         ].map(({ to, label, key }) => (
           <li
             key={to}
@@ -107,7 +109,12 @@ export default function SidebarLeft() {
                 {
                   to: ROUTES_RAPORT.PRICE_CHANGE_REPORT,
                   label: t("PRICE_CHANGE_REPORT"),
-                  key: "F6",
+                  key: "none",
+                },
+                {
+                  to: ROUTES_RAPORT.ACCOUNT_REPORTS,
+                  label: t("ACCOUNT_REPORTS"),
+                  key: "none2",
                 },
               ].map(({ to, label, key }) => (
                 <li

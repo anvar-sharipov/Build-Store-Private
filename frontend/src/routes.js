@@ -6,8 +6,11 @@ export const ROUTES = {
   PARTNERS: "/partners",
   EMPLOYEERS: "/employers",
   AGENTS: "/agents",
+  ENTRIES: "/entries",
+  ACCOUNT: "/account",
 };
 
 export const ROUTES_RAPORT = {
   PRICE_CHANGE_REPORT: "/report/price-changes",
+  ACCOUNT_REPORTS: "/report/accounts",
 };

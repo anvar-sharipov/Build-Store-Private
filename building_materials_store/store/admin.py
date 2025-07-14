@@ -290,9 +290,9 @@ class PurchaseInvoiceAdmin(admin.ModelAdmin):
 class SalesInvoiceAdmin(admin.ModelAdmin):
     list_display = [
         'id', 'buyer', 'delivered_by', 'created_by', 'created_at', 'total_amount',
-        'is_canceled', 'canceled_at', 'canceled_by', 'cancel_reason'
+        'is_canceled', 'canceled_at', 'canceled_by', 'cancel_reason', 'status'
     ]
-    list_filter = ['is_canceled', 'buyer', 'delivered_by', 'created_at']
+    list_filter = ['is_canceled', 'buyer', 'delivered_by', 'created_at', 'status']
     search_fields = ['id', 'buyer__name', 'created_by__username', 'cancel_reason']
     autocomplete_fields = ['buyer', 'delivered_by', 'created_by', 'canceled_by']
     readonly_fields = ['total_amount', 'created_at', 'canceled_at']
@@ -345,3 +345,56 @@ class SalesReturnInvoiceAdmin(admin.ModelAdmin):
 
 
 ############################################################################################################## Fakturalar END
+
+
+############################################################################################################## Accounts START
+@admin.register(Currency)
+class CurrencyAdmin(admin.ModelAdmin):
+    list_display = ('code', 'name', 'symbol')
+    search_fields = ('code', 'name')
+    ordering = ('code',)
+
+
+@admin.register(CurrencyRate)
+class CurrencyRateAdmin(admin.ModelAdmin):
+    list_display = ('currency', 'rate', 'date')            # Отображаемые колонки
+    list_filter = ('currency', 'date')                     # Фильтры справа
+    search_fields = ('currency__code',)                    # Поиск по коду валюты
+    ordering = ('-date',)                                  # Сортировка по дате (сначала новые)
+    date_hierarchy = 'date'                                # Навигация по датам
+    list_per_page = 25                                     # Пагинация
+
+
+@admin.register(Account)
+class AccountAdmin(admin.ModelAdmin):
+    list_display = ('number', 'name', 'type', 'currency')
+    list_filter = ('type', 'currency')
+    search_fields = ('number', 'name')
+    ordering = ('number',)
+
+
+class EntryInline(admin.TabularInline):
+    model = Entry
+    extra = 0
+    readonly_fields = ('account', 'debit', 'credit')
+    can_delete = False
+
+
+@admin.register(Transaction)
+class TransactionAdmin(admin.ModelAdmin):
+    list_display = ('date', 'description', 'partner')
+    list_filter = ('partner',)
+    search_fields = ('description', 'partner__name')
+    date_hierarchy = 'date'
+    ordering = ('-date',)
+    inlines = [EntryInline]
+    readonly_fields = ('date',)
+
+
+@admin.register(Entry)
+class EntryAdmin(admin.ModelAdmin):
+    list_display = ('transaction', 'account', 'debit', 'credit')
+    list_filter = ('account__type', 'account__currency')
+    search_fields = ('transaction__description', 'account__name', 'account__number')
+    ordering = ('-transaction__date',)
+############################################################################################################## Accounts END

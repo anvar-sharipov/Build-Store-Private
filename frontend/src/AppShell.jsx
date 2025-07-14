@@ -13,6 +13,9 @@ import Agent from "./Components/Page/Agent/Agent";
 import PriceChangeReport from "./Components/Page/Reports/PriceChangeReport/PriceChangeReport";
 import AddPurchaseInvoicePage from "./Components/Page/Faktura/PuchaseInvoice/AddPurchaseInvoicePage";
 import AddSaleInvoicePage from "./Components/Page/Faktura/SaleInvoice/AddSaleInvoicePage";
+import Entries from "./Components/Page/Entries/Entries";
+import Account from "./Components/Page/Account/Account";
+import AccountReports from "./Components/Page/Reports/Accounts/AccountReport/AccountReports";
 
 
 import { AuthProvider } from "./AuthContext";
@@ -45,9 +48,15 @@ function AppShell() {
                 <Route path={ROUTES.EMPLOYEERS} element={<Employee />} />
                 <Route path={ROUTES.PARTNERS} element={<Partner />} />
                 <Route path={ROUTES.AGENTS} element={<Agent />} />
+                <Route path={ROUTES.ENTRIES} element={<Entries />} />
+                <Route path={ROUTES.ACCOUNT} element={<Account />} />
                 <Route
                   path={ROUTES_RAPORT.PRICE_CHANGE_REPORT}
                   element={<PriceChangeReport />}
+                />
+                <Route
+                  path={ROUTES_RAPORT.ACCOUNT_REPORTS}
+                  element={<AccountReports />}
                 />
               </Routes>
             </section>

@@ -24,7 +24,7 @@ const SearchedPartnerList = ({
           ref={(el) => (resultPartenrRefs.current[index] = el)}
           tabIndex={0}
           onClick={() => {
-            setSelectedPartner(p.name);
+            setSelectedPartner(p);
             setPartnerQuery(p.name);
             setSelectedPartnerId(p.id)
             setTimeout(() => {
@@ -48,7 +48,7 @@ const SearchedPartnerList = ({
             } else if (e.key === "Enter") {
               e.preventDefault();
               // e.target.innerHTML
-              setSelectedPartner(p.name);
+              setSelectedPartner(p);
               setPartnerQuery(p.name);
               setSelectedPartnerId(p.id)
               setTimeout(() => {

@@ -4,6 +4,8 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from decimal import Decimal
 from django.utils import timezone
+from django.db.models import Sum
+
 
 
 
@@ -391,29 +393,27 @@ class Partner(models.Model):
 
     name = models.CharField(verbose_name='Partneryn ady', max_length=2000)
     # СВЯЗЬ С AGENT
-    agent = models.ForeignKey(
-        'Agent',
-        on_delete=models.PROTECT,  # или CASCADE, если хочешь удалять партнёра при удалении агента
-        null=True,
-        blank=True,
-        verbose_name='Agent'
+    agent = models.ForeignKey('Agent', on_delete=models.PROTECT, null=True, blank=True, verbose_name='Agent'
     )
-    type = models.CharField(
-        max_length=20,
-        choices=PARTNER_TYPE_CHOICES,
-        default=SUPPLIER,
-        verbose_name='Partneriň görnüşi',
-    )
+    type = models.CharField(max_length=20, choices=PARTNER_TYPE_CHOICES, default=SUPPLIER, verbose_name='Partneriň görnüşi',)
 
-    balance = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        default=Decimal('0.00'),
-        verbose_name='Balans (deb/kred)'
-    )
+    balance = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), verbose_name='Balans (deb/kred)')
 
     def __str__(self):
         return f'{self.name} ({self.get_type_display()})'
+    
+
+    # @property
+    # def current_balance(self):
+    #     # Считаем обороты по дебету и кредиту партнёра до даты накладной (включительно)
+    #     entries = Entry.objects.filter(transaction__partner=self, transaction__date__lte=timezone.now())
+
+    #     debit_sum = entries.aggregate(total_debit=Sum('debit'))['total_debit'] or Decimal('0')
+    #     credit_sum = entries.aggregate(total_credit=Sum('credit'))['total_credit'] or Decimal('0')
+
+    #     balance = debit_sum - credit_sum
+    #     return balance
+
 
     class Meta:
         verbose_name = 'Partner'
@@ -525,7 +525,14 @@ class SalesInvoice(models.Model):  # накладная по продаже
     STATUS_CHOICES = [
         ('draft', 'Черновик'),
         ('confirmed', 'Подтверждена'),
-        ('canceled', 'Отменена'),
+    ]
+
+
+    ENTRY_TYPE_CHOICES = [
+        ('none', 'Не указано'),
+        ('shipment', 'Отгрузка'),
+        ('payment', 'Оплата'),
+        ('both', 'Отгрузка и оплата'),
     ]
 
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft', verbose_name='Статус')
@@ -537,10 +544,7 @@ class SalesInvoice(models.Model):  # накладная по продаже
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"), verbose_name='Общая сумма')
     delivered_by = models.ForeignKey('Employee', on_delete=models.PROTECT, verbose_name='Доставил', null=True, blank=True)
     note = models.TextField(null=True, blank=True, verbose_name='Примечание')
-    is_canceled = models.BooleanField(default=False, verbose_name='Отменена?')
-    canceled_at = models.DateTimeField(null=True, blank=True, verbose_name='Дата отмены')
-    canceled_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='canceled_sales_invoices', verbose_name='Кем отменена')
-    cancel_reason = models.TextField(null=True, blank=True, verbose_name='Причина отмены')
+    entry_type = models.CharField(max_length=10, choices=ENTRY_TYPE_CHOICES, verbose_name="Тип проводки", default='none')
 
     class Meta:
         verbose_name = 'Расходная накладная'
@@ -574,6 +578,21 @@ class SalesInvoice(models.Model):  # накладная по продаже
             item.product.quantity += item.quantity
             item.product.save()
 
+    # @property
+    # def partner_balance(self):
+
+    #     # Считаем обороты по дебету и кредиту партнёра до даты накладной (включительно)
+    #     entries = Entry.objects.filter(
+    #         transaction__partner=self.buyer,
+    #         transaction__date__lte=self.created_at
+    #     )
+
+    #     debit_sum = entries.aggregate(total_debit=Sum('debit'))['total_debit'] or Decimal('0')
+    #     credit_sum = entries.aggregate(total_credit=Sum('credit'))['total_credit'] or Decimal('0')
+
+    #     balance = debit_sum - credit_sum
+    #     return balance
+
 
 class SalesInvoiceItem(models.Model): # spisok productow w prodaja nakladnoy
     invoice = models.ForeignKey( # kakaya nakladnaya
@@ -595,49 +614,10 @@ class SalesInvoiceItem(models.Model): # spisok productow w prodaja nakladnoy
         if created and self.quantity > self.product.quantity:
             raise ValidationError(f"Недостаточно товара на складе: {self.product.name}")
         super().save(*args, **kwargs)
-        if created and not self.invoice.is_canceled:
-            self.product.quantity -= self.quantity
-            self.product.save()
 
 
-######################################################################## Возврат по продаже START
-class SalesReturnInvoice(models.Model):
-    original_invoice = models.ForeignKey(SalesInvoice, on_delete=models.PROTECT, related_name='returns')
-    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
-    created_at = models.DateTimeField(auto_now_add=True)
-    reason = models.TextField(null=True, blank=True)
-    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
-
-    def calculate_total(self):
-        return sum(item.get_line_total() for item in self.items.all())
-
-    def save(self, *args, **kwargs):
-        self.total_amount = self.calculate_total()
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"Возврат к продаже №{self.original_invoice.id}"
 
 
-class SalesReturnItem(models.Model):
-    invoice = models.ForeignKey(SalesReturnInvoice, on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey('Product', on_delete=models.PROTECT)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2)
-    sale_price = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def get_line_total(self):
-        quantity = self.quantity or 0
-        sale_price = self.sale_price or 0
-        return quantity * sale_price
-
-
-    def save(self, *args, **kwargs):
-        created = self.pk is None
-        super().save(*args, **kwargs)
-        if created:
-            self.product.quantity += self.quantity
-            self.product.save()
-######################################################################## Возврат по продаже END
 ######################################################################## Расходная накладная (faktura) END
 ########################################################################################################################################################################################################################
 ########################################################################################################################################################################################################################
@@ -776,6 +756,7 @@ class Account(models.Model):
 class Transaction(models.Model):
     description = models.TextField(verbose_name='Описание операции')
     date = models.DateTimeField(auto_now_add=True, verbose_name='Дата операции')
+    invoice = models.ForeignKey(SalesInvoice, null=True, blank=True, on_delete=models.SET_NULL)
     partner = models.ForeignKey(Partner, null=True, blank=True, on_delete=models.SET_NULL, verbose_name='Партнер')
 
     def __str__(self):
@@ -791,6 +772,8 @@ class Transaction(models.Model):
 class Entry(models.Model):
     transaction = models.ForeignKey(Transaction, related_name='entries', on_delete=models.CASCADE, verbose_name='Операция')
     account = models.ForeignKey(Account, on_delete=models.PROTECT, verbose_name='Счет')
+    product = models.ForeignKey('Product', null=True, blank=True, on_delete=models.SET_NULL)
+    warehouse = models.ForeignKey('Warehouse', null=True, blank=True, on_delete=models.SET_NULL)
     debit = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), verbose_name='Дебет')
     credit = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), verbose_name='Кредит')
 

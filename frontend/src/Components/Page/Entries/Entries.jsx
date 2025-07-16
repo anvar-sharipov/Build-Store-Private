@@ -109,6 +109,8 @@ const Entries = () => {
 
     // Отправка
     try {
+      console.log('newTx', newTx);
+      
       await myAxios.post('/transactions/', newTx)
       alert('Проводка создана')
       setNewTx({

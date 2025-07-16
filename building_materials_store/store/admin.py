@@ -240,15 +240,15 @@ class PurchaseReturnItemInline(admin.TabularInline):
     line_total.short_description = 'Сумма'
 
 
-class SalesReturnItemInline(admin.TabularInline):
-    model = SalesReturnItem
-    extra = 1
-    autocomplete_fields = ['product']
-    readonly_fields = ['line_total']
+# class SalesReturnItemInline(admin.TabularInline):
+#     model = SalesReturnItem
+#     extra = 1
+#     autocomplete_fields = ['product']
+#     readonly_fields = ['line_total']
 
-    def line_total(self, obj):
-        return obj.get_line_total()
-    line_total.short_description = 'Сумма'
+#     def line_total(self, obj):
+#         return obj.get_line_total()
+#     line_total.short_description = 'Сумма'
 
 
 ######################### Admin для приходной накладной ##############################
@@ -289,34 +289,13 @@ class PurchaseInvoiceAdmin(admin.ModelAdmin):
 @admin.register(SalesInvoice)
 class SalesInvoiceAdmin(admin.ModelAdmin):
     list_display = [
-        'id', 'buyer', 'delivered_by', 'created_by', 'created_at', 'total_amount',
-        'is_canceled', 'canceled_at', 'canceled_by', 'cancel_reason', 'status'
+        'id', 'buyer', 'delivered_by', 'created_by', 'created_at', 'total_amount', 'entry_type'
     ]
-    list_filter = ['is_canceled', 'buyer', 'delivered_by', 'created_at', 'status']
-    search_fields = ['id', 'buyer__name', 'created_by__username', 'cancel_reason']
-    autocomplete_fields = ['buyer', 'delivered_by', 'created_by', 'canceled_by']
-    readonly_fields = ['total_amount', 'created_at', 'canceled_at']
+    list_filter = ['buyer', 'delivered_by', 'created_at', 'status', 'entry_type']
+    search_fields = ['id', 'buyer__name', 'created_by__username']
+    autocomplete_fields = ['buyer', 'delivered_by', 'created_by']
+    readonly_fields = ['total_amount', 'created_at']
     inlines = [SalesInvoiceItemInline]
-
-    actions = ['cancel_selected_invoices']
-
-    @admin.action(description="Отменить выбранные накладные")
-    def cancel_selected_invoices(self, request, queryset):
-        canceled_count = 0
-        for invoice in queryset:
-            if not invoice.is_canceled:
-                invoice.is_canceled = True
-                invoice.canceled_at = now()
-                invoice.canceled_by = request.user
-                invoice.cancel_reason = "Отменено через админку"
-                try:
-                    invoice.full_clean()
-                    invoice.save()
-                    canceled_count += 1
-                except ValidationError as e:
-                    self.message_user(request, f"Ошибка отмены накладной {invoice.id}: {e}", level='error')
-        self.message_user(request, f"Отменено накладных: {canceled_count}")
-
 ######################### Admin для возврата по приходу ##############################
 
 @admin.register(PurchaseReturnInvoice)
@@ -332,16 +311,16 @@ class PurchaseReturnInvoiceAdmin(admin.ModelAdmin):
 
 ######################### Admin для возврата по продаже ##############################
 
-@admin.register(SalesReturnInvoice)
-class SalesReturnInvoiceAdmin(admin.ModelAdmin):
-    list_display = [
-        'id', 'original_invoice', 'created_by', 'created_at', 'total_amount', 'reason'
-    ]
-    list_filter = ['created_at', 'original_invoice__buyer']
-    search_fields = ['id', 'original_invoice__id', 'created_by__username', 'reason']
-    autocomplete_fields = ['original_invoice', 'created_by']
-    readonly_fields = ['total_amount', 'created_at']
-    inlines = [SalesReturnItemInline]
+# @admin.register(SalesReturnInvoice)
+# class SalesReturnInvoiceAdmin(admin.ModelAdmin):
+#     list_display = [
+#         'id', 'original_invoice', 'created_by', 'created_at', 'total_amount', 'reason'
+#     ]
+#     list_filter = ['created_at', 'original_invoice__buyer']
+#     search_fields = ['id', 'original_invoice__id', 'created_by__username', 'reason']
+#     autocomplete_fields = ['original_invoice', 'created_by']
+#     readonly_fields = ['total_amount', 'created_at']
+#     inlines = [SalesReturnItemInline]
 
 
 ############################################################################################################## Fakturalar END

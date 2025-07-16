@@ -6,6 +6,7 @@ from openpyxl.utils import get_column_letter
 from icecream import ic
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
+from collections import OrderedDict
 
 
 from rest_framework import viewsets, status, filters
@@ -32,6 +33,7 @@ from django.db.models import Sum, F, Count
 from openpyxl.styles import Font
 from rest_framework.exceptions import PermissionDenied
 from django.db import transaction
+from datetime import datetime
 
 from rest_framework.pagination import PageNumberPagination
 # swoy pagination 
@@ -132,8 +134,37 @@ class ProductViewSet(viewsets.ModelViewSet):
 
 
 
+class PartnerEntriesView(APIView):
+    
+    def get(self, request, partner_id):
+        entries = Entry.objects.filter(transaction__partner_id=partner_id).order_by('transaction__date', 'id')
+
+        running_balance = Decimal('0.00')
+        result = []
+
+        for entry in entries:
+            entry_data = EntrySerializer(entry).data
+
+            debit = Decimal(entry_data.get('debit') or '0')
+            credit = Decimal(entry_data.get('credit') or '0')
+
+            account_number = entry_data['account']['number']
+            # print('account_number', account_number)
+
+            # Считаем сальдо только по счету покупателя 62.*
+            if account_number.startswith('62'):
+                running_balance += debit - credit
+                print('running_balance', running_balance)
+                entry_data['running_balance'] = str(running_balance)
+            else:
+                entry_data['running_balance'] = ''  # или None
+
+            result.append(entry_data)
+
+        print('running_balance', running_balance)
 
 
+        return Response(result)
 
 
 class PartnerViewSet(viewsets.ModelViewSet):
@@ -882,9 +913,12 @@ class PurchaseInvoiceViewSet(viewsets.ModelViewSet):
     
 
 class SalesInvoiceViewSet(viewsets.ModelViewSet):
+    
+
     queryset = SalesInvoice.objects.all()  # ОБЯЗАТЕЛЬНО
     serializer_class = SalesInvoiceSerializer
     permission_classes = [IsAuthenticated]
+
 
     def get_queryset(self):
         return SalesInvoice.objects.select_related(
@@ -928,18 +962,18 @@ class PurchaseReturnInvoiceViewSet(viewsets.ModelViewSet):
         serializer.save(created_by=self.request.user)
 
 
-class SalesReturnInvoiceViewSet(viewsets.ModelViewSet):
-    queryset = SalesReturnInvoice.objects.all()  # ОБЯЗАТЕЛЬНО
-    serializer_class = SalesReturnInvoiceSerializer
-    permission_classes = [IsAuthenticated]
+# class SalesReturnInvoiceViewSet(viewsets.ModelViewSet):
+#     queryset = SalesReturnInvoice.objects.all()  # ОБЯЗАТЕЛЬНО
+#     serializer_class = SalesReturnInvoiceSerializer
+#     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return SalesReturnInvoice.objects.select_related(
-            'original_invoice', 'created_by'
-        ).prefetch_related('items__product').all()
+#     def get_queryset(self):
+#         return SalesReturnInvoice.objects.select_related(
+#             'original_invoice', 'created_by'
+#         ).prefetch_related('items__product').all()
 
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+#     def perform_create(self, serializer):
+#         serializer.save(created_by=self.request.user)
 
 
 ######################################################################################################################### Faktura END

@@ -6,8 +6,111 @@ from rest_framework.generics import ListAPIView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.db import transaction
+from datetime import datetime
+from django.db.models import Sum
 
 User = get_user_model()
+
+
+# dlya sozdaniya prowodok pri rashodnoy naklodnoy
+def create_transaction_for_invoice(invoice: SalesInvoice, total_pay_summ):
+    if not invoice.entry_type:
+        return  # Накладная не требует проводки
+    
+    # partner_id = 25  # ID партнёра
+    # currency_code = 'USD'
+    # start_date = datetime(2025, 1, 1)
+    # end_date = datetime(2025, 7, 17)
+
+    # entries = Entry.objects.filter(
+    #     transaction__partner_id=partner_id,
+    #     transaction__date__range=(start_date, end_date),
+    #     account__currency__code=currency_code,
+    # )
+
+    # total_debit = entries.aggregate(Sum('debit'))['debit__sum'] or 0
+    # total_credit = entries.aggregate(Sum('credit'))['credit__sum'] or 0
+
+    # print(f"Оборот по дебету: {total_debit}")
+    # print(f"Оборот по кредиту: {total_credit}")
+
+    # return
+
+    description_map = {
+        'shipment': f"Отгрузка товара по накладной №{invoice.id}",
+        'payment': f"Оплата по накладной №{invoice.id}",
+        'both': f"Отгрузка и оплата по накладной №{invoice.id}"
+    }
+    
+    # # description = description_map[invoice.entry_type]
+    # description = description_map.get(invoice.entry_type)
+    if invoice.entry_type not in ['shipment', 'payment', 'both']:
+        return
+    
+    description = description_map[invoice.entry_type]
+
+    # Если есть примечание — добавим его в скобках
+    if invoice.note:
+        description += f" (Примечание: {invoice.note})"
+
+    currency = Currency.objects.get(pk=invoice.currency_id)
+    # print('invoice.currency', invoice.currency)
+    # print('invoice.entry_type', invoice.entry_type, type(invoice.entry_type))
+    # print('description', description)
+    # print('invoice.entry_type', invoice.entry_type)
+
+
+    transaction = Transaction.objects.create(
+        description=description,
+        invoice=invoice,
+        partner=invoice.buyer,
+    )
+
+    
+    
+    # Счета для операций — должны быть настроены в системе заранее
+    # Пример (нужно адаптировать под твои реальные счета)
+    if currency.code == "USD":
+        account_goods = Account.objects.get(number='41.1')  # складские товары (актив)
+        account_income = Account.objects.get(number='90.1')  # доход от продаж
+        account_cash = Account.objects.get(number='50.1')  # касса или расчетный счет (актив)
+        account_client = Account.objects.get(number='62.1')
+    else:
+        account_goods = Account.objects.get(number='41.2')  # складские товары (актив)
+        account_income = Account.objects.get(number='90.2')  # доход от продаж
+        account_cash = Account.objects.get(number='50.2')  # касса или расчетный счет (актив)
+        account_client = Account.objects.get(number='62.2')
+    
+    total = invoice.total_amount
+    print('total_pay_summ', total_pay_summ)
+
+    if invoice.entry_type == 'shipment':
+        # Отгрузка товара: списание со склада (кредит) и уменьшение активов
+        Entry.objects.create(transaction=transaction, account=account_goods, debit=0, credit=total)
+        # Пример: можно тут ещё делать проводку по себестоимости и доходу, если есть учет
+        # Списание товаров со склада (кредит 41)
+        Entry.objects.create(transaction=transaction, account=account_client, debit=total_pay_summ, credit=0)
+
+    elif invoice.entry_type == 'payment':
+        # Оплата: поступление денег (дебет), увеличение денег в кассе/банке
+        Entry.objects.create(transaction=transaction, account=account_cash, debit=total_pay_summ, credit=0)  # деньги пришли
+        Entry.objects.create(transaction=transaction, account=account_client, debit=0, credit=total_pay_summ)  # гасим долг клиента
+
+    if invoice.entry_type == 'both':
+        # 1. Признание дохода
+        Entry.objects.create(transaction=transaction, account=account_income, debit=0, credit=total)
+
+        # 2. Списание товара
+        Entry.objects.create(transaction=transaction, account=account_goods, debit=0, credit=total)
+
+        # 3. Клиент должен нам (дебиторская задолженность)
+        Entry.objects.create(transaction=transaction, account=account_client, debit=total, credit=0)
+
+        # 4. Оплата клиента (деньги пришли)
+        Entry.objects.create(transaction=transaction, account=account_cash, debit=total_pay_summ, credit=0)
+
+        # 5. Погашение задолженности клиента
+        Entry.objects.create(transaction=transaction, account=account_client, debit=0, credit=total)
 
 
 
@@ -294,6 +397,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
 
 class PartnerSerializer(serializers.ModelSerializer):
+    # current_balance = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
     type_display = serializers.CharField(source='get_type_display', read_only=True)
     # agent = AgentSerializer(read_only=True)  # для чтения
     agent = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -454,8 +558,8 @@ class SalesInvoiceSerializer(serializers.ModelSerializer):
     delivered_by = EmployeeSerializer(read_only=True)
     delivered_by_id = serializers.PrimaryKeyRelatedField(queryset=Employee.objects.all(), write_only=True, required=False, allow_null=True)
     
-    created_by = serializers.StringRelatedField(read_only=True)
-    canceled_by = serializers.StringRelatedField(read_only=True)
+    created_by = serializers.StringRelatedField(read_only=True) 
+    entry_type = serializers.ChoiceField(choices=SalesInvoice.ENTRY_TYPE_CHOICES, required=False, allow_null=True)
     
     currency = serializers.StringRelatedField(read_only=True)
     currency_id = serializers.PrimaryKeyRelatedField(queryset=Currency.objects.all(), write_only=True, source='currency')
@@ -464,43 +568,42 @@ class SalesInvoiceSerializer(serializers.ModelSerializer):
     warehouse_id = serializers.PrimaryKeyRelatedField(queryset=Warehouse.objects.all(), write_only=True, source='warehouse', required=False, allow_null=True)
     
     items = SalesInvoiceItemSerializer(many=True)
+
+    total_pay_summ = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, write_only=True)
+
+
     
     class Meta:
         model = SalesInvoice
         fields = [
-            'id', 'status', 'currency', 'currency_id',
+            'id', 'status', 'currency', 'currency_id', 'entry_type',
             'buyer', 'buyer_id', 'delivered_by', 'delivered_by_id',
             'created_by', 'created_at', 'total_amount',
-            'note',
-            'is_canceled', 'canceled_at', 'canceled_by', 'cancel_reason',
-            'items',
+            'note', 'items',
             'warehouse', 'warehouse_id',
+            'total_pay_summ',
         ]
     
-    def validate(self, data):
-        if data.get('is_canceled') and not data.get('cancel_reason'):
-            raise serializers.ValidationError("При отмене накладной нужно указать причину отмены")
-        return data
     
     @transaction.atomic
     def create(self, validated_data):
         items_data = validated_data.pop('items', [])
-        buyer = validated_data.pop('buyer')
+        buyer = validated_data.pop('buyer', None)
         delivered_by = validated_data.pop('delivered_by_id', None)
-        currency = validated_data.pop('currency')
+        currency = validated_data.pop('currency', None)
+        print('validated_data === ', validated_data)
+        total_pay_summ = validated_data.pop('total_pay_summ', 0)
         user = self.context['request'].user
 
-        # Создаем накладную без вызова calculate_total
         invoice = SalesInvoice.objects.create(
             buyer=buyer,
             delivered_by=delivered_by,
             currency=currency,
             created_by=user,
-            total_amount=0,  # временно 0
+            total_amount=0,
             **validated_data
         )
 
-        # Создаем все позиции
         for item in items_data:
             product = item.pop('product_id')
             SalesInvoiceItem.objects.create(
@@ -509,9 +612,14 @@ class SalesInvoiceSerializer(serializers.ModelSerializer):
                 **item
             )
 
-        # Обновляем total_amount после добавления всех позиций
         invoice.total_amount = invoice.calculate_total()
         invoice.save(update_fields=['total_amount'])
+        # print('invoice 2 ===', invoice)
+        # print('invoice type === ', type(invoice))
+        # print('invoice 3 === ', invoice.note)
+
+        # Здесь вызываем функцию для создания проводок
+        create_transaction_for_invoice(invoice, total_pay_summ)
 
         return invoice
     
@@ -546,90 +654,7 @@ class SalesInvoiceSerializer(serializers.ModelSerializer):
         return instance
 
 ####################################################################
-# SalesReturnInvoice и Items
-####################################################################
-
-class SalesReturnItemSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True)
-    product_id = serializers.PrimaryKeyRelatedField(
-        queryset=Product.objects.all(), write_only=True
-    )
-    invoice = serializers.PrimaryKeyRelatedField(read_only=True)
-
-    class Meta:
-        model = SalesReturnItem
-        fields = ['id', 'product', 'product_id', 'quantity', 'sale_price', 'invoice']
-
-    def validate_quantity(self, value):
-        if value <= 0:
-            raise serializers.ValidationError("Количество должно быть положительным")
-        return value
-
-
-class SalesReturnInvoiceSerializer(serializers.ModelSerializer):
-    original_invoice = SalesInvoiceSerializer(read_only=True)
-    original_invoice_id = serializers.PrimaryKeyRelatedField(
-        queryset=SalesInvoice.objects.all(), write_only=True, source='original_invoice'
-    )
-
-    created_by = serializers.StringRelatedField(read_only=True)
-    items = SalesReturnItemSerializer(many=True)
-
-    class Meta:
-        model = SalesReturnInvoice
-        fields = [
-            'id', 'original_invoice', 'original_invoice_id',
-            'created_by', 'created_at', 'reason', 'total_amount',
-            'items'
-        ]
-
-    @transaction.atomic
-    def create(self, validated_data):
-        items_data = validated_data.pop('items', [])
-        original_invoice = validated_data.pop('original_invoice')
-        user = self.context['request'].user
-
-        return_invoice = SalesReturnInvoice.objects.create(
-            original_invoice=original_invoice,
-            created_by=user,
-            **validated_data
-        )
-
-        for item in items_data:
-            product = item.pop('product_id')
-            SalesReturnItem.objects.create(
-                invoice=return_invoice,
-                product=product,
-                **item
-            )
-        return return_invoice
-
-    @transaction.atomic
-    def update(self, instance, validated_data):
-        items_data = validated_data.pop('items', None)
-        original_invoice = validated_data.pop('original_invoice', None)
-
-        if original_invoice:
-            instance.original_invoice = original_invoice
-
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-
-        instance.save()
-
-        if items_data is not None:
-            instance.items.all().delete()
-            for item in items_data:
-                product = item.pop('product_id')
-                SalesReturnItem.objects.create(
-                    invoice=instance,
-                    product=product,
-                    **item
-                )
-        return instance
-    
-####################################################################
-# SalesInvoice и Items START
+# SalesInvoice и Items END
 ####################################################################
 ############################################################################################################################################################################################################
 ############################################################################################################################################################################################################
@@ -774,17 +799,36 @@ class TransactionSimpleSerializer(serializers.ModelSerializer):
         fields = ['id', 'date', 'description']
 
 
+# class EntrySerializer(serializers.ModelSerializer):
+#     account = AccountSerializer(read_only=True)
+#     account_id = serializers.PrimaryKeyRelatedField(
+#         queryset = Account.objects.all(), source='account', write_only=True
+#     )
+
+#     transaction_obj = TransactionSimpleSerializer(source='transaction', read_only=True)
+
+#     class Meta:
+#         model = Entry
+#         fields = ['id', 'transaction', 'transaction_obj', 'account', 'account_id', 'debit', 'credit']
+
 class EntrySerializer(serializers.ModelSerializer):
     account = AccountSerializer(read_only=True)
     account_id = serializers.PrimaryKeyRelatedField(
-        queryset = Account.objects.all(), source='account', write_only=True
+        queryset=Account.objects.all(), source='account', write_only=True
     )
-
     transaction_obj = TransactionSimpleSerializer(source='transaction', read_only=True)
+    date = serializers.DateTimeField(source='transaction.date', read_only=True)
+    debit = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
+    credit = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
+    running_balance = serializers.SerializerMethodField()
 
     class Meta:
         model = Entry
-        fields = ['id', 'transaction', 'transaction_obj', 'account', 'account_id', 'debit', 'credit']
+        fields = ['id', 'date', 'transaction', 'transaction_obj', 'account', 'account_id', 'debit', 'credit', 'running_balance']
+
+    def get_running_balance(self, obj):
+        # будем подставлять позже в view через context
+        return self.context.get('running_balances', {}).get(obj.id)
 
 
 class TransactionSerializer(serializers.ModelSerializer):

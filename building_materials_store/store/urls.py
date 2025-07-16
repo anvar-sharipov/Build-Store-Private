@@ -24,7 +24,7 @@ router.register(r'currencys', CurrencyViewSet)
 router.register(r'purchase-invoices', PurchaseInvoiceViewSet, basename='purchaseinvoice')
 router.register(r'sales-invoices', SalesInvoiceViewSet, basename='salesinvoice')
 router.register(r'purchase-return-invoices', PurchaseReturnInvoiceViewSet, basename='purchasereturninvoice')
-router.register(r'sales-return-invoices', SalesReturnInvoiceViewSet, basename='salesreturninvoice')
+# router.register(r'sales-return-invoices', SalesReturnInvoiceViewSet, basename='salesreturninvoice')
 # faktura END
 
 # Entries START
@@ -55,5 +55,8 @@ urlpatterns = [
     path('price-change-report/', PriceChangeReportView.as_view(), name='price-change-report'),
     path('price-change-report/excel/', PriceChangeExcelDownloadView.as_view(), name='price-change-excel'),
     path('products-download/export-excel/', ProductExportExcelView.as_view(), name='products_export_excel'),
+
+    # dlya poiska baalansa partnera po schetam
+    path('api/partner/<int:partner_id>/entries/', PartnerEntriesView.as_view()),
 ]
 

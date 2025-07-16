@@ -6,6 +6,7 @@ import QRDisplay from "../../../UI/QRDisplay";
 import React from "react";
 import { input } from "framer-motion/client";
 import { AiOutlineClose } from "react-icons/ai";
+import { AiOutlineDown } from "react-icons/ai";
 
 const columnAnim = {
   initial: { opacity: 0, scale: 0.95 },
@@ -28,12 +29,16 @@ const SaleInvoiceForm2 = ({
   adminVisibleColumns,
   userVisibleColumns,
   handleDeleteProduct,
+  setTotalPaySumm,
 }) => {
   const [isOpen, setIsOpen] = useState(false); // dlya galochek
   const [showStockMessageIds, setShowStockMessageIds] = useState([]);
   const [numerateRow, setNumerateRow] = useState(1);
 
-    
+  const td_basic_class =
+    "print:px-[3px] print:text-[14px] print:leading-none border border-gray-300 dark:border-gray-700 print:border-black";
+  const th_basic_class =
+    "print:p-[1px] print:text-[14px] print:leading-none border border-gray-300 dark:border-gray-600 dark:text-gray-200 print:border-black";
 
   // dlya tfoot summ START
   const products = invoiceTable.filter((p) => !p.is_gift);
@@ -59,6 +64,10 @@ const SaleInvoiceForm2 = ({
         : p.retail_price_summ || 0)
     );
   }, 0);
+
+  useEffect(() => {
+    setTotalPaySumm(totalMainSum);
+  }, [totalMainSum]);
 
   const totalMainVolume = products.reduce(
     (sum, p) => sum + (p.volume * p.selected_quantity || 0),
@@ -123,171 +132,196 @@ const SaleInvoiceForm2 = ({
 
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="print:hidden p-4 border rounded-md dark:border-gray-700 shadow-sm bg-white dark:bg-gray-800 max-w-full flex flex-col gap-4 mt-2"
-      >
-        {/* Тип цены и чекбоксы в одной строке, wrap для чекбоксов */}
-        <div className="flex flex-wrap items-center gap-6">
-          {/* Тип цены */}
-          <div className="flex items-center gap-3 min-w-[180px]">
-            <span className="font-semibold text-gray-700 dark:text-gray-300">
-              Тип цены:
-            </span>
-            <label className="flex items-center gap-1 cursor-pointer select-none text-gray-800 dark:text-gray-200">
-              <input
-                type="radio"
-                name="priceType"
-                value="wholesale"
-                onChange={(e) => {
-                  setPriceType(e.target.value);
-                  setInvoiceTable((prev) =>
-                    prev.map((item) => {
-                      return {
-                        ...item,
-                        selected_quantity: item.selected_quantity,
-                        base_quantity: 1,
-                        wholesale_price_1pc: item.original_wholesale_price_1pc,
-                        wholesale_price_summ:
-                          item.original_wholesale_price_1pc *
-                          item.selected_quantity,
-                        retail_price_1pc: item.original_retail_price_1pc,
-                        retail_price_summ: item.original_retail_price_1pc,
-                        purchase_price_summ:
-                          item.purchase_price_1pc * item.selected_quantity,
-                        difference_price:
-                          item.original_difference_price_wholesale,
-                        difference_price_summ:
-                          item.original_difference_price_wholesale *
-                          item.selected_quantity,
-                        discount_difference_price:
-                          item.original_discount_difference_price_wholesale,
-                        discount_difference_price_summ:
-                          item.original_discount_difference_price_wholesale *
-                          item.selected_quantity,
-                        manually_changed_fields: {
-                          ...item.manually_changed_fields,
-                          price: false,
-                        },
-                      };
-                    })
-                  );
-                }}
-                checked={priceType === "wholesale"}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"
-              />
-              <span>Опт</span>
-            </label>
-            <label className="flex items-center gap-1 cursor-pointer select-none text-gray-800 dark:text-gray-200">
-              <input
-                type="radio"
-                name="priceType"
-                value="retail"
-                onChange={(e) => {
-                  setPriceType(e.target.value);
-                  setInvoiceTable((prev) =>
-                    prev.map((item) => {
-                      return {
-                        ...item,
-                        selected_quantity: item.selected_quantity,
-                        base_quantity: 1,
-                        wholesale_price_1pc: item.original_wholesale_price_1pc,
-                        wholesale_price_summ: item.original_wholesale_price_1pc,
-                        retail_price_1pc: item.original_retail_price_1pc,
-                        retail_price_summ:
-                          item.original_retail_price_1pc *
-                          item.selected_quantity,
-                        purchase_price_summ:
-                          item.purchase_price_1pc * item.selected_quantity,
-                        difference_price: item.original_difference_price_retail,
-                        difference_price_summ:
-                          item.original_difference_price_retail *
-                          item.selected_quantity,
-                        discount_difference_price:
-                          item.original_discount_difference_price_retail,
-                        discount_difference_price_summ:
-                          item.original_discount_difference_price_retail *
-                          item.selected_quantity,
-                        manually_changed_fields: {
-                          ...item.manually_changed_fields,
-                          price: false,
-                        },
-                      };
-                    })
-                  );
-                }}
-                checked={priceType === "retail"}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"
-              />
-              <span>Розница</span>
-            </label>
-          </div>
-
-          {/* Чекбоксы */}
-          <div className="flex flex-wrap gap-4 flex-1 min-w-[300px]">
-            {[
-              { key: "qr_code", label: "QR code" },
-              { key: "purchase", label: "Приход" },
-              { key: "income", label: "Доход" },
-              { key: "discount", label: "Скидка" },
-              { key: "volume", label: "Объём (м³)" },
-              { key: "weight", label: "Вес (кг)" },
-              { key: "dimensions", label: "Размеры" },
-            ].map(({ key, label }) => (
-              <label
-                key={key}
-                className="flex items-center gap-2 cursor-pointer select-none text-gray-800 dark:text-gray-200"
-              >
-                <input
-                  type="checkbox"
-                  checked={visibleColumns[key]}
-                  onChange={(e) =>
-                    setVisibleColumns((prev) => ({
-                      ...prev,
-                      [key]: e.target.checked,
-                    }))
-                  }
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"
-                />
-                {label}
-              </label>
-            ))}
+      <div className="bg-yellow-400 dark:bg-gray-800 border dark:border-gray-700">
+        <div
+          onClick={() => setIsOpen(!isOpen)}
+          className="text-blue-600 hover:underline hover:text-blue-800 cursor-pointer transition flex items-center gap-1 print:hidden p-2"
+        >
+          <div className="flex text-center mx-auto items-center gap-2">
+            <span>Настройки</span>
+            <AiOutlineDown
+              className={`transition-transform duration-300 transform ${
+                isOpen ? "rotate-180" : "rotate-0"
+              }`}
+            />
           </div>
         </div>
 
-        {/* Кнопки управления галочками с меньшими размерами */}
-        <div className="flex gap-3">
-          <button
-            onClick={() => setVisibleColumns(userVisibleColumns)}
-            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 text-white rounded text-sm transition"
-            type="button"
-          >
-            Снять все галочки
-          </button>
-          <button
-            onClick={() => setVisibleColumns(adminVisibleColumns)}
-            className="px-3 py-1.5 bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-400 text-white rounded text-sm transition"
-            type="button"
-          >
-            Вставить все галочки
-          </button>
-        </div>
-      </motion.div>
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="print:hidden p-4 shadow-sm dark:bg-gray-800 max-w-full flex flex-col gap-4 mt-2 print:p-0 print:m-0 bg-yellow-400"
+            >
+              {/* Тип цены и чекбоксы в одной строке, wrap для чекбоксов */}
+
+              <div className="flex flex-wrap items-center gap-6">
+                {/* Тип цены */}
+                <div className="flex items-center gap-3 min-w-[180px]">
+                  <span className="font-semibold text-gray-700 dark:text-gray-300">
+                    Тип цены:
+                  </span>
+                  <label className="flex items-center gap-1 cursor-pointer select-none text-gray-800 dark:text-gray-200">
+                    <input
+                      type="radio"
+                      name="priceType"
+                      value="wholesale"
+                      onChange={(e) => {
+                        setPriceType(e.target.value);
+                        setInvoiceTable((prev) =>
+                          prev.map((item) => {
+                            return {
+                              ...item,
+                              selected_quantity: item.selected_quantity,
+                              base_quantity: 1,
+                              wholesale_price_1pc:
+                                item.original_wholesale_price_1pc,
+                              wholesale_price_summ:
+                                item.original_wholesale_price_1pc *
+                                item.selected_quantity,
+                              retail_price_1pc: item.original_retail_price_1pc,
+                              retail_price_summ: item.original_retail_price_1pc,
+                              purchase_price_summ:
+                                item.purchase_price_1pc *
+                                item.selected_quantity,
+                              difference_price:
+                                item.original_difference_price_wholesale,
+                              difference_price_summ:
+                                item.original_difference_price_wholesale *
+                                item.selected_quantity,
+                              discount_difference_price:
+                                item.original_discount_difference_price_wholesale,
+                              discount_difference_price_summ:
+                                item.original_discount_difference_price_wholesale *
+                                item.selected_quantity,
+                              manually_changed_fields: {
+                                ...item.manually_changed_fields,
+                                price: false,
+                              },
+                            };
+                          })
+                        );
+                      }}
+                      checked={priceType === "wholesale"}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"
+                    />
+                    <span>Опт</span>
+                  </label>
+                  <label className="flex items-center gap-1 cursor-pointer select-none text-gray-800 dark:text-gray-200">
+                    <input
+                      type="radio"
+                      name="priceType"
+                      value="retail"
+                      onChange={(e) => {
+                        setPriceType(e.target.value);
+                        setInvoiceTable((prev) =>
+                          prev.map((item) => {
+                            return {
+                              ...item,
+                              selected_quantity: item.selected_quantity,
+                              base_quantity: 1,
+                              wholesale_price_1pc:
+                                item.original_wholesale_price_1pc,
+                              wholesale_price_summ:
+                                item.original_wholesale_price_1pc,
+                              retail_price_1pc: item.original_retail_price_1pc,
+                              retail_price_summ:
+                                item.original_retail_price_1pc *
+                                item.selected_quantity,
+                              purchase_price_summ:
+                                item.purchase_price_1pc *
+                                item.selected_quantity,
+                              difference_price:
+                                item.original_difference_price_retail,
+                              difference_price_summ:
+                                item.original_difference_price_retail *
+                                item.selected_quantity,
+                              discount_difference_price:
+                                item.original_discount_difference_price_retail,
+                              discount_difference_price_summ:
+                                item.original_discount_difference_price_retail *
+                                item.selected_quantity,
+                              manually_changed_fields: {
+                                ...item.manually_changed_fields,
+                                price: false,
+                              },
+                            };
+                          })
+                        );
+                      }}
+                      checked={priceType === "retail"}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"
+                    />
+                    <span>Розница</span>
+                  </label>
+                </div>
+
+                {/* Чекбоксы */}
+                <div className="flex flex-wrap gap-4 flex-1 min-w-[300px]">
+                  {[
+                    { key: "qr_code", label: "QR code" },
+                    { key: "purchase", label: "Приход" },
+                    { key: "income", label: "Доход" },
+                    { key: "discount", label: "Скидка" },
+                    { key: "volume", label: "Объём (м³)" },
+                    { key: "weight", label: "Вес (кг)" },
+                    { key: "dimensions", label: "Размеры" },
+                  ].map(({ key, label }) => (
+                    <label
+                      key={key}
+                      className="flex items-center gap-2 cursor-pointer select-none text-gray-800 dark:text-gray-200"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={visibleColumns[key]}
+                        onChange={(e) =>
+                          setVisibleColumns((prev) => ({
+                            ...prev,
+                            [key]: e.target.checked,
+                          }))
+                        }
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Кнопки управления галочками с меньшими размерами */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setVisibleColumns(userVisibleColumns)}
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 text-white rounded text-sm transition"
+                  type="button"
+                >
+                  Снять все галочки
+                </button>
+                <button
+                  onClick={() => setVisibleColumns(adminVisibleColumns)}
+                  className="px-3 py-1.5 bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-400 text-white rounded text-sm transition"
+                  type="button"
+                >
+                  Вставить все галочки
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       <div className="overflow-x-auto w-full max-w-full">
         <motion.table
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="table-auto border border-gray-300 border-collapse w-full print:border-black print:text-black print:text-[10px] print:leading-tight mt-2"
+          className="table-auto border border-gray-300 border-collapse w-full print:border-black print:text-black print:text-[14px] print:leading-tight mt-2 print:mt-0 print:pt-0"
         >
           <thead className="bg-gray-100 dark:bg-gray-900 print:bg-white print:dark:bg-white">
             <tr className="bg-gray-100 dark:bg-gray-900">
-              <th className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200">
-                №
-              </th>
+              <th className={th_basic_class}>№</th>
 
               <AnimatePresence>
                 {/* QR колонка */}
@@ -295,7 +329,7 @@ const SaleInvoiceForm2 = ({
                   <motion.th
                     key="qr_code"
                     {...columnAnim}
-                    className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
+                    className={th_basic_class}
                   >
                     QR
                   </motion.th>
@@ -303,19 +337,13 @@ const SaleInvoiceForm2 = ({
               </AnimatePresence>
 
               {/* Статичные колонки */}
-              <th className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200">
-                Товар
-              </th>
-              <th className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200">
-                Ед. изм
-              </th>
-              <th className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200">
-                Кол-во
-              </th>
-              <th className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200">
+              <th className={th_basic_class}>Товар</th>
+              <th className={th_basic_class}>Ед. изм</th>
+              <th className={th_basic_class}>Кол-во</th>
+              <th className={th_basic_class}>
                 Цена {priceType === "wholesale" ? "опт" : "розн"} за шт.
               </th>
-              <th className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200">
+              <th className={th_basic_class}>
                 Цена {priceType === "wholesale" ? "опт" : "розн"} сумма
               </th>
 
@@ -327,14 +355,14 @@ const SaleInvoiceForm2 = ({
                     <motion.th
                       key="purchase_price"
                       {...columnAnim}
-                      className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
+                      className={th_basic_class}
                     >
                       Цена прих. за шт.
                     </motion.th>
                     <motion.th
                       key="purchase_sum"
                       {...columnAnim}
-                      className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
+                      className={th_basic_class}
                     >
                       Сумма прих.
                     </motion.th>
@@ -347,14 +375,14 @@ const SaleInvoiceForm2 = ({
                     <motion.th
                       key="income_price"
                       {...columnAnim}
-                      className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
+                      className={th_basic_class}
                     >
                       Доход. за шт.
                     </motion.th>
                     <motion.th
                       key="income_sum"
                       {...columnAnim}
-                      className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
+                      className={th_basic_class}
                     >
                       Доход. сумма
                     </motion.th>
@@ -367,14 +395,14 @@ const SaleInvoiceForm2 = ({
                     <motion.th
                       key="discount_price"
                       {...columnAnim}
-                      className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
+                      className={th_basic_class}
                     >
                       Скидка за шт.
                     </motion.th>
                     <motion.th
                       key="discount_sum"
                       {...columnAnim}
-                      className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
+                      className={th_basic_class}
                     >
                       Скидка сумма
                     </motion.th>
@@ -386,7 +414,7 @@ const SaleInvoiceForm2 = ({
                   <motion.th
                     key="volume"
                     {...columnAnim}
-                    className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
+                    className={th_basic_class}
                   >
                     Объём (м³)
                   </motion.th>
@@ -397,7 +425,7 @@ const SaleInvoiceForm2 = ({
                   <motion.th
                     key="weight"
                     {...columnAnim}
-                    className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
+                    className={th_basic_class}
                   >
                     Вес (кг)
                   </motion.th>
@@ -409,21 +437,21 @@ const SaleInvoiceForm2 = ({
                     <motion.th
                       key="dimensions_length"
                       {...columnAnim}
-                      className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
+                      className={th_basic_class}
                     >
                       Длина (см)
                     </motion.th>
                     <motion.th
                       key="dimensions_width"
                       {...columnAnim}
-                      className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
+                      className={th_basic_class}
                     >
                       Ширина (см)
                     </motion.th>
                     <motion.th
                       key="dimensions_height"
                       {...columnAnim}
-                      className="p-2 border border-gray-300 dark:border-gray-600 dark:text-gray-200"
+                      className={th_basic_class}
                     >
                       Высота (см)
                     </motion.th>
@@ -438,19 +466,20 @@ const SaleInvoiceForm2 = ({
             {products.map((p, idx) => {
               return (
                 <tr key={p.id}>
-                  <td className="p-2 border border-gray-300 dark:border-gray-700">
-                    <span className="print:hidden">
-                      <button
-                        onClick={() => handleDeleteProduct(p.id)}
-                        className="group relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-red-100 dark:hover:bg-red-900 transition-colors duration-200"
-                      >
-                        <AiOutlineClose className="text-gray-600 dark:text-gray-300 group-hover:text-red-500 transform transition-transform duration-300 group-hover:rotate-90 text-xl" />
-                        <span className="sr-only">Удалить</span>
-                      </button>
-                    </span>
-                    <span className="relative flex items-center justify-center w-10 h-10">
-                      {idx + 1}
-                    </span>
+                  <td className={td_basic_class}>
+                    <div className="flex">
+                      <span className="print:hidden">
+                        <button
+                          onClick={() => handleDeleteProduct(p.id)}
+                          className="group relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-red-100 dark:hover:bg-red-900 transition-colors duration-200"
+                        >
+                          <AiOutlineClose className="text-gray-600 dark:text-gray-300 group-hover:text-red-500 transform transition-transform duration-300 group-hover:rotate-90 text-xl" />
+                        </button>
+                      </span>
+                      <span className="relative flex items-center justify-center w-10 h-10">
+                        {idx + 1}
+                      </span>
+                    </div>
                   </td>
 
                   <AnimatePresence>
@@ -458,26 +487,22 @@ const SaleInvoiceForm2 = ({
                       <motion.td
                         key={`qr-${p.id}`}
                         {...columnAnim}
-                        className="p-2 border border-gray-300 dark:border-gray-700"
+                        className={td_basic_class}
                       >
                         <QRDisplay
                           code={p.qr_code}
-                          mySize={64}
+                          mySize={44}
                           myClass="flex items-center justify-center w-20 h-20"
                         />
                       </motion.td>
                     )}
                   </AnimatePresence>
 
-                  <td className="p-2 border border-gray-300 dark:border-gray-700">
-                    {p.name}
-                  </td>
-                  <td className="p-2 border border-gray-300 dark:border-gray-700">
-                    {p.selected_unit.name}
-                  </td>
+                  <td className={td_basic_class}>{p.name}</td>
+                  <td className={td_basic_class}>{p.selected_unit.name}</td>
 
                   {/* quantity input ############################################### */}
-                  <td className="p-2 border border-gray-300 dark:border-gray-700">
+                  <td className={td_basic_class}>
                     <input
                       type="number"
                       className={`border px-2 py-1 rounded w-20
@@ -638,6 +663,9 @@ const SaleInvoiceForm2 = ({
                           e.preventDefault();
                           priceInputRefs.current[p.id]?.focus();
                           priceInputRefs.current[p.id]?.select();
+                        } else if (e.key === "Enter") {
+                          inputRef.current?.focus();
+                          inputRef.current?.select();
                         }
                       }}
                     />
@@ -657,7 +685,7 @@ const SaleInvoiceForm2 = ({
                   </td>
 
                   {/* price 1pc input ############################################## */}
-                  <td className="p-2 border border-gray-300 dark:border-gray-700">
+                  <td className={td_basic_class}>
                     <input
                       type="number"
                       className={`border px-2 py-1 rounded w-20
@@ -773,12 +801,15 @@ const SaleInvoiceForm2 = ({
                           e.preventDefault();
                           quantityInputRefs.current[p.id]?.focus();
                           quantityInputRefs.current[p.id]?.select();
+                        } else if (e.key === "Enter") {
+                          inputRef.current?.focus();
+                          inputRef.current?.select();
                         }
                       }}
                     />
                   </td>
 
-                  <td className="p-2 border border-gray-300 dark:border-gray-700">
+                  <td className={td_basic_class}>
                     {formatNumber(
                       priceType === "wholesale"
                         ? p.wholesale_price_summ
@@ -793,14 +824,14 @@ const SaleInvoiceForm2 = ({
                         <motion.td
                           key={`purchase-price-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300 dark:border-gray-700"
+                          className={td_basic_class}
                         >
                           {formatNumber(p.purchase_price_1pc)}
                         </motion.td>
                         <motion.td
                           key={`purchase-sum-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300 dark:border-gray-700"
+                          className={td_basic_class}
                         >
                           {formatNumber(p.purchase_price_summ)}
                         </motion.td>
@@ -813,14 +844,14 @@ const SaleInvoiceForm2 = ({
                         <motion.td
                           key={`income-price-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300 dark:border-gray-700"
+                          className={td_basic_class}
                         >
                           {formatNumber(p.difference_price)}
                         </motion.td>
                         <motion.td
                           key={`income-sum-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300 dark:border-gray-700"
+                          className={td_basic_class}
                         >
                           {formatNumber(p.difference_price_summ)}
                         </motion.td>
@@ -833,14 +864,14 @@ const SaleInvoiceForm2 = ({
                         <motion.td
                           key={`discount-price-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300 dark:border-gray-700"
+                          className={td_basic_class}
                         >
                           {formatNumber(p.discount_difference_price)}
                         </motion.td>
                         <motion.td
                           key={`discount-sum-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300 dark:border-gray-700"
+                          className={td_basic_class}
                         >
                           {formatNumber(p.discount_difference_price_summ)}
                         </motion.td>
@@ -852,7 +883,7 @@ const SaleInvoiceForm2 = ({
                       <motion.td
                         key={`volume-${p.id}`}
                         {...columnAnim}
-                        className="p-2 border border-gray-300 dark:border-gray-700"
+                        className={td_basic_class}
                       >
                         {formatNumber(p.volume * p.selected_quantity, 4)}
                       </motion.td>
@@ -863,7 +894,7 @@ const SaleInvoiceForm2 = ({
                       <motion.td
                         key={`weight-${p.id}`}
                         {...columnAnim}
-                        className="p-2 border border-gray-300 dark:border-gray-700"
+                        className={td_basic_class}
                       >
                         {formatNumber(p.weight * p.selected_quantity)}
                       </motion.td>
@@ -875,21 +906,21 @@ const SaleInvoiceForm2 = ({
                         <motion.td
                           key={`length-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300 dark:border-gray-700"
+                          className={td_basic_class}
                         >
                           {formatNumber(p.length * p.selected_quantity)}
                         </motion.td>
                         <motion.td
                           key={`width-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300 dark:border-gray-700"
+                          className={td_basic_class}
                         >
                           {formatNumber(p.width * p.selected_quantity)}
                         </motion.td>
                         <motion.td
                           key={`height-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300 dark:border-gray-700"
+                          className={td_basic_class}
                         >
                           {formatNumber(p.height * p.selected_quantity)}
                         </motion.td>
@@ -908,11 +939,11 @@ const SaleInvoiceForm2 = ({
                     key={p.id}
                     className={
                       idx === 0
-                        ? "border-t-4 border-gray-300  dark:border-gray-700"
+                        ? "border-t-4 border-gray-300  dark:border-gray-700 print:border-black"
                         : ""
                     }
                   >
-                    <td className="p-2 border border-gray-300 dark:border-gray-700 ">
+                    <td className={td_basic_class}>
                       <span className="relative flex items-center justify-center w-10 h-10">
                         {products.length + idx + 1}
                       </span>
@@ -923,26 +954,22 @@ const SaleInvoiceForm2 = ({
                         <motion.td
                           key={`qr-gift-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300 dark:border-gray-700"
+                          className={td_basic_class}
                         >
                           <QRDisplay
                             code={p.qr_code}
-                            mySize={64}
+                            mySize={44}
                             myClass="flex items-center justify-center w-20 h-20 rounded"
                           />
                         </motion.td>
                       )}
                     </AnimatePresence>
 
-                    <td className="p-2 border border-gray-300 dark:border-gray-700">
-                      {p.name}
-                    </td>
-                    <td className="p-2 border border-gray-300 dark:border-gray-700">
-                      {p.selected_unit.name}
-                    </td>
+                    <td className={td_basic_class}>{p.name}</td>
+                    <td className={td_basic_class}>{p.selected_unit.name}</td>
 
                     <td
-                      className={`border px-2 py-1 rounded w-20 border-gray-300 dark:border-gray-700
+                      className={`border px-2 py-1 rounded w-20 border-gray-300 dark:border-gray-700 print:border-black
                   ${p.manually_changed_fields.not_enough ? "bg-red-100" : ""}
                 `}
                     >
@@ -963,13 +990,13 @@ const SaleInvoiceForm2 = ({
                     </td>
 
                     <td
-                      className="p-3 border text-indigo-800 italic font-medium border-gray-300 dark:border-gray-700 dark:text-gray-400"
+                      className="p-3 border text-indigo-800 italic font-medium border-gray-300 dark:border-gray-700 dark:text-gray-400 print:border-black"
                       colSpan={calcGiftColSpan()}
                     >
-                      🎁 Бесплатно для{" "}
+                      {/* 🎁 Бесплатно для{" "}
                       <span className="font-semibold">
                         {p.gift_for_product_name}
-                      </span>
+                      </span> */}
                     </td>
 
                     <AnimatePresence>
@@ -977,7 +1004,7 @@ const SaleInvoiceForm2 = ({
                         <motion.td
                           key={`volume-gift-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300 dark:border-gray-700"
+                          className={td_basic_class}
                         >
                           {formatNumber(p.volume * p.selected_quantity, 4)}
                         </motion.td>
@@ -987,7 +1014,7 @@ const SaleInvoiceForm2 = ({
                         <motion.td
                           key={`weight-gift-${p.id}`}
                           {...columnAnim}
-                          className="p-2 border border-gray-300 dark:border-gray-700"
+                          className={td_basic_class}
                         >
                           {formatNumber(p.weight * p.selected_quantity, 4)}
                         </motion.td>
@@ -998,21 +1025,21 @@ const SaleInvoiceForm2 = ({
                           <motion.td
                             key={`length-gift-${p.id}`}
                             {...columnAnim}
-                            className="p-2 border border-gray-300 dark:border-gray-700"
+                            className={td_basic_class}
                           >
                             {formatNumber(p.length * p.selected_quantity)}
                           </motion.td>
                           <motion.td
                             key={`width-gift-${p.id}`}
                             {...columnAnim}
-                            className="p-2 border border-gray-300 dark:border-gray-700"
+                            className={td_basic_class}
                           >
                             {formatNumber(p.width * p.selected_quantity)}
                           </motion.td>
                           <motion.td
                             key={`height-gift-${p.id}`}
                             {...columnAnim}
-                            className="p-2 border border-gray-300 dark:border-gray-700"
+                            className={td_basic_class}
                           >
                             {formatNumber(p.height * p.selected_quantity)}
                           </motion.td>
@@ -1027,21 +1054,21 @@ const SaleInvoiceForm2 = ({
           <tfoot className="bg-gray-200 dark:bg-gray-800 font-semibold print:bg-white print:dark:bg-white">
             <tr>
               <td
-                className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200 text-right"
+                className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200 print:border-black text-right"
                 colSpan={visibleColumns.qr_code ? 6 : 5}
               >
                 Итого:
               </td>
 
-              <td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200">
+              <td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200 print:border-black">
                 {formatNumber(totalMainSum)}
               </td>
 
               <AnimatePresence>
                 {visibleColumns.purchase && (
                   <React.Fragment key="purchase-fragment">
-                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700" />
-                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200">
+                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 print:border-black" />
+                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200 print:border-black">
                       {formatNumber(totalPurchaseSum)}
                     </motion.td>
                   </React.Fragment>
@@ -1049,8 +1076,8 @@ const SaleInvoiceForm2 = ({
 
                 {visibleColumns.income && (
                   <React.Fragment key="income-fragment">
-                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700" />
-                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200">
+                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 print:border-black" />
+                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200 print:border-black">
                       {formatNumber(totalIncomeSum)}
                     </motion.td>
                   </React.Fragment>
@@ -1058,15 +1085,15 @@ const SaleInvoiceForm2 = ({
 
                 {visibleColumns.discount && (
                   <React.Fragment key="discount-fragment">
-                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700" />
-                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200">
+                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 print:border-black" />
+                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200 print:border-black">
                       {formatNumber(totalDiscountSum)}
                     </motion.td>
                   </React.Fragment>
                 )}
 
                 {visibleColumns.volume && (
-                  <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200">
+                  <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200 print:border-black">
                     {formatNumber(totalVolume, 4)}
                   </motion.td>
                 )}
@@ -1074,7 +1101,7 @@ const SaleInvoiceForm2 = ({
                 {visibleColumns.weight && (
                   <motion.td
                     key="weight"
-                    className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200"
+                    className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200 print:border-black"
                   >
                     {formatNumber(totalWeight)}
                   </motion.td>
@@ -1082,13 +1109,13 @@ const SaleInvoiceForm2 = ({
 
                 {visibleColumns.dimensions && (
                   <React.Fragment key="dimensions-fragment">
-                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200">
+                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200 print:border-black">
                       {formatNumber(totalLength)}
                     </motion.td>
-                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200">
+                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200 print:border-black">
                       {formatNumber(totalWidth)}
                     </motion.td>
-                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200">
+                    <motion.td className="p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-200 print:border-black">
                       {formatNumber(totalHeight)}
                     </motion.td>
                   </React.Fragment>

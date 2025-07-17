@@ -7,6 +7,7 @@ from icecream import ic
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from collections import OrderedDict
+from collections import defaultdict
 
 
 from rest_framework import viewsets, status, filters
@@ -135,35 +136,35 @@ class ProductViewSet(viewsets.ModelViewSet):
 
 
 class PartnerEntriesView(APIView):
-    
     def get(self, request, partner_id):
-        entries = Entry.objects.filter(transaction__partner_id=partner_id).order_by('transaction__date', 'id')
+        entries = Entry.objects.filter(
+            transaction__partner_id=partner_id,
+            # account__number__startswith='62.'
+            account__number='62'
+        ).order_by('account__currency__code', 'transaction__date', 'id')
 
-        running_balance = Decimal('0.00')
-        result = []
+        grouped = defaultdict(list)
+        balances = defaultdict(lambda: Decimal('0.00'))
 
         for entry in entries:
-            entry_data = EntrySerializer(entry).data
+            currency = entry.account.currency.code
+            debit = Decimal(entry.debit or '0')
+            credit = Decimal(entry.credit or '0')
 
-            debit = Decimal(entry_data.get('debit') or '0')
-            credit = Decimal(entry_data.get('credit') or '0')
+            balances[currency] += debit - credit
 
-            account_number = entry_data['account']['number']
-            # print('account_number', account_number)
+            data = EntrySerializer(entry).data
+            data['running_balance'] = str(balances[currency])
+            grouped[currency].append(data)
 
-            # Считаем сальдо только по счету покупателя 62.*
-            if account_number.startswith('62'):
-                running_balance += debit - credit
-                print('running_balance', running_balance)
-                entry_data['running_balance'] = str(running_balance)
-            else:
-                entry_data['running_balance'] = ''  # или None
-
-            result.append(entry_data)
-
-        print('running_balance', running_balance)
-
-
+        result = []
+        for currency_code, items in grouped.items():
+            result.append({
+                'currency': currency_code,
+                'entries': items,
+                'final_balance': str(balances[currency_code])
+            })
+        print('result', result)
         return Response(result)
 
 

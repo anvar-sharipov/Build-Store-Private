@@ -16,25 +16,7 @@ User = get_user_model()
 def create_transaction_for_invoice(invoice: SalesInvoice, total_pay_summ):
     if not invoice.entry_type:
         return  # Накладная не требует проводки
-    
-    # partner_id = 25  # ID партнёра
-    # currency_code = 'USD'
-    # start_date = datetime(2025, 1, 1)
-    # end_date = datetime(2025, 7, 17)
 
-    # entries = Entry.objects.filter(
-    #     transaction__partner_id=partner_id,
-    #     transaction__date__range=(start_date, end_date),
-    #     account__currency__code=currency_code,
-    # )
-
-    # total_debit = entries.aggregate(Sum('debit'))['debit__sum'] or 0
-    # total_credit = entries.aggregate(Sum('credit'))['credit__sum'] or 0
-
-    # print(f"Оборот по дебету: {total_debit}")
-    # print(f"Оборот по кредиту: {total_credit}")
-
-    # return
 
     description_map = {
         'shipment': f"Отгрузка товара по накладной №{invoice.id}",
@@ -70,17 +52,24 @@ def create_transaction_for_invoice(invoice: SalesInvoice, total_pay_summ):
     
     # Счета для операций — должны быть настроены в системе заранее
     # Пример (нужно адаптировать под твои реальные счета)
-    if currency.code == "USD":
-        account_goods = Account.objects.get(number='41.1')  # складские товары (актив)
-        account_income = Account.objects.get(number='90.1')  # доход от продаж
-        account_cash = Account.objects.get(number='50.1')  # касса или расчетный счет (актив)
-        account_client = Account.objects.get(number='62.1')
-    else:
-        account_goods = Account.objects.get(number='41.2')  # складские товары (актив)
-        account_income = Account.objects.get(number='90.2')  # доход от продаж
-        account_cash = Account.objects.get(number='50.2')  # касса или расчетный счет (актив)
-        account_client = Account.objects.get(number='62.2')
-    
+    # if currency.code == "USD":
+    #     account_goods = Account.objects.get(number='41.1')  # складские товары (актив)
+    #     account_income = Account.objects.get(number='90.1')  # доход от продаж
+    #     account_cash = Account.objects.get(number='50.1')  # касса или расчетный счет (актив)
+    #     account_client = Account.objects.get(number='62.1')
+    # else:
+    #     account_goods = Account.objects.get(number='41.2')  # складские товары (актив)
+    #     account_income = Account.objects.get(number='90.2')  # доход от продаж
+    #     account_cash = Account.objects.get(number='50.2')  # касса или расчетный счет (актив)
+    #     account_client = Account.objects.get(number='62.2')
+
+
+    account_goods = Account.objects.get(number='41')  # складские товары (актив)
+    account_income = Account.objects.get(number='90')  # доход от продаж
+    account_cash = Account.objects.get(number='50')  # касса или расчетный счет (актив)
+    account_client = Account.objects.get(number='62')
+
+
     total = invoice.total_amount
     print('total_pay_summ', total_pay_summ)
 
@@ -89,7 +78,7 @@ def create_transaction_for_invoice(invoice: SalesInvoice, total_pay_summ):
         Entry.objects.create(transaction=transaction, account=account_goods, debit=0, credit=total)
         # Пример: можно тут ещё делать проводку по себестоимости и доходу, если есть учет
         # Списание товаров со склада (кредит 41)
-        Entry.objects.create(transaction=transaction, account=account_client, debit=total_pay_summ, credit=0)
+        Entry.objects.create(transaction=transaction, account=account_client, debit=total, credit=0)
 
     elif invoice.entry_type == 'payment':
         # Оплата: поступление денег (дебет), увеличение денег в кассе/банке
@@ -97,21 +86,51 @@ def create_transaction_for_invoice(invoice: SalesInvoice, total_pay_summ):
         Entry.objects.create(transaction=transaction, account=account_client, debit=0, credit=total_pay_summ)  # гасим долг клиента
 
     if invoice.entry_type == 'both':
-        # 1. Признание дохода
-        Entry.objects.create(transaction=transaction, account=account_income, debit=0, credit=total)
+        # 1. Доход (на 216) — для каждого товара
+        for item in invoice.items.all():
+            Entry.objects.create(
+                transaction=transaction,
+                account=account_income,
+                debit=0,
+                credit=item.sale_price * item.quantity,
+                product=item.product,  # ✅ указываем товар
+                warehouse=invoice.warehouse,
+            )
 
-        # 2. Списание товара
-        Entry.objects.create(transaction=transaction, account=account_goods, debit=0, credit=total)
+        # 2. Списание товара (на 216)
+        for item in invoice.items.all():
+            Entry.objects.create(
+                transaction=transaction,
+                account=account_goods,
+                debit=0,
+                credit=item.sale_price * item.quantity,
+                product=item.product,  # ✅
+                warehouse=invoice.warehouse,
+            )
 
-        # 3. Клиент должен нам (дебиторская задолженность)
-        Entry.objects.create(transaction=transaction, account=account_client, debit=total, credit=0)
+        # 3. Дебиторка (на 216)
+        Entry.objects.create(
+            transaction=transaction,
+            account=account_client,
+            debit=total,
+            credit=0
+        )
 
-        # 4. Оплата клиента (деньги пришли)
-        Entry.objects.create(transaction=transaction, account=account_cash, debit=total_pay_summ, credit=0)
+        # 4. Оплата от клиента (300)
+        Entry.objects.create(
+            transaction=transaction,
+            account=account_cash,
+            debit=total_pay_summ,
+            credit=0
+        )
 
-        # 5. Погашение задолженности клиента
-        Entry.objects.create(transaction=transaction, account=account_client, debit=0, credit=total)
-
+        # 5. Гасим 216 долга
+        Entry.objects.create(
+            transaction=transaction,
+            account=account_client,
+            debit=0,
+            credit=total_pay_summ
+        )
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -569,7 +588,7 @@ class SalesInvoiceSerializer(serializers.ModelSerializer):
     
     items = SalesInvoiceItemSerializer(many=True)
 
-    total_pay_summ = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, write_only=True)
+    # total_pay_summ = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, write_only=True)
 
 
     
@@ -601,6 +620,7 @@ class SalesInvoiceSerializer(serializers.ModelSerializer):
             currency=currency,
             created_by=user,
             total_amount=0,
+            total_pay_summ=total_pay_summ,
             **validated_data
         )
 
@@ -821,10 +841,11 @@ class EntrySerializer(serializers.ModelSerializer):
     debit = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
     credit = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
     running_balance = serializers.SerializerMethodField()
+    product_name = serializers.CharField(source='product.name', read_only=True)
 
     class Meta:
         model = Entry
-        fields = ['id', 'date', 'transaction', 'transaction_obj', 'account', 'account_id', 'debit', 'credit', 'running_balance']
+        fields = ['id', 'date', 'transaction', 'transaction_obj', 'account', 'account_id', 'debit', 'credit', 'running_balance', 'product_name']
 
     def get_running_balance(self, obj):
         # будем подставлять позже в view через context
@@ -833,10 +854,11 @@ class EntrySerializer(serializers.ModelSerializer):
 
 class TransactionSerializer(serializers.ModelSerializer):
     entries = EntrySerializer(many=True, read_only=True)
+    invoice_obj = SalesInvoiceSerializer(source='invoice', read_only=True)
 
     class Meta:
         model = Transaction
-        fields = ['id', 'date', 'description', 'partner', 'entries']
+        fields = ['id', 'date', 'description', 'invoice', 'partner', 'entries', 'invoice_obj']
 
 
 class EntryWriteSerializer(serializers.ModelSerializer):

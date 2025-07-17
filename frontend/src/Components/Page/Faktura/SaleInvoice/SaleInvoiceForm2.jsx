@@ -301,7 +301,7 @@ const SaleInvoiceForm2 = ({
                 </button>
                 <button
                   onClick={() => setVisibleColumns(adminVisibleColumns)}
-                  className="px-3 py-1.5 bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-400 text-white rounded text-sm transition"
+                  className="px-3 py-1.5 bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-400 text-white rounded transition"
                   type="button"
                 >
                   Вставить все галочки
@@ -473,7 +473,7 @@ const SaleInvoiceForm2 = ({
                           onClick={() => handleDeleteProduct(p.id)}
                           className="group relative flex items-center justify-center w-10 h-10 rounded-full hover:bg-red-100 dark:hover:bg-red-900 transition-colors duration-200"
                         >
-                          <AiOutlineClose className="text-gray-600 dark:text-gray-300 group-hover:text-red-500 transform transition-transform duration-300 group-hover:rotate-90 text-xl" />
+                          <AiOutlineClose className="text-gray-600 dark:text-gray-300 group-hover:text-red-500 transform transition-transform duration-300 group-hover:rotate-90" />
                         </button>
                       </span>
                       <span className="relative flex items-center justify-center w-10 h-10">

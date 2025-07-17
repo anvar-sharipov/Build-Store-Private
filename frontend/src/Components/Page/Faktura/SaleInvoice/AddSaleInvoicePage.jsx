@@ -13,6 +13,8 @@ import { useTranslation } from "react-i18next";
 import SearchedPartnerList from "./SearchedPartnerList";
 import Notification from "../../../Notification";
 import MyInput from "../../../UI/MyInput";
+import MyModal from "../../../UI/MyModal";
+import GetSaldo from "./GetSaldo";
 
 const userVisibleColumns = {
   qr_code: false,
@@ -67,6 +69,12 @@ const AddSaleInvoicePage = () => {
   const [description, setDescription] = useState("");
   const [totalPaySumm, setTotalPaySumm] = useState(0);
 
+  const [openEntryModal, setOpenEntryModal] = useState(false);
+  const [selectedEntryForModal, setSelectedEntryForModal] = useState(null);
+  
+
+  const [selectedCurrencyCode, setSelectedCurrencyCode] = useState("USD");
+
   // for json for save
   const [selectedWarehouseId, setSelectedWarehouseId] = useState(null);
   const [selectedCurrencyId, setSelectedCurrencyId] = useState(null);
@@ -114,6 +122,10 @@ const AddSaleInvoicePage = () => {
     return saved ? JSON.parse(saved) : defaultVisibleColumns;
   });
 
+  useEffect(() => {
+    // console.log("dadadadadadadada", selectedCurrency);
+  }, [selectedCurrency]);
+
   // insert
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -158,13 +170,13 @@ const AddSaleInvoicePage = () => {
     const delayDebounce = setTimeout(() => {
       const fetchProducts = async () => {
         if (query.length >= 2) {
-          console.log("tut");
+          // console.log("tut");
 
           setLoading(true);
           try {
             const res = await myAxios.get(`search-products/?q=${query}`);
             setResults(res.data);
-            console.log("res.data", res.data);
+            // console.log("res.data", res.data);
 
             setFocusedIndex(0);
           } catch (error) {
@@ -222,7 +234,7 @@ const AddSaleInvoicePage = () => {
     async function fetchPartners() {
       try {
         const res = await myAxios.get("partners/");
-        console.log("res.data", res.data);
+        // console.log("res.data", res.data);
 
         setAllPartners(res.data);
       } catch (error) {
@@ -305,6 +317,7 @@ const AddSaleInvoicePage = () => {
   }
 
   const handleSaveInvoice = async () => {
+    console.log("invoiceTable:", invoiceTable);
     const items = invoiceTable.map((item) => {
       let productId;
       if (typeof item.id === "string" && item.id.includes("-gift-")) {
@@ -318,7 +331,7 @@ const AddSaleInvoicePage = () => {
         sale_price: item.wholesale_price_1pc,
       };
     });
-    console.log("totalPaySumm", totalPaySumm);
+    // console.log("totalPaySumm", totalPaySumm);
 
     const dataToSend = {
       buyer_id: selectedPartnerId,
@@ -371,8 +384,8 @@ const AddSaleInvoicePage = () => {
         const res = await myAxios.get(
           `/api/partner/${selectedPartnerId}/entries/`
         );
-        console.log('resssssss.data', res.data);
-        
+        // console.log("resssssss.data", res.data);
+
         setEntries(res.data);
       } catch (e) {
         setError("Ошибка загрузки истории");
@@ -383,6 +396,49 @@ const AddSaleInvoicePage = () => {
   }, [selectedPartnerId]);
 
   // wywod istorii pokupok partnera posle najatiya na enter END #########
+
+  // Функция объединения и пересчёта сальдо нарастающим итогом
+  function mergeEntriesWithRunningBalance(entries) {
+    const map = new Map();
+
+    // Объединяем по ключу
+    entries.forEach((entry) => {
+      const key = `${new Date(entry.date).toISOString().slice(0, 10)}|${
+        entry.account.number
+      }|${entry.transaction_obj?.description || ""}`;
+
+      if (!map.has(key)) {
+        map.set(key, {
+          ...entry,
+          debit: parseFloat(entry.debit) || 0,
+          credit: parseFloat(entry.credit) || 0,
+        });
+      } else {
+        const existing = map.get(key);
+        existing.debit += parseFloat(entry.debit) || 0;
+        existing.credit += parseFloat(entry.credit) || 0;
+        map.set(key, existing);
+      }
+    });
+
+    // Превращаем в массив
+    const merged = Array.from(map.values());
+
+    // Считаем нарастающее сальдо
+    let runningBalance = 0;
+    const result = merged.map((e) => {
+      runningBalance += e.debit - e.credit;
+      return {
+        ...e,
+        debit: e.debit === 0 ? "" : e.debit.toFixed(2),
+        credit: e.credit === 0 ? "" : e.credit.toFixed(2),
+        running_balance: runningBalance.toFixed(2),
+      };
+    });
+
+    return result;
+  }
+  // console.log("entriesWithBalance", entriesWithBalance);
 
   return (
     <div className="p-4 w-full mx-auto print:border-none print:p-0 print:m-0">
@@ -398,7 +454,7 @@ const AddSaleInvoicePage = () => {
           />
 
           {/* Заголовок по центру */}
-          <h1 className="font-bold text-lg text-center flex-1 dark:text-gray-400">
+          <h1 className="font-bold text-center flex-1 dark:text-gray-400">
             Расходная накладная №
           </h1>
 
@@ -413,7 +469,7 @@ const AddSaleInvoicePage = () => {
               onClick={() => navigate(-1)}
               className="text-blue-600 hover:underline hover:text-blue-800 cursor-pointer transition print:hidden"
             >
-              <span className="text-lg">←</span>
+              <span>←</span>
               <span>{t("back")}</span>
             </div>
           </SmartTooltip>
@@ -421,10 +477,20 @@ const AddSaleInvoicePage = () => {
 
         {/* currency and warehouse */}
         <div className="flex gap-5 print:hidden">
-          <div>
+          <div className="hidden">
             <select
-              onChange={(e) => {
+              onChange={async (e) => {
                 setSelectedCurrencyId(e.target.value);
+
+                try {
+                  const res = await myAxios.get("currency-rates");
+                  setselectedCurrency(
+                    res.data.find((cur) => cur.id.toString() !== e.target.value)
+                  );
+                  // console.log("selectedCurrency", selectedCurrency.rate);
+                } catch (error) {
+                  console.error("Ошибка при загрузке курсов валют", error);
+                }
               }}
               className="block w-full px-3 py-2 border border-gray-300 rounded-md 
                  bg-white text-gray-900 
@@ -762,9 +828,9 @@ const AddSaleInvoicePage = () => {
             </div>
           )}
           {selectedCurrency && (
-            <div className="flex">
+            <div className="hidden">
               <span className="w-36">Walyuta:</span>
-              <div>{selectedCurrency}</div>
+              <div>{selectedCurrency.currency}</div>
             </div>
           )}
         </div>
@@ -797,84 +863,27 @@ const AddSaleInvoicePage = () => {
       )}
 
       <div className="bg-yellow-400 dark:bg-gray-800 p-5 mt-2">
-        {entriesWithBalance.length > 0 && (
-          <div className="border rounded p-4 shadow-sm bg-white dark:bg-gray-800 max-w-5xl mx-auto">
-            <h2 className="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-100">
-              Карточка счёта: 62 (Покупатели)
-            </h2>
-
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-              Клиент ID: {selectedPartnerId} <br />
-              Валюта: USD
-            </p>
-
-            {error && <p className="text-red-600">{error}</p>}
-
-            <div className="overflow-auto max-h-[400px]">
-              <table className="w-full text-sm border border-gray-300 dark:border-gray-600">
-                <thead className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                  <tr>
-                    <th className="px-2 py-1 border">Дата</th>
-                    <th className="px-2 py-1 border">Субсчёт</th>
-                    <th className="px-2 py-1 border">Операция</th>
-                    <th className="px-2 py-1 border text-right">Дебет</th>
-                    <th className="px-2 py-1 border text-right">Кредит</th>
-                    <th className="px-2 py-1 border text-right">Сальдо</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {entriesWithBalance.map((entry) => (
-                    <tr key={entry.id} className="border-t">
-                      <td className="px-2 py-1 border">
-                        {new Date(entry.date).toLocaleDateString("ru-RU", {
-                          year: "numeric",
-                          month: "2-digit",
-                          day: "2-digit",
-                        })}
-                      </td>
-                      <td className="px-2 py-1 border">
-                        {entry.account.number}
-                      </td>
-                      <td className="px-2 py-1 border">
-                        {entry.transaction_obj?.description || "-"}
-                      </td>
-                      <td className="px-2 py-1 border text-right">
-                        {parseFloat(entry.debit) > 0 ? entry.debit : ""}
-                      </td>
-                      <td className="px-2 py-1 border text-right">
-                        {parseFloat(entry.credit) > 0 ? entry.credit : ""}
-                      </td>
-                      <td className="px-2 py-1 border text-right font-semibold">
-                        {entry.running_balance}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <p className="mt-4 text-right text-md font-semibold text-gray-800 dark:text-gray-100">
-              Текущий остаток:{" "}
-              {entriesWithBalance.length
-                ? entriesWithBalance[entriesWithBalance.length - 1]
-                    .running_balance
-                : "0.00"}{" "}
-              USD
-            </p>
-          </div>
-        )}
-
+        <GetSaldo
+          entriesWithBalance={entriesWithBalance}
+          selectedPartner={selectedPartner}
+          setOpenEntryModal={setOpenEntryModal}
+          setSelectedEntryForModal={setSelectedEntryForModal}
+          selectedEntryForModal={selectedEntryForModal}
+          myAxios={myAxios}
+          openEntryModal={openEntryModal}
+          mergeEntriesWithRunningBalance={mergeEntriesWithRunningBalance}
+        />
         {invoiceTable.length > 0 && (
           <div>
             <div className="print:hidden">
-              <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="block mb-2 font-medium text-gray-700 dark:text-gray-300">
                 Примечание
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows="4"
-                className="w-full px-4 py-2 text-sm border rounded-xl shadow-sm resize-y
+                className="w-full px-4 py-2 border rounded-xl shadow-sm resize-y
              bg-white text-gray-900 border-gray-300
              focus:ring-2 focus:ring-blue-500 focus:border-blue-500
              dark:bg-gray-800 dark:text-white dark:border-gray-600 
@@ -905,7 +914,7 @@ const AddSaleInvoicePage = () => {
               <div className="mb-4">
                 <label
                   htmlFor="payed_summ"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
                   Введите сумму платёжа
                 </label>

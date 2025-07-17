@@ -545,6 +545,7 @@ class SalesInvoice(models.Model):  # накладная по продаже
     delivered_by = models.ForeignKey('Employee', on_delete=models.PROTECT, verbose_name='Доставил', null=True, blank=True)
     note = models.TextField(null=True, blank=True, verbose_name='Примечание')
     entry_type = models.CharField(max_length=10, choices=ENTRY_TYPE_CHOICES, verbose_name="Тип проводки", default='none')
+    total_pay_summ = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"), verbose_name="Сумма оплаты", null=True, blank=True)
 
     class Meta:
         verbose_name = 'Расходная накладная'

@@ -289,9 +289,9 @@ class PurchaseInvoiceAdmin(admin.ModelAdmin):
 @admin.register(SalesInvoice)
 class SalesInvoiceAdmin(admin.ModelAdmin):
     list_display = [
-        'id', 'buyer', 'delivered_by', 'created_by', 'created_at', 'total_amount', 'entry_type'
+        'id', 'buyer', 'delivered_by', 'created_by', 'created_at', 'total_amount'
     ]
-    list_filter = ['buyer', 'delivered_by', 'created_at', 'status', 'entry_type']
+    list_filter = ['buyer', 'delivered_by', 'created_at', 'isEntry']
     search_fields = ['id', 'buyer__name', 'created_by__username']
     autocomplete_fields = ['buyer', 'delivered_by', 'created_by']
     readonly_fields = ['total_amount', 'created_at']

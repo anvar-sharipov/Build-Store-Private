@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import myAxios from "../../axios";
 import ProductsFilter from "./filters/productsFilter";
 import { SearchContext } from "../../context/SearchContext";
+import SalesInvoiceFilter from "./filters/SalesInvoiceFilter";
 
 // настройки для разных страниц
 const FILTER_CONFIG = {
@@ -114,7 +115,7 @@ export default function SidebarRight() {
 
   //   Если текущая страница не найдена в FILTER_CONFIG — не показываем сайдбар
   // if (!config && currentPath !== "/products") return null;
-  if (!(currentPath in FILTER_CONFIG) && currentPath !== "/products")
+  if (!(currentPath in FILTER_CONFIG) && currentPath !== "/products" && currentPath !== "/main")
     return null;
 
   const typeOptions = config.type || [];
@@ -210,6 +211,14 @@ export default function SidebarRight() {
           tags={tags}
           selectedTags={selectedTags}
           t={t}
+        />
+      )}
+
+      {currentPath === "/main" && (
+        <SalesInvoiceFilter
+        searchParams={searchParams}
+        setSearchParams={setSearchParams}
+        t={t}
         />
       )}
     </aside>

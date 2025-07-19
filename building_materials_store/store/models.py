@@ -522,20 +522,7 @@ class PurchaseInvoiceItem(models.Model):
 
 class SalesInvoice(models.Model):  # накладная по продаже
 
-    STATUS_CHOICES = [
-        ('draft', 'Черновик'),
-        ('confirmed', 'Подтверждена'),
-    ]
 
-
-    ENTRY_TYPE_CHOICES = [
-        ('none', 'Не указано'),
-        ('shipment', 'Отгрузка'),
-        ('payment', 'Оплата'),
-        ('both', 'Отгрузка и оплата'),
-    ]
-
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft', verbose_name='Статус')
     currency = models.ForeignKey('Currency', on_delete=models.PROTECT, verbose_name='Валюта')
     buyer = models.ForeignKey('Partner', on_delete=models.PROTECT, limit_choices_to={'type__in': ['klient', 'both']}, verbose_name='Покупатель')
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name='Создал')
@@ -544,8 +531,8 @@ class SalesInvoice(models.Model):  # накладная по продаже
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"), verbose_name='Общая сумма')
     delivered_by = models.ForeignKey('Employee', on_delete=models.PROTECT, verbose_name='Доставил', null=True, blank=True)
     note = models.TextField(null=True, blank=True, verbose_name='Примечание')
-    entry_type = models.CharField(max_length=10, choices=ENTRY_TYPE_CHOICES, verbose_name="Тип проводки", default='none')
     total_pay_summ = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"), verbose_name="Сумма оплаты", null=True, blank=True)
+    isEntry = models.BooleanField(default=False, verbose_name="Проводка создана")
 
     class Meta:
         verbose_name = 'Расходная накладная'
@@ -566,18 +553,18 @@ class SalesInvoice(models.Model):  # накладная по продаже
                 self.total_amount = 0
         super().save(*args, **kwargs)
 
-    def cancel(self, user, reason):
-        if self.is_canceled:
-            raise ValidationError("Накладная уже отменена.")
-        self.is_canceled = True
-        self.canceled_at = timezone.now()
-        self.canceled_by = user
-        self.cancel_reason = reason
-        self.save()
-        # Вернуть товар на склад
-        for item in self.items.all():
-            item.product.quantity += item.quantity
-            item.product.save()
+    # def cancel(self, user, reason):
+    #     if self.is_canceled:
+    #         raise ValidationError("Накладная уже отменена.")
+    #     self.is_canceled = True
+    #     self.canceled_at = timezone.now()
+    #     self.canceled_by = user
+    #     self.cancel_reason = reason
+    #     self.save()
+    #     # Вернуть товар на склад
+    #     for item in self.items.all():
+    #         item.product.quantity += item.quantity
+    #         item.product.save()
 
     # @property
     # def partner_balance(self):

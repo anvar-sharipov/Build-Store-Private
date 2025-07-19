@@ -71,7 +71,6 @@ const AddSaleInvoicePage = () => {
 
   const [openEntryModal, setOpenEntryModal] = useState(false);
   const [selectedEntryForModal, setSelectedEntryForModal] = useState(null);
-  
 
   const [selectedCurrencyCode, setSelectedCurrencyCode] = useState("USD");
 
@@ -80,6 +79,10 @@ const AddSaleInvoicePage = () => {
   const [selectedCurrencyId, setSelectedCurrencyId] = useState(null);
   const [selectedAwtoId, setSelectedAwtoId] = useState(null);
   const [selectedPartnerId, setSelectedPartnerId] = useState(null);
+
+  const [isEntry, setIsEntry] = useState(false);
+
+  const [saveLoading, setSaveLoading] = useState(false)
 
   // dlya wywoda balance partnera
   const [entries, setEntries] = useState([]);
@@ -101,6 +104,8 @@ const AddSaleInvoicePage = () => {
 
   const [selectedEntry, setSelectedEntry] = useState("");
 
+  
+
   const handleDeleteProduct = (id) => {
     setInvoiceTable((prevTable) =>
       prevTable.filter(
@@ -110,6 +115,7 @@ const AddSaleInvoicePage = () => {
     inputRef.current?.focus();
     inputRef.current?.select();
   };
+
 
   // localStorage.removeItem("visibleColumns")
 
@@ -317,7 +323,8 @@ const AddSaleInvoicePage = () => {
   }
 
   const handleSaveInvoice = async () => {
-    console.log("invoiceTable:", invoiceTable);
+    // console.log("invoiceTable:", invoiceTable);
+    setSaveLoading(true)
     const items = invoiceTable.map((item) => {
       let productId;
       if (typeof item.id === "string" && item.id.includes("-gift-")) {
@@ -340,8 +347,8 @@ const AddSaleInvoicePage = () => {
       warehouse_id: selectedWarehouseId,
       delivered_by_id: selectedAwtoId,
       items: items,
-      // entry_type: selectedEntry || null,
-      ...(selectedEntry && { entry_type: selectedEntry }),
+      // ...(selectedEntry && { entry_type: selectedEntry }),
+      isEntry: isEntry,
       note: description,
       total_pay_summ: totalPaySumm,
     };
@@ -357,6 +364,9 @@ const AddSaleInvoicePage = () => {
       console.log("Успешно сохранено:", res.data);
     } catch (error) {
       console.error("Ошибка при сохранении:", error);
+      showNotification(t("commonSaveError"), "error")
+    } finally {
+      setSaveLoading(false)
     }
 
     // // (опционально) сохранить в стейт
@@ -439,6 +449,14 @@ const AddSaleInvoicePage = () => {
     return result;
   }
   // console.log("entriesWithBalance", entriesWithBalance);
+
+  const handleChangeIsEntry = (event) => {
+    setIsEntry(event.target.checked);
+    console.log("Is Entry:", event.target.checked);
+    
+    // Здесь можешь вызвать функцию, которая будет проводить проводку
+    // if (event.target.checked) postTransaction();
+  };
 
   return (
     <div className="p-4 w-full mx-auto print:border-none print:p-0 print:m-0">
@@ -748,37 +766,6 @@ const AddSaleInvoicePage = () => {
               Продукты
             </label>
 
-            {/* <MySearchInput
-            id="product-search"
-            ref={inputRef}
-            value={query}
-            autoComplete="off"
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Поиск товара..."
-            onKeyDown={(e) => {
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-                if (results.length > 0) {
-                  resultRefs.current[focusedIndex]?.focus();
-                } else if (invoiceTable.length > 0) {
-                  const firstNormalProduct = invoiceTable.find(
-                    (item) => item.is_gift === false
-                  );
-                  if (firstNormalProduct) {
-                    const firstProductId = firstNormalProduct.id;
-                    setTimeout(() => {
-                      quantityInputRefs.current[firstProductId]?.focus();
-                      quantityInputRefs.current[firstProductId]?.select();
-                    }, 0);
-                  }
-                }
-              } else if (e.key === "ArrowUp") {
-                e.preventDefault();
-                searchPartnerInputRef.current?.focus();
-                searchPartnerInputRef.current?.select();
-              }
-            }}
-          /> */}
           </div>
           <div>
             {results.length > 0 &&
@@ -823,7 +810,7 @@ const AddSaleInvoicePage = () => {
             <div className="flex">
               <span className="w-36">Satyn alyjy:</span>
               <div>
-                {selectedPartner.name} {selectedPartner.balance}
+                {selectedPartner.name}
               </div>
             </div>
           )}
@@ -893,23 +880,20 @@ const AddSaleInvoicePage = () => {
               ></textarea>
             </div>
             <div className="mt-2 flex justify-between items-center print:hidden">
-              <div>
-                <select
-                  value={selectedEntry}
-                  onChange={(e) => {
-                    setSelectedEntry(e.target.value);
-                  }}
-                  className="block px-3 py-2 border border-gray-300 rounded-md 
-                 bg-white text-gray-900 
-                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                 dark:bg-gray-800 dark:text-white dark:border-gray-600 
-                 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+              <div className="flex items-center space-x-2">
+                <input
+                  checked={isEntry}
+                  onChange={handleChangeIsEntry}
+                  id="post-transaction"
+                  type="checkbox"
+                  className="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                />
+                <label
+                  htmlFor="post-transaction"
+                  className="text-gray-800 text-sm font-medium select-none"
                 >
-                  <option value="">Выберите тип проводки</option>
-                  <option value="shipment">Провести как отгрузку</option>
-                  <option value="payment">Провести как оплату</option>
-                  <option value="both">Провести всё вместе</option>
-                </select>
+                  Сохранить с проводкой
+                </label>
               </div>
               <div className="mb-4">
                 <label
@@ -927,8 +911,8 @@ const AddSaleInvoicePage = () => {
 
               <div>
                 {invoiceTable.length > 0 && (
-                  <MyButton variant="blue" onClick={handleSaveInvoice}>
-                    Save
+                  <MyButton variant="blue" onClick={handleSaveInvoice} disabled={saveLoading}>
+                    {saveLoading ? t("saving"): t("save") }
                   </MyButton>
                 )}
               </div>
@@ -936,6 +920,11 @@ const AddSaleInvoicePage = () => {
           </div>
         )}
       </div>
+      <Notification
+        message={t(notification.message)}
+        type={notification.type}
+        onClose={() => setNotification({ message: "", type: "" })}
+      />
     </div>
   );
 };

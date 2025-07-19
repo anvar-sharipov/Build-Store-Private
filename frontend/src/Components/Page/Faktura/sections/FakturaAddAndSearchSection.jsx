@@ -5,22 +5,21 @@ import { myClass } from "../../../tailwindClasses";
 import Tooltip from "../../../ToolTip";
 import SmartTooltip from "../../../SmartTooltip";
 import { useNavigate } from "react-router-dom";
+import myAxios from "../../../axios";
 
 const FakturaAddAndSearchSection = ({
   t,
-  addPurchaseIconRef,
   addSalesIconRef,
   searchInputRef,
   searchQuery,
   setSearchQuery,
-
+  handleSearchChange,
+  listItemRefs,
+  invoices,
 }) => {
-  const [addPurchaseIconHovered, setAddPurchaseIconHovered] = useState(false);
-  const [addPurchaseIconFocused, setAddPurchaseIconFocused] = useState(false);
-  const addPurchaseIconhoverTimeoutRef = useRef(null);
-  const [addSalesIconHovered, setAddSalesIconHovered] = useState(false);
+  // const [addSalesIconHovered, setAddSalesIconHovered] = useState(false);
   const addSalesIconhoverTimeoutRef = useRef(null);
-  const [addSalesIconFocused, setAddSalesIconFocused] = useState(false);
+  // const [addSalesIconFocused, setAddSalesIconFocused] = useState(false);
   const navigate = useNavigate();
 
   return (
@@ -28,36 +27,15 @@ const FakturaAddAndSearchSection = ({
       {/* add and search section */}
       <div className="bg-gray-200 dark:bg-gray-800 rounded-lg shadow-md p-1 mb-2 flex items-center justify-between px-2 print:hidden">
         <div>
-          <SmartTooltip tooltip={t("purchaseInvoice")} shortcut="INSERT">
-            <button
-              ref={addPurchaseIconRef}
-              className={myClass.addButton4}
-              onClick={() => navigate("/purchase-invoices/new")}
-              onKeyDown={(e) => {
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  addSalesIconRef.current.focus();
-                }
-              }}
-            >
-              <IoAdd size={20} />
-            </button>
-          </SmartTooltip>
-        </div>
-
-        <div>
-          <SmartTooltip tooltip={t("salesInvoice")} shortcut="CTRL+INSERT">
+          <SmartTooltip tooltip={t("salesInvoice")} shortcut="INSERT">
             <button
               ref={addSalesIconRef}
               className={myClass.addButtonIndogo}
-            onClick={() => navigate("/sale-invoices/new")}
+              onClick={() => navigate("/sale-invoices/new")}
               onKeyDown={(e) => {
                 if (e.key === "ArrowDown") {
                   e.preventDefault();
                   searchInputRef.current.focus();
-                } else if (e.key === "ArrowUp") {
-                  addPurchaseIconRef.current.focus();
-                  e.preventDefault();
                 }
               }}
             >
@@ -103,17 +81,15 @@ const FakturaAddAndSearchSection = ({
             ref={searchInputRef}
             placeholder={t("search")}
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={handleSearchChange}
             onKeyDown={(e) => {
               if (e.key === "ArrowUp") {
                 e.preventDefault();
                 addSalesIconRef.current?.focus();
+              } else if (e.key === "ArrowDown" && invoices.length > 0) {
+                e.preventDefault();
+                listItemRefs.current[0]?.focus();
               }
-              //   if (e.key === "ArrowDown" && filteredList.length > 0) {
-              //     e.preventDefault();
-
-              //     listItemRefs.current[0]?.focus();
-              //   }
             }}
           />
         </div>

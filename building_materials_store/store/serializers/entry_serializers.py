@@ -1,0 +1,101 @@
+from rest_framework import serializers
+from ..models import *
+from .base_serializers import *
+from .sale_invoice_serializers import *
+# from django.contrib.auth.models import Group
+# from django.contrib.auth import get_user_model
+# from rest_framework.generics import ListAPIView
+# from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+# from rest_framework_simplejwt.views import TokenObtainPairView
+# from django.db import transaction
+# from datetime import datetime
+# from django.db.models import Sum
+
+
+
+class AccountSerializer(serializers.ModelSerializer):
+    currency = CurrencySerializer(read_only=True)
+    currency_id = serializers.PrimaryKeyRelatedField(
+        queryset=Currency.objects.all(),
+        source='currency',
+        write_only=True
+    )
+
+    class Meta:
+        model = Account
+        fields = ['id', 'number', 'name', 'type', 'currency', 'currency_id']
+
+
+# dlya wywoda date w EntrySerializer
+class TransactionSimpleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = ['id', 'date', 'description']
+
+
+# class EntrySerializer(serializers.ModelSerializer):
+#     account = AccountSerializer(read_only=True)
+#     account_id = serializers.PrimaryKeyRelatedField(
+#         queryset = Account.objects.all(), source='account', write_only=True
+#     )
+
+#     transaction_obj = TransactionSimpleSerializer(source='transaction', read_only=True)
+
+#     class Meta:
+#         model = Entry
+#         fields = ['id', 'transaction', 'transaction_obj', 'account', 'account_id', 'debit', 'credit']
+
+class EntrySerializer(serializers.ModelSerializer):
+    account = AccountSerializer(read_only=True)
+    account_id = serializers.PrimaryKeyRelatedField(
+        queryset=Account.objects.all(), source='account', write_only=True
+    )
+    transaction_obj = TransactionSimpleSerializer(source='transaction', read_only=True)
+    date = serializers.DateTimeField(source='transaction.date', read_only=True)
+    debit = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
+    credit = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
+    running_balance = serializers.SerializerMethodField()
+    product_name = serializers.CharField(source='product.name', read_only=True)
+
+    class Meta:
+        model = Entry
+        fields = ['id', 'date', 'transaction', 'transaction_obj', 'account', 'account_id', 'debit', 'credit', 'running_balance', 'product_name']
+
+    def get_running_balance(self, obj):
+        # будем подставлять позже в view через context
+        return self.context.get('running_balances', {}).get(obj.id)
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    entries = EntrySerializer(many=True, read_only=True)
+    invoice_obj = SalesInvoiceSerializer(source='invoice', read_only=True)
+
+    class Meta:
+        model = Transaction
+        fields = ['id', 'date', 'description', 'invoice', 'partner', 'entries', 'invoice_obj']
+
+
+class EntryWriteSerializer(serializers.ModelSerializer):
+    account_id = serializers.PrimaryKeyRelatedField(
+        queryset=Account.objects.all(), source='account'
+    )
+
+    class Meta:
+        model = Entry
+        fields = ['account_id', 'debit', 'credit']
+
+
+class TransactionWriteSerializer(serializers.ModelSerializer):
+    entries = EntryWriteSerializer(many=True)
+
+    class Meta:
+        model = Transaction
+        fields = ['description', 'partner', 'entries']
+
+    def create(self, validated_data):
+        entries_data = validated_data.pop('entries')
+        transaction = Transaction.objects.create(**validated_data)
+        for entry_data in entries_data:
+            Entry.objects.create(transaction=transaction, **entry_data)
+        return transaction
+    

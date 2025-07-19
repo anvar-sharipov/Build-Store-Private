@@ -15,7 +15,7 @@ const columnAnim = {
   transition: { duration: 0.2 },
 };
 
-const SaleInvoiceForm2 = ({
+const UpdateInvoiceForm2 = ({
   visibleColumns,
   setVisibleColumns,
   invoiceTable,
@@ -30,20 +30,27 @@ const SaleInvoiceForm2 = ({
   userVisibleColumns,
   handleDeleteProduct,
   setTotalPaySumm,
+  invoice,
 }) => {
   const [isOpen, setIsOpen] = useState(false); // dlya galochek
   const [showStockMessageIds, setShowStockMessageIds] = useState([]);
   const [numerateRow, setNumerateRow] = useState(1);
-  console.log('invoiceTable', invoiceTable);
-  
+
+ 
 
   const td_basic_class =
     "print:px-[3px] print:text-[14px] print:leading-none border border-gray-300 dark:border-gray-700 print:border-black";
   const th_basic_class =
     "print:p-[1px] print:text-[14px] print:leading-none border border-gray-300 dark:border-gray-600 dark:text-gray-200 print:border-black";
 
+// console.log('invoice', invoice);
+// console.log('invoiceTable', invoiceTable);
+
+
   // dlya tfoot summ START
   const products = invoiceTable.filter((p) => !p.is_gift);
+  console.log('products', products);
+  
   const gifts = invoiceTable.filter((p) => p.is_gift);
 
   const totalPurchaseSum = products.reduce(
@@ -68,7 +75,12 @@ const SaleInvoiceForm2 = ({
   }, 0);
 
   useEffect(() => {
-    setTotalPaySumm(totalMainSum);
+    if (parseFloat(invoice.total_pay_summ) === parseFloat(totalMainSum)){
+        setTotalPaySumm(totalMainSum);
+    } else {
+        setTotalPaySumm(invoice.total_pay_summ);
+    }
+    
   }, [totalMainSum]);
 
   const totalMainVolume = products.reduce(
@@ -506,6 +518,7 @@ const SaleInvoiceForm2 = ({
                   {/* quantity input ############################################### */}
                   <td className={td_basic_class}>
                     <input
+                      disabled={invoice.isEntry}
                       type="number"
                       className={`border px-2 py-1 rounded w-20
                         ${
@@ -546,7 +559,8 @@ const SaleInvoiceForm2 = ({
                             );
                           }, 3000);
                         }
-
+                       
+                        
                         const new_purchase_price_summ =
                           p.purchase_price_1pc * new_quantity;
 
@@ -689,6 +703,7 @@ const SaleInvoiceForm2 = ({
                   {/* price 1pc input ############################################## */}
                   <td className={td_basic_class}>
                     <input
+                    disabled={invoice.isEntry}
                       type="number"
                       className={`border px-2 py-1 rounded w-20
                         ${
@@ -1131,4 +1146,4 @@ const SaleInvoiceForm2 = ({
   );
 };
 
-export default SaleInvoiceForm2;
+export default UpdateInvoiceForm2;

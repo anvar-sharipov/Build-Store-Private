@@ -48,3 +48,32 @@ class ProductFilter(django_filters.FilterSet):
     class Meta:
         model = Product
         fields = []
+
+
+
+class SalesInvoiceFilter(django_filters.FilterSet):
+    isEntry = django_filters.BooleanFilter(field_name='isEntry')
+
+    search = django_filters.CharFilter(method='filter_search')
+
+    def filter_search(self, queryset, name, value):
+        if not value:
+            return queryset
+
+        filters = Q()
+
+        # Если значение — число, ищем по id (номер накладной)
+        if value.isdigit():
+            filters |= Q(id=int(value))
+
+        # Поиск по имени покупателя через триграммы (или можно заменить на icontains)
+        queryset = queryset.annotate(
+            similarity=TrigramSimilarity('buyer__name', value)
+        )
+        filters |= Q(similarity__gt=0.1)
+
+        return queryset.filter(filters).order_by('-similarity')
+
+    class Meta:
+        model = SalesInvoice
+        fields = ['isEntry']

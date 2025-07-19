@@ -11,11 +11,11 @@ import Employee from "./Components/Page/Employee/Employee";
 import Partner from "./Components/Page/Partner/Partner";
 import Agent from "./Components/Page/Agent/Agent";
 import PriceChangeReport from "./Components/Page/Reports/PriceChangeReport/PriceChangeReport";
-import AddPurchaseInvoicePage from "./Components/Page/Faktura/PuchaseInvoice/AddPurchaseInvoicePage";
 import AddSaleInvoicePage from "./Components/Page/Faktura/SaleInvoice/AddSaleInvoicePage";
 import Entries from "./Components/Page/Entries/Entries";
 import Account from "./Components/Page/Account/Account";
 import AccountReports from "./Components/Page/Reports/Accounts/AccountReport/AccountReports";
+import UpdateSaleInvoice from "./Components/Page/Faktura/UpdateSaleInvoice/UpdateSaleInvoice";
 
 
 import { AuthProvider } from "./AuthContext";
@@ -23,7 +23,7 @@ import { SearchProvider } from "./Components/context/SearchContext";
 
 function AppShell() {
   const location = useLocation();
-  const isFullScreenPage = location.pathname === "/purchase-invoices/new" || location.pathname === "/sale-invoices/new" ;
+  const isFullScreenPage = location.pathname === "/sale-invoices/new" || location.pathname.includes("/sale-invoices/update");
 
   return (
     <>
@@ -40,8 +40,8 @@ function AppShell() {
             <section className="flex-grow flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 ">
               <Routes>
                 <Route path={ROUTES.MAIN} element={<ProductList />} />
-                <Route path="/purchase-invoices/new" element={<AddPurchaseInvoicePage />} />
                 <Route path="/sale-invoices/new" element={<AddSaleInvoicePage /> } />
+                <Route path="/sale-invoices/update/:id" element={<UpdateSaleInvoice />} />
                 <Route path={ROUTES.REGISTER} element={<Register />} />
                 <Route path={ROUTES.LOGIN} element={<Login />} />
                 <Route path={ROUTES.HARYTLAR} element={<Harytlar />} />

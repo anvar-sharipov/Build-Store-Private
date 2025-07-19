@@ -155,6 +155,8 @@ const SearchedProductList = ({
 
   // esli najal na enter ili na click
   const handleSelectProduct = async (product) => {
+    console.log('productttttt', product);
+    
     const alreadyExists = invoiceTable.some((p) => p.id === product.id);
 
     if (alreadyExists) {

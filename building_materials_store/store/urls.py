@@ -1,6 +1,14 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import *
+from . views.base_views import *
+from . views.entry_views import *
+from . views.partner_views import *
+from . views.product_views import *
+from . views.purchase_invoice_views import *
+from . views.register_views import *
+from . views.sale_invoice_views import *
+from . views.report_views import *
+from . views.utils import *
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 

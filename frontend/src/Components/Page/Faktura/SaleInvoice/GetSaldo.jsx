@@ -20,9 +20,9 @@ const GetSaldo = ({
         entriesWithBalance.map((group, index) => (
           <div
             key={index}
-            className="rounded p-4 shadow-sm bg-white dark:bg-gray-800 max-w-5xl mx-auto mb-6 print:m-0 print:p-0"
+            className="rounded-xl p-4 shadow-md bg-white dark:bg-gray-800 mb-6 print:m-0 print:p-0 print:shadow-none print:w-full"
           >
-            <h2 className="font-semibold mb-2 text-gray-800 dark:text-gray-100 print:mb-0">
+            <h2 className="font-semibold mb-3 text-gray-800 dark:text-gray-100 text-lg print:text-base print:mb-1">
               Карточка счёта: 62 (Покупатели)
             </h2>
 
@@ -30,16 +30,26 @@ const GetSaldo = ({
               Покупатель: {selectedPartner.name} <br />
             </p> */}
 
-            <div className="overflow-auto max-h-[400px] print:text-[14px]">
-              <table className="w-full border border-gray-300 dark:border-gray-600">
+            <div className="overflow-auto max-h-[400px] print:overflow-visible print:max-h-fit print:text-xs">
+              <table className="w-full border border-gray-300 dark:border-gray-600 text-sm print:text-xs print:w-full">
                 <thead className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                  <tr>
-                    <th className="px-2 py-1 border print:p-0 print:border-black">Дата</th>
+                  <tr 
+                    className="border-t cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors print:hover:bg-transparent"
+                  >
+                    <th className="px-2 py-1 border print:p-0 print:border-black print:text-black">
+                      Дата
+                    </th>
                     {/* <th className="px-2 py-1 border print:p-0">Счёт</th> */}
-                    <th className="px-2 py-1 border print:p-0 print:border-black">Операция</th>
-                    <th className="px-2 py-1 border print:p-0 print:border-black">Дебет</th>
-                    <th className="px-2 py-1 border print:p-0 print:border-black">Кредит</th>
-                    <th className="px-2 py-1 border font-semibold print:p-0 print:border-black">
+                    <th className="px-2 py-1 border print:p-0 print:border-black print:text-black">
+                      Операция
+                    </th>
+                    <th className="px-2 py-1 border print:p-0 print:border-black print:text-black">
+                      Дебет
+                    </th>
+                    <th className="px-2 py-1 border print:p-0 print:border-black print:text-black">
+                      Кредит
+                    </th>
+                    <th className="px-2 py-1 border print:p-0 print:border-black print:text-black">
                       Сальдо
                     </th>
                   </tr>
@@ -71,7 +81,7 @@ const GetSaldo = ({
                         }}
                         className="border-t cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
                       >
-                        <td className="px-2 py-1 border print:p-0 text-center print:border-black">
+                        <td className="px-2 py-1 border print:pl-1 print:border-black print:text-black">
                           {new Date(entry.date).toLocaleDateString("ru-RU", {
                             year: "numeric",
                             month: "2-digit",
@@ -81,16 +91,16 @@ const GetSaldo = ({
                         {/* <td className="px-2 py-1 border print:p-0 text-center">
                           {entry.account.number}
                         </td> */}
-                        <td className="px-2 py-1 border print:p-0 print:border-black">
+                        <td className="px-2 py-1 border print:pl-1 print:border-black print:text-black">
                           {entry.transaction_obj?.description || "-"}
                         </td>
-                        <td className="px-2 py-1 border print:p-0 text-center print:border-black">
+                        <td className="px-2 py-1 border print:pl-1 print:border-black print:text-black">
                           {formatNumber(entry.debit)}
                         </td>
-                        <td className="px-2 py-1 border print:p-0 text-center print:border-black">
+                        <td className="px-2 py-1 border print:pl-1 print:border-black print:text-black">
                           {formatNumber(entry.credit)}
                         </td>
-                        <td className="px-2 py-1 border print:p-0 font-semibold text-center print:border-black">
+                        <td className="px-2 py-1 border print:pl-1 print:border-black print:text-black">
                           {formatNumber(entry.running_balance)}
                         </td>
                       </tr>
@@ -100,10 +110,13 @@ const GetSaldo = ({
 
                 <tfoot className="bg-gray-200 dark:bg-gray-800 font-semibold">
                   <tr>
-                    <td colSpan={2} className="px-2 py-1 border text-right print:border-black">
+                    <td
+                      colSpan={2}
+                      className="px-2 py-1 border print:pl-1 print:border-black print:text-black"
+                    >
                       Итого:
                     </td>
-                    <td className="px-2 py-1 border text-center print:border-black">
+                    <td className="px-2 py-1 border print:pl-1 print:border-black print:text-black">
                       {formatNumber(
                         group.entries.reduce(
                           (sum, e) => sum + parseFloat(e.debit || 0),
@@ -111,7 +124,7 @@ const GetSaldo = ({
                         )
                       )}
                     </td>
-                    <td className="px-2 py-1 border text-center print:border-black">
+                    <td className="px-2 py-1 border print:pl-1 print:border-black print:text-black">
                       {formatNumber(
                         group.entries.reduce(
                           (sum, e) => sum + parseFloat(e.credit || 0),
@@ -119,7 +132,9 @@ const GetSaldo = ({
                         )
                       )}
                     </td>
-                    <td className="px-2 py-1 border print:border-black">{formatNumber(group.final_balance)}</td>
+                    <td className="px-2 py-1 border print:pl-1 print:border-black print:text-black">
+                      {formatNumber(group.final_balance)}
+                    </td>
                   </tr>
                 </tfoot>
               </table>

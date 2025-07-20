@@ -34,11 +34,11 @@ const SaleInvoiceForm2 = ({
   const [isOpen, setIsOpen] = useState(false); // dlya galochek
   const [showStockMessageIds, setShowStockMessageIds] = useState([]);
   const [numerateRow, setNumerateRow] = useState(1);
-  console.log('invoiceTable', invoiceTable);
-  
+  console.log("invoiceTable", invoiceTable);
 
   const td_basic_class =
-    "print:px-[3px] print:text-[14px] print:leading-none border border-gray-300 dark:border-gray-700 print:border-black";
+    "text-sm leading-tight border border-gray-300 dark:border-gray-700 " +
+    "print:px-[3px] print:py-0 print:text-[13px] print:leading-none print:border-black";
   const th_basic_class =
     "print:p-[1px] print:text-[14px] print:leading-none border border-gray-300 dark:border-gray-600 dark:text-gray-200 print:border-black";
 

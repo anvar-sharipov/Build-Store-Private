@@ -797,35 +797,30 @@ const AddSaleInvoicePage = () => {
           </div>
         </div>
 
-        <div className="hidden print:block print:text-[14px] print:font-semibold">
+        <div className="hidden print:block print:text-[13px] print:font-normal print:leading-tight space-y-0.5">
           {selectedWarehouse && (
-            <div className="flex">
-              <span className="w-36">Satyjy:</span>
-              <span>{selectedWarehouse}</span>
+            <div>
+              <b>Satyjy:</b> {selectedWarehouse}
             </div>
           )}
           {selectedPartner?.name && (
-            <div className="flex">
-              <span className="w-36">Satyn alyjy:</span>
-              <div>{selectedPartner.name}</div>
+            <div>
+              <b>Satyn alyjy:</b> {selectedPartner.name}
             </div>
           )}
-          {selectedCurrency && (
-            <div className="hidden">
-              <span className="w-36">Walyuta:</span>
-              <div>{selectedCurrency.currency}</div>
+          {/* {selectedCurrency && (
+            <div>
+              <b>Walyuta:</b> {selectedCurrency.currency}
             </div>
-          )}
+          )} */}
           {selectedAwto && (
-            <div className="flex">
-              <span className="w-36">Awto:</span>
-              <div>{selectedAwto}</div>
+            <div>
+              <b>Awto:</b> {selectedAwto}
             </div>
           )}
           {totalPaySumm && (
-            <div className="flex">
-              <span className="w-36">Summa plateja:</span>
-              <div>{totalPaySumm}</div>
+            <div>
+              <b>Summa plateja:</b> {totalPaySumm}
             </div>
           )}
         </div>
@@ -857,7 +852,85 @@ const AddSaleInvoicePage = () => {
         </div>
       )} */}
 
-      <div className="bg-yellow-400 dark:bg-gray-800 p-5 mt-2">
+      <div className="lg:flex lg:flex-row gap-2 text-sm print:block print:w-full bg-yellow-400 p-4">
+        {/* Левая часть */}
+        <div className="flex-1 space-y-2 print:hidden">
+          {invoiceTable.length > 0 && (
+            <div>
+              <div className="print:hidden">
+                <label className="block mb-1 font-medium text-gray-700 dark:text-gray-300">
+                  Примечание
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows="3"
+                  className="w-full px-2 py-1 border rounded-md resize-y
+              bg-white text-gray-900 border-gray-300
+              focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+              dark:bg-gray-800 dark:text-white dark:border-gray-600 
+              dark:focus:ring-blue-400 dark:focus:border-blue-400
+              placeholder-gray-400 dark:placeholder-gray-500 transition"
+                  placeholder="Введите дополнительную информацию..."
+                ></textarea>
+              </div>
+
+              <div className="mt-2 flex flex-wrap justify-between items-center gap-2 print:hidden">
+                <label className="inline-flex items-center space-x-1 text-gray-800">
+                  <input
+                    checked={isEntry}
+                    onChange={handleChangeIsEntry}
+                    type="checkbox"
+                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                  />
+                  <span className="text-sm select-none">С проводкой</span>
+                </label>
+
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="payed_summ"
+                    className="text-gray-700 dark:text-gray-300"
+                  >
+                    Оплата:
+                  </label>
+                  <MyInput
+                    id="payed_summ"
+                    value={totalPaySumm}
+                    onChange={(e) => setTotalPaySumm(e.target.value)}
+                    className="w-24"
+                  />
+                </div>
+
+                {invoiceTable.length > 0 && (
+                  <MyButton
+                    variant="blue"
+                    onClick={handleSaveInvoice}
+                    disabled={saveLoading}
+                  >
+                    {saveLoading ? t("saving") : t("save")}
+                  </MyButton>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Правая часть */}
+        <div className="flex-shrink-0 w-full lg:w-auto print:w-full">
+          <GetSaldo
+            entriesWithBalance={entriesWithBalance}
+            selectedPartner={selectedPartner}
+            setOpenEntryModal={setOpenEntryModal}
+            setSelectedEntryForModal={setSelectedEntryForModal}
+            selectedEntryForModal={selectedEntryForModal}
+            myAxios={myAxios}
+            openEntryModal={openEntryModal}
+            mergeEntriesWithRunningBalance={mergeEntriesWithRunningBalance}
+          />
+        </div>
+      </div>
+
+      {/* <div className="bg-yellow-400 dark:bg-gray-800 p-5 mt-2">
         <GetSaldo
           entriesWithBalance={entriesWithBalance}
           selectedPartner={selectedPartner}
@@ -931,7 +1004,7 @@ const AddSaleInvoicePage = () => {
             </div>
           </div>
         )}
-      </div>
+      </div> */}
       <Notification
         message={t(notification.message)}
         type={notification.type}

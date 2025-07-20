@@ -1198,30 +1198,30 @@ const UpdateSaleInvoice = () => {
               </div>
             </div>
 
-            <div className="hidden print:block print:text-[14px] print:font-semibold">
-              {selectedWarehouse?.name && (
-                <div className="flex">
-                  <span className="w-36">Satyjy:</span>
-                  <span>{selectedWarehouse.name}</span>
+            <div className="hidden print:block print:text-[13px] print:font-normal print:leading-tight space-y-0.5">
+              {selectedWarehouse.name && (
+                <div>
+                  <b>Satyjy:</b> {selectedWarehouse.name}
                 </div>
               )}
-              {selectedPartner.name && (
-                <div className="flex">
-                  <span className="w-36">Satyn alyjy:</span>
-                  <div>{selectedPartner.name}</div>
+              {selectedPartner?.name && (
+                <div>
+                  <b>Satyn alyjy:</b> {selectedPartner.name}
                 </div>
               )}
-
-              {selectedAwto?.name && (
-                <div className="flex">
-                  <span className="w-36">Awto:</span>
-                  <div>{selectedAwto.name}</div>
+              {/* {selectedCurrency && (
+            <div>
+              <b>Walyuta:</b> {selectedCurrency.currency}
+            </div>
+          )} */}
+              {selectedAwto.name && (
+                <div>
+                  <b>Awto:</b> {selectedAwto.name}
                 </div>
               )}
               {totalPaySumm && (
-                <div className="flex">
-                  <span className="w-36">Summa plateja:</span>
-                  <div>{totalPaySumm}</div>
+                <div>
+                  <b>Summa plateja:</b> {totalPaySumm}
                 </div>
               )}
             </div>
@@ -1255,7 +1255,96 @@ const UpdateSaleInvoice = () => {
         </div>
       )} */}
 
-      <div className="bg-yellow-400 dark:bg-gray-800 p-5 mt-2">
+      <div className="lg:flex lg:flex-row gap-4 print:block print:w-full bg-yellow-400 p-4">
+        {/* Левая часть */}
+        <div className="flex-1 space-y-3 print:hidden">
+          {/* Примечание */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Примечание
+            </label>
+            <textarea
+              disabled={invoice.isEntry}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows="3"
+              className="w-full px-3 py-1.5 border rounded-lg shadow-sm resize-y
+        bg-white text-gray-900 border-gray-300
+        focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+        dark:bg-gray-800 dark:text-white dark:border-gray-600 
+        dark:focus:ring-blue-400 dark:focus:border-blue-400
+        placeholder-gray-400 dark:placeholder-gray-500 text-sm transition"
+              placeholder="Введите дополнительную информацию..."
+            />
+          </div>
+
+          {/* Нижний блок: чекбокс, сумма, кнопка */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+            {/* Чекбокс */}
+            <div className="flex items-center space-x-2">
+              <input
+                disabled={invoice.isEntry}
+                checked={isEntry}
+                onChange={handleChangeIsEntry}
+                id="post-transaction"
+                type="checkbox"
+                className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+              />
+              <label
+                htmlFor="post-transaction"
+                className="text-gray-800 text-sm font-medium select-none"
+              >
+                С проводкой
+              </label>
+            </div>
+
+            {/* Сумма платёжа */}
+            <div>
+              <label
+                htmlFor="payed_summ"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Сумма платёжа
+              </label>
+              <MyInput
+                disabled={invoice.isEntry}
+                id="payed_summ"
+                value={totalPaySumm}
+                onChange={(e) => setTotalPaySumm(e.target.value)}
+              />
+            </div>
+
+            {/* Кнопка */}
+            {invoiceTable.length > 0 && (
+              <div className="sm:text-right">
+                <MyButton
+                  variant="blue"
+                  onClick={handleSaveInvoice}
+                  disabled={invoice.isEntry || saveLoading}
+                >
+                  {saveLoading ? t("saving") : t("save")}
+                </MyButton>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Правая часть */}
+        <div className="flex-shrink-0 w-full lg:w-auto print:w-full">
+          <GetSaldo
+            entriesWithBalance={entriesWithBalance}
+            selectedPartner={selectedPartner}
+            setOpenEntryModal={setOpenEntryModal}
+            setSelectedEntryForModal={setSelectedEntryForModal}
+            selectedEntryForModal={selectedEntryForModal}
+            myAxios={myAxios}
+            openEntryModal={openEntryModal}
+            mergeEntriesWithRunningBalance={mergeEntriesWithRunningBalance}
+          />
+        </div>
+      </div>
+
+      {/* <div className="bg-yellow-400 dark:bg-gray-800 p-5 mt-2">
         <GetSaldo
           entriesWithBalance={entriesWithBalance}
           selectedPartner={selectedPartner}
@@ -1332,7 +1421,7 @@ const UpdateSaleInvoice = () => {
             </div>
           </div>
         )}
-      </div>
+      </div> */}
       {/*  */}
 
       <Notification

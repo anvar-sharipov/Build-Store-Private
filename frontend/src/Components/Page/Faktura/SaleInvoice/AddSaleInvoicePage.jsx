@@ -15,6 +15,7 @@ import Notification from "../../../Notification";
 import MyInput from "../../../UI/MyInput";
 import MyModal from "../../../UI/MyModal";
 import GetSaldo from "./GetSaldo";
+import { ROUTES } from "../../../../routes";
 
 const userVisibleColumns = {
   qr_code: false,
@@ -82,7 +83,7 @@ const AddSaleInvoicePage = () => {
 
   const [isEntry, setIsEntry] = useState(false);
 
-  const [saveLoading, setSaveLoading] = useState(false)
+  const [saveLoading, setSaveLoading] = useState(false);
 
   // dlya wywoda balance partnera
   const [entries, setEntries] = useState([]);
@@ -104,8 +105,6 @@ const AddSaleInvoicePage = () => {
 
   const [selectedEntry, setSelectedEntry] = useState("");
 
-  
-
   const handleDeleteProduct = (id) => {
     setInvoiceTable((prevTable) =>
       prevTable.filter(
@@ -115,7 +114,6 @@ const AddSaleInvoicePage = () => {
     inputRef.current?.focus();
     inputRef.current?.select();
   };
-
 
   // localStorage.removeItem("visibleColumns")
 
@@ -324,7 +322,7 @@ const AddSaleInvoicePage = () => {
 
   const handleSaveInvoice = async () => {
     // console.log("invoiceTable:", invoiceTable);
-    setSaveLoading(true)
+    setSaveLoading(true);
     const items = invoiceTable.map((item) => {
       let productId;
       if (typeof item.id === "string" && item.id.includes("-gift-")) {
@@ -362,11 +360,12 @@ const AddSaleInvoicePage = () => {
     try {
       const res = await myAxios.post("sales-invoices/", dataToSend);
       console.log("Успешно сохранено:", res.data);
+      navigate(ROUTES.MAIN);
     } catch (error) {
       console.error("Ошибка при сохранении:", error);
-      showNotification(t("commonSaveError"), "error")
+      showNotification(t("commonSaveError"), "error");
     } finally {
-      setSaveLoading(false)
+      setSaveLoading(false);
     }
 
     // // (опционально) сохранить в стейт
@@ -453,7 +452,7 @@ const AddSaleInvoicePage = () => {
   const handleChangeIsEntry = (event) => {
     setIsEntry(event.target.checked);
     console.log("Is Entry:", event.target.checked);
-    
+
     // Здесь можешь вызвать функцию, которая будет проводить проводку
     // if (event.target.checked) postTransaction();
   };
@@ -765,7 +764,6 @@ const AddSaleInvoicePage = () => {
             >
               Продукты
             </label>
-
           </div>
           <div>
             {results.length > 0 &&
@@ -809,15 +807,25 @@ const AddSaleInvoicePage = () => {
           {selectedPartner?.name && (
             <div className="flex">
               <span className="w-36">Satyn alyjy:</span>
-              <div>
-                {selectedPartner.name}
-              </div>
+              <div>{selectedPartner.name}</div>
             </div>
           )}
           {selectedCurrency && (
             <div className="hidden">
               <span className="w-36">Walyuta:</span>
               <div>{selectedCurrency.currency}</div>
+            </div>
+          )}
+          {selectedAwto && (
+            <div className="flex">
+              <span className="w-36">Awto:</span>
+              <div>{selectedAwto}</div>
+            </div>
+          )}
+          {totalPaySumm && (
+            <div className="flex">
+              <span className="w-36">Summa plateja:</span>
+              <div>{totalPaySumm}</div>
             </div>
           )}
         </div>
@@ -843,11 +851,11 @@ const AddSaleInvoicePage = () => {
           setTotalPaySumm={setTotalPaySumm}
         />
       )}
-      {selectedAwto && (
+      {/* {selectedAwto && (
         <div className="mt-5 font-semibold hidden print:block print:text-[14px] print:font-semibold">
           {selectedAwto}
         </div>
-      )}
+      )} */}
 
       <div className="bg-yellow-400 dark:bg-gray-800 p-5 mt-2">
         <GetSaldo
@@ -911,8 +919,12 @@ const AddSaleInvoicePage = () => {
 
               <div>
                 {invoiceTable.length > 0 && (
-                  <MyButton variant="blue" onClick={handleSaveInvoice} disabled={saveLoading}>
-                    {saveLoading ? t("saving"): t("save") }
+                  <MyButton
+                    variant="blue"
+                    onClick={handleSaveInvoice}
+                    disabled={saveLoading}
+                  >
+                    {saveLoading ? t("saving") : t("save")}
                   </MyButton>
                 )}
               </div>

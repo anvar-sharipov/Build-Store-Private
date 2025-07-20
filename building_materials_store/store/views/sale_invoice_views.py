@@ -69,7 +69,7 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return SalesInvoice.objects.select_related(
             'buyer', 'delivered_by', 'created_by'
-        ).prefetch_related('items__product').all()
+        ).prefetch_related('items__product').all().order_by('-pk')
 
     # def perform_create(self, serializer):
     #     serializer.save(created_by=self.request.user)

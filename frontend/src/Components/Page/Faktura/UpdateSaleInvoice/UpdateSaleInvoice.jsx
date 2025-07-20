@@ -13,6 +13,7 @@ import UpdateInvoiceForm2 from "./UpdateInvoiceForm2";
 import GetSaldo from "../SaleInvoice/GetSaldo";
 import MyButton from "../../../UI/MyButton";
 import MyInput from "../../../UI/MyInput";
+import { ROUTES } from "../../../../routes";
 
 const userVisibleColumns = {
   qr_code: false,
@@ -209,7 +210,7 @@ const UpdateSaleInvoice = () => {
     }, 400);
     return () => clearTimeout(delayDebounce);
   }, [query]);
-// ########################################################################################################################## updateQuantity START
+  // ########################################################################################################################## updateQuantity START
   const updateQuantity = (productId, new_quantity) => {
     setInvoiceTable((prevTable) =>
       prevTable.map((item) => {
@@ -292,8 +293,7 @@ const UpdateSaleInvoice = () => {
     );
   };
 
-// ########################################################################################################################## updateQuantity END
-
+  // ########################################################################################################################## updateQuantity END
 
   //   ######################################################################################################################## invoice START
   useEffect(() => {
@@ -308,11 +308,11 @@ const UpdateSaleInvoice = () => {
     // }, 50);
 
     if (invoice.note) {
-        setDescription(invoice.note)
+      setDescription(invoice.note);
     }
 
     if (invoice.isEntry) {
-        setIsEntry(invoice.isEntry)
+      setIsEntry(invoice.isEntry);
     }
 
     if (invoice.warehouse?.id > 0) {
@@ -794,6 +794,7 @@ const UpdateSaleInvoice = () => {
         dataToSend
       );
       console.log("Успешно сохранено:", res.data);
+      navigate(ROUTES.MAIN);
     } catch (error) {
       console.error("Ошибка при сохранении:", error);
       showNotification(t("commonSaveError"), "error");
@@ -822,9 +823,11 @@ const UpdateSaleInvoice = () => {
                 className="flex-shrink-0 hidden print:block"
               />
               {/* Заголовок по центру */}
-              <h1 className="font-bold text-center flex-1 dark:text-gray-400">
+              <h1 className="font-bold text-center flex-1 dark:text-gray-400 print:hidden">
                 редактирования расходной накладной № {invoice?.id}{" "}
-                {invoice.isEntry}
+              </h1>
+              <h1 className="font-bold text-center flex-1 dark:text-gray-400 hidden print:block print:text-[24px] print:font-semibold">
+                Расходная накладная № {invoice?.id}{" "}
               </h1>
 
               <div className="mr-2">
@@ -1208,6 +1211,19 @@ const UpdateSaleInvoice = () => {
                   <div>{selectedPartner.name}</div>
                 </div>
               )}
+
+              {selectedAwto?.name && (
+                <div className="flex">
+                  <span className="w-36">Awto:</span>
+                  <div>{selectedAwto.name}</div>
+                </div>
+              )}
+              {totalPaySumm && (
+                <div className="flex">
+                  <span className="w-36">Summa plateja:</span>
+                  <div>{totalPaySumm}</div>
+                </div>
+              )}
             </div>
           </div>
           {invoiceTable.length > 0 && (
@@ -1233,11 +1249,11 @@ const UpdateSaleInvoice = () => {
           )}
         </div>
       )}
-      {selectedAwto?.name && (
+      {/* {selectedAwto?.name && (
         <div className="mt-5 font-semibold hidden print:block print:text-[14px] print:font-semibold">
           {selectedAwto.name}
         </div>
-      )}
+      )} */}
 
       <div className="bg-yellow-400 dark:bg-gray-800 p-5 mt-2">
         <GetSaldo

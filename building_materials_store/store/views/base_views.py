@@ -47,7 +47,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import PageNumberPagination
 # swoy pagination 
 class CustomPageNumberPagination(PageNumberPagination):
-    page_size = 2              # Кол-во элементов на странице по умолчанию
+    page_size = 10              # Кол-во элементов на странице по умолчанию
     page_size_query_param = 'page_size'  # Позволяет клиенту указать page_size в запросе (?page_size=50)
     max_page_size = 100          # Максимальное кол-во элементов на странице, чтобы не перегружать сервер
 

@@ -108,8 +108,8 @@ class SalesInvoiceSerializer(serializers.ModelSerializer):
     created_by = serializers.StringRelatedField(read_only=True) 
     # entry_type = serializers.ChoiceField(choices=SalesInvoice.ENTRY_TYPE_CHOICES, required=False, allow_null=True)
     
-    currency = serializers.StringRelatedField(read_only=True)
-    currency_id = serializers.PrimaryKeyRelatedField(queryset=Currency.objects.all(), write_only=True, source='currency')
+    # currency = serializers.StringRelatedField(read_only=True)
+    # currency_id = serializers.PrimaryKeyRelatedField(queryset=Currency.objects.all(), write_only=True, source='currency')
 
     warehouse = WarehouseSerializer(read_only=True)
     warehouse_id = serializers.PrimaryKeyRelatedField(queryset=Warehouse.objects.all(), write_only=True, source='warehouse', required=False, allow_null=True)
@@ -123,7 +123,7 @@ class SalesInvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = SalesInvoice
         fields = [
-            'id', 'currency', 'currency_id',
+            'id',
             'buyer', 'buyer_id', 'delivered_by', 'delivered_by_id',
             'created_by', 'created_at', 'total_amount',
             'note', 'items',
@@ -137,7 +137,7 @@ class SalesInvoiceSerializer(serializers.ModelSerializer):
         items_data = validated_data.pop('items', [])
         buyer = validated_data.pop('buyer', None)
         delivered_by = validated_data.pop('delivered_by_id', None)
-        currency = validated_data.pop('currency', None)
+        # currency = validated_data.pop('currency', None)
         print('validated_data === ', validated_data)
         total_pay_summ = validated_data.pop('total_pay_summ', 0)
         user = self.context['request'].user
@@ -145,7 +145,7 @@ class SalesInvoiceSerializer(serializers.ModelSerializer):
         invoice = SalesInvoice.objects.create(
             buyer=buyer,
             delivered_by=delivered_by,
-            currency=currency,
+            # currency=currency,
             created_by=user,
             total_amount=0,
             total_pay_summ=total_pay_summ,
@@ -178,13 +178,13 @@ class SalesInvoiceSerializer(serializers.ModelSerializer):
         items_data = validated_data.pop('items', [])
         buyer = validated_data.pop('buyer', None)
         delivered_by = validated_data.pop('delivered_by_id', None)
-        currency = validated_data.pop('currency', None)
+        # currency = validated_data.pop('currency', None)
         total_pay_summ = validated_data.pop('total_pay_summ', 0)
         user = self.context['request'].user
 
         instance.buyer = buyer if buyer else instance.buyer
         instance.delivered_by = delivered_by if delivered_by else instance.delivered_by
-        instance.currency = currency if currency else instance.currency
+        # instance.currency = currency if currency else instance.currency
         instance.total_pay_summ = total_pay_summ
         instance.created_by = user
 

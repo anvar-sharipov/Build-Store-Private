@@ -88,31 +88,23 @@ class PartnerEntriesView(APIView):
     def get(self, request, partner_id):
         entries = Entry.objects.filter(
             transaction__partner_id=partner_id,
-            # account__number__startswith='62.'
             account__number='62'
-        ).order_by('account__currency__code', 'transaction__date', 'id')
-
-        grouped = defaultdict(list)
-        balances = defaultdict(lambda: Decimal('0.00'))
-
-        for entry in entries:
-            currency = entry.account.currency.code
-            debit = Decimal(entry.debit or '0')
-            credit = Decimal(entry.credit or '0')
-
-            balances[currency] += debit - credit
-
-            data = EntrySerializer(entry).data
-            data['running_balance'] = str(balances[currency])
-            grouped[currency].append(data)
+        ).order_by('transaction__date', 'id')
 
         result = []
-        for currency_code, items in grouped.items():
-            result.append({
-                'currency': currency_code,
-                'entries': items,
-                'final_balance': str(balances[currency_code])
-            })
-        print('result', result)
-        return Response(result)
-    
+        running_balance = Decimal('0.00')
+
+        for entry in entries:
+            debit = Decimal(entry.debit or '0')
+            credit = Decimal(entry.credit or '0')
+            running_balance += debit - credit
+
+            data = EntrySerializer(entry).data
+            data['running_balance'] = str(running_balance)
+            result.append(data)
+
+        return Response({
+            'entries': result,
+            'final_balance': str(running_balance)
+        })
+            

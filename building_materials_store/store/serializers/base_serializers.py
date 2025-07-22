@@ -104,13 +104,13 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
 
 
-class CurrencySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Currency
-        fields = ['id', 'code', 'name', 'symbol']
+# class CurrencySerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Currency
+#         fields = ['id', 'code', 'name', 'symbol']
 
 
-class CurrencyRateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CurrencyRate
-        fields = '__all__'
+# class CurrencyRateSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = CurrencyRate
+#         fields = '__all__'

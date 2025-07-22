@@ -48,7 +48,7 @@ const Faktura = () => {
         if (searchQuery.trim()) {
           params.search = searchQuery.trim(); // или другое имя, если у тебя на бэке не `search`
         }
-        console.log("params", params);
+        // console.log("params", params);
 
         const res = await myAxios.get("sales-invoices/", { params });
 
@@ -60,7 +60,7 @@ const Faktura = () => {
       } finally {
         setLoading(false);
         
-        console.log('invoices', invoices);
+        // console.log('invoices', invoices);
         
       }
     };

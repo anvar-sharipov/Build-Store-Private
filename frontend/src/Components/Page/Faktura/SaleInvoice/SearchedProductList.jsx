@@ -73,7 +73,7 @@ const SearchedProductList = ({
               name: defaultUnit.unit_name,
               conversion_factor: defaultUnit.conversion_factor,
             };
-            console.log("selected_unit", selected_unit);
+            // console.log("selected_unit", selected_unit);
           } else {
             selected_unit = {
               id: gift.base_unit_obj.id,
@@ -95,7 +95,8 @@ const SearchedProductList = ({
         setInvoiceTable((prev) => [
           ...prev,
           {
-            id: `${gift.id}-gift-${gift.gift_for_product_id}`, // уникальный id
+            // id: `${gift.id}-gift-${gift.gift_for_product_id}`, // уникальный id
+            id: gift.id,
             qr_code: gift.qr_code,
             name: gift.name,
             gift_for_product_name: gift.gift_for_product_name,
@@ -155,7 +156,7 @@ const SearchedProductList = ({
 
   // esli najal na enter ili na click
   const handleSelectProduct = async (product) => {
-    console.log('productttttt', product);
+    // console.log('productttttt', product);
     
     const alreadyExists = invoiceTable.some((p) => p.id === product.id);
 

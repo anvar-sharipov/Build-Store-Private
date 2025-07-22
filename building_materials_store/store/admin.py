@@ -327,27 +327,27 @@ class PurchaseReturnInvoiceAdmin(admin.ModelAdmin):
 
 
 ############################################################################################################## Accounts START
-@admin.register(Currency)
-class CurrencyAdmin(admin.ModelAdmin):
-    list_display = ('code', 'name', 'symbol')
-    search_fields = ('code', 'name')
-    ordering = ('code',)
+# @admin.register(Currency)
+# class CurrencyAdmin(admin.ModelAdmin):
+#     list_display = ('code', 'name', 'symbol')
+#     search_fields = ('code', 'name')
+#     ordering = ('code',)
 
 
-@admin.register(CurrencyRate)
-class CurrencyRateAdmin(admin.ModelAdmin):
-    list_display = ('currency', 'rate', 'date')            # Отображаемые колонки
-    list_filter = ('currency', 'date')                     # Фильтры справа
-    search_fields = ('currency__code',)                    # Поиск по коду валюты
-    ordering = ('-date',)                                  # Сортировка по дате (сначала новые)
-    date_hierarchy = 'date'                                # Навигация по датам
-    list_per_page = 25                                     # Пагинация
+# @admin.register(CurrencyRate)
+# class CurrencyRateAdmin(admin.ModelAdmin):
+#     list_display = ('currency', 'rate', 'date')            # Отображаемые колонки
+#     list_filter = ('currency', 'date')                     # Фильтры справа
+#     search_fields = ('currency__code',)                    # Поиск по коду валюты
+#     ordering = ('-date',)                                  # Сортировка по дате (сначала новые)
+#     date_hierarchy = 'date'                                # Навигация по датам
+#     list_per_page = 25                                     # Пагинация
 
 
 @admin.register(Account)
 class AccountAdmin(admin.ModelAdmin):
-    list_display = ('number', 'name', 'type', 'currency')
-    list_filter = ('type', 'currency')
+    list_display = ('number', 'name', 'type')
+    list_filter = ('type',)
     search_fields = ('number', 'name')
     ordering = ('number',)
 
@@ -372,8 +372,8 @@ class TransactionAdmin(admin.ModelAdmin):
 
 @admin.register(Entry)
 class EntryAdmin(admin.ModelAdmin):
-    list_display = ('transaction', 'account', 'debit', 'credit')
-    list_filter = ('account__type', 'account__currency')
+    list_display = ('id', 'transaction', 'account', 'debit', 'credit')
+    list_filter = ('account__type',)
     search_fields = ('transaction__description', 'account__name', 'account__number')
     ordering = ('-transaction__date',)
 ############################################################################################################## Accounts END

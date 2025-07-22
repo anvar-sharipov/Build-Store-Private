@@ -523,7 +523,7 @@ class PurchaseInvoiceItem(models.Model):
 class SalesInvoice(models.Model):  # накладная по продаже
 
 
-    currency = models.ForeignKey('Currency', on_delete=models.PROTECT, verbose_name='Валюта')
+    # currency = models.ForeignKey('Currency', on_delete=models.PROTECT, verbose_name='Валюта', null=True, blank=True)
     buyer = models.ForeignKey('Partner', on_delete=models.PROTECT, limit_choices_to={'type__in': ['klient', 'both']}, verbose_name='Покупатель')
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name='Создал')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
@@ -690,32 +690,32 @@ class PurchaseReturnItem(models.Model):
 
 ############################################################################################################## Accounts START
 
-# # Валюта
-class Currency(models.Model):
-    code = models.CharField(max_length=3, unique=True, verbose_name='Код валюты')  # USD, TMT и т.п.
-    name = models.CharField(max_length=50, verbose_name='Название валюты')
-    symbol = models.CharField(max_length=5, verbose_name='Символ')
+# # # Валюта
+# class Currency(models.Model):
+#     code = models.CharField(max_length=3, unique=True, verbose_name='Код валюты')  # USD, TMT и т.п.
+#     name = models.CharField(max_length=50, verbose_name='Название валюты')
+#     symbol = models.CharField(max_length=5, verbose_name='Символ')
 
-    def __str__(self):
-        return f"{self.symbol} ({self.code})"
+#     def __str__(self):
+#         return f"{self.symbol} ({self.code})"
 
-    class Meta:
-        verbose_name = 'Валюта'
-        verbose_name_plural = 'Валюты'
+#     class Meta:
+#         verbose_name = 'Валюта'
+#         verbose_name_plural = 'Валюты'
 
 # Курс валюты
-class CurrencyRate(models.Model):
-    currency = models.ForeignKey(Currency, on_delete=models.CASCADE, verbose_name="Валюта")
-    rate = models.DecimalField(max_digits=12, decimal_places=4, default=1, verbose_name="Курс валюты")
-    date = models.DateField(auto_now_add=True, verbose_name="Дата курса")
+# class CurrencyRate(models.Model):
+#     currency = models.ForeignKey(Currency, on_delete=models.CASCADE, verbose_name="Валюта", null=True, blank=True)
+#     rate = models.DecimalField(max_digits=12, decimal_places=4, default=1, verbose_name="Курс валюты")
+#     date = models.DateField(auto_now_add=True, verbose_name="Дата курса")
 
-    class Meta:
-        verbose_name = "Курс валюты"
-        verbose_name_plural = "Курсы валют"
-        unique_together = ('currency', 'date')
+#     class Meta:
+#         verbose_name = "Курс валюты"
+#         verbose_name_plural = "Курсы валют"
+#         unique_together = ('currency', 'date')
 
-    def __str__(self):
-        return f"{self.currency.code}: {self.rate} на {self.date}"
+#     def __str__(self):
+#         return f"{self.currency.code}: {self.rate} на {self.date}"
 
 
 
@@ -734,10 +734,10 @@ class Account(models.Model):
     number = models.CharField(max_length=20, unique=True)       # Пример: '50.1', '90.2'
     name = models.CharField(max_length=255)                     # Название: 'Касса в USD'
     type = models.CharField(max_length=20, choices=ACCOUNT_TYPES)
-    currency = models.ForeignKey(Currency, on_delete=models.PROTECT)
+    # currency = models.ForeignKey(Currency, on_delete=models.PROTECT, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.number} {self.name} ({self.currency.code})"
+        return f"{self.number} {self.name}"
     
 
 # # Хозяйственная операция

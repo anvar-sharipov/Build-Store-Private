@@ -37,7 +37,7 @@ function AppShell() {
           >
             {!isFullScreenPage && <SidebarLeft />}
 
-            <section className="flex-grow flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 ">
+            <section className={`flex-grow flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-sm ${isFullScreenPage ? "p-0" : "p-4"}`}>
               <Routes>
                 <Route path={ROUTES.MAIN} element={<ProductList />} />
                 <Route path="/sale-invoices/new" element={<AddSaleInvoicePage /> } />

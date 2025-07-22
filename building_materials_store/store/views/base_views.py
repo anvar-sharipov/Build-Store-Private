@@ -286,15 +286,15 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     
 
 
-class CurrencyViewSet(viewsets.ModelViewSet):
-    queryset = Currency.objects.all()
-    serializer_class = CurrencySerializer
-    permission_classes = [IsAuthenticated]
+# class CurrencyViewSet(viewsets.ModelViewSet):
+#     queryset = Currency.objects.all()
+#     serializer_class = CurrencySerializer
+#     permission_classes = [IsAuthenticated]
 
 
-class CurrencyRateViewSet(viewsets.ModelViewSet):
-    queryset = CurrencyRate.objects.all()
-    serializer_class = CurrencyRateSerializer
+# class CurrencyRateViewSet(viewsets.ModelViewSet):
+    # queryset = CurrencyRate.objects.all()
+    # serializer_class = CurrencyRateSerializer
 
 
 @api_view(['GET'])

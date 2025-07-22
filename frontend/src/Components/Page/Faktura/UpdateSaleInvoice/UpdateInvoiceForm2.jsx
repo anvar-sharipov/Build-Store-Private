@@ -31,14 +31,14 @@ const UpdateInvoiceForm2 = ({
   handleDeleteProduct,
   setTotalPaySumm,
   invoice,
+  setTotalDebit,
 }) => {
-  const [isOpen, setIsOpen] = useState(false); // dlya galochek
   const [showStockMessageIds, setShowStockMessageIds] = useState([]);
   const [numerateRow, setNumerateRow] = useState(1);
 
   const td_basic_class =
-    "text-sm leading-tight border border-gray-300 dark:border-gray-700 " +
-    "print:px-[3px] print:py-0 print:text-[13px] print:leading-none print:border-black";
+    "leading-tight border border-gray-300 dark:border-gray-700 " +
+    "print:px-[3px] print:py-0 print:text-[14px] print:leading-none print:border-black";
   const th_basic_class =
     "print:p-[1px] print:text-[14px] print:leading-none border border-gray-300 dark:border-gray-600 dark:text-gray-200 print:border-black";
 
@@ -47,9 +47,21 @@ const UpdateInvoiceForm2 = ({
 
   // dlya tfoot summ START
   const products = invoiceTable.filter((p) => !p.is_gift);
-  console.log("products", products);
+  // console.log("products", products);
 
-  const gifts = invoiceTable.filter((p) => p.is_gift);
+  // const gifts = invoiceTable.filter((p) => p.is_gift);
+  const gifts = Object.values(
+    invoiceTable
+      .filter((p) => p.is_gift)
+      .reduce((acc, gift) => {
+        if (acc[gift.id]) {
+          acc[gift.id].selected_quantity += gift.selected_quantity;
+        } else {
+          acc[gift.id] = { ...gift };
+        }
+        return acc;
+      }, {})
+  );
 
   const totalPurchaseSum = products.reduce(
     (sum, p) => sum + (p.purchase_price_summ || 0),
@@ -71,6 +83,22 @@ const UpdateInvoiceForm2 = ({
         : p.retail_price_summ || 0)
     );
   }, 0);
+
+  useEffect(() => {
+    const total = products.reduce((sum, p) => {
+      return (
+        sum +
+        (priceType === "wholesale"
+          ? p.wholesale_price_summ
+          : p.retail_price_summ || 0)
+      );
+    }, 0);
+
+    setTotalDebit(total);
+  }, [products, priceType]); // зависимости
+  useEffect(() => {
+    setTotalPaySumm(totalMainSum);
+  }, [totalMainSum]);
 
   useEffect(() => {
     if (parseFloat(invoice.total_pay_summ) === parseFloat(totalMainSum)) {
@@ -143,192 +171,12 @@ const UpdateInvoiceForm2 = ({
 
   return (
     <>
-      <div className="bg-yellow-400 dark:bg-gray-800 border dark:border-gray-700">
-        <div
-          onClick={() => setIsOpen(!isOpen)}
-          className="text-blue-600 hover:underline hover:text-blue-800 cursor-pointer transition flex items-center gap-1 print:hidden p-2"
-        >
-          <div className="flex text-center mx-auto items-center gap-2">
-            <span>Настройки</span>
-            <AiOutlineDown
-              className={`transition-transform duration-300 transform ${
-                isOpen ? "rotate-180" : "rotate-0"
-              }`}
-            />
-          </div>
-        </div>
-
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="print:hidden p-4 shadow-sm dark:bg-gray-800 max-w-full flex flex-col gap-4 mt-2 print:p-0 print:m-0 bg-yellow-400"
-            >
-              {/* Тип цены и чекбоксы в одной строке, wrap для чекбоксов */}
-
-              <div className="flex flex-wrap items-center gap-6">
-                {/* Тип цены */}
-                <div className="flex items-center gap-3 min-w-[180px]">
-                  <span className="font-semibold text-gray-700 dark:text-gray-300">
-                    Тип цены:
-                  </span>
-                  <label className="flex items-center gap-1 cursor-pointer select-none text-gray-800 dark:text-gray-200">
-                    <input
-                      type="radio"
-                      name="priceType"
-                      value="wholesale"
-                      onChange={(e) => {
-                        setPriceType(e.target.value);
-                        setInvoiceTable((prev) =>
-                          prev.map((item) => {
-                            return {
-                              ...item,
-                              selected_quantity: item.selected_quantity,
-                              base_quantity: 1,
-                              wholesale_price_1pc:
-                                item.original_wholesale_price_1pc,
-                              wholesale_price_summ:
-                                item.original_wholesale_price_1pc *
-                                item.selected_quantity,
-                              retail_price_1pc: item.original_retail_price_1pc,
-                              retail_price_summ: item.original_retail_price_1pc,
-                              purchase_price_summ:
-                                item.purchase_price_1pc *
-                                item.selected_quantity,
-                              difference_price:
-                                item.original_difference_price_wholesale,
-                              difference_price_summ:
-                                item.original_difference_price_wholesale *
-                                item.selected_quantity,
-                              discount_difference_price:
-                                item.original_discount_difference_price_wholesale,
-                              discount_difference_price_summ:
-                                item.original_discount_difference_price_wholesale *
-                                item.selected_quantity,
-                              manually_changed_fields: {
-                                ...item.manually_changed_fields,
-                                price: false,
-                              },
-                            };
-                          })
-                        );
-                      }}
-                      checked={priceType === "wholesale"}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"
-                    />
-                    <span>Опт</span>
-                  </label>
-                  <label className="flex items-center gap-1 cursor-pointer select-none text-gray-800 dark:text-gray-200">
-                    <input
-                      type="radio"
-                      name="priceType"
-                      value="retail"
-                      onChange={(e) => {
-                        setPriceType(e.target.value);
-                        setInvoiceTable((prev) =>
-                          prev.map((item) => {
-                            return {
-                              ...item,
-                              selected_quantity: item.selected_quantity,
-                              base_quantity: 1,
-                              wholesale_price_1pc:
-                                item.original_wholesale_price_1pc,
-                              wholesale_price_summ:
-                                item.original_wholesale_price_1pc,
-                              retail_price_1pc: item.original_retail_price_1pc,
-                              retail_price_summ:
-                                item.original_retail_price_1pc *
-                                item.selected_quantity,
-                              purchase_price_summ:
-                                item.purchase_price_1pc *
-                                item.selected_quantity,
-                              difference_price:
-                                item.original_difference_price_retail,
-                              difference_price_summ:
-                                item.original_difference_price_retail *
-                                item.selected_quantity,
-                              discount_difference_price:
-                                item.original_discount_difference_price_retail,
-                              discount_difference_price_summ:
-                                item.original_discount_difference_price_retail *
-                                item.selected_quantity,
-                              manually_changed_fields: {
-                                ...item.manually_changed_fields,
-                                price: false,
-                              },
-                            };
-                          })
-                        );
-                      }}
-                      checked={priceType === "retail"}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"
-                    />
-                    <span>Розница</span>
-                  </label>
-                </div>
-
-                {/* Чекбоксы */}
-                <div className="flex flex-wrap gap-4 flex-1 min-w-[300px]">
-                  {[
-                    { key: "qr_code", label: "QR code" },
-                    { key: "purchase", label: "Приход" },
-                    { key: "income", label: "Доход" },
-                    { key: "discount", label: "Скидка" },
-                    { key: "volume", label: "Объём (м³)" },
-                    { key: "weight", label: "Вес (кг)" },
-                    { key: "dimensions", label: "Размеры" },
-                  ].map(({ key, label }) => (
-                    <label
-                      key={key}
-                      className="flex items-center gap-2 cursor-pointer select-none text-gray-800 dark:text-gray-200"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={visibleColumns[key]}
-                        onChange={(e) =>
-                          setVisibleColumns((prev) => ({
-                            ...prev,
-                            [key]: e.target.checked,
-                          }))
-                        }
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"
-                      />
-                      {label}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Кнопки управления галочками с меньшими размерами */}
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setVisibleColumns(userVisibleColumns)}
-                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 text-white rounded text-sm transition"
-                  type="button"
-                >
-                  Снять все галочки
-                </button>
-                <button
-                  onClick={() => setVisibleColumns(adminVisibleColumns)}
-                  className="px-3 py-1.5 bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-400 text-white rounded transition"
-                  type="button"
-                >
-                  Вставить все галочки
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      <div className="overflow-x-auto w-full max-w-full">
+      <div className="w-full max-w-full px-3">
         <motion.table
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="table-auto border border-gray-300 border-collapse w-full print:border-black print:text-black print:text-[14px] print:leading-tight mt-2 print:mt-0 print:pt-0"
+          className="table-auto border border-gray-300 border-collapse w-full print:border-black print:text-black print:text-[14px] print:leading-tight print:mt-0 print:pt-0"
         >
           <thead className="bg-gray-100 dark:bg-gray-900 print:bg-white print:dark:bg-white">
             <tr className="bg-gray-100 dark:bg-gray-900">

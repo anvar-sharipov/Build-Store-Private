@@ -10,10 +10,12 @@ import Fuse from "fuse.js";
 import { myClass } from "../../../tailwindClasses";
 import Notification from "../../../Notification";
 import UpdateInvoiceForm2 from "./UpdateInvoiceForm2";
-import GetSaldo from "../SaleInvoice/GetSaldo";
 import MyButton from "../../../UI/MyButton";
 import MyInput from "../../../UI/MyInput";
 import { ROUTES } from "../../../../routes";
+import GetSaldo2 from "../SaleInvoice/GetSaldo2";
+import { motion, AnimatePresence } from "framer-motion";
+import { AiOutlineDown } from "react-icons/ai";
 
 const userVisibleColumns = {
   qr_code: false,
@@ -37,6 +39,7 @@ const adminVisibleColumns = {
 
 const UpdateSaleInvoice = () => {
   const { t } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false); // dlya galochek
   const { id } = useParams(); // Получаем ID из URL
   const [invoice, setInvoice] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -84,6 +87,8 @@ const UpdateSaleInvoice = () => {
 
   const [notification, setNotification] = useState({ message: "", type: "" });
   const [priceType, setPriceType] = useState("wholesale");
+
+  const [totalDebit, setTotalDebit] = useState(0)
 
   //   Visible columns START
   const defaultVisibleColumns = adminVisibleColumns;
@@ -298,7 +303,7 @@ const UpdateSaleInvoice = () => {
   //   ######################################################################################################################## invoice START
   useEffect(() => {
     if (!invoice) return;
-    console.log("invoice", invoice);
+    // console.log("invoice", invoice);
 
     searchPartnerInputRef.current?.focus();
     // setTimeout(() => {
@@ -357,7 +362,7 @@ const UpdateSaleInvoice = () => {
 
         for (const { data, quantity } of productResponses) {
           if (parseFloat(data.purchase_price) !== 0) {
-            console.log("data", data);
+            // console.log("data", data);
 
             await handleSelectProduct(data); // если она асинхронная
             updateQuantity(data.id, quantity);
@@ -461,7 +466,8 @@ const UpdateSaleInvoice = () => {
         setInvoiceTable((prev) => [
           ...prev,
           {
-            id: `${gift.id}-gift-${gift.gift_for_product_id}`, // уникальный id
+            // id: `${gift.id}-gift-${gift.gift_for_product_id}`, // уникальный id
+            id: gift.id,
             qr_code: gift.qr_code,
             name: gift.name,
             gift_for_product_name: gift.gift_for_product_name,
@@ -682,12 +688,9 @@ const UpdateSaleInvoice = () => {
     async function fetchEntries() {
       try {
         setError(null);
-        const res = await myAxios.get(
-          `/api/partner/${selectedPartnerId}/entries/`
-        );
-        // console.log("resssssss.data", res.data);
+        const res = await myAxios.get(`partner/${selectedPartnerId}/entries/`);
 
-        setEntries(res.data);
+        setEntries(res.data.entries);
       } catch (e) {
         setError("Ошибка загрузки истории");
       }
@@ -696,54 +699,9 @@ const UpdateSaleInvoice = () => {
     fetchEntries();
   }, [selectedPartnerId]);
 
-  // wywod istorii pokupok partnera posle najatiya na enter END #########
-
-  // Функция объединения и пересчёта сальдо нарастающим итогом
-  function mergeEntriesWithRunningBalance(entries) {
-    const map = new Map();
-
-    // Объединяем по ключу
-    entries.forEach((entry) => {
-      const key = `${new Date(entry.date).toISOString().slice(0, 10)}|${
-        entry.account.number
-      }|${entry.transaction_obj?.description || ""}`;
-
-      if (!map.has(key)) {
-        map.set(key, {
-          ...entry,
-          debit: parseFloat(entry.debit) || 0,
-          credit: parseFloat(entry.credit) || 0,
-        });
-      } else {
-        const existing = map.get(key);
-        existing.debit += parseFloat(entry.debit) || 0;
-        existing.credit += parseFloat(entry.credit) || 0;
-        map.set(key, existing);
-      }
-    });
-
-    // Превращаем в массив
-    const merged = Array.from(map.values());
-
-    // Считаем нарастающее сальдо
-    let runningBalance = 0;
-    const result = merged.map((e) => {
-      runningBalance += e.debit - e.credit;
-      return {
-        ...e,
-        debit: e.debit === 0 ? "" : e.debit.toFixed(2),
-        credit: e.credit === 0 ? "" : e.credit.toFixed(2),
-        running_balance: runningBalance.toFixed(2),
-      };
-    });
-
-    return result;
-  }
-  // console.log("entriesWithBalance", entriesWithBalance);
-
   const handleChangeIsEntry = (event) => {
     setIsEntry(event.target.checked);
-    console.log("Is Entry:", event.target.checked);
+    // console.log("Is Entry:", event.target.checked);
 
     // Здесь можешь вызвать функцию, которая будет проводить проводку
     // if (event.target.checked) postTransaction();
@@ -755,12 +713,12 @@ const UpdateSaleInvoice = () => {
     // console.log("invoiceTable:", invoiceTable);
     setSaveLoading(true);
     const items = invoiceTable.map((item) => {
-      let productId;
-      if (typeof item.id === "string" && item.id.includes("-gift-")) {
-        productId = parseInt(item.id.split("-gift-")[0]);
-      } else {
-        productId = parseInt(item.id);
-      }
+      // let productId;
+      // if (typeof item.id === "string" && item.id.includes("-gift-")) {
+      //   productId = parseInt(item.id.split("-gift-")[0]);
+      // } else {
+        const productId = parseInt(item.id);
+      // }
       return {
         product_id: productId,
         quantity: item.selected_quantity,
@@ -771,7 +729,7 @@ const UpdateSaleInvoice = () => {
 
     const dataToSend = {
       buyer_id: selectedPartnerId,
-      currency_id: 1,
+      // currency_id: 1,
       status: "draft",
       warehouse_id: selectedWarehouseId,
       delivered_by_id: selectedAwtoId,
@@ -786,7 +744,7 @@ const UpdateSaleInvoice = () => {
     //   dataToSend.entry_type = selectedEntry;
     // }
 
-    console.log("dataToSend", dataToSend);
+    // console.log("dataToSend", dataToSend);
 
     try {
       const res = await myAxios.put(
@@ -812,10 +770,10 @@ const UpdateSaleInvoice = () => {
   return (
     <>
       {invoice && (
-        <div className="p-4 w-full mx-auto print:border-none print:p-0 print:m-0">
+        <div className="w-full mx-auto print:border-none print:p-0 print:m-0">
           {/* head  */}
           <div className="bg-yellow-400 dark:bg-gray-800 p-5">
-            <div className="flex justify-between items-center pb-2 print:border-b print:border-gray-700 print:text-[14px] print:font-semibold">
+            <div className="print:flex justify-between items-center pb-2 print:border-b print:border-gray-700 print:text-[14px] print:font-semibold hidden">
               <img
                 src="/polisem.png"
                 alt="polisem"
@@ -827,7 +785,7 @@ const UpdateSaleInvoice = () => {
                 редактирования расходной накладной № {invoice?.id}{" "}
               </h1>
               <h1 className="font-bold text-center flex-1 dark:text-gray-400 hidden print:block print:text-[24px] print:font-semibold">
-                Расходная накладная № {invoice?.id}{" "}
+                Фактура № {invoice?.id}{" "}
               </h1>
 
               <div className="mr-2">
@@ -844,25 +802,12 @@ const UpdateSaleInvoice = () => {
                print:border-none"
                 />
               </div>
-              <SmartTooltip tooltip={t("back")} shortcut="Escape">
-                <div
-                  ref={backBtn}
-                  onClick={() => navigate(-1)}
-                  className="text-blue-600 hover:underline hover:text-blue-800 cursor-pointer transition print:hidden"
-                >
-                  <span>←</span>
-                  <span>{t("back")}</span>
-                </div>
-              </SmartTooltip>
-              {/* Кнопка назад справа */}
             </div>
 
-            {/* currency and warehouse */}
-            <div className="flex gap-5 print:hidden">
+            {/* warehouse and back button */}
+            <div className="flex print:hidden justify-between items-center">
               <div>
                 <select
-                  value={selectedWarehouseId ?? ""}
-                  disabled={invoice.isEntry}
                   onChange={(e) => {
                     const selectedId = e.target.value;
                     setSelectedWarehouseId(selectedId);
@@ -874,8 +819,8 @@ const UpdateSaleInvoice = () => {
                       setSelectedWarehouse(selectedWarehouse.name);
                     }
                   }}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md 
-                 bg-white text-gray-900 
+                  className="block w-full  rounded-md 
+                 bg-yellow-400 h-8 text-gray-900 
                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
                  dark:bg-gray-800 dark:text-white dark:border-gray-600 
                  dark:focus:ring-blue-400 dark:focus:border-blue-400"
@@ -890,11 +835,26 @@ const UpdateSaleInvoice = () => {
                   ))}
                 </select>
               </div>
+              <h1 className="font-bold text-center flex-1 dark:text-gray-400 print:hidden">
+                Редактирования фактуры № {invoice?.id}{" "}
+              </h1>
+              <div>
+                <SmartTooltip tooltip={t("back")} shortcut="Escape">
+                  <div
+                    ref={backBtn}
+                    onClick={() => navigate(-1)}
+                    className="text-blue-600 hover:underline hover:text-blue-800 cursor-pointer transition print:hidden"
+                  >
+                    <span>←</span>
+                    <span>{t("back")}</span>
+                  </div>
+                </SmartTooltip>
+              </div>
             </div>
 
             {/* search awto (employee) */}
             <div
-              className="mt-2"
+              className="mt-1"
               tabIndex={-1}
               onBlur={(e) => {
                 if (!e.currentTarget.contains(e.relatedTarget)) {
@@ -990,7 +950,7 @@ const UpdateSaleInvoice = () => {
 
             {/* for search partner */}
             <div
-              className="mt-2"
+              className="mt-1"
               tabIndex={-1}
               onBlur={(e) => {
                 // Проверим, ушёл ли фокус с блока и его дочерних элементов
@@ -1093,7 +1053,7 @@ const UpdateSaleInvoice = () => {
 
             {/* for search product */}
             <div
-              className="mt-2"
+              className="mt-1"
               tabIndex={-1}
               onBlur={(e) => {
                 // Проверим, ушёл ли фокус с блока и его дочерних элементов
@@ -1198,6 +1158,188 @@ const UpdateSaleInvoice = () => {
               </div>
             </div>
 
+            {invoiceTable.length > 0 && (
+              <div className="print:hidden">
+                <div
+                  className="flex text-center items-center gap-2 text-blue-600 hover:underline hover:text-blue-800 cursor-pointer transition"
+                  onClick={() => setIsOpen(!isOpen)}
+                >
+                  <span>Настройки</span>
+                  <AiOutlineDown
+                    className={`transition-transform duration-300 transform ${
+                      isOpen ? "rotate-180" : "rotate-0"
+                    }`}
+                  />
+                </div>
+                <AnimatePresence>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5 }}
+                      className="print:hidden p-4 shadow-sm dark:bg-gray-800 max-w-full flex flex-col gap-4 mt-2 print:p-0 print:m-0"
+                    >
+                      {/* Тип цены и чекбоксы в одной строке, wrap для чекбоксов */}
+
+                      <div className="flex flex-wrap items-center gap-6">
+                        {/* Тип цены */}
+                        <div className="flex items-center gap-3 min-w-[180px]">
+                          <span className="font-semibold text-gray-700 dark:text-gray-300">
+                            Тип цены:
+                          </span>
+                          <label className="flex items-center gap-1 cursor-pointer select-none text-gray-800 dark:text-gray-200">
+                            <input
+                              type="radio"
+                              name="priceType"
+                              value="wholesale"
+                              onChange={(e) => {
+                                setPriceType(e.target.value);
+                                setInvoiceTable((prev) =>
+                                  prev.map((item) => {
+                                    return {
+                                      ...item,
+                                      selected_quantity: item.selected_quantity,
+                                      base_quantity: 1,
+                                      wholesale_price_1pc:
+                                        item.original_wholesale_price_1pc,
+                                      wholesale_price_summ:
+                                        item.original_wholesale_price_1pc *
+                                        item.selected_quantity,
+                                      retail_price_1pc:
+                                        item.original_retail_price_1pc,
+                                      retail_price_summ:
+                                        item.original_retail_price_1pc,
+                                      purchase_price_summ:
+                                        item.purchase_price_1pc *
+                                        item.selected_quantity,
+                                      difference_price:
+                                        item.original_difference_price_wholesale,
+                                      difference_price_summ:
+                                        item.original_difference_price_wholesale *
+                                        item.selected_quantity,
+                                      discount_difference_price:
+                                        item.original_discount_difference_price_wholesale,
+                                      discount_difference_price_summ:
+                                        item.original_discount_difference_price_wholesale *
+                                        item.selected_quantity,
+                                      manually_changed_fields: {
+                                        ...item.manually_changed_fields,
+                                        price: false,
+                                      },
+                                    };
+                                  })
+                                );
+                              }}
+                              checked={priceType === "wholesale"}
+                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"
+                            />
+                            <span>Опт</span>
+                          </label>
+                          <label className="flex items-center gap-1 cursor-pointer select-none text-gray-800 dark:text-gray-200">
+                            <input
+                              type="radio"
+                              name="priceType"
+                              value="retail"
+                              onChange={(e) => {
+                                setPriceType(e.target.value);
+                                setInvoiceTable((prev) =>
+                                  prev.map((item) => {
+                                    return {
+                                      ...item,
+                                      selected_quantity: item.selected_quantity,
+                                      base_quantity: 1,
+                                      wholesale_price_1pc:
+                                        item.original_wholesale_price_1pc,
+                                      wholesale_price_summ:
+                                        item.original_wholesale_price_1pc,
+                                      retail_price_1pc:
+                                        item.original_retail_price_1pc,
+                                      retail_price_summ:
+                                        item.original_retail_price_1pc *
+                                        item.selected_quantity,
+                                      purchase_price_summ:
+                                        item.purchase_price_1pc *
+                                        item.selected_quantity,
+                                      difference_price:
+                                        item.original_difference_price_retail,
+                                      difference_price_summ:
+                                        item.original_difference_price_retail *
+                                        item.selected_quantity,
+                                      discount_difference_price:
+                                        item.original_discount_difference_price_retail,
+                                      discount_difference_price_summ:
+                                        item.original_discount_difference_price_retail *
+                                        item.selected_quantity,
+                                      manually_changed_fields: {
+                                        ...item.manually_changed_fields,
+                                        price: false,
+                                      },
+                                    };
+                                  })
+                                );
+                              }}
+                              checked={priceType === "retail"}
+                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"
+                            />
+                            <span>Розница</span>
+                          </label>
+                        </div>
+
+                        {/* Чекбоксы */}
+                        <div className="flex flex-wrap gap-4 flex-1 min-w-[300px]">
+                          {[
+                            { key: "qr_code", label: "QR code" },
+                            { key: "purchase", label: "Приход" },
+                            { key: "income", label: "Доход" },
+                            { key: "discount", label: "Скидка" },
+                            { key: "volume", label: "Объём (м³)" },
+                            { key: "weight", label: "Вес (кг)" },
+                            { key: "dimensions", label: "Размеры" },
+                          ].map(({ key, label }) => (
+                            <label
+                              key={key}
+                              className="flex items-center gap-2 cursor-pointer select-none text-gray-800 dark:text-gray-200"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={visibleColumns[key]}
+                                onChange={(e) =>
+                                  setVisibleColumns((prev) => ({
+                                    ...prev,
+                                    [key]: e.target.checked,
+                                  }))
+                                }
+                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"
+                              />
+                              {label}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Кнопки управления галочками с меньшими размерами */}
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => setVisibleColumns(userVisibleColumns)}
+                          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 text-white rounded text-sm transition"
+                          type="button"
+                        >
+                          Снять все галочки
+                        </button>
+                        <button
+                          onClick={() => setVisibleColumns(adminVisibleColumns)}
+                          className="px-3 py-1.5 bg-green-600 hover:bg-green-700 focus:ring-2 focus:ring-green-400 text-white rounded transition"
+                          type="button"
+                        >
+                          Вставить все галочки
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+
             <div className="hidden print:block print:text-[13px] print:font-normal print:leading-tight space-y-0.5">
               {selectedWarehouse.name && (
                 <div>
@@ -1217,11 +1359,6 @@ const UpdateSaleInvoice = () => {
               {selectedAwto.name && (
                 <div>
                   <b>Awto:</b> {selectedAwto.name}
-                </div>
-              )}
-              {totalPaySumm && (
-                <div>
-                  <b>Summa plateja:</b> {totalPaySumm}
                 </div>
               )}
             </div>
@@ -1245,6 +1382,7 @@ const UpdateSaleInvoice = () => {
               totalPaySumm={totalPaySumm}
               setTotalPaySumm={setTotalPaySumm}
               invoice={invoice}
+              setTotalDebit={setTotalDebit}
             />
           )}
         </div>
@@ -1254,150 +1392,78 @@ const UpdateSaleInvoice = () => {
           {selectedAwto.name}
         </div>
       )} */}
-
-      <div className="lg:flex lg:flex-row gap-4 print:block print:w-full bg-yellow-400 p-4">
-        {/* Левая часть */}
-        <div className="flex-1 space-y-3 print:hidden">
-          {/* Примечание */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Примечание
-            </label>
-            <textarea
-              disabled={invoice.isEntry}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows="3"
-              className="w-full px-3 py-1.5 border rounded-lg shadow-sm resize-y
-        bg-white text-gray-900 border-gray-300
-        focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-        dark:bg-gray-800 dark:text-white dark:border-gray-600 
-        dark:focus:ring-blue-400 dark:focus:border-blue-400
-        placeholder-gray-400 dark:placeholder-gray-500 text-sm transition"
-              placeholder="Введите дополнительную информацию..."
-            />
-          </div>
-
-          {/* Нижний блок: чекбокс, сумма, кнопка */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
-            {/* Чекбокс */}
-            <div className="flex items-center space-x-2">
-              <input
-                disabled={invoice.isEntry}
-                checked={isEntry}
-                onChange={handleChangeIsEntry}
-                id="post-transaction"
-                type="checkbox"
-                className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-              />
-              <label
-                htmlFor="post-transaction"
-                className="text-gray-800 text-sm font-medium select-none"
-              >
-                С проводкой
-              </label>
-            </div>
-
-            {/* Сумма платёжа */}
+      {invoiceTable.length > 0 && (
+        <div className="lg:flex lg:flex-row gap-4 print:block print:w-full bg-yellow-400 p-4">
+          {/* Левая часть */}
+          <div className="flex-1 space-y-3 print:hidden">
+            {/* Примечание */}
             <div>
-              <label
-                htmlFor="payed_summ"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Сумма платёжа
-              </label>
-              <MyInput
-                disabled={invoice.isEntry}
-                id="payed_summ"
-                value={totalPaySumm}
-                onChange={(e) => setTotalPaySumm(e.target.value)}
-              />
-            </div>
-
-            {/* Кнопка */}
-            {invoiceTable.length > 0 && (
-              <div className="sm:text-right">
-                <MyButton
-                  variant="blue"
-                  onClick={handleSaveInvoice}
-                  disabled={invoice.isEntry || saveLoading}
-                >
-                  {saveLoading ? t("saving") : t("save")}
-                </MyButton>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Правая часть */}
-        <div className="flex-shrink-0 w-full lg:w-auto print:w-full">
-          <GetSaldo
-            entriesWithBalance={entriesWithBalance}
-            selectedPartner={selectedPartner}
-            setOpenEntryModal={setOpenEntryModal}
-            setSelectedEntryForModal={setSelectedEntryForModal}
-            selectedEntryForModal={selectedEntryForModal}
-            myAxios={myAxios}
-            openEntryModal={openEntryModal}
-            mergeEntriesWithRunningBalance={mergeEntriesWithRunningBalance}
-          />
-        </div>
-      </div>
-
-      {/* <div className="bg-yellow-400 dark:bg-gray-800 p-5 mt-2">
-        <GetSaldo
-          entriesWithBalance={entriesWithBalance}
-          selectedPartner={selectedPartner}
-          setOpenEntryModal={setOpenEntryModal}
-          setSelectedEntryForModal={setSelectedEntryForModal}
-          selectedEntryForModal={selectedEntryForModal}
-          myAxios={myAxios}
-          openEntryModal={openEntryModal}
-          mergeEntriesWithRunningBalance={mergeEntriesWithRunningBalance}
-        />
-        {invoiceTable.length > 0 && (
-          <div>
-            <div className="print:hidden">
-              <label className="block mb-2 font-medium text-gray-700 dark:text-gray-300">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Примечание
               </label>
               <textarea
                 disabled={invoice.isEntry}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                rows="4"
-                className="w-full px-4 py-2 border rounded-xl shadow-sm resize-y
-             bg-white text-gray-900 border-gray-300
-             focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-             dark:bg-gray-800 dark:text-white dark:border-gray-600 
-             dark:focus:ring-blue-400 dark:focus:border-blue-400
-             placeholder-gray-400 dark:placeholder-gray-500 transition"
+                rows="1"
+                className="w-full px-3 py-1.5 border rounded-lg shadow-sm resize-y
+        bg-white text-gray-900 border-gray-300
+        focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+        dark:bg-gray-800 dark:text-white dark:border-gray-600 
+        dark:focus:ring-blue-400 dark:focus:border-blue-400
+        placeholder-gray-400 dark:placeholder-gray-500 text-sm transition"
                 placeholder="Введите дополнительную информацию..."
-              ></textarea>
+              />
             </div>
-            <div className="mt-2 flex justify-between items-center print:hidden">
-              <div className="flex items-center space-x-2">
+
+            {/* Нижний блок: чекбокс, сумма, кнопка */}
+            <div className="mt-2 flex flex-wrap justify-between items-center gap-2 print:hidden">
+              {/* Чекбокс */}
+              <label
+                htmlFor="post-transaction"
+                className="inline-flex items-center space-x-1 text-gray-800"
+              >
                 <input
                   disabled={invoice.isEntry}
                   checked={isEntry}
                   onChange={handleChangeIsEntry}
                   id="post-transaction"
                   type="checkbox"
-                  className="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                 />
-                <label
-                  htmlFor="post-transaction"
-                  className="text-gray-800 text-sm font-medium select-none"
-                >
-                  Сохранить с проводкой
-                </label>
-              </div>
-              <div className="mb-4">
+                <span className="text-sm select-none">С проводкой</span>
+              </label>
+              {/* <input
+                disabled={invoice.isEntry}
+                checked={isEntry}
+                onChange={handleChangeIsEntry}
+                id="post-transaction"
+                type="checkbox"
+                className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+              /> */}
+
+              {/* Сумма платёжа */}
+              <div className="flex items-center gap-2">
                 <label
                   htmlFor="payed_summ"
-                  className="block font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="text-gray-700 dark:text-gray-300"
                 >
-                  Введите сумму платёжа
+                  Оплата:
+                </label>
+                <MyInput
+                  disabled={invoice.isEntry}
+                  id="payed_summ"
+                  value={totalPaySumm}
+                  onChange={(e) => setTotalPaySumm(e.target.value)}
+                  className="w-24"
+                />
+              </div>
+              {/* <div>
+                <label
+                  htmlFor="payed_summ"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Сумма платёжа
                 </label>
                 <MyInput
                   disabled={invoice.isEntry}
@@ -1405,24 +1471,36 @@ const UpdateSaleInvoice = () => {
                   value={totalPaySumm}
                   onChange={(e) => setTotalPaySumm(e.target.value)}
                 />
-              </div>
+              </div> */}
 
-              <div>
-                {invoiceTable.length > 0 && (
-                  <MyButton
-                    variant="blue"
-                    onClick={handleSaveInvoice}
-                    disabled={invoice.isEntry || saveLoading ? true : false}
-                  >
-                    {saveLoading ? t("saving") : t("save")}
-                  </MyButton>
-                )}
-              </div>
+              {/* Кнопка */}
+
+              <MyButton
+                  variant="blue"
+                  onClick={handleSaveInvoice}
+                  disabled={invoice.isEntry || saveLoading}
+                >
+                  {saveLoading ? t("saving") : t("save")}
+                </MyButton>
+
+              {/* <div className="sm:text-right">
+                <MyButton
+                  variant="blue"
+                  onClick={handleSaveInvoice}
+                  disabled={invoice.isEntry || saveLoading}
+                >
+                  {saveLoading ? t("saving") : t("save")}
+                </MyButton>
+              </div> */}
             </div>
           </div>
-        )}
-      </div> */}
-      {/*  */}
+
+          {/* Правая часть */}
+          <div className="flex-shrink-0 w-full lg:w-auto print:w-full">
+            <GetSaldo2 entries={entries} setTotalDebit={setTotalDebit} totalDebit={totalDebit} totalPaySumm={totalPaySumm} />
+          </div>
+        </div>
+      )}
 
       <Notification
         message={t(notification.message)}

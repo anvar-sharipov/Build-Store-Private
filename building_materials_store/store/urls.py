@@ -26,7 +26,7 @@ router.register(r'models', ModelViewSet)
 router.register(r'tags', TagViewSet)
 router.register(r'product-images', ProductImageViewSet)
 router.register(r'product-units', ProductUnitViewSet)
-router.register(r'currencys', CurrencyViewSet)
+# router.register(r'currencys', CurrencyViewSet)
 
 # faktura START
 router.register(r'purchase-invoices', PurchaseInvoiceViewSet, basename='purchaseinvoice')
@@ -41,7 +41,7 @@ router.register(r'transactions', TransactionViewSet)
 router.register(r'entries', EntryViewSet)
 router.register(r'warehouses', WarehouseViewSet)
 # router.register(r'currencies', CurrencyViewSet)
-router.register(r'currency-rates', CurrencyRateViewSet)
+# router.register(r'currency-rates', CurrencyRateViewSet)
 # Entries START
 
 # path('groups/', GroupViewSet.as_view()),
@@ -65,6 +65,6 @@ urlpatterns = [
     path('products-download/export-excel/', ProductExportExcelView.as_view(), name='products_export_excel'),
 
     # dlya poiska baalansa partnera po schetam
-    path('api/partner/<int:partner_id>/entries/', PartnerEntriesView.as_view()),
+    path('partner/<int:partner_id>/entries/', PartnerEntriesView.as_view()),
 ]
 

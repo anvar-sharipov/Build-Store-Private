@@ -2,48 +2,22 @@ from rest_framework import serializers
 from ..models import *
 from .base_serializers import *
 from .sale_invoice_serializers import *
-# from django.contrib.auth.models import Group
-# from django.contrib.auth import get_user_model
-# from rest_framework.generics import ListAPIView
-# from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-# from rest_framework_simplejwt.views import TokenObtainPairView
-# from django.db import transaction
-# from datetime import datetime
-# from django.db.models import Sum
 
 
 
 class AccountSerializer(serializers.ModelSerializer):
-    currency = CurrencySerializer(read_only=True)
-    currency_id = serializers.PrimaryKeyRelatedField(
-        queryset=Currency.objects.all(),
-        source='currency',
-        write_only=True
-    )
 
     class Meta:
         model = Account
-        fields = ['id', 'number', 'name', 'type', 'currency', 'currency_id']
+        fields = ['id', 'number', 'name', 'type']
 
 
 # dlya wywoda date w EntrySerializer
 class TransactionSimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
-        fields = ['id', 'date', 'description']
+        fields = ['id', 'date', 'description', 'invoice']
 
-
-# class EntrySerializer(serializers.ModelSerializer):
-#     account = AccountSerializer(read_only=True)
-#     account_id = serializers.PrimaryKeyRelatedField(
-#         queryset = Account.objects.all(), source='account', write_only=True
-#     )
-
-#     transaction_obj = TransactionSimpleSerializer(source='transaction', read_only=True)
-
-#     class Meta:
-#         model = Entry
-#         fields = ['id', 'transaction', 'transaction_obj', 'account', 'account_id', 'debit', 'credit']
 
 class EntrySerializer(serializers.ModelSerializer):
     account = AccountSerializer(read_only=True)

@@ -84,11 +84,22 @@ const UpdateSaleInvoice = () => {
   const [openEntryModal, setOpenEntryModal] = useState(false);
   const [selectedEntryForModal, setSelectedEntryForModal] = useState(null);
   const [description, setDescription] = useState("");
+  const [hiddenPrintSaldo, setHiddenPrintSaldo] = useState(false);
+  useEffect(() => {
+    const stored = localStorage.getItem("hiddenPrintSaldo");
+    if (stored !== null) {
+      setHiddenPrintSaldo(stored === "true");
+    }
+  }, []);
+  // Сохраняем в localStorage при изменении
+  useEffect(() => {
+    localStorage.setItem("hiddenPrintSaldo", hiddenPrintSaldo.toString());
+  }, [hiddenPrintSaldo]);
 
   const [notification, setNotification] = useState({ message: "", type: "" });
   const [priceType, setPriceType] = useState("wholesale");
 
-  const [totalDebit, setTotalDebit] = useState(0)
+  const [totalDebit, setTotalDebit] = useState(0);
 
   //   Visible columns START
   const defaultVisibleColumns = adminVisibleColumns;
@@ -717,7 +728,7 @@ const UpdateSaleInvoice = () => {
       // if (typeof item.id === "string" && item.id.includes("-gift-")) {
       //   productId = parseInt(item.id.split("-gift-")[0]);
       // } else {
-        const productId = parseInt(item.id);
+      const productId = parseInt(item.id);
       // }
       return {
         product_id: productId,
@@ -773,82 +784,94 @@ const UpdateSaleInvoice = () => {
         <div className="w-full mx-auto print:border-none print:p-0 print:m-0">
           {/* head  */}
           <div className="bg-yellow-400 dark:bg-gray-800 p-5">
-            <div className="print:flex justify-between items-center pb-2 print:border-b print:border-gray-700 print:text-[14px] print:font-semibold hidden">
-              <img
-                src="/polisem.png"
-                alt="polisem"
-                width={140}
-                className="flex-shrink-0 hidden print:block"
-              />
-              {/* Заголовок по центру */}
-              <h1 className="font-bold text-center flex-1 dark:text-gray-400 print:hidden">
-                редактирования расходной накладной № {invoice?.id}{" "}
-              </h1>
-              <h1 className="font-bold text-center flex-1 dark:text-gray-400 hidden print:block print:text-[24px] print:font-semibold">
-                Фактура № {invoice?.id}{" "}
-              </h1>
+            <div className="bg-yellow-400 dark:bg-gray-800 print:p-0">
+              {/* 💻 Экранная панель */}
+              <div className="flex justify-between items-center">
+                {/* Селект склада */}
+                <div className="print:hidden">
+                  <select
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      setSelectedWarehouseId(selectedId);
 
-              <div className="mr-2">
-                <input
-                  type="date"
-                  value={selectedDate ?? ""}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  disabled={invoice.isEntry}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md
-               bg-white text-gray-900
-               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-               dark:bg-gray-800 dark:text-white dark:border-gray-600
-               dark:focus:ring-blue-400 dark:focus:border-blue-400
-               print:border-none"
-                />
-              </div>
-            </div>
-
-            {/* warehouse and back button */}
-            <div className="flex print:hidden justify-between items-center">
-              <div>
-                <select
-                  onChange={(e) => {
-                    const selectedId = e.target.value;
-                    setSelectedWarehouseId(selectedId);
-
-                    const selectedWarehouse = allWarehouses.find(
-                      (w) => w.id.toString() === selectedId
-                    );
-                    if (selectedWarehouse) {
-                      setSelectedWarehouse(selectedWarehouse.name);
-                    }
-                  }}
-                  className="block w-full  rounded-md 
-                 bg-yellow-400 h-8 text-gray-900 
-                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                 dark:bg-gray-800 dark:text-white dark:border-gray-600 
-                 dark:focus:ring-blue-400 dark:focus:border-blue-400"
-                >
-                  <option value="" disabled>
-                    Выберите склад
-                  </option>
-                  {allWarehouses.map((w) => (
-                    <option value={w.id} key={w.id}>
-                      {w.name} {w.location}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <h1 className="font-bold text-center flex-1 dark:text-gray-400 print:hidden">
-                Редактирования фактуры № {invoice?.id}{" "}
-              </h1>
-              <div>
-                <SmartTooltip tooltip={t("back")} shortcut="Escape">
-                  <div
-                    ref={backBtn}
-                    onClick={() => navigate(-1)}
-                    className="text-blue-600 hover:underline hover:text-blue-800 cursor-pointer transition print:hidden"
+                      const selectedWarehouse = allWarehouses.find(
+                        (w) => w.id.toString() === selectedId
+                      );
+                      if (selectedWarehouse) {
+                        setSelectedWarehouse(selectedWarehouse.name);
+                      }
+                    }}
+                    className="block w-full h-8 rounded-md 
+                    bg-yellow-400 text-gray-900 
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                    dark:bg-gray-800 dark:text-white dark:border-gray-600 
+                    dark:focus:ring-blue-400 dark:focus:border-blue-400"
                   >
-                    <span>←</span>
-                    <span>{t("back")}</span>
+                    <option value="" disabled>
+                      Выберите склад
+                    </option>
+                    {allWarehouses.map((w) => (
+                      <option value={w.id} key={w.id}>
+                        {w.name} {w.location}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Заголовок по центру */}
+                <h1 className="font-bold text-center flex-1 dark:text-gray-400 print:hidden">
+                  Редактирование фактуры № {invoice?.id}
+                </h1>
+
+                {/* 🖨️ Печатная шапка */}
+                <div className="print:flex print:justify-between print:items-center print:w-full border-b print:border-gray-700 print:text-[14px] print:font-semibold print:m-0">
+                  {/* Логотип слева */}
+                  <div className="w-36 hidden print:flex">
+                    <img
+                      src="/polisem.png"
+                      alt="polisem"
+                      width={140}
+                      className="flex-shrink-0 hidden print:flex"
+                    />
                   </div>
-                </SmartTooltip>
+
+                  {/* Заголовок по центру */}
+                  <div className="flex-1 justify-center hidden print:flex">
+                    <h1 className="font-bold text-center dark:text-gray-400 print:text-[24px] print:font-semibold">
+                      Фактура № {invoice?.id}
+                    </h1>
+                  </div>
+
+                  {/* Дата справа */}
+                  <div className="w-36 mr-5 print:mr-0">
+                    <input
+                      type="date"
+                      value={selectedDate ?? ""}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      disabled={invoice.isEntry}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md
+                  bg-white text-gray-900
+                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                  dark:bg-gray-800 dark:text-white dark:border-gray-600
+                  dark:focus:ring-blue-400 dark:focus:border-blue-400
+                  print:border-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Кнопка «Назад» */}
+                <div className="print:hidden">
+                  <SmartTooltip tooltip={t("back")} shortcut="Escape">
+                    <div
+                      ref={backBtn}
+                      onClick={() => navigate(-1)}
+                      className="text-blue-600 hover:underline hover:text-blue-800 cursor-pointer transition"
+                    >
+                      <span>←</span>
+                      <span>{t("back")}</span>
+                    </div>
+                  </SmartTooltip>
+                </div>
               </div>
             </div>
 
@@ -1315,6 +1338,20 @@ const UpdateSaleInvoice = () => {
                             </label>
                           ))}
                         </div>
+                        {/* Saldo */}
+                        <div className="flex flex-wrap gap-4 flex-1 min-w-[300px]">
+                          <label className="flex items-center gap-2 cursor-pointer select-none text-gray-800 dark:text-gray-200">
+                            <input
+                              type="checkbox"
+                              checked={hiddenPrintSaldo}
+                              onChange={(e) =>
+                                setHiddenPrintSaldo(e.target.checked)
+                              }
+                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"
+                            />
+                            saldo
+                          </label>
+                        </div>
                       </div>
 
                       {/* Кнопки управления галочками с меньшими размерами */}
@@ -1476,12 +1513,12 @@ const UpdateSaleInvoice = () => {
               {/* Кнопка */}
 
               <MyButton
-                  variant="blue"
-                  onClick={handleSaveInvoice}
-                  disabled={invoice.isEntry || saveLoading}
-                >
-                  {saveLoading ? t("saving") : t("save")}
-                </MyButton>
+                variant="blue"
+                onClick={handleSaveInvoice}
+                disabled={invoice.isEntry || saveLoading}
+              >
+                {saveLoading ? t("saving") : t("save")}
+              </MyButton>
 
               {/* <div className="sm:text-right">
                 <MyButton
@@ -1496,8 +1533,17 @@ const UpdateSaleInvoice = () => {
           </div>
 
           {/* Правая часть */}
-          <div className="flex-shrink-0 w-full lg:w-auto print:w-full">
-            <GetSaldo2 entries={entries} setTotalDebit={setTotalDebit} totalDebit={totalDebit} totalPaySumm={totalPaySumm} />
+          <div
+            className={`flex-shrink-0 w-full lg:w-auto print:w-full ${
+              hiddenPrintSaldo ? "print:block" : "print:hidden"
+            }`}
+          >
+            <GetSaldo2
+              entries={entries}
+              setTotalDebit={setTotalDebit}
+              totalDebit={totalDebit}
+              totalPaySumm={totalPaySumm}
+            />
           </div>
         </div>
       )}

@@ -14,6 +14,8 @@ from django.db import transaction
 def create_transaction_for_invoice(invoice: SalesInvoice, partner):
     description = f" (Примечание: {invoice.note})"
 
+    print('invoice', invoice)
+
     transaction = Transaction.objects.create(
         description=description,
         invoice=invoice,

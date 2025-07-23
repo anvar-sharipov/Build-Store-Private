@@ -73,10 +73,24 @@ const AddSaleInvoicePage = () => {
   const [description, setDescription] = useState("");
   const [totalPaySumm, setTotalPaySumm] = useState(0);
 
-  const [totalDebit, setTotalDebit] = useState(0)
+  const [totalDebit, setTotalDebit] = useState(0);
 
   const [openEntryModal, setOpenEntryModal] = useState(false);
   const [selectedEntryForModal, setSelectedEntryForModal] = useState(null);
+
+  const [hiddenPrintSaldo, setHiddenPrintSaldo] = useState(false);
+  useEffect(() => {
+    const stored = localStorage.getItem("hiddenPrintSaldo");
+    if (stored !== null) {
+      setHiddenPrintSaldo(stored === "true");
+    }
+  }, []);
+  // Сохраняем в localStorage при изменении
+  useEffect(() => {
+    localStorage.setItem("hiddenPrintSaldo", hiddenPrintSaldo.toString());
+    console.log('hiddenPrintSaldo', hiddenPrintSaldo, typeof hiddenPrintSaldo);
+    
+  }, [hiddenPrintSaldo]);
 
   // const [selectedCurrencyCode, setSelectedCurrencyCode] = useState("USD");
 
@@ -299,7 +313,7 @@ const AddSaleInvoicePage = () => {
   }, [awtoQuery, allAwto]);
 
   // get all awto (employee) END
-
+  // const [selectedDat2, setSelectedDate2] = useState("");
   function DateInput() {
     const today = new Date().toISOString().split("T")[0]; // формат YYYY-MM-DD
     const [selectedDate, setSelectedDate] = useState(today);
@@ -309,7 +323,9 @@ const AddSaleInvoicePage = () => {
         <input
           type="date"
           value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
+          onChange={(e) => {
+            setSelectedDate(e.target.value);
+          }}
           className="block w-full px-3 py-2 border border-gray-300 rounded-md
                bg-white text-gray-900
                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
@@ -329,7 +345,7 @@ const AddSaleInvoicePage = () => {
       // if (typeof item.id === "string" && item.id.includes("-gift-")) {
       //   productId = parseInt(item.id.split("-gift-")[0]);
       // } else {
-        const productId = parseInt(item.id);
+      const productId = parseInt(item.id);
       // }
       return {
         product_id: productId,
@@ -453,28 +469,9 @@ const AddSaleInvoicePage = () => {
     <div className="w-full mx-auto print:border-none print:p-0 print:m-0">
       {/* head */}
       <div className="bg-yellow-400 dark:bg-gray-800 p-5">
-        <div className="print:flex justify-between items-center pb-2 print:border-b print:border-gray-700 print:text-[14px] print:font-semibold hidden">
-          {/* Логотип слева */}
-          <img
-            src="/polisem.png"
-            alt="polisem"
-            width={140}
-            className="flex-shrink-0 hidden print:block"
-          />
-
-          {/* Заголовок по центру */}
-          <h1 className="font-bold text-center flex-1 dark:text-gray-400">
-            Фактура №
-          </h1>
-
-          <div className="mr-2">
-            <DateInput />
-          </div>
-        </div>
-
         {/* warehouse and back button */}
-        <div className="flex print:hidden justify-between items-center">
-          <div>
+        <div className="flex justify-between items-center print:border-b print:border-gray-700 print:text-[14px] print:font-semibold">
+          <div className="print:hidden">
             <select
               onChange={(e) => {
                 const selectedId = e.target.value;
@@ -503,10 +500,33 @@ const AddSaleInvoicePage = () => {
               ))}
             </select>
           </div>
+          <div className="flex items-center justify-between w-full print:border-b print:border-gray-700 print:text-[14px] print:font-semibold">
+            {/* Левая часть: логотип только при печати */}
+            <div className="w-36">
+              <img
+                src="/polisem.png"
+                alt="polisem"
+                width={140}
+                className="hidden print:block"
+              />
+            </div>
+
+            {/* Центр: заголовок только при печати */}
+            {/* <div className="flex-1 hidden print:flex justify-center">
+              <h1 className="font-bold text-center dark:text-gray-400">
+                Фактура №
+              </h1>
+            </div> */}
+
+            {/* Правая часть: дата — видна всегда */}
+            <div className="w-36 text-right mr-5 print:m-0">
+              <DateInput />
+            </div>
+          </div>
           <div>
             <SmartTooltip tooltip={t("back")} shortcut="Escape">
               <MyButton
-              variant="blue"
+                variant="blue"
                 ref={backBtn}
                 onClick={() => navigate(-1)}
                 className="text-blue-600 hover:text-blue-800 cursor-pointer transition print:hidden"
@@ -914,6 +934,18 @@ const AddSaleInvoicePage = () => {
                         </label>
                       ))}
                     </div>
+                    {/* Saldo */}
+                    <div className="flex flex-wrap gap-4 flex-1 min-w-[300px]">
+                      <label className="flex items-center gap-2 cursor-pointer select-none text-gray-800 dark:text-gray-200">
+                        <input
+                          type="checkbox"
+                          checked={hiddenPrintSaldo}
+                          onChange={(e) => setHiddenPrintSaldo(e.target.checked)}
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700"
+                        />
+                        saldo
+                      </label>
+                    </div>
                   </div>
 
                   {/* Кнопки управления галочками с меньшими размерами */}
@@ -1056,8 +1088,13 @@ const AddSaleInvoicePage = () => {
 
           {/* Правая часть */}
 
-          <div className="flex-shrink-0 w-full lg:w-auto print:w-full">
-            <GetSaldo2 entries={entries} setTotalDebit={setTotalDebit} totalDebit={totalDebit} totalPaySumm={totalPaySumm} />
+          <div className={`flex-shrink-0 w-full lg:w-auto print:w-full ${hiddenPrintSaldo ? "print:block" : "print:hidden"}`}>
+            <GetSaldo2
+              entries={entries}
+              setTotalDebit={setTotalDebit}
+              totalDebit={totalDebit}
+              totalPaySumm={totalPaySumm}
+            />
           </div>
         </div>
       )}

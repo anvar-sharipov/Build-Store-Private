@@ -64,7 +64,7 @@ export default function SidebarLeft() {
     >
       <ul>
         {[
-          { to: ROUTES.MAIN, label: t("main"), key: "F1" },
+          { to: ROUTES.MAIN, label: t("sales_invoice"), key: "F1" },
           { to: ROUTES.HARYTLAR, label: t("towary"), key: "F2" },
           { to: ROUTES.EMPLOYEERS, label: t("employeers"), key: "F3" },
           { to: ROUTES.PARTNERS, label: t("partners"), key: "F4" },

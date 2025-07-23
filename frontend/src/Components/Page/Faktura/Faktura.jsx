@@ -83,8 +83,9 @@ const Faktura = () => {
   };
 
   useEffect(() => {
+    document.title = t("sales_invoice");
     searchInputRef.current?.focus();
-  }, []);
+  }, [t]);
 
   return (
     <div>
@@ -116,7 +117,7 @@ const Faktura = () => {
                       if (e.key === "Delete") {
                         e.preventDefault();
                         // setOpenDeleteModal({ open: true, data: item, index });
-                      } else if (e.ctrlKey && e.key === "Enter") {
+                      } else if (e.key === "Enter") {
                         e.preventDefault();
                         navigate(`/sale-invoices/update/${invoice.id}`);
                         // setOpenPartnerListModal({

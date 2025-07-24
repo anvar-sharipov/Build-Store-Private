@@ -19,7 +19,7 @@ const SearchedPartnerList = ({
     <ul className="print:hidden">
       {filteredPartners.map((p, index) => (
         <li
-          className={myClass.li}
+          className={myClass.li3}
           key={p.id}
           ref={(el) => (resultPartenrRefs.current[index] = el)}
           tabIndex={0}
@@ -58,7 +58,11 @@ const SearchedPartnerList = ({
             }
           }}
         >
-          {p.name} ({p.type_display})
+          <div className="flex justify-between w-full">
+            <div>{p.name}</div>
+            <div>{p.type_display}</div>
+          </div>
+           
         </li>
       ))}
     </ul>

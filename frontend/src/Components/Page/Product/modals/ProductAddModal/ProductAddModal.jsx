@@ -12,6 +12,7 @@ const ProductAddModal = ({
   showNotification,
   setNotification,
   notification,
+  warehouses
 }) => {
   const emptyProduct = {
     id: null,
@@ -36,6 +37,7 @@ const ProductAddModal = ({
     tags_obj: [],
     units: [],
     free_items: [],
+    warehouses: []
   };
 
   return (
@@ -54,6 +56,7 @@ const ProductAddModal = ({
       showNotification={showNotification}
       setNotification={setNotification}
       notification={notification}
+      warehouses={warehouses}
     />
   );
 };

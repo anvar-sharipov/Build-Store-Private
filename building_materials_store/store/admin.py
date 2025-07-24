@@ -1,379 +1,364 @@
 from django.contrib import admin
-from . models import *
 from django.contrib.auth.admin import UserAdmin
-from django.utils.translation import gettext_lazy as _
+from django.utils.html import format_html
+from django.db.models import Sum
+from .models import *
+
+# Фильтры для админки
+class ActiveFilter(admin.SimpleListFilter):
+    title = 'Активность'
+    parameter_name = 'is_active'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'Да'),
+            ('no', 'Нет'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(is_active=True)
+        if self.value() == 'no':
+            return queryset.filter(is_active=False)
 
 
-
-@admin.register(CustomUser)
+# Кастомный UserAdmin
 class CustomUserAdmin(UserAdmin):
-    model = CustomUser
-
-    list_display = ("username", "email", "is_staff", "is_active")
-    list_filter = ("is_staff", "is_active", "groups")
-
-    fieldsets = (
-        (None, {"fields": ("username", "password")}),
-        (_("Personal info"), {"fields": ("email", "first_name", "last_name", "photo")}),
-        (_("Permissions"), {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
-        (_("Important dates"), {"fields": ("last_login", "date_joined")}),
+    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'photo_tag')
+    fieldsets = UserAdmin.fieldsets + (
+        ('Дополнительно', {'fields': ('photo',)}),
     )
 
-    add_fieldsets = (
-        (None, {
-            "classes": ("wide",),
-            "fields": ("username", "password1", "password2", "is_staff", "is_active"),
-        }),
-    )
+    def photo_tag(self, obj):
+        if obj.photo:
+            return format_html('<img src="{}" width="50" height="50" />', obj.photo.url)
+        return "-"
+    photo_tag.short_description = 'Фото'
 
-    search_fields = ("username", "email")
-    ordering = ("username",)
+admin.site.register(CustomUser, CustomUserAdmin)
 
 
-
-
-class ModelInline(admin.TabularInline):
-    model = Model
-    extra = 1
-    show_change_link = True
-
-
-# @admin.register(Brand)
-# class BrandAdmin(admin.ModelAdmin):
-#     list_display = ('id', 'name')
-#     search_fields = ('name',)
-#     inlines = [ModelInline]
-
-
-# @admin.register(Model)
-# class ModelAdmin(admin.ModelAdmin):
-#     list_display = ('id', 'name', 'brand')
-#     list_filter = ('brand',)
-#     search_fields = ('name', 'brand__name')
-
-
-# class ProductImageInline(admin.TabularInline):
-#     model = ProductImage
-#     extra = 1
-#     readonly_fields = ['image_preview']
-
-#     def image_preview(self, obj):
-#         if obj.image:
-#             return f'<img src="{obj.image.url}" width="100" />'
-#         return "-"
-#     image_preview.allow_tags = True
-#     image_preview.short_description = "Превью"
-
-
-class ProductBatchInline(admin.TabularInline):
-    model = ProductBatch
-    extra = 1
-
-
-# @admin.register(ProductImage)
-# class ProductImageAdmin(admin.ModelAdmin):
-#     list_display = ('id', 'product', 'alt_text', 'image_preview')
-#     search_fields = ('product__name', 'alt_text')
-
-#     def image_preview(self, obj):
-#         if obj.image:
-#             return f'<img src="{obj.image.url}" width="100" />'
-#         return "-"
-#     image_preview.allow_tags = True
-#     image_preview.short_description = "Превью"
-
-
-# @admin.register(ProductBatch)
-# class ProductBatchAdmin(admin.ModelAdmin):
-#     list_display = (
-#         'id', 'product', 'batch_number', 'quantity',
-#         'arrival_date', 'production_date', 'expiration_date'
-#     )
-#     list_filter = ('arrival_date', 'expiration_date', 'product')
-#     search_fields = ('product__name', 'batch_number')
-
-
-@admin.register(Tag)
-class TagAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name')
-    search_fields = ('name',)
-
-
-    
+# Единицы измерения
 @admin.register(UnitOfMeasurement)
 class UnitOfMeasurementAdmin(admin.ModelAdmin):
     list_display = ('name',)
     search_fields = ('name',)
 
 
+# Изображения товара - inline
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
+    extra = 1
+    readonly_fields = ('image_preview',)
+    
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" width="100" height="100" />', obj.image.url)
+        return "-"
+    image_preview.short_description = 'Превью'
+
+
+# Единицы товара - inline
 class ProductUnitInline(admin.TabularInline):
     model = ProductUnit
     extra = 1
-    autocomplete_fields = ('unit',)
-    fields = ('unit', 'conversion_factor', 'is_default_for_sale')
-    verbose_name = "Alternatiw ölçeg"
-    verbose_name_plural = "Alternatiw ölçegler"
 
 
+# Теги товара - inline
+class ProductTagsInline(admin.TabularInline):
+    model = Product.tags.through
+    extra = 1
+    verbose_name = "Тег"
+    verbose_name_plural = "Теги"
+
+
+# История цен - inline
+class PriceChangeHistoryInline(admin.TabularInline):
+    model = PriceChangeHistory
+    extra = 0
+    readonly_fields = ('changed_at', 'changed_by', 'difference')
+    can_delete = False
+
+    def has_add_permission(self, request, obj):
+        return False
+
+
+# Остатки на складах - inline
+class WarehouseProductInline(admin.TabularInline):
+    model = WarehouseProduct
+    extra = 1
+    readonly_fields = ('warehouse', 'available_quantity')
+    
+    def available_quantity(self, obj):
+        return obj.quantity
+    available_quantity.short_description = 'Доступно'
+
+
+# Админка товаров
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'base_unit', 'wholesale_price', 'retail_price', 'quantity')
+    list_display = ('name', 'sku', 'category', 'retail_price', 'wholesale_price', 'total_quantity', 'is_active')
+    list_filter = ('category', 'brand', 'is_active')
+    search_fields = ('name', 'sku', 'qr_code')
+    readonly_fields = ('created_at', 'updated_at', 'volume_calculated', 'total_quantity')
+    inlines = [ProductImageInline, ProductUnitInline, ProductTagsInline, PriceChangeHistoryInline, WarehouseProductInline]
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('name', 'description', 'sku', 'qr_code', 'category', 'is_active')
+        }),
+        ('Цены', {
+            'fields': ('purchase_price', 'retail_price', 'wholesale_price', 'discount_price', 'firma_price')
+        }),
+        ('Производитель', {
+            'fields': ('brand', 'model')
+        }),
+        ('Характеристики', {
+            'fields': ('base_unit', 'weight', 'length', 'width', 'height', 'volume_calculated')
+        }),
+        ('Даты', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+    
+    def volume_calculated(self, obj):
+        return obj.volume
+    volume_calculated.short_description = 'Объем (м³)'
+    
+    def total_quantity(self, obj):
+        return obj.total_quantity
+    total_quantity.short_description = 'Общее количество'
+    
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:
+            obj.created_by = request.user
+        obj.updated_by = request.user
+        super().save_model(request, obj, form, change)
+
+
+# Бренды
+@admin.register(Brand)
+class BrandAdmin(admin.ModelAdmin):
+    list_display = ('name', 'product_count')
     search_fields = ('name',)
-    autocomplete_fields = ('base_unit',)
-    inlines = [ProductUnitInline]
+    
+    def product_count(self, obj):
+        return obj.products.count()
+    product_count.short_description = 'Товаров'
 
 
+# Модели
+@admin.register(Model)
+class ModelAdmin(admin.ModelAdmin):
+    list_display = ('name', 'brand', 'product_count')
+    list_filter = ('brand',)
+    search_fields = ('name', 'brand__name')
+    
+    def product_count(self, obj):
+        return obj.products.count()
+    product_count.short_description = 'Товаров'
 
+
+# Категории
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    list_filter = ('name',)
+    search_fields = ('name',)
+    
+    def product_count(self, obj):
+        return obj.products.count()
+    product_count.short_description = 'Товаров'
+
+
+# Теги
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ('name', 'product_count')
+    search_fields = ('name',)
+    
+    def product_count(self, obj):
+        return obj.products.count()
+    product_count.short_description = 'Товаров'
+
+
+# Склады
 @admin.register(Warehouse)
 class WarehouseAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "location")         # отображаемые поля в списке
-    list_display_links = ("id", "name")               # по каким полям можно кликать
-    search_fields = ("name", "location")              # поля для поиска
-    list_filter = ("location",)                       # боковая фильтрация
-    ordering = ("name",)                              # сортировка по умолчанию
-    list_per_page = 25                                # пагинация
-
-    fieldsets = (
-        (None, {
-            "fields": ("name", "location")
-        }),
-    )
+    list_display = ('name', 'location')
+    search_fields = ('name', 'location')
+    
+    # def product_count(self, obj):
+    #     return obj.stock_items.count()
+    # product_count.short_description = 'Товаров'
 
 
+# Остатки на складах
+@admin.register(WarehouseProduct)
+class WarehouseProductAdmin(admin.ModelAdmin):
+    list_display = ('warehouse', 'product', 'quantity')
+    list_filter = ('warehouse',)
+    search_fields = ('product__name', 'warehouse__name')
+    
 
+# История цен
 @admin.register(PriceChangeHistory)
 class PriceChangeHistoryAdmin(admin.ModelAdmin):
-    list_display = (
-        'product', 
-        'price_type', 
-        'old_price', 
-        'new_price', 
-        'difference', 
-        'quantity_at_change', 
-        'changed_by', 
-        'changed_at'
-    )
-    list_filter = ('price_type', 'changed_by', 'changed_at')
-    search_fields = ('product__name', 'changed_by__username')
-    readonly_fields = ('difference', 'changed_at')
-    ordering = ('-changed_at',)
-    fieldsets = (
-        (None, {
-            'fields': (
-                'product', 'price_type', 'old_price', 'new_price', 
-                'quantity_at_change', 'difference', 'changed_by', 
-                'changed_at', 'notes'
-            )
-        }),
-    )
+    list_display = ('product', 'price_type', 'old_price', 'new_price', 'difference', 'changed_at', 'changed_by')
+    list_filter = ('price_type', 'changed_at')
+    search_fields = ('product__name',)
+    readonly_fields = ('changed_at', 'difference')
+    
+    def save_model(self, request, obj, form, change):
+        if not obj.changed_by:
+            obj.changed_by = request.user
+        super().save_model(request, obj, form, change)
 
 
-
-
-class CategoryAdmin(admin.ModelAdmin):
-    search_fields = ('name',)
-    list_display = ('name',)
-admin.site.register(Category, CategoryAdmin)
-
-
-
+# Агенты
+@admin.register(Agent)
 class AgentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'partner_count')
     search_fields = ('name',)
-    list_display = ('name',)
-
-admin.site.register(Agent, AgentAdmin)
-
-
-class EmployeeAdmin(admin.ModelAdmin):
-    search_fields = ('name',)
-    list_display = ('name',)
-
-admin.site.register(Employee, EmployeeAdmin)
+    
+    def partner_count(self, obj):
+        return obj.partner_set.count()
+    partner_count.short_description = 'Партнеров'
 
 
-
+# Партнеры
 @admin.register(Partner)
 class PartnerAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'type', 'agent')  # Показываем имя, тип и агента
-    list_filter = ('type', 'agent')                # Фильтрация по типу и агенту
-    search_fields = ('name', 'agent__name')        # Поиск по имени партнера и имени агента
-    autocomplete_fields = ['agent']                # Автозаполнение для ForeignKey
+    list_display = ('name', 'type', 'balance', 'agent', 'invoice_count')
+    list_filter = ('type', 'agent')
+    search_fields = ('name',)
+    readonly_fields = ('balance',)
+    
+    def invoice_count(self, obj):
+        return obj.salesinvoice_set.count()
+    invoice_count.short_description = 'Накладных'
 
 
+# Сотрудники
+@admin.register(Employee)
+class EmployeeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'delivered_invoices')
+    search_fields = ('name',)
+    
+    def delivered_invoices(self, obj):
+        return obj.salesinvoice_set.count()
+    delivered_invoices.short_description = 'Доставленных накладных'
 
 
-
-############################################################################################################## Fakturalar START
-
-######################### Inline классы для позиций накладных ##############################
-
-class PurchaseInvoiceItemInline(admin.TabularInline):
-    model = PurchaseInvoiceItem
-    extra = 1
-    autocomplete_fields = ['product']
-    readonly_fields = ['line_total']
-
-    def line_total(self, obj):
-        return obj.get_line_total()
-    line_total.short_description = 'Сумма'
-
-
+# Позиции накладных - inline
 class SalesInvoiceItemInline(admin.TabularInline):
     model = SalesInvoiceItem
     extra = 1
-    autocomplete_fields = ['product']
-    readonly_fields = ['line_total']
-
+    readonly_fields = ('line_total',)
+    
     def line_total(self, obj):
         return obj.get_line_total()
     line_total.short_description = 'Сумма'
 
 
-class PurchaseReturnItemInline(admin.TabularInline):
-    model = PurchaseReturnItem
-    extra = 1
-    autocomplete_fields = ['product']
-    readonly_fields = ['line_total']
-
-    def line_total(self, obj):
-        return obj.get_line_total()
-    line_total.short_description = 'Сумма'
-
-
-# class SalesReturnItemInline(admin.TabularInline):
-#     model = SalesReturnItem
-#     extra = 1
-#     autocomplete_fields = ['product']
-#     readonly_fields = ['line_total']
-
-#     def line_total(self, obj):
-#         return obj.get_line_total()
-#     line_total.short_description = 'Сумма'
-
-
-######################### Admin для приходной накладной ##############################
-
-@admin.register(PurchaseInvoice)
-class PurchaseInvoiceAdmin(admin.ModelAdmin):
-    list_display = [
-        'id', 'supplier', 'created_by', 'created_at', 'total_amount',
-        'is_canceled', 'canceled_at', 'canceled_by', 'cancel_reason'
-    ]
-    list_filter = ['is_canceled', 'supplier', 'created_at']
-    search_fields = ['id', 'supplier__name', 'created_by__username', 'cancel_reason']
-    autocomplete_fields = ['supplier', 'created_by', 'canceled_by']
-    readonly_fields = ['total_amount', 'created_at', 'canceled_at']
-    inlines = [PurchaseInvoiceItemInline]
-
-    actions = ['cancel_selected_invoices']
-
-    @admin.action(description="Отменить выбранные накладные")
-    def cancel_selected_invoices(self, request, queryset):
-        canceled_count = 0
-        for invoice in queryset:
-            if not invoice.is_canceled:
-                invoice.is_canceled = True
-                invoice.canceled_at = now()
-                invoice.canceled_by = request.user
-                invoice.cancel_reason = "Отменено через админку"
-                try:
-                    invoice.full_clean()
-                    invoice.save()
-                    canceled_count += 1
-                except ValidationError as e:
-                    self.message_user(request, f"Ошибка отмены накладной {invoice.id}: {e}", level='error')
-        self.message_user(request, f"Отменено накладных: {canceled_count}")
-
-######################### Admin для расходной накладной ##############################
-
+# Накладные продаж
 @admin.register(SalesInvoice)
 class SalesInvoiceAdmin(admin.ModelAdmin):
-    list_display = [
-        'id', 'buyer', 'delivered_by', 'created_by', 'created_at', 'total_amount'
-    ]
-    list_filter = ['buyer', 'delivered_by', 'created_at', 'isEntry']
-    search_fields = ['id', 'buyer__name', 'created_by__username']
-    autocomplete_fields = ['buyer', 'delivered_by', 'created_by']
-    readonly_fields = ['total_amount', 'created_at']
+    list_display = ('id', 'buyer', 'created_at', 'warehouse', 'total_amount', 'paid_amount', 'is_paid', 'created_by')
+    list_filter = ('created_at', 'warehouse', 'buyer')
+    search_fields = ('buyer__name', 'id')
+    readonly_fields = ('created_at', 'total_amount', 'paid_amount', 'is_paid')
     inlines = [SalesInvoiceItemInline]
-######################### Admin для возврата по приходу ##############################
-
-@admin.register(PurchaseReturnInvoice)
-class PurchaseReturnInvoiceAdmin(admin.ModelAdmin):
-    list_display = [
-        'id', 'original_invoice', 'created_by', 'created_at', 'total_amount', 'reason'
-    ]
-    list_filter = ['created_at', 'original_invoice__supplier']
-    search_fields = ['id', 'original_invoice__id', 'created_by__username', 'reason']
-    autocomplete_fields = ['original_invoice', 'created_by']
-    readonly_fields = ['total_amount', 'created_at']
-    inlines = [PurchaseReturnItemInline]
-
-######################### Admin для возврата по продаже ##############################
-
-# @admin.register(SalesReturnInvoice)
-# class SalesReturnInvoiceAdmin(admin.ModelAdmin):
-#     list_display = [
-#         'id', 'original_invoice', 'created_by', 'created_at', 'total_amount', 'reason'
-#     ]
-#     list_filter = ['created_at', 'original_invoice__buyer']
-#     search_fields = ['id', 'original_invoice__id', 'created_by__username', 'reason']
-#     autocomplete_fields = ['original_invoice', 'created_by']
-#     readonly_fields = ['total_amount', 'created_at']
-#     inlines = [SalesReturnItemInline]
-
-
-############################################################################################################## Fakturalar END
-
-
-############################################################################################################## Accounts START
-# @admin.register(Currency)
-# class CurrencyAdmin(admin.ModelAdmin):
-#     list_display = ('code', 'name', 'symbol')
-#     search_fields = ('code', 'name')
-#     ordering = ('code',)
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('buyer', 'warehouse', 'created_by', 'created_at')
+        }),
+        ('Доставка', {
+            'fields': ('delivered_by',)
+        }),
+        ('Финансы', {
+            'fields': ('total_amount', 'paid_amount', 'is_paid')
+        }),
+        ('Примечания', {
+            'fields': ('note',)
+        }),
+    )
+    
+    def paid_amount(self, obj):
+        return obj.total_pay_summ or 0
+    paid_amount.short_description = 'Оплачено'
+    
+    def is_paid(self, obj):
+        return obj.total_pay_summ and obj.total_pay_summ >= obj.total_amount
+    is_paid.boolean = True
+    is_paid.short_description = 'Оплачено полностью'
+    
+    def save_model(self, request, obj, form, change):
+        if not obj.created_by:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
 
 
-# @admin.register(CurrencyRate)
-# class CurrencyRateAdmin(admin.ModelAdmin):
-#     list_display = ('currency', 'rate', 'date')            # Отображаемые колонки
-#     list_filter = ('currency', 'date')                     # Фильтры справа
-#     search_fields = ('currency__code',)                    # Поиск по коду валюты
-#     ordering = ('-date',)                                  # Сортировка по дате (сначала новые)
-#     date_hierarchy = 'date'                                # Навигация по датам
-#     list_per_page = 25                                     # Пагинация
-
-
+# Счета
 @admin.register(Account)
 class AccountAdmin(admin.ModelAdmin):
-    list_display = ('number', 'name', 'type')
+    list_display = ('number', 'name', 'type', 'balance')
     list_filter = ('type',)
     search_fields = ('number', 'name')
-    ordering = ('number',)
+    
+    def balance(self, obj):
+        debit = Entry.objects.filter(account=obj).aggregate(Sum('debit'))['debit__sum'] or 0
+        credit = Entry.objects.filter(account=obj).aggregate(Sum('credit'))['credit__sum'] or 0
+        return debit - credit
+    balance.short_description = 'Сальдо'
 
 
+# Проводки - inline
 class EntryInline(admin.TabularInline):
     model = Entry
-    extra = 0
-    readonly_fields = ('account', 'debit', 'credit')
-    can_delete = False
+    extra = 2
+    readonly_fields = ('balance_effect',)
+    
+    def balance_effect(self, obj):
+        return obj.debit - obj.credit
+    balance_effect.short_description = 'Влияние на баланс'
 
 
+# Хозяйственные операции
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ('date', 'description', 'partner')
-    list_filter = ('partner',)
+    list_display = ('id', 'date', 'description', 'partner', 'invoice', 'total_amount')
+    list_filter = ('date', 'partner')
     search_fields = ('description', 'partner__name')
-    date_hierarchy = 'date'
-    ordering = ('-date',)
     inlines = [EntryInline]
-    readonly_fields = ('date',)
+    
+    def total_amount(self, obj):
+        return obj.entries.aggregate(total=Sum('debit'))['total'] or 0
+    total_amount.short_description = 'Сумма'
+
+
+# Дополнительные настройки админки
+admin.site.site_header = "Панель управления складом"
+admin.site.site_title = "Администрирование"
+admin.site.index_title = "Главная"
 
 
 @admin.register(Entry)
 class EntryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'transaction', 'account', 'debit', 'credit')
-    list_filter = ('account__type',)
-    search_fields = ('transaction__description', 'account__name', 'account__number')
-    ordering = ('-transaction__date',)
-############################################################################################################## Accounts END
+    list_display = (
+        'id',
+        'transaction',
+        'account',
+        'product',
+        'warehouse',
+        'debit',
+        'credit',
+    )
+    list_filter = ('account', 'warehouse')
+    search_fields = (
+        'transaction__id',
+        'account__name',
+        'account__number',
+        'product__name',
+        'warehouse__name',
+    )
+    autocomplete_fields = ['transaction', 'account', 'product', 'warehouse']

@@ -30,7 +30,7 @@ def create_price_change_history(sender, instance, **kwargs):
 
         # discount_price может быть None, сравниваем аккуратно
         if old_price != new_price:
-            quantity = instance.quantity or 0
+            quantity = instance.total_quantity or 0
 
             PriceChangeHistory.objects.create(
                 product=instance,

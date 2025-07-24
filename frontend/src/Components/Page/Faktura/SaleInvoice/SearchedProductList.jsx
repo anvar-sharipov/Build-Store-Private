@@ -25,6 +25,7 @@ const SearchedProductList = ({
   showNotification,
   notification,
   Notification,
+  selectedWarehouseId,
   // setFreeProducts,
   // freeProducts,
 }) => {
@@ -42,11 +43,13 @@ const SearchedProductList = ({
       const gift_results = [];
 
       for (const p of free_products) {
-        const res = await myAxios.get(`products/${p.id}`);
+        // const res = await myAxios.get(`products/${p.id}`);
+        const res = await myAxios.get(`search-products/?id=${p.id}&warehouse=${selectedWarehouseId}`)
+        const free_product = res.data[0];
         // console.log("res.data", res.data);
 
         gift_results.push({
-          ...res.data,
+          ...free_product,
           gift_quantity: parseFloat(p.gift_quantity_per_unit) || 1,
           gift_for_product_id: product.id,
           gift_for_product_name: product.name,
@@ -88,6 +91,8 @@ const SearchedProductList = ({
             conversion_factor: 1,
           };
         }
+        console.log('gift', gift);
+        
 
         // console.log("gift", gift);
         // console.log("selected_unit", selected_unit);
@@ -100,7 +105,7 @@ const SearchedProductList = ({
             qr_code: gift.qr_code,
             name: gift.name,
             gift_for_product_name: gift.gift_for_product_name,
-            quantity_in_stok: gift.quantity,
+            quantity_in_stok: gift.base_quantity_in_stock,
             selected_unit,
             selected_quantity: gift.gift_quantity, // учитываем количество подарка
             original_quantity_per_unit: gift.gift_quantity,
@@ -130,7 +135,7 @@ const SearchedProductList = ({
 
             units: gift.units,
             base_unit: gift.base_unit_obj,
-            quantity_in_stock: gift.quantity,
+            quantity_in_stock: gift.base_quantity_in_stock,
 
             manually_changed_fields: {
               price: false,
@@ -157,7 +162,7 @@ const SearchedProductList = ({
   // esli najal na enter ili na click
   const handleSelectProduct = async (product) => {
     // console.log('productttttt', product);
-    
+
     const alreadyExists = invoiceTable.some((p) => p.id === product.id);
 
     if (alreadyExists) {
@@ -235,7 +240,7 @@ const SearchedProductList = ({
         id: product.id,
         qr_code: product.qr_code,
         name: product.name,
-        quantity_in_stok: product.quantity,
+        quantity_in_stok: product.base_quantity_in_stock,
         selected_unit,
         selected_quantity: 1,
         base_quantity: 1,
@@ -266,7 +271,7 @@ const SearchedProductList = ({
 
         units: product.units,
         base_unit: product.base_unit_obj,
-        quantity_in_stock: product.quantity,
+        quantity_in_stock: product.base_quantity_in_stock,
 
         manually_changed_fields: {
           price: false,
@@ -294,40 +299,46 @@ const SearchedProductList = ({
     <div>
       <ul className="print:hidden">
         {results.length > 0 &&
-          results.map((product, index) => (
-            <li
-              className={myClass.li}
-              key={product.id}
-              ref={(el) => (resultRefs.current[index] = el)}
-              tabIndex={0}
-              onClick={() => handleSelectProduct(product)}
-              onKeyDown={async (e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  await handleSelectProduct(product);
-                } else if (e.key === "ArrowUp") {
-                  e.preventDefault();
-                  if (index === 0) {
-                    inputRef.current?.focus();
-                    inputRef.current?.select();
-                  } else {
-                    resultRefs.current[index - 1]?.focus();
+          results.map((product, index) => {
+            // let quantity = parseFloat(product.quantity_on_selected_warehouses || product.total_quantity || 0);
+            return (
+              <li
+                className={myClass.li3}
+                key={product.id}
+                ref={(el) => (resultRefs.current[index] = el)}
+                tabIndex={0}
+                onClick={() => handleSelectProduct(product)}
+                onKeyDown={async (e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    await handleSelectProduct(product);
+                  } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    if (index === 0) {
+                      inputRef.current?.focus();
+                      inputRef.current?.select();
+                    } else {
+                      resultRefs.current[index - 1]?.focus();
+                    }
+                  } else if (
+                    e.key === "ArrowDown" &&
+                    index + 1 < results.length
+                  ) {
+                    e.preventDefault();
+                    resultRefs.current[index + 1]?.focus();
                   }
-                } else if (
-                  e.key === "ArrowDown" &&
-                  index + 1 < results.length
-                ) {
-                  e.preventDefault();
-                  resultRefs.current[index + 1]?.focus();
-                }
-              }}
-            >
-              <div className="flex justify-between w-full">
-                <div>{product.name}</div>
-                {/* <div>{product.quantity}</div> */}
-              </div>
-            </li>
-          ))}
+                }}
+              >
+                <div className="flex justify-between w-full">
+                  <div>{product.name}</div>
+                  <div className="flex">
+                    <div className="w-16">{product.quantity_on_selected_warehouses}</div>
+                    <div>{product.unit_name_on_selected_warehouses}</div>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
       </ul>
       <Notification
         message={t(notification.message)}

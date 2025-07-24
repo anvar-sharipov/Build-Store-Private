@@ -311,7 +311,13 @@
 
   "purchaseInvoice": "Добавить приход",
   "salesInvoice": "Добавить продажу",
-  "sales_invoice": "Расходная фактура"
+  "sales_invoice": "Расход. фактура",
+  "selectWarehouse": "Выбрать склад",
+  "warehouses": "Склады",
+  "warehouse": "Склад",
+  "Add Warehouse": "Добавить склад",  
+  "No warehouses added": "Склады не добавлены",  
+  "productNotDeleted": "Товар не был удалён"
 
 
 

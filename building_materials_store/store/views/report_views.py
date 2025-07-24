@@ -9,6 +9,9 @@ from openpyxl.utils import get_column_letter
 # from rest_framework.filters import OrderingFilter
 # from collections import OrderedDict
 # from collections import defaultdict
+from django.db.models import Value
+
+
 
 
 # from rest_framework import viewsets, status, filters
@@ -19,7 +22,6 @@ from .. serializers.base_serializers import *
 from .. serializers.entry_serializers import *
 from .. serializers.partner_serializers import *
 from .. serializers.product_serializers import *
-from .. serializers.purchase_invoice_serializers import *
 from .. serializers.register_serializers import *
 from .. serializers.sale_invoice_serializers import *
 
@@ -36,7 +38,8 @@ from rest_framework.permissions import IsAuthenticated
 # from .. filters import ProductFilter
 # from django.views.decorators.http import require_GET
 # from django.http import JsonResponse
-# from django.contrib.postgres.search import TrigramSimilarity
+from django.contrib.postgres.search import TrigramSimilarity
+from django.db.models.functions import Greatest
 from django.db.models import Q
 # from django.utils.dateparse import parse_datetime, parse_date
 # from django.db.models import Sum, F, Count
@@ -60,6 +63,7 @@ class ProductExportExcelView(APIView):
             filters = request.data.get("filters", {})
             product_ids = request.data.get("product_ids", [])
             
+            warehouse_ids = []
             if product_ids:
                 # Старый способ - по ID товаров (ограниченный пагинацией)
                 queryset = Product.objects.filter(id__in=product_ids)
@@ -72,12 +76,20 @@ class ProductExportExcelView(APIView):
                 # Применяем поиск
                 if 'search' in filters and filters['search']:
                     search_query = filters['search']
-                    queryset = queryset.filter(
-                        Q(name__icontains=search_query) |
-                        Q(sku__icontains=search_query) |
-                        Q(category__name__icontains=search_query) |
-                        Q(brand__name__icontains=search_query)
-                    )
+                    # queryset = queryset.filter(
+                    #     Q(name__icontains=search_query) |
+                    #     Q(sku__icontains=search_query) |
+                    #     Q(category__name__icontains=search_query) |
+                    #     Q(brand__name__icontains=search_query)
+                    # )
+                    queryset = queryset.annotate(
+                        similarity=Greatest(
+                            TrigramSimilarity('name', search_query),
+                            TrigramSimilarity('sku', search_query),
+                            TrigramSimilarity('category__name', search_query),
+                            TrigramSimilarity('brand__name', search_query),
+                        )
+                    ).filter(similarity__gt=0.3).order_by('-similarity')
                 
                 # Применяем фильтр по категории
                 if 'categories' in filters and filters['categories']:
@@ -93,6 +105,15 @@ class ProductExportExcelView(APIView):
 
                 if 'tags' in filters and filters['tags']:
                     queryset = queryset.filter(model_id=filters['tags'])
+
+                
+                if 'warehouse' in filters and filters['warehouse']:
+                    warehouses = filters.get('warehouse')
+                    if warehouses:
+                        warehouse_ids = [int(w_id) for w_id in warehouses.split(',') if w_id.isdigit()]
+                        queryset = queryset.filter(warehouse_products__warehouse_id__in=warehouse_ids)
+
+                
 
 
                 if 'wholesale_price_max' in filters or "wholesale_price_min" in filters:
@@ -163,8 +184,20 @@ class ProductExportExcelView(APIView):
             headers = [
                 "№","ID", "Наименование", "Категория", "Ед. изм.", "Артикул", "Количество",
                 "Цена закупки", "Розничная цена", "Оптовая цена", "Цена со скидкой",
-                "Бренд", "Модель", "Вес (кг)", "Объём (м³)"
+                "Бренд", "Модель", "Вес (кг)", "Объём (м³)", "Длина (см)", "Ширина (см)", "Высота (см)", "Активен"
             ]
+
+            if warehouse_ids:
+                warehouse_names = list(
+                    Warehouse.objects.filter(id__in=warehouse_ids).values_list('name', flat=True)
+                )
+                ws.append(["Склады:"] + warehouse_names)  # Первая строка Excel
+                ws.append([])  # Пустая строка для отступа
+            else:
+                ws.append(["Склады: Все"])  # Первая строка Excel
+                ws.append([])  # Пустая строка для отступа
+
+
             ws.append(headers)
 
             # Обрабатываем товары партиями для больших объемов
@@ -174,14 +207,33 @@ class ProductExportExcelView(APIView):
                 batch_queryset = queryset[i:i + batch_size]
                 
                 for product in batch_queryset:
+                    if warehouse_ids:
+                        quantity = product.warehouse_products.filter(
+                            warehouse_id__in=warehouse_ids
+                        ).aggregate(total=models.Sum('quantity'))['total'] or 0
+                    else:
+                        quantity = product.get_total_quantity()
+
+                   
+                    unit_name = product.base_unit.name if product.base_unit else ""
+                    for unit in product.units.all():
+                        if unit.is_default_for_sale and unit.conversion_factor:
+                            quantity = quantity / unit.conversion_factor
+                            unit_name = unit.unit.name
+                            break
+
+                    is_active = "+" if product.is_active else ""
                     ws.append([
                         row_number,
                         product.id,
                         product.name,
                         product.category.name if product.category else "",
-                        product.base_unit.name if product.base_unit else "",
+                        # product.base_unit.name if product.base_unit else "",
+                        unit_name,
                         product.sku or "",
-                        float(product.quantity) if product.quantity else 0,
+                        # float(product.quantity) if product.quantity else 0,
+                        # float(product.total_quantity) if hasattr(product, 'total_quantity') and product.total_quantity else 0,
+                        float(quantity),
                         float(product.purchase_price) if product.purchase_price else 0,
                         float(product.retail_price) if product.retail_price else 0,
                         float(product.wholesale_price) if product.wholesale_price else 0,
@@ -190,6 +242,10 @@ class ProductExportExcelView(APIView):
                         product.model.name if product.model else "",
                         float(product.weight) if product.weight else 0,
                         float(product.volume) if product.volume else 0,
+                        product.length,
+                        product.width,
+                        product.height,
+                        is_active,
                     ])
                     row_number += 1
 

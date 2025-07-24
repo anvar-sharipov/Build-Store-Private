@@ -26,10 +26,14 @@ const ProductEditModal2 = ({
   showNotification,
   setNotification,
   notification,
+  warehouses,
 }) => {
   const [product, setProduct] = useState(productEditModal2.data);
   const [activeTab, setActiveTab] = useState("basic");
   const [loadingModal, setLoadingModal] = useState(false);
+
+  console.log("product", product);
+  // console.log('options', options);
 
   const tabs = [
     { id: "basic", label: t("basic"), icon: Package },
@@ -45,7 +49,7 @@ const ProductEditModal2 = ({
     description: product.description || "",
     sku: product.sku || "",
     qr_code: product.qr_code || "",
-    quantity: product.quantity || 0,
+    // quantity: product.quantity || 0,
     purchase_price: product.purchase_price || 0,
     retail_price: product.retail_price || 0,
     wholesale_price: product.wholesale_price || 0,
@@ -65,6 +69,22 @@ const ProductEditModal2 = ({
     tags: product.tags_obj ? product.tags_obj.map((tag) => String(tag.id)) : [],
     units: product.units || [],
     free_items: product.free_items || [],
+    // Вот так:
+    warehouses:
+      product.warehouses_data && product.warehouses_data.length > 0
+        ? product.warehouses_data.map((wp) => ({
+            warehouse: String(wp.warehouse_id),
+            quantity: wp.quantity.toString(),
+          }))
+        : [
+            {
+              warehouse:
+                options.warehouses.length > 0
+                  ? String(options.warehouses[0].value) // ← выбираем первый склад
+                  : "",
+              quantity: 0,
+            },
+          ],
   };
 
   const validationSchema = Yup.object({
@@ -83,16 +103,19 @@ const ProductEditModal2 = ({
           return true;
         }
       }),
-    quantity: Yup.number()
-      .typeError(t("enterNumber"))
-      .min(0, t("quantityNonNegative"))
-      .notRequired(),
+    // quantity: Yup.number()
+    //   .typeError(t("enterNumber"))
+    //   .min(0, t("quantityNonNegative"))
+    //   .notRequired(),
     base_unit: Yup.number()
       .required(t("selectUnit"))
       .typeError(t("invalidValue")),
     category: Yup.number()
       .required(t("selectCategory"))
       .typeError(t("invalidValue")),
+    // warehouse: Yup.number()
+    //   .required(t("selectWarehouse"))
+    //   .typeError(t("invalidValue")),
     purchase_price: Yup.number()
       .typeError(t("enterPrice"))
       .min(0, t("priceNonNegative"))
@@ -142,6 +165,8 @@ const ProductEditModal2 = ({
     try {
       let res;
       if (isCreate) {
+        console.log("payload", payload);
+
         res = await myAxios.post(`/products/`, payload);
         setProducts((prev) => [res.data, ...prev]);
       } else {

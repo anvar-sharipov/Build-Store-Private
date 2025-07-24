@@ -5,6 +5,7 @@ import myAxios from "../../../../../axios";
 import UnitModal from "../../../../../UI/miniModals/UnitModal";
 import ProductUnitsList from "./sections/ProductUnitsList";
 import ProductFreeItemsList from "./sections/ProductFreeItemsList";
+import WarehousesSection from "./sections/WarehousesSection";
 
 const BasicTab = ({ options, loadingModal, setOptions, productId, t }) => {
   const [showUnitModal, setShowUnitModal] = useState(false);
@@ -16,10 +17,11 @@ const BasicTab = ({ options, loadingModal, setOptions, productId, t }) => {
     setFieldValue,
     setFieldError,
     initialValues,
-  
   } = useFormikContext();
 
   const timeoutRef = useRef(null);
+  console.log('values', values);
+  
 
   const handleUnitAdded = (newUnit) => {
     setOptions((prev) => ({
@@ -37,27 +39,61 @@ const BasicTab = ({ options, loadingModal, setOptions, productId, t }) => {
 
   return (
     <div className="space-y-4">
-      {/* Наименование — на всю ширину */}
-      <div className="mt-5">
-        <div className="flex gap-2 items-center">
-          <label className="block text-sm font-medium">{t("nameLabel")}</label>
-          <Field
-            name="name"
-            className={myClass.input2}
-            placeholder={t("namePlaceholder")}
-            autoComplete="off"
-          />
+      <div className="flex justify-between gap-3">
+        {/* Наименование — на всю ширину */}
+        <div className="w-full">
+          <div className="">
+            <label className="block text-sm font-medium">
+              {t("nameLabel")}
+            </label>
+            <Field
+              name="name"
+              className={myClass.input2}
+              placeholder={t("namePlaceholder")}
+              autoComplete="off"
+            />
+          </div>
+          {errors.name && (
+            <div className="text-red-500 text-sm mt-1">{errors.name}</div>
+          )}
         </div>
-        {errors.name && (
-          <div className="text-red-500 text-sm mt-1">{errors.name}</div>
-        )}
+        {/* sklad */}
+        {/* <div>
+          <label className="block text-sm font-medium">{t("sklad")}</label>
+          <div className="flex gap-2">
+            <Field as="select" name="warehouse" className={myClass.input2}>
+              <option value="">{t("sklad")}</option>
+              {options.warehouses.map((w) => (
+                <option key={w.value} value={w.value}>
+                  {w.label}
+                </option>
+              ))}
+            </Field>
+            <button
+              type="button"
+              className={myClass.buttonRounded}
+              onClick={() => setShowUnitModal(true)}
+            >
+              +
+            </button>
+          </div>
+          {errors.warehouse && (
+            <div className="text-red-500 text-sm mt-1">{errors.warehouse}</div>
+          )}
+        </div> */}
       </div>
+
+      
+
+
 
       {/* Компактный блок: Кол-во, Баз.ед., SKU */}
       <div className="flex flex-col sm:flex-row gap-4">
         {/* Количество */}
-        <div className="flex-1">
-          <label className="block text-sm font-medium">{t("quantityLabel")}</label>
+        {/* <div className="flex-1">
+          <label className="block text-sm font-medium">
+            {t("quantityLabel")}
+          </label>
           <Field
             type="number"
             name="quantity"
@@ -69,11 +105,15 @@ const BasicTab = ({ options, loadingModal, setOptions, productId, t }) => {
             component="div"
             className="text-red-500 text-sm mt-1"
           />
-        </div>
+        </div> */}
+
+        <WarehousesSection options={options} t={t} />
 
         {/* Базовая единица + кнопка */}
-        <div className="flex-1">
-          <label className="block text-sm font-medium">{t("baseUnitLabel")}</label>
+        <div className="flex-1"> 
+          <label className="block text-sm font-medium">
+            {t("baseUnitLabel")}
+          </label>
           <div className="flex gap-2">
             <Field as="select" name="base_unit" className={myClass.input2}>
               <option value="">{t("baseUnitPlaceholder")}</option>
@@ -126,7 +166,7 @@ const BasicTab = ({ options, loadingModal, setOptions, productId, t }) => {
         <Field
           as="textarea"
           name="description"
-          rows={4}
+          rows={1}
           placeholder={t("descriptionPlaceholder")}
           className={myClass.input2}
         />
@@ -134,7 +174,11 @@ const BasicTab = ({ options, loadingModal, setOptions, productId, t }) => {
 
       <div className="flex flex-col gap-4 sm:gap-6 sm:flex-col lg:flex-row justify-between">
         <ProductFreeItemsList productOptions={options.products} t={t} />
-        <ProductUnitsList unitOptions={options.base_units} errors={errors} t={t} />
+        <ProductUnitsList
+          unitOptions={options.base_units}
+          errors={errors}
+          t={t}
+        />
       </div>
 
       {/* Модалка */}

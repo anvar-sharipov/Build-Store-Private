@@ -18,6 +18,7 @@ import {
   fetchBrands,
   fetchModels,
   fetchTags,
+  fetchWarehouses,
 } from "../../fetchs/optionsFetchers";
 import ProductDeleteModal from "./modals/ProductDeleteModal";
 
@@ -32,6 +33,7 @@ const Harytlar = () => {
   const [totalCount, setTotalCount] = useState(0);
   const searchInputRef = useRef(null);
   const [clickedNextPageBtn, setClickedNextPageBtn] = useState(false);
+  // const [warehouses, setWarehouses] = useState([])
 
   const [openDeleteModal, setOpenDeleteModal] = useState({
     open: false,
@@ -57,87 +59,6 @@ const Harytlar = () => {
       setOpenDeleteModal({ open: false, data: null, index: null });
     }
   };
-
-  // const downloadFilteredExcel = async () => {
-  //   console.log("Starting download...");
-
-  //   if (products.length === 0) {
-  //     showNotification(t("noProductsToExport"), "error");
-  //     return;
-  //   }
-
-  //   const productIds = products.map((p) => p.id);
-  //   console.log("Product IDs to export:", productIds);
-
-  //   try {
-  //     const token = localStorage.getItem("access");
-  //     console.log("Token exists:", !!token);
-
-  //     if (!token) {
-  //       showNotification(t("authenticationRequired"), "error");
-  //       return;
-  //     }
-
-  //     console.log("Making request to /products/export-excel/");
-
-  //     const response = await myAxios.post(
-  //       "/products-download/export-excel/",
-  //       { product_ids: productIds },
-  //       {
-  //         responseType: "blob",
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //           "Content-Type": "application/json",
-  //         },
-  //       }
-  //     );
-
-  //     console.log("Response received:", response);
-  //     console.log("Response status:", response.status);
-  //     console.log("Response headers:", response.headers);
-  //     console.log("Response data type:", typeof response.data);
-  //     console.log(
-  //       "Response data instanceof Blob:",
-  //       response.data instanceof Blob
-  //     );
-  //     console.log("Response data size:", response.data.size);
-
-  //     if (response.data instanceof Blob && response.data.size > 0) {
-  //       const blob = new Blob([response.data], {
-  //         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  //       });
-
-  //       const url = window.URL.createObjectURL(blob);
-  //       const a = document.createElement("a");
-  //       a.href = url;
-  //       a.download = `products_export_${new Date()
-  //         .toISOString()
-  //         .slice(0, 10)}.xlsx`;
-
-  //       document.body.appendChild(a);
-  //       a.click();
-  //       document.body.removeChild(a);
-  //       window.URL.revokeObjectURL(url);
-
-  //       console.log("File download initiated successfully");
-  //       showNotification(t("fileDownloadedSuccessfully"), "success");
-  //     } else {
-  //       console.error("Invalid response data:", response.data);
-  //       throw new Error("Invalid response data");
-  //     }
-  //   } catch (err) {
-  //     console.error("Download error:", err);
-  //     console.error("Error response:", err.response);
-
-  //     if (err.response?.status === 401) {
-  //       showNotification(t("authenticationError"), "error");
-  //     } else if (err.response?.status === 400) {
-  //       showNotification(t("badRequest"), "error");
-  //     } else {
-  //       showNotification(t("errorDownloadingFile"), "error");
-  //     }
-  //   }
-  // };
 
   const downloadFilteredExcel = async () => {
     try {
@@ -225,16 +146,22 @@ const Harytlar = () => {
   });
 
   useEffect(() => {
+    console.log("options", options);
+  }, [options]);
+
+  useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [units, categories, brands, models, tags] = await Promise.all([
-          fetchUnits(),
-          fetchCategories(),
-          fetchBrands(),
-          fetchModels(),
-          fetchTags(),
-        ]);
+        const [units, categories, brands, models, tags, warehouses] =
+          await Promise.all([
+            fetchUnits(),
+            fetchCategories(),
+            fetchBrands(),
+            fetchModels(),
+            fetchTags(),
+            fetchWarehouses(),
+          ]);
 
         if (units) {
           const formattedUnits = units.map((unit) => ({
@@ -271,6 +198,13 @@ const Harytlar = () => {
             label: tag.name,
           }));
           setOptions((prev) => ({ ...prev, tags: formattedTags }));
+        }
+        if (warehouses) {
+          const formattedWarehouses = warehouses.map((w) => ({
+            value: String(w.id),
+            label: w.name,
+          }));
+          setOptions((prev) => ({ ...prev, warehouses: formattedWarehouses }));
         }
       } catch (e) {
         console.error("Ошибка загрузки данных:", e);

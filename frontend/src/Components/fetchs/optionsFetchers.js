@@ -52,3 +52,13 @@ export const fetchTags = async () => {
     return e;
   }
 };
+
+export const fetchWarehouses = async () => {
+  try {
+    const res = await myAxios.get("/warehouses");
+    return res.data;
+  } catch (e) {
+    console.error("Ошибка при загрузке warehouses:", e);
+    return e;
+  }
+};

@@ -19,17 +19,25 @@ class ProductFilter(django_filters.FilterSet):
     wholesale_price_min = django_filters.NumberFilter(field_name='wholesale_price', lookup_expr='gte')
     wholesale_price_max = django_filters.NumberFilter(field_name='wholesale_price', lookup_expr='lte')
 
-    quantity_min = django_filters.NumberFilter(field_name='quantity', lookup_expr='gte')
-    quantity_max = django_filters.NumberFilter(field_name='quantity', lookup_expr='lte')
+    quantity_min = django_filters.NumberFilter(field_name='total_quantity2', lookup_expr='gte')
+    quantity_max = django_filters.NumberFilter(field_name='total_quantity2', lookup_expr='lte')
 
     retail_price_min = django_filters.NumberFilter(field_name='retail_price', lookup_expr='gte')
     retail_price_max = django_filters.NumberFilter(field_name='retail_price', lookup_expr='lte')
+
+    warehouse = NumberInFilter(field_name='warehouse_products__warehouse_id', lookup_expr='in', label='Склад')
+
+    # def filter_by_warehouse(self, queryset, name, value):
+    #     if not value:
+    #         return queryset
+    #     # Фильтруем продукты, у которых есть остаток на указанном складе
+    #     return queryset.filter(warehouse_products__warehouse_id=value)
 
     ordering = django_filters.OrderingFilter(
         fields=(
             ('wholesale_price', 'wholesale_price'),
             ('retail_price', 'retail_price'),
-            ('quantity', 'quantity'),
+            ('total_quantity2', 'total_quantity2'),
             ('name', 'name'),
         ),
     )

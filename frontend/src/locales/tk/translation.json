@@ -289,7 +289,13 @@
 
   "purchaseInvoice": "Gelýän hasap-fakturany",
   "salesInvoice": "Satuw hasap-fakturasy",
-  "sales_invoice": "Çykdaj fakturasy"
+  "sales_invoice": "Çykdajy fakturasy",
+  "selectWarehouse": "Ambory saýla",
+  "warehouses": "Ambarlar",
+  "warehouse": "Ambar",
+  "Add Warehouse": "Ambar goş",
+  "No warehouses added": "Hiç bir ambar goşulmady",
+  "productNotDeleted": "Haryt pozulmady"
 
   
 

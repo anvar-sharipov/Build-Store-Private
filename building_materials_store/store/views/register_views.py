@@ -19,7 +19,6 @@ from .. serializers.base_serializers import *
 from .. serializers.entry_serializers import *
 from .. serializers.partner_serializers import *
 from .. serializers.product_serializers import *
-from .. serializers.purchase_invoice_serializers import *
 from .. serializers.register_serializers import *
 from .. serializers.sale_invoice_serializers import *
 

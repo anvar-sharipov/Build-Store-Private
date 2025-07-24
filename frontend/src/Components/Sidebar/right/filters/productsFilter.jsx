@@ -8,6 +8,7 @@ function ProductsFilter({
   brands,
   models,
   tags,
+  warehouses,
   selectedTags,
   t,
   setSearchQuery,
@@ -26,6 +27,7 @@ function ProductsFilter({
     retail_price_max: searchParams.get("retail_price_max") || "",
     ordering: searchParams.get("ordering") || "",
     is_active: searchParams.get("is_active") || "",
+    warehouse: searchParams.get("warehouse") ? searchParams.get("warehouse").split(",") : [],
   };
 
   // Функция для обработки выбора тегов
@@ -49,6 +51,14 @@ function ProductsFilter({
   const onSubmit = (values) => {
     // создаём копию текущих параметров
     const params = new URLSearchParams(searchParams);
+
+    // console.log("values", values);
+
+    if (values.warehouse.length > 0) {
+      params.set("warehouse", values.warehouse.join(","));
+    } else {
+      params.delete("warehouse");
+    }
 
     // категории — массив в строку
     if (values.categories.length > 0) {
@@ -344,6 +354,42 @@ function ProductsFilter({
             </div>
           )}
 
+          {warehouses.length > 0 && (
+            <div className="border p-2 border-gray-600 rounded mt-4">
+              <h3 className="font-semibold text-base text-center text-gray-600">
+                {t("warehouse")}
+              </h3>
+              <div className="flex flex-wrap gap-2 max-h-40 overflow-auto">
+                {warehouses.map((w) => (
+                  <label
+                    key={w.id}
+                    className="flex items-center cursor-pointer select-none whitespace-nowrap px-2 py-1 rounded border border-gray-700 hover:bg-gray-700"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={values.warehouse.includes(String(w.id))}
+                      onChange={() => {
+                        if (values.warehouse.includes(String(w.id))) {
+                          setFieldValue(
+                            "warehouse",
+                            values.warehouse.filter((t) => t !== String(w.id))
+                          );
+                        } else {
+                          setFieldValue("warehouse", [
+                            ...values.warehouse,
+                            String(w.id),
+                          ]);
+                        }
+                      }}
+                      className="mr-1 accent-blue-600 w-4 h-4"
+                    />
+                    <span className="text-sm">{w.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="border p-2 border-gray-600 rounded mt-4">
             <h3 className="font-semibold text-base text-center text-gray-600">
               {t("wholesale_price")}
@@ -479,12 +525,12 @@ function ProductsFilter({
               <option value="">{t("noneSort")}</option>
               <option value="wholesale_price">{t("wholesale_price")} ↑</option>
               <option value="-wholesale_price">{t("wholesale_price")} ↓</option>
-              <option value="quantity">{t("quantity")} ↑</option>
-              <option value="-quantity">{t("quantity")} ↓</option>
+              <option value="total_quantity2">{t("quantity")} ↑</option>
+              <option value="-total_quantity2">{t("quantity")} ↓</option>
               <option value="retail_price">{t("retail_price")} ↑</option>
               <option value="-retail_price">{t("retail_price")} ↓</option>
-              <option value="name">{t("name")} ↑</option>
-              <option value="-name">{t("name")} ↓</option>
+              <option value="name">{t("name_asc")} ↑</option>
+              <option value="-name">{t("name_asc")} ↓</option>
             </Field>
           </div>
 
@@ -502,6 +548,7 @@ function ProductsFilter({
                 const params = new URLSearchParams(searchParams);
                 params.delete("categories");
                 params.delete("tags");
+                params.delete("warehouse");
                 params.delete("brands");
                 params.delete("models");
                 params.delete("is_active");

@@ -193,7 +193,9 @@ const AddSaleInvoicePage = () => {
 
           setLoading(true);
           try {
-            const res = await myAxios.get(`search-products/?q=${query}`);
+            const res = await myAxios.get(`search-products/?search=${query}&warehouse=${selectedWarehouseId}`);
+            console.log('res', res);
+            
             setResults(res.data);
             // console.log("res.data", res.data);
 
@@ -580,11 +582,11 @@ const AddSaleInvoicePage = () => {
           </div>
           <div>
             {filteredAwto.length > 0 && (
-              <div className="absolute bg-gray-300 p-2 mt-1 border border-gray-500 rounded-md dark:bg-gray-700 z-20 font-semibold">
+              <div className="absolute bg-indigo-200 mt-1 border border-gray-500 rounded-md dark:bg-gray-700 w-[90%] font-semibold z-20 p-5">
                 <ul className="print:hidden">
                   {filteredAwto.map((p, index) => (
                     <li
-                      className={myClass.li}
+                      className={myClass.li3}
                       key={p.id}
                       ref={(el) => (resultAwtoRefs.current[index] = el)}
                       tabIndex={0}
@@ -678,7 +680,7 @@ const AddSaleInvoicePage = () => {
 
           <div>
             {filteredPartners.length > 0 && (
-              <div className="absolute bg-gray-300 p-2 mt-1 border border-gray-500 rounded-md dark:bg-gray-700 z-20 font-semibold">
+              <div className="absolute bg-indigo-200 mt-1 border border-gray-500 rounded-md dark:bg-gray-700 w-[90%] font-semibold z-20 p-5">
                 <SearchedPartnerList
                   setSelectedPartnerId={setSelectedPartnerId}
                   filteredPartners={filteredPartners}
@@ -751,7 +753,7 @@ const AddSaleInvoicePage = () => {
               (loading ? (
                 <MyLoading />
               ) : (
-                <div className="absolute bg-gray-100 mt-1 border border-gray-500 rounded-md dark:bg-gray-700 w-full font-semibold">
+                <div className="absolute bg-indigo-200 mt-1 border border-gray-500 rounded-md dark:bg-gray-700 w-[90%] font-semibold p-5">
                   <SearchedProductList
                     t={t}
                     results={results}
@@ -770,6 +772,7 @@ const AddSaleInvoicePage = () => {
                     showNotification={showNotification}
                     notification={notification}
                     Notification={Notification}
+                    selectedWarehouseId={selectedWarehouseId}
                     // setFreeProducts={setFreeProducts}
                     // freeProducts={freeProducts}
                   />

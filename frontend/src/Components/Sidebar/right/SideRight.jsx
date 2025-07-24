@@ -63,23 +63,26 @@ export default function SidebarRight() {
   const [brands, setBrands] = useState([]);
   const [models, setModels] = useState([]);
   const [tags, setTags] = useState([]);
+  const [warehouses, setWarehouses] = useState([]);
   // const [is_active , setIs_active ] = useState([]);
 
   useEffect(() => {
     if (currentPath === "/products") {
       const fetchAll = async () => {
         try {
-          const [categoriesRes, brandsRes, modelsRes, tagsRes] =
+          const [categoriesRes, brandsRes, modelsRes, tagsRes, warehousesRes] =
             await Promise.all([
               myAxios.get("/categories"),
               myAxios.get("/brands"),
               myAxios.get("/models"),
               myAxios.get("/tags"),
+              myAxios.get("/warehouses"),
             ]);
           setCategories(categoriesRes.data);
           setBrands(brandsRes.data);
           setModels(modelsRes.data);
           setTags(tagsRes.data);
+          setWarehouses(warehousesRes.data)
         } catch (e) {
           console.error("Ошибка при загрузке данных:", e);
         }
@@ -209,6 +212,7 @@ export default function SidebarRight() {
           brands={brands}
           models={models}
           tags={tags}
+          warehouses={warehouses}
           selectedTags={selectedTags}
           t={t}
         />

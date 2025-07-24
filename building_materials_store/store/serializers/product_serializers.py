@@ -27,10 +27,23 @@ class ProductImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'product', 'alt_text', 'image' ]
 
 
-class ProductBatchSerializer(serializers.ModelSerializer):
+class WarehouseProductSerializer(serializers.ModelSerializer):
+    warehouse_name = serializers.CharField(source='warehouse.name', read_only=True)
+    warehouse = serializers.PrimaryKeyRelatedField(queryset=Warehouse.objects.all())
+
     class Meta:
-        model = ProductBatch
-        fields = ['id', 'batch_number', 'quantity', 'arrival_date', 'production_date', 'expiration_date']
+        model = WarehouseProduct
+        fields = ['id', 'warehouse', 'warehouse_name', 'quantity']
+
+
+class WarehouseProductReadSerializer(serializers.ModelSerializer):
+    warehouse_name = serializers.CharField(source='warehouse.name', read_only=True)
+    warehouse_id = serializers.IntegerField(source='warehouse.id', read_only=True)
+
+    class Meta:
+        model = WarehouseProduct
+        fields = ['warehouse_id', 'warehouse_name', 'quantity']
+
 
 
 class FreeProductSerializer(serializers.ModelSerializer):
@@ -42,6 +55,7 @@ class FreeProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = FreeProduct
         fields = ['id', 'gift_product', 'gift_product_name', 'quantity_per_unit', 'gift_product_quantity', 'gift_product_unit_name']
+
 
 class ProductSerializer(serializers.ModelSerializer):
     category_name_obj = CategorySerializer(read_only=True, source='category')
@@ -56,49 +70,87 @@ class ProductSerializer(serializers.ModelSerializer):
     model = serializers.PrimaryKeyRelatedField(queryset=Model.objects.all(), write_only=True, required=False, allow_null=True)
     category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), write_only=True, required=False, allow_null=True)
 
-
-    # units = ProductUnitSerializer(many=True, read_only=True)
-    units = ProductUnitSerializer(many=True)
-    free_items = FreeProductSerializer(many=True)
+    units = ProductUnitSerializer(many=True, required=False)
     images = ProductImageSerializer(many=True, read_only=True)
-    batches = ProductBatchSerializer(many=True, read_only=True)
     
+    warehouses = WarehouseProductSerializer(many=True, write_only=True, required=False)  # Для передачи количества по складам
+    warehouses_data = WarehouseProductReadSerializer(many=True, source='warehouse_products', read_only=True)
 
+    free_items = FreeProductSerializer(many=True)
+
+    # total_quantity = serializers.DecimalField(source='total_quantity', max_digits=10, decimal_places=2, read_only=True)
+    # total_quantity = serializers.ReadOnlyField()
+    total_quantity = serializers.SerializerMethodField()
+
+    quantity_on_selected_warehouses = serializers.SerializerMethodField()
+
+    
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'description', 'sku', 'qr_code',
-            'quantity', 'purchase_price', 'retail_price', 'wholesale_price', 'discount_price', 'firma_price',
+            'purchase_price', 'retail_price', 'wholesale_price', 'discount_price', 'firma_price',
             'weight', 'volume', 'length', 'width', 'height',
-            
             'base_unit', 'base_unit_obj',
             'category', 'category_name_obj',
             'brand', 'brand_obj',
             'model', 'model_obj',
-            
             'tags', 'tags_obj',
-            'units', 
-            'images', 
-            'batches', 'free_items',
-            'is_active', 'created_at', 'updated_at'
+            'units',
+            'images',
+            'free_items',
+            'warehouses', 'warehouses_data',    # для записи остатков
+            'total_quantity', # для отображения суммы
+            'is_active', 'created_at', 'updated_at',
+            'quantity_on_selected_warehouses',
         ]
-        
 
+    def get_quantity_on_selected_warehouses(self, obj):
+        # warehouse_ids = self.context.get('warehouse_ids', [])
+        if self.context:
+
+            request = self.context.get('request')
+            warehouse_ids_str = request.query_params.get('warehouse', '')  # например '3,2'
+
+            warehouse_ids = []
+            if warehouse_ids_str:
+                warehouse_ids = warehouse_ids_str.split(',')
+            if warehouse_ids:
+                return obj.warehouse_products.filter(
+                    warehouse_id__in=warehouse_ids
+                ).aggregate(total=Sum('quantity'))['total'] or 0
+            else:
+                return obj.get_total_quantity()
+
+
+    def get_total_quantity(self, obj):
+        # Если queryset аннотирован, возвращаем аннотированное значение
+        if hasattr(obj, 'total_quantity') and obj.total_quantity is not None:
+            return obj.total_quantity
+        # Если аннотация отсутствует (например, отдельный объект), считаем на лету
+        return obj.warehouse_products.aggregate(total=Sum('quantity'))['total'] or 0
+
+    
 
     def create(self, validated_data):
         tags_data = validated_data.pop('tags', [])
         units_data = validated_data.pop('units', [])
+        warehouses_data = validated_data.pop('warehouses', [])
         free_items_data = validated_data.pop('free_items', [])
 
         user = self.context['request'].user
 
         product = Product(**validated_data)
-        product.save(user=user)  # передаём пользователя в модель
+        product.save(user=user)
 
-        product.tags.set(tags_data)
+        if tags_data:
+            product.tags.set(tags_data)
 
         for unit_data in units_data:
             ProductUnit.objects.create(product=product, **unit_data)
+        print('warehouses_data', warehouses_data)
+        for wh_data in warehouses_data:
+            WarehouseProduct.objects.create(product=product, **wh_data)
 
         for free_item_data in free_items_data:
             FreeProduct.objects.create(main_product=product, **free_item_data)
@@ -108,6 +160,7 @@ class ProductSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         tags_data = validated_data.pop('tags', None)
         units_data = validated_data.pop('units', None)
+        warehouses_data = validated_data.pop('warehouses', None)
         free_items_data = validated_data.pop('free_items', None)
 
         user = self.context['request'].user
@@ -115,16 +168,20 @@ class ProductSerializer(serializers.ModelSerializer):
         if tags_data is not None:
             instance.tags.set(tags_data)
 
-        # Обновляем поля экземпляра
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
-        instance.save(user=user)  # передаём пользователя
+        instance.save(user=user)
 
         if units_data is not None:
             instance.units.all().delete()
             for unit_data in units_data:
                 ProductUnit.objects.create(product=instance, **unit_data)
+
+        if warehouses_data is not None:
+            instance.warehouse_products.all().delete()
+            for wh_data in warehouses_data:
+                WarehouseProduct.objects.create(product=instance, **wh_data)
 
         if free_items_data is not None:
             instance.free_items.all().delete()

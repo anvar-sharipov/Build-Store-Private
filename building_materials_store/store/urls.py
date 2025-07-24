@@ -4,7 +4,6 @@ from . views.base_views import *
 from . views.entry_views import *
 from . views.partner_views import *
 from . views.product_views import *
-from . views.purchase_invoice_views import *
 from . views.register_views import *
 from . views.sale_invoice_views import *
 from . views.report_views import *
@@ -29,9 +28,7 @@ router.register(r'product-units', ProductUnitViewSet)
 # router.register(r'currencys', CurrencyViewSet)
 
 # faktura START
-router.register(r'purchase-invoices', PurchaseInvoiceViewSet, basename='purchaseinvoice')
 router.register(r'sales-invoices', SalesInvoiceViewSet, basename='salesinvoice')
-router.register(r'purchase-return-invoices', PurchaseReturnInvoiceViewSet, basename='purchasereturninvoice')
 # router.register(r'sales-return-invoices', SalesReturnInvoiceViewSet, basename='salesreturninvoice')
 # faktura END
 

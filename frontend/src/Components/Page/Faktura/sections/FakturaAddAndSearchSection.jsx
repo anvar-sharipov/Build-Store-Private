@@ -26,7 +26,7 @@ const FakturaAddAndSearchSection = ({
     <div>
       {/* add and search section */}
       <div className="bg-gray-200 dark:bg-gray-800 rounded-lg shadow-md p-1 mb-2 flex items-center justify-between px-2 print:hidden">
-        <div>
+        {/* <div>
           <SmartTooltip tooltip={t("salesInvoice")} shortcut="INSERT">
             <button
               ref={addSalesIconRef}
@@ -42,39 +42,27 @@ const FakturaAddAndSearchSection = ({
               <IoAdd size={20} />
             </button>
           </SmartTooltip>
+        </div> */}
+
+        <div>
+          <SmartTooltip tooltip={t("salesInvoice")} shortcut="INSERT">
+            <button
+              ref={addSalesIconRef}
+              className={myClass.addButtonIndogo}
+              onClick={() => navigate("/sale-invoices/main")}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  searchInputRef.current.focus();
+                }
+              }}
+            >
+              <IoAdd size={20} />
+            </button>
+          </SmartTooltip>
         </div>
 
-        {/* <div className="text-gray-600 dark:text-gray-400 hidden lg:flex items-center gap-3">
-          <div>
-            {filteredList.length > 0 && (
-              <div className="flex gap-3 items-center">
-                <span>
-                  {t("total")}: {filteredList.length}
-                </span>
-                <RiFileExcel2Fill
-                  size={30}
-                  className={`cursor-pointer rounded transition-transform duration-300 text-green-700 hover:text-green-600 ${
-                    excelIconIsAnimating ? "scale-125" : "scale-100"
-                  }`}
-                  ref={excelIconRef}
-                  onClick={handleDownloadExcel}
-                  onMouseEnter={() => {
-                    hoverTimeoutRef.current = setTimeout(() => {
-                      setExcelIconHovered(true);
-                    }, 500);
-                  }}
-                  onMouseLeave={() => {
-                    clearTimeout(hoverTimeoutRef.current);
-                    setExcelIconHovered(false);
-                  }}
-                />
-              </div>
-            )}
-            <Tooltip visible={excelIconHovered} targetRef={excelIconRef}>
-              {t("downloadExcel")} (CTRL+E)
-            </Tooltip>
-          </div>
-        </div> */}
+
 
         <div className="flex items-end gap-3">
           <MySearchInput

@@ -105,6 +105,8 @@
 
   "commonSaveError": "Ошибка при сохранении.",
 
+  "pc": "штук",
+
 
 
 
@@ -312,12 +314,16 @@
   "purchaseInvoice": "Добавить приход",
   "salesInvoice": "Добавить продажу",
   "sales_invoice": "Расход. фактура",
+  "sales_invoice2": "Расходная фактура",
   "selectWarehouse": "Выбрать склад",
   "warehouses": "Склады",
   "warehouse": "Склад",
   "Add Warehouse": "Добавить склад",  
   "No warehouses added": "Склады не добавлены",  
-  "productNotDeleted": "Товар не был удалён"
+  "productNotDeleted": "Товар не был удалён",
+  "forSearchProductShooseWarehouse": "Для поиска продукта выберите склад",
+  "OnStock": "На складе", 
+  "alreadyAdded": "Этот товар уже находится в списке."
 
 
 

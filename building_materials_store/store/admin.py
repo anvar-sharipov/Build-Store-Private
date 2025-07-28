@@ -97,7 +97,7 @@ class WarehouseProductInline(admin.TabularInline):
 # Админка товаров
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'sku', 'category', 'retail_price', 'wholesale_price', 'total_quantity', 'is_active')
+    list_display = ('id', 'name', 'sku', 'category', 'retail_price', 'wholesale_price', 'total_quantity', 'is_active')
     list_filter = ('category', 'brand', 'is_active')
     search_fields = ('name', 'sku', 'qr_code')
     readonly_fields = ('created_at', 'updated_at', 'volume_calculated', 'total_quantity')

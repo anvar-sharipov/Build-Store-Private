@@ -1,8 +1,11 @@
 import { Field, FieldArray, ErrorMessage, useFormikContext } from "formik";
 import { useState } from "react";
+import MyButton from "../../../../../../UI/MyButton";
+import { myClass } from "../../../../../../tailwindClasses";
 
-const WarehousesSection = ({ options, t }) => {
+const WarehousesSection = ({ options, t, warehouses }) => {
   const { values, setFieldValue } = useFormikContext();
+  // console.log("options", options);
 
   return (
     <div>
@@ -12,13 +15,48 @@ const WarehousesSection = ({ options, t }) => {
             <>
               <div className="flex gap-3 items-center mb-2">
                 <label className="text-sm font-medium">{t("warehouses")}</label>
-                <button
+                <MyButton
                   type="button"
-                  onClick={() => push({ warehouse: "", quantity: "" })}
+                  onClick={() => {
+                    const existingIds = values.warehouses.map(
+                      (w) => w.warehouse
+                    );
+
+                    for (const option of options.warehouses) {
+                      if (!existingIds.includes(option.value)) {
+                        push({ warehouse: option.value, quantity: 0 });
+                        break; // остановиться после первого добавленного склада
+                      }
+                    }
+                  }}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors"
+                  disabled={
+                    options.warehouses.length <= values.warehouses.length
+                  }
                 >
-                  + {t("add")}
-                </button>
+                  + 1 {t("warehouse")}
+                  {/* {t("add")} */}
+                </MyButton>
+                <MyButton
+                  disabled={
+                    options.warehouses.length <= values.warehouses.length
+                  }
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors"
+                  type="button"
+                  onClick={() => {
+                    const existingIds = values.warehouses.map(
+                      (w) => w.warehouse
+                    ); // массив уже выбранных складов
+
+                    options.warehouses.forEach((option) => {
+                      if (!existingIds.includes(option.value)) {
+                        push({ warehouse: option.value, quantity: 0 });
+                      }
+                    });
+                  }}
+                >
+                  + Все {t("warehouses")}
+                </MyButton>
               </div>
               {values.warehouses && values.warehouses.length > 0 ? (
                 values.warehouses.map((wh, index) => (
@@ -26,7 +64,7 @@ const WarehousesSection = ({ options, t }) => {
                     <Field
                       as="select"
                       name={`warehouses.${index}.warehouse`}
-                      className="border p-1 rounded"
+                      className={myClass.input2}
                       required
                     >
                       {/* <option value="">{t("Select warehouse")}</option> */}
@@ -43,7 +81,7 @@ const WarehousesSection = ({ options, t }) => {
                       min="0"
                       step="0.01"
                       placeholder={t("quantity")}
-                      className="border p-1 rounded w-24"
+                      className={`${myClass.input2}`}
                       required
                     />
 

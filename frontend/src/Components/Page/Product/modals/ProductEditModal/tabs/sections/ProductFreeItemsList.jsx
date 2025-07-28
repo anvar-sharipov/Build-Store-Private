@@ -6,6 +6,7 @@ import { useState, useCallback } from "react";
 const ProductFreeItemsList = ({ productOptions = [], t }) => {
   const { values, setFieldValue, errors, touched } = useFormikContext();
   const [selectedProducts, setSelectedProducts] = useState({}); // Кэш выбранных продуктов
+  // console.log("valuessssss", values);
 
   const handleAddFreeItem = () => {
     const newItem = { gift_product: "", quantity_per_unit: "" };
@@ -33,22 +34,38 @@ const ProductFreeItemsList = ({ productOptions = [], t }) => {
     setSelectedProducts(updatedCache);
   };
 
-  const loadProductOptions = useCallback(async (inputValue) => {
-    if (!inputValue || inputValue.length < 2) {
-      return [];
-    }
+  const loadProductOptions = useCallback(
+    async (inputValue) => {
+      if (!inputValue || inputValue.length < 2) {
+        return [];
+      }
 
-    try {
-      const res = await myAxios.get(`search-products/?q=${inputValue}`);
-      return res.data.map((p) => ({
-        value: String(p.id),
-        label: p.name,
-      }));
-    } catch (error) {
-      console.error(t("productSearchError"), error);
-      return [];
-    }
-  }, [t]);
+      try {
+        const warehouses = values.warehouses.map((w) => w.warehouse);
+        // console.log("warehousesssss", warehouses);
+
+        const params = new URLSearchParams({
+          search_free: inputValue,
+        });
+        warehouses.forEach(id => params.append('warehouses', id));
+        // console.log('params.toString()', params.toString());
+        
+        const res = await myAxios.get(
+          `search-products/?${params.toString()}`
+        );
+        // console.log("res.dataaaaa", res.data);
+
+        return res.data.map((p) => ({
+          value: String(p.id),
+          label: p.name,
+        }));
+      } catch (error) {
+        console.error(t("productSearchError"), error);
+        return [];
+      }
+    },
+    [t, values.warehouses, setFieldValue.warehouses]
+  );
 
   const getSelectValue = (item, index) => {
     if (!item.gift_product) return null;
@@ -105,18 +122,18 @@ const ProductFreeItemsList = ({ productOptions = [], t }) => {
           <div className="flex-1">
             <AsyncSelect
               menuPlacement="top"
-              cacheOptions
+              cacheOptions={false}
               defaultOptions={false}
               loadOptions={loadProductOptions}
               placeholder={t("enterProductName")}
               noOptionsMessage={({ inputValue }) =>
-                inputValue.length < 2
-                  ? t("minTwoChars")
-                  : t("productsNotFound")
+                inputValue.length < 2 ? t("minTwoChars") : t("productsNotFound")
               }
               loadingMessage={() => t("searching")}
               value={getSelectValue(item, index)}
-              onChange={(selectedOption) => handleProductChange(selectedOption, index)}
+              onChange={(selectedOption) =>
+                handleProductChange(selectedOption, index)
+              }
               isClearable
               styles={{
                 control: (base) => ({

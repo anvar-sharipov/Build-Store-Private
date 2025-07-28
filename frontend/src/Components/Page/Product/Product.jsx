@@ -73,7 +73,7 @@ const Harytlar = () => {
       // Отправляем только параметры фильтрации, а не ID товаров
       const filterParams = Object.fromEntries(searchParams.entries());
 
-      console.log("Sending filter params:", filterParams);
+      // console.log("Sending filter params:", filterParams);
 
       const response = await myAxios.post(
         "/products-download/export-excel/",
@@ -146,7 +146,7 @@ const Harytlar = () => {
   });
 
   useEffect(() => {
-    console.log("options", options);
+    // console.log("options", options);
   }, [options]);
 
   useEffect(() => {
@@ -362,6 +362,7 @@ const Harytlar = () => {
           showNotification={showNotification}
           setNotification={setNotification}
           notification={notification}
+          // warehouses={warehouses}
         />
       )}
 
@@ -376,6 +377,7 @@ const Harytlar = () => {
           showNotification={showNotification}
           setNotification={setNotification}
           notification={notification}
+          // warehouses={warehouses}
         />
       )}
 

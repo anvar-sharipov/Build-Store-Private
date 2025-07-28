@@ -62,3 +62,25 @@ export const fetchWarehouses = async () => {
     return e;
   }
 };
+
+
+export const fetchPartners = async () => {
+  try {
+    const res = await myAxios.get("/partners");
+    return res.data;
+  } catch (e) {
+    console.error("Ошибка при загрузке partners:", e);
+    return e;
+  }
+};
+
+export const fetchEmployeers = async () => {
+  try {
+    const res = await myAxios.get("/employeers");
+    return res.data;
+  } catch (e) {
+    console.error("Ошибка при загрузке employeers:", e);
+    return e;
+  }
+};
+

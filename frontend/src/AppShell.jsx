@@ -20,10 +20,11 @@ import UpdateSaleInvoice from "./Components/Page/Faktura/UpdateSaleInvoice/Updat
 
 import { AuthProvider } from "./AuthContext";
 import { SearchProvider } from "./Components/context/SearchContext";
+import MainPage from "./Components/Page/Faktura/SaleInvoice2/MainPage";
 
 function AppShell() {
   const location = useLocation();
-  const isFullScreenPage = location.pathname === "/sale-invoices/new" || location.pathname.includes("/sale-invoices/update");
+  const isFullScreenPage = location.pathname === "/sale-invoices/new" || location.pathname.includes("/sale-invoices/update") || location.pathname.includes("/sale-invoices/main");
 
   return (
     <>
@@ -33,7 +34,7 @@ function AppShell() {
           <main
             className={`flex flex-grow gap-4 mt-4 ${
               isFullScreenPage ? "" : "lg:ml-52 lg:mr-72"
-            } print:w-full print:block print:mr-4 print:ml-4 print:p-0 print:m-0`}
+            } print:w-full print:block print:p-0 print:m-0`}
           >
             {!isFullScreenPage && <SidebarLeft />}
 
@@ -41,6 +42,7 @@ function AppShell() {
               <Routes>
                 <Route path={ROUTES.MAIN} element={<ProductList />} />
                 <Route path="/sale-invoices/new" element={<AddSaleInvoicePage /> } />
+                <Route path="/sale-invoices/main" element={<MainPage /> } />
                 <Route path="/sale-invoices/update/:id" element={<UpdateSaleInvoice />} />
                 <Route path={ROUTES.REGISTER} element={<Register />} />
                 <Route path={ROUTES.LOGIN} element={<Login />} />

@@ -32,9 +32,12 @@ const UpdateInvoiceForm2 = ({
   setTotalPaySumm,
   invoice,
   setTotalDebit,
+  setShowStockMessageIds,
+  showStockMessageIds,
 }) => {
-  const [showStockMessageIds, setShowStockMessageIds] = useState([]);
   const [numerateRow, setNumerateRow] = useState(1);
+  const [calculateFreeQuantity, setCalculateFreeQuantity] = useState([]);
+  // const [showStockMessageIdsFree, setShowStockMessageIdsFree] = useState([]);
 
   const td_basic_class =
     "leading-tight border border-gray-300 dark:border-gray-700 " +
@@ -42,8 +45,6 @@ const UpdateInvoiceForm2 = ({
   const th_basic_class =
     "print:p-[1px] print:text-[14px] print:leading-none border border-gray-300 dark:border-gray-600 dark:text-gray-200 print:border-black";
 
-  // console.log('invoice', invoice);
-  // console.log('invoiceTable', invoiceTable);
 
   // dlya tfoot summ START
   const products = invoiceTable.filter((p) => !p.is_gift);
@@ -62,6 +63,17 @@ const UpdateInvoiceForm2 = ({
         return acc;
       }, {})
   );
+
+  // useEffect(() => {
+  //   gifts.forEach((g) => {
+  //     if (g.selected_quantity > g.quantity_in_stock) {
+  //       setShowStockMessageIds((prev) => [...prev, g.id]);
+  //       setTimeout(() => {
+  //         setShowStockMessageIds((prev) => prev.filter((id) => id !== g.id));
+  //       }, 3000);
+  //     }
+  //   });
+  // }, [gifts]);
 
   const totalPurchaseSum = products.reduce(
     (sum, p) => sum + (p.purchase_price_summ || 0),
@@ -389,6 +401,8 @@ const UpdateInvoiceForm2 = ({
                         const new_base_quantity = new_quantity * factor;
 
                         let not_enough = false;
+                
+                        
                         if (
                           parseFloat(p.quantity_in_stok) <
                           new_quantity * factor
@@ -455,6 +469,8 @@ const UpdateInvoiceForm2 = ({
                                   item.quantity_in_stok / factor <
                                   item.original_quantity_per_unit * new_quantity
                                 ) {
+                             
+
                                   not_enough_gift = true;
                                   setShowStockMessageIds((prev) => [
                                     ...prev,

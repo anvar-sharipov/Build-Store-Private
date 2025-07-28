@@ -32,7 +32,7 @@ const ProductEditModal2 = ({
   const [activeTab, setActiveTab] = useState("basic");
   const [loadingModal, setLoadingModal] = useState(false);
 
-  console.log("product", product);
+  // console.log("product", product);
   // console.log('options', options);
 
   const tabs = [
@@ -165,7 +165,7 @@ const ProductEditModal2 = ({
     try {
       let res;
       if (isCreate) {
-        console.log("payload", payload);
+        // console.log("payload", payload);
 
         res = await myAxios.post(`/products/`, payload);
         setProducts((prev) => [res.data, ...prev]);
@@ -176,7 +176,7 @@ const ProductEditModal2 = ({
         );
       }
     } catch (error) {
-      console.log("eerrorrr", error);
+      // console.log("eerrorrr", error);
 
       if (error.response && error.response.status === 403) {
         // Показываем уведомление пользователю
@@ -219,6 +219,7 @@ const ProductEditModal2 = ({
                     setOptions={setOptions}
                     productId={product.id}
                     t={t}
+                    warehouses={warehouses}
                   />
                 ) : activeTab === "prices" ? (
                   <PricesTab options={options} setOptions={setOptions} t={t} />
@@ -242,6 +243,7 @@ const ProductEditModal2 = ({
                     product={product}
                     setProduct={setProduct}
                     t={t}
+                    
                   />
                 ) : null}
               </div>

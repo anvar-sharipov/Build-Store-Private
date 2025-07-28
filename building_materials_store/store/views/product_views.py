@@ -36,9 +36,10 @@ from .. filters import ProductFilter
 # from django.views.decorators.http import require_GET
 # from django.http import JsonResponse
 from django.contrib.postgres.search import TrigramSimilarity
-# from django.db.models import Q
+from django.db.models import Q
 # from django.utils.dateparse import parse_datetime, parse_date
 # from django.db.models import Sum, F, Count
+from django.db.models import F, Count
 # from openpyxl.styles import Font
 from rest_framework.exceptions import PermissionDenied
 # from django.db import transaction
@@ -69,12 +70,12 @@ def search_products(request):
  
     query = request.GET.get("search", "")
     warehouse = request.GET.get("warehouse", "")
-
+    search_free = request.GET.get("search_free", "")
     product_id = request.query_params.get('id')
-
-  
+    search_in_invoice = request.GET.get("search_in_invoice", "")
+    
     if query:
-        # print('warehouse', warehouse)
+        # dlya list product w sale invoice
         results = Product.objects.annotate(
             similarity=TrigramSimilarity("name", query)
         ).filter(similarity__gt=0.1)
@@ -110,21 +111,88 @@ def search_products(request):
                 'quantity_on_selected_warehouses': quantity,
                 'unit_name_on_selected_warehouses': unit_name,
                 'base_quantity_in_stock': base_quantity_in_stock,
+                'selected_quantity': 1,
             })
             data.append(serialized)
             # print(product, unit_name, quantity)
+
+    # esli poisk produkta s sales invoice (esli najal na enter wybor producta)
+    elif search_in_invoice:
+        ic('search_in_invoice')
+        product_id = request.GET.get("id", "")
+        warehouse = request.GET.get("warehouse", "")
+        
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return Response({"error": "Продукт не найден"}, status=404)
+
+        # warehouse_products = product.warehouse_products.filter(warehouse_id=warehouse)
+        warehouse_products2 = WarehouseProduct.objects.get(warehouse__id=warehouse, product__id=product.id).product
+        
+        quantity = warehouse_products2.warehouse_products.filter(warehouse_id=warehouse).aggregate(total=models.Sum('quantity'))['total'] or 0
+        base_quantity_in_stock = quantity
+
+        unit_name = warehouse_products2.base_unit.name if warehouse_products2.base_unit else ""
+        for unit in warehouse_products2.units.all():
+            if unit.is_default_for_sale and unit.conversion_factor:
+                # print('quantity', quantity)
+                # print('unit.conversion_factor', unit.conversion_factor)
+                quantity = float(quantity) / float(unit.conversion_factor)
+                unit_name = unit.unit.name
+                break
+        
+        data = []
+        serialized = ProductSerializer(warehouse_products2).data
+        serialized.update({
+                'quantity_on_selected_warehouses': quantity,
+                'unit_name_on_selected_warehouses': unit_name,
+                'base_quantity_in_stock': base_quantity_in_stock,
+                'selected_quantity': 1,
+            })
+        data.append(serialized)
+        
+
+        
+        # for wp in warehouse_products:  # wp = warehouse_product
+        #     product = wp.product
+        #     base_quantity_in_stock = wp.quantity  # Кол-во на складе в базовой единице
+
+        #     quantity = base_quantity_in_stock
+        #     unit_name = product.base_unit.name if product.base_unit else ""
+
+        #     for unit in product.units.all():
+        #         if unit.is_default_for_sale and unit.conversion_factor:
+        #             quantity = float(quantity) / float(unit.conversion_factor)
+        #             unit_name = unit.unit.name
+        #             break
+
+        #     ic('tut3')
+        #     serialized = ProductSerializer(product).data
+        #     serialized.update({
+        #         'quantity_on_selected_warehouses': quantity,
+        #         'unit_name_on_selected_warehouses': unit_name,
+        #         'base_quantity_in_stock': base_quantity_in_stock,
+        #     })
+        #     data.append(serialized)
+        #     ic('tut4')
+
     elif product_id:
+ 
         results = Product.objects.filter(id=product_id)
+        ic('tut')
         data = []
         for product in results:
+            ic('tut1')
             if warehouse:
+                ic('tut1.1', warehouse)
                 quantity = product.warehouse_products.filter(
                     warehouse_id=warehouse
                 ).aggregate(total=models.Sum('quantity'))['total'] or 0
                 base_quantity_in_stock = quantity
             else:
                 quantity = product.get_total_quantity()
-
+            ic('tut2')
             unit_name = product.base_unit.name if product.base_unit else ""
             for unit in product.units.all():
                 if unit.is_default_for_sale and unit.conversion_factor:
@@ -133,7 +201,7 @@ def search_products(request):
                     quantity = float(quantity) / float(unit.conversion_factor)
                     unit_name = unit.unit.name
                     break
-
+            ic('tut3')
             serialized = ProductSerializer(product).data
             serialized.update({
                 'quantity_on_selected_warehouses': quantity,
@@ -141,6 +209,46 @@ def search_products(request):
                 'base_quantity_in_stock': base_quantity_in_stock,
             })
             data.append(serialized)
+            ic('tut4')
+    elif search_free:
+        warehouse_ids = request.GET.getlist("warehouses")
+        ic(warehouse_ids)
+        if warehouse_ids:
+            warehouse_ids = [int(w) for w in warehouse_ids if w.isdigit()]
+        
+        # Добавляем аннотацию с похожестью по триграммам
+        results = Product.objects.annotate(
+            similarity=TrigramSimilarity('name', search_free)
+        ).filter(similarity__gt=0.1)  # порог схожести (можно подстроить)
+        
+        # eto ili
+        # if warehouse_ids:
+        #     results = results.filter(warehouse_products__warehouse_id__in=warehouse_ids)
+
+        # a eto i (doljno byt wo wseh wybrannyh skladah)
+        if warehouse_ids:
+            results = results.annotate(
+                warehouses_count=Count(
+                    'warehouse_products__warehouse_id',
+                    filter=Q(warehouse_products__warehouse_id__in=warehouse_ids),
+                    distinct=True
+                )
+            ).filter(
+                warehouses_count=len(warehouse_ids)
+            )
+        
+        results = results.order_by('-similarity')[:10]  # сортируем по убыванию схожести
+
+        data = []
+        for product in results:
+            serialized = ProductSerializer(product).data
+            data.append(serialized)
+
+    
+
+       
+        
+
 
     # return Response(ProductSerializer(results, many=True).data)
     return Response(data)

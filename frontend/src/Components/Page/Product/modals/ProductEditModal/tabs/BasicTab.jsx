@@ -7,7 +7,7 @@ import ProductUnitsList from "./sections/ProductUnitsList";
 import ProductFreeItemsList from "./sections/ProductFreeItemsList";
 import WarehousesSection from "./sections/WarehousesSection";
 
-const BasicTab = ({ options, loadingModal, setOptions, productId, t }) => {
+const BasicTab = ({ options, loadingModal, setOptions, productId, t, warehouses }) => {
   const [showUnitModal, setShowUnitModal] = useState(false);
 
   const {
@@ -18,9 +18,10 @@ const BasicTab = ({ options, loadingModal, setOptions, productId, t }) => {
     setFieldError,
     initialValues,
   } = useFormikContext();
+  
 
   const timeoutRef = useRef(null);
-  console.log('values', values);
+  // console.log('values', values);
   
 
   const handleUnitAdded = (newUnit) => {
@@ -107,7 +108,7 @@ const BasicTab = ({ options, loadingModal, setOptions, productId, t }) => {
           />
         </div> */}
 
-        <WarehousesSection options={options} t={t} />
+        <WarehousesSection options={options} t={t} warehouses={warehouses} />
 
         {/* Базовая единица + кнопка */}
         <div className="flex-1"> 

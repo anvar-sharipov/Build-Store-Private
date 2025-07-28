@@ -91,7 +91,7 @@ const SearchedProductList = ({
             conversion_factor: 1,
           };
         }
-        console.log('gift', gift);
+        // console.log('gift', gift);
         
 
         // console.log("gift", gift);
@@ -167,6 +167,11 @@ const SearchedProductList = ({
 
     if (alreadyExists) {
       showNotification("Продукт уже добавлен", "error");
+      return;
+    }
+    
+    if (product.base_quantity_in_stock < parseFloat(1)) {
+      showNotification("Продукт нет на складе", "error");
       return;
     }
 

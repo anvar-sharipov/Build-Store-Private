@@ -76,6 +76,7 @@ const UpdateSaleInvoice = () => {
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [invoiceTable, setInvoiceTable] = useState([]);
   const quantityInputRefs = useRef({});
+  const [showStockMessageIds, setShowStockMessageIds] = useState([]);
 
   //   saldo
   const [entries, setEntries] = useState([]);
@@ -126,6 +127,95 @@ const UpdateSaleInvoice = () => {
     }
     fetchWarehouse();
   }, []);
+
+  const loadProducts = async (warehouse_id) => {
+    try {
+      // const res = await myAxios.get(`search-products/?id=${p.id}&warehouse=${selectedWarehouseId}`)
+
+      const productResponses = await Promise.all(
+        invoice.items.map((item) => {
+          return (
+            // myAxios.get(`products/${item.product.id}`).then((res) => ({
+            myAxios
+              .get(
+                `search-products/?id=${item.product.id}&warehouse=${warehouse_id}`
+              )
+              .then((res) => {
+                console.log("res", res);
+
+                return {
+                  data: res.data[0],
+                  quantity: item.quantity,
+                };
+              })
+          );
+        })
+      );
+
+      for (const { data, quantity } of productResponses) {
+        if (parseFloat(data.purchase_price) !== 0) {
+          await handleSelectProduct(data, warehouse_id); // если она асинхронная
+          updateQuantity(data.id, quantity);
+        }
+      }
+
+      // ✅ Здесь уже точно всё обработано — ставим сумму
+      if (invoice.total_pay_summ) {
+        // console.log('invoice.total_pay_summ', invoice.total_pay_summ);
+
+        setTotalPaySumm(invoice.total_pay_summ);
+      }
+    } catch (error) {
+      console.log("Ошибка при загрузке продуктов:", error);
+    } finally {
+    }
+  };
+
+  // useEffect(() => {
+  //   const loadProducts = async () => {
+  //     try {
+  //       // const res = await myAxios.get(`search-products/?id=${p.id}&warehouse=${selectedWarehouseId}`)
+
+  //       const productResponses = await Promise.all(
+  //         invoice.items.map((item) => {
+  //           return (
+  //             // myAxios.get(`products/${item.product.id}`).then((res) => ({
+  //             myAxios
+  //               .get(
+  //                 `search-products/?id=${item.product.id}&warehouse=${selectedAwtoId}`
+  //               )
+  //               .then((res) => {
+  //                 console.log("res", res);
+
+  //                 return {
+  //                   data: res.data[0],
+  //                   quantity: item.quantity,
+  //                 };
+  //               })
+  //           );
+  //         })
+  //       );
+
+  //       for (const { data, quantity } of productResponses) {
+  //         if (parseFloat(data.purchase_price) !== 0) {
+  //           await handleSelectProduct(data, selectedAwtoId); // если она асинхронная
+  //           updateQuantity(data.id, quantity);
+  //         }
+  //       }
+
+  //       // ✅ Здесь уже точно всё обработано — ставим сумму
+  //       if (invoice.total_pay_summ) {
+  //         // console.log('invoice.total_pay_summ', invoice.total_pay_summ);
+
+  //         setTotalPaySumm(invoice.total_pay_summ);
+  //       }
+  //     } catch (error) {
+  //       console.log("Ошибка при загрузке продуктов:", error);
+  //     } finally {
+  //     }
+  //   };
+  //   loadProducts();
+  // }, [selectedWarehouseId]);
 
   // get all awto (employee) START
   useEffect(() => {
@@ -208,13 +298,16 @@ const UpdateSaleInvoice = () => {
         if (query.length >= 2) {
           //   setLoading(true);
           try {
-            const res = await myAxios.get(`search-products/?q=${query}`);
+            const res = await myAxios.get(
+              `search-products/?search=${query}&warehouse=${selectedWarehouseId}`
+            );
+
+            // const res = await myAxios.get(`search-products/?id=${p.id}&warehouse=${selectedWarehouseId}`)
             setResults(res.data);
-            // console.log("res.data", res.data);
 
             setFocusedIndex(0);
           } catch (error) {
-            console.error(error);
+            console.error("ne udalos zagruzit spisok towarow", error);
           } finally {
             // setLoading(false);
           }
@@ -235,8 +328,10 @@ const UpdateSaleInvoice = () => {
           const new_base_quantity = new_quantity * factor;
 
           let not_enough = false;
+
           if (parseFloat(item.quantity_in_stok) < new_base_quantity) {
             not_enough = true;
+
             setShowStockMessageIds((prev) => [...prev, item.id]);
             setTimeout(() => {
               setShowStockMessageIds((prev) =>
@@ -286,6 +381,9 @@ const UpdateSaleInvoice = () => {
 
           if (item.quantity_in_stok / factor < gift_quantity) {
             not_enough_gift = true;
+            console.log("gift_quantity", gift_quantity);
+            console.log("item.quantity_in_stok", item.quantity_in_stok);
+            console.log("item", item);
             setShowStockMessageIds((prev) => [...prev, item.id]);
             setTimeout(() => {
               setShowStockMessageIds((prev) =>
@@ -362,20 +460,32 @@ const UpdateSaleInvoice = () => {
     }
     const loadProducts = async () => {
       try {
+        // const res = await myAxios.get(`search-products/?id=${p.id}&warehouse=${selectedWarehouseId}`)
+        const warehouse_id = invoice.warehouse.id;
+
         const productResponses = await Promise.all(
-          invoice.items.map((item) =>
-            myAxios.get(`products/${item.product.id}`).then((res) => ({
-              data: res.data,
-              quantity: item.quantity,
-            }))
-          )
+          invoice.items.map((item) => {
+            return (
+              // myAxios.get(`products/${item.product.id}`).then((res) => ({
+              myAxios
+                .get(
+                  `search-products/?id=${item.product.id}&warehouse=${warehouse_id}`
+                )
+                .then((res) => {
+                  console.log("res", res);
+
+                  return {
+                    data: res.data[0],
+                    quantity: item.quantity,
+                  };
+                })
+            );
+          })
         );
 
         for (const { data, quantity } of productResponses) {
           if (parseFloat(data.purchase_price) !== 0) {
-            // console.log("data", data);
-
-            await handleSelectProduct(data); // если она асинхронная
+            await handleSelectProduct(data, warehouse_id); // если она асинхронная
             updateQuantity(data.id, quantity);
           }
         }
@@ -391,7 +501,6 @@ const UpdateSaleInvoice = () => {
       } finally {
       }
     };
-
     loadProducts();
   }, [invoice]);
   //   ######################################################################################################################## invoice END
@@ -416,7 +525,7 @@ const UpdateSaleInvoice = () => {
   };
 
   //   ############################################################################################################################# handleFreeProducts START
-  async function handleFreeProducts(product) {
+  async function handleFreeProducts(product, warehouse_id) {
     if (product.free_items.length === 0) return;
 
     try {
@@ -430,16 +539,25 @@ const UpdateSaleInvoice = () => {
       const gift_results = [];
 
       for (const p of free_products) {
-        const res = await myAxios.get(`products/${p.id}`);
+        // const res = await myAxios.get(`products/${p.id}`);
+
+        const res = await myAxios.get(
+          `search-products/?id=${p.id}&warehouse=${warehouse_id}`
+        );
+
+        const free_product = res.data[0];
+
         // console.log("res.data", res.data);
 
         gift_results.push({
-          ...res.data,
+          ...free_product,
           gift_quantity: parseFloat(p.gift_quantity_per_unit) || 1,
           gift_for_product_id: product.id,
           gift_for_product_name: product.name,
         });
       }
+
+      // console.log('gift_results', gift_results);
 
       // Добавляем каждый подарок в таблицу
       gift_results.forEach((gift) => {
@@ -473,6 +591,7 @@ const UpdateSaleInvoice = () => {
             conversion_factor: 1,
           };
         }
+        console.log("gift.base_quantity_in_stock", gift);
 
         setInvoiceTable((prev) => [
           ...prev,
@@ -482,7 +601,7 @@ const UpdateSaleInvoice = () => {
             qr_code: gift.qr_code,
             name: gift.name,
             gift_for_product_name: gift.gift_for_product_name,
-            quantity_in_stok: gift.quantity,
+            quantity_in_stok: gift.base_quantity_in_stock,
             selected_unit,
             selected_quantity: gift.gift_quantity,
             original_quantity_per_unit: gift.gift_quantity,
@@ -512,7 +631,7 @@ const UpdateSaleInvoice = () => {
 
             units: gift.units,
             base_unit: gift.base_unit_obj,
-            quantity_in_stock: gift.quantity,
+            quantity_in_stock: gift.base_quantity_in_stock,
 
             manually_changed_fields: {
               price: false,
@@ -539,11 +658,16 @@ const UpdateSaleInvoice = () => {
 
   // ############################################################################################################################ handleSelectProduct START
 
-  const handleSelectProduct = async (product) => {
+  const handleSelectProduct = async (product, warehouse_id) => {
     const alreadyExists = invoiceTable.some((p) => p.id === product.id);
 
     if (alreadyExists) {
       showNotification("Продукт уже добавлен", "error");
+      return;
+    }
+
+    if (product.base_quantity_in_stock < parseFloat(1)) {
+      showNotification("Продукт нет на складе", "error");
       return;
     }
 
@@ -609,7 +733,7 @@ const UpdateSaleInvoice = () => {
     const purchase_price_1pc =
       selected_unit.conversion_factor * product.purchase_price;
 
-    await handleFreeProducts(product);
+    await handleFreeProducts(product, warehouse_id);
 
     setInvoiceTable((prev) => [
       ...prev,
@@ -617,7 +741,7 @@ const UpdateSaleInvoice = () => {
         id: product.id,
         qr_code: product.qr_code,
         name: product.name,
-        quantity_in_stok: product.quantity,
+        quantity_in_stok: product.base_quantity_in_stock,
         selected_unit,
         selected_quantity: 1,
         base_quantity: 1,
@@ -648,7 +772,7 @@ const UpdateSaleInvoice = () => {
 
         units: product.units,
         base_unit: product.base_unit_obj,
-        quantity_in_stock: product.quantity,
+        quantity_in_stock: product.base_quantity_in_stock,
 
         manually_changed_fields: {
           price: false,
@@ -793,12 +917,17 @@ const UpdateSaleInvoice = () => {
                     onChange={(e) => {
                       const selectedId = e.target.value;
                       setSelectedWarehouseId(selectedId);
+                      setTimeout(() => {
+                        loadProducts(selectedId)
+                      }, 0);
+                      
 
                       const selectedWarehouse = allWarehouses.find(
                         (w) => w.id.toString() === selectedId
                       );
                       if (selectedWarehouse) {
                         setSelectedWarehouse(selectedWarehouse.name);
+                        
                       }
                     }}
                     className="block w-full h-8 rounded-md 
@@ -920,11 +1049,11 @@ const UpdateSaleInvoice = () => {
               </div>
               <div>
                 {filteredAwto.length > 0 && !stopOpenAwtoList && (
-                  <div className="absolute bg-gray-300 p-2 mt-1 border border-gray-500 rounded-md dark:bg-gray-700 z-20 font-semibold">
+                  <div className="absolute bg-indigo-200 mt-1 border border-gray-500 rounded-md dark:bg-gray-700 w-[90%] font-semibold p-5 z-20">
                     <ul className="print:hidden">
                       {filteredAwto.map((p, index) => (
                         <li
-                          className={myClass.li}
+                          className={myClass.li3}
                           key={p.id}
                           ref={(el) => (resultAwtoRefs.current[index] = el)}
                           tabIndex={0}
@@ -1022,11 +1151,11 @@ const UpdateSaleInvoice = () => {
 
               <div>
                 {filteredPartners.length > 0 && !stopOpenPartnerList && (
-                  <div className="absolute bg-gray-300 p-2 mt-1 border border-gray-500 rounded-md dark:bg-gray-700 z-20 font-semibold">
+                  <div className="absolute bg-indigo-200 mt-1 border border-gray-500 rounded-md dark:bg-gray-700 w-[90%] font-semibold p-5 z-20">
                     <ul className="print:hidden">
                       {filteredPartners.map((p, index) => (
                         <li
-                          className={myClass.li}
+                          className={myClass.li3}
                           key={p.id}
                           ref={(el) => (resultPartenrRefs.current[index] = el)}
                           tabIndex={0}
@@ -1136,21 +1265,29 @@ const UpdateSaleInvoice = () => {
                   (loading ? (
                     <MyLoading />
                   ) : (
-                    <div className="absolute bg-gray-100 mt-1 border border-gray-500 rounded-md dark:bg-gray-700 w-full font-semibold">
+                    <div className="absolute bg-indigo-200 mt-1 border border-gray-500 rounded-md dark:bg-gray-700 w-[90%] font-semibold p-5 z-20">
                       <div>
                         <ul className="print:hidden">
                           {results.length > 0 &&
                             results.map((product, index) => (
                               <li
-                                className={myClass.li}
+                                className={myClass.li3}
                                 key={product.id}
                                 ref={(el) => (resultRefs.current[index] = el)}
                                 tabIndex={0}
-                                onClick={() => handleSelectProduct(product)}
+                                onClick={() =>
+                                  handleSelectProduct(
+                                    product,
+                                    selectedWarehouseId
+                                  )
+                                }
                                 onKeyDown={async (e) => {
                                   if (e.key === "Enter") {
                                     e.preventDefault();
-                                    await handleSelectProduct(product);
+                                    await handleSelectProduct(
+                                      product,
+                                      selectedWarehouseId
+                                    );
                                   } else if (e.key === "ArrowUp") {
                                     e.preventDefault();
                                     if (index === 0) {
@@ -1168,9 +1305,20 @@ const UpdateSaleInvoice = () => {
                                   }
                                 }}
                               >
+                                {/* <div className="flex justify-between w-full">
+                                  <div>{product.name}</div>
+                                 
+                                </div> */}
                                 <div className="flex justify-between w-full">
                                   <div>{product.name}</div>
-                                  {/* <div>{product.quantity}</div> */}
+                                  <div className="flex">
+                                    <div className="w-16">
+                                      {product.quantity_on_selected_warehouses}
+                                    </div>
+                                    <div>
+                                      {product.unit_name_on_selected_warehouses}
+                                    </div>
+                                  </div>
                                 </div>
                               </li>
                             ))}
@@ -1420,6 +1568,8 @@ const UpdateSaleInvoice = () => {
               setTotalPaySumm={setTotalPaySumm}
               invoice={invoice}
               setTotalDebit={setTotalDebit}
+              showStockMessageIds={showStockMessageIds}
+              setShowStockMessageIds={setShowStockMessageIds}
             />
           )}
         </div>

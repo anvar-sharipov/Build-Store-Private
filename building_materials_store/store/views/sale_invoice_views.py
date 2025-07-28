@@ -82,6 +82,43 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+    
+    def create(self, request, *args, **kwargs):
+        data = request.data  # вот здесь JSON из React
+        ic(data)
+
+        # Тут ты можешь делать любую логику сохранения вручную,
+        # например:
+        # 1. Проверить данные
+        # 2. Создать объект SalesInvoice
+        # 3. Создать связанные объекты, например, items
+
+        # Пример (условный, адаптируй под свою модель):
+        try:
+            # Например, создаём накладную:
+            invoice = SalesInvoice.objects.create(
+                invoice_date=data.get('invoice_date'),
+                buyer_id=data.get('buyer_id'),
+                created_by=request.user,
+                # ... остальные поля из data
+            )
+
+            # Создаем связанные элементы (items) если есть
+            items = data.get('products', [])
+            for item_data in items:
+                invoice.items.create(
+                    product_id=item_data['id'],
+                    quantity=item_data['selected_quantity'],
+                    price=item_data['selected_price'],
+                    # ...
+                )
+
+            serializer = self.get_serializer(invoice)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
 
     # @transaction.atomic
     # @action(detail=True, methods=['post'], url_path='cancel')

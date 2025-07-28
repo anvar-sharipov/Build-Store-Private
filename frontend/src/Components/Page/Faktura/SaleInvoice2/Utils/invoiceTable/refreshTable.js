@@ -13,7 +13,9 @@
         let footerTotalPrice = 0;
 
         const updatedProducts = values.products.map((product) => {
-            footerTotalPrice = product.selected_quantity * product.selected_price
+            footerTotalPrice += product.selected_quantity * product.selected_price
+            console.log('footerTotalPrice', footerTotalPrice);
+            
             const selected_price = product.selected_price
 
             return {

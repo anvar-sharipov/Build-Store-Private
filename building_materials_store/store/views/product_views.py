@@ -131,6 +131,7 @@ def search_products(request):
         warehouse_products2 = WarehouseProduct.objects.get(warehouse__id=warehouse, product__id=product.id).product
         
         quantity = warehouse_products2.warehouse_products.filter(warehouse_id=warehouse).aggregate(total=models.Sum('quantity'))['total'] or 0
+        ic(quantity)
         base_quantity_in_stock = quantity
 
         unit_name = warehouse_products2.base_unit.name if warehouse_products2.base_unit else ""

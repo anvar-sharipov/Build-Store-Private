@@ -12,7 +12,7 @@ import SearchPartner from "./Utils/SearchPartner";
 import SearchProduct from "./Utils/SearchProduct";
 import MySearchInput from "../../../UI/MySearchInput";
 import myAxios from "../../../axios";
-import defaultInitialValues from "./Utils/DefaultInitialValues";
+import { defaultInitialValues, defaultValidationSchema } from "./Utils/DefaultInitialValues";
 import InvoiceTable from "./Utils/invoiceTable/InvoiceTable";
 import Notification from "../../../Notification";
 import PriceType from "./Utils/invoiceTable/PriceType";
@@ -37,6 +37,18 @@ const MainPage = () => {
     if (!loading) partnerInputRef.current?.focus();
   }, [loading]);
 
+  const onSubmit = async (values) => {
+  try {
+    // Подготовь данные, если надо, например, без лишних полей
+    const dataToSend = { ...values };
+
+    const res = await myAxios.post("sales-invoices/", dataToSend);
+    console.log("Ответ сервера:", res.data);
+  } catch (error) {
+    console.error("Ошибка при отправке:", error);
+  }
+};
+
   return (
     <div className="px-5 py-2 print:border-none print:px-2 print:m-0">
       {loading ? (
@@ -44,13 +56,10 @@ const MainPage = () => {
       ) : (
         <Formik
           initialValues={defaultInitialValues(fetchs)}
-          //   validationSchema={Yup.object({
-          //     invoice_date: Yup.date().required("Дата обязательна"),
-          //     awto_name: Yup.string().required("Awto обязателен"),
-          //   })}
-          onSubmit={(values) => {
-            console.log("Formik submit:", values);
-          }}
+          validationSchema={defaultValidationSchema(t)}
+          onSubmit={onSubmit}
+          validateOnChange={true}
+          validateOnBlur={true}
         >
           {({ values, setFieldValue, errors, touched, handleBlur }) => {
             useEffect(() => {
@@ -68,7 +77,12 @@ const MainPage = () => {
                 <SearchPartner partnerInputRef={partnerInputRef} productInputRef={productInputRef} awtoInputRef={awtoInputRef} fetchs={fetchs} />
 
                 {values.warehouses.id ? (
-                  <SearchProduct partnerInputRef={partnerInputRef} productInputRef={productInputRef} showNotification={showNotification} productQuantityRefs={productQuantityRefs} />
+                  <SearchProduct
+                    partnerInputRef={partnerInputRef}
+                    productInputRef={productInputRef}
+                    showNotification={showNotification}
+                    productQuantityRefs={productQuantityRefs}
+                  />
                 ) : (
                   <div className="text-center text-gray-700 dark:text-gray-200 text-lg font-semibold mb-4">
                     {t("forSearchProductShooseWarehouse")}
@@ -85,7 +99,6 @@ const MainPage = () => {
                     productPriceRefs={productPriceRefs}
                   />
                 )}
-
                 <Button />
               </Form>
             );

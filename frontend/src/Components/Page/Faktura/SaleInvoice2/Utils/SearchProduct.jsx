@@ -44,7 +44,7 @@ const SearchProduct = ({ partnerInputRef, productInputRef, showNotification, pro
   }, [query]);
 
   const handleSelectItem = async (item) => {
-    console.log("Выбран", item);
+    // console.log("Выбран", item);
 
     const already_exists = values.products.some((p) => p.id === item.id);
     if (already_exists) {
@@ -62,7 +62,6 @@ const SearchProduct = ({ partnerInputRef, productInputRef, showNotification, pro
     const newProducts = [...values.products, {...item, selected_price: selected_price}];
     setFieldValue("products", newProducts);
     refreshTable({ ...values, products: newProducts }, setFieldValue, values.warehouses.id);
-    console.log("productQuantityRefs", productQuantityRefs);
 
     setTimeout(() => {
       productQuantityRefs.current[item.id]?.focus();

@@ -46,7 +46,7 @@ const TDPrice = ({ product, index }) => {
         type="number"
         step="0.001"
         min="0"
-        className={showError ? "border-red-500 bg-red-50" : ""}
+        className={`dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-blue-400 border-gray-300 rounded focus:ring-blue-500 ${showError ? "border-red-500 bg-red-50" : ""}`}
         value={product.selected_price || ""}
         onChange={handlePriceChange}
       />

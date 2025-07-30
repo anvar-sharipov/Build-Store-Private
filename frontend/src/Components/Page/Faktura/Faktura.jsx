@@ -119,6 +119,7 @@ const Faktura = () => {
                         // setOpenDeleteModal({ open: true, data: item, index });
                       } else if (e.key === "Enter") {
                         e.preventDefault();
+                        // navigate(`/sale-invoices/update/${invoice.id}`);
                         navigate(`/sale-invoices/update/${invoice.id}`);
                         // setOpenPartnerListModal({
                         //   open: true,
@@ -154,7 +155,7 @@ const Faktura = () => {
                       {index + 1}.
                     </div>
                     <div className="font-medium text-gray-800 dark:text-gray-200 truncate">
-                      {invoice.id} {invoice.buyer.name}
+                      {invoice.id} {invoice.buyer?.name}
                     </div>
                     <div className="flex gap-1 justify-end">
                       {invoice.isEntry ? (

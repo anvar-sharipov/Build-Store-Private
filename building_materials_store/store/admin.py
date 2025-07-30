@@ -263,14 +263,14 @@ class SalesInvoiceItemInline(admin.TabularInline):
 # Накладные продаж
 @admin.register(SalesInvoice)
 class SalesInvoiceAdmin(admin.ModelAdmin):
-    list_display = ('id', 'buyer', 'created_at', 'warehouse', 'total_amount', 'paid_amount', 'is_paid', 'created_by')
-    list_filter = ('created_at', 'warehouse', 'buyer')
+    list_display = ('id', 'buyer', 'created_at', 'warehouse', 'total_amount', 'paid_amount', 'is_paid', 'created_by', 'type_price')
+    list_filter = ('created_at', 'warehouse', 'buyer', 'type_price')
     search_fields = ('buyer__name', 'id')
     readonly_fields = ('created_at', 'total_amount', 'paid_amount', 'is_paid')
     inlines = [SalesInvoiceItemInline]
     fieldsets = (
         ('Основная информация', {
-            'fields': ('buyer', 'warehouse', 'created_by', 'created_at')
+            'fields': ('buyer', 'warehouse', 'created_by', 'created_at', 'invoice_date')
         }),
         ('Доставка', {
             'fields': ('delivered_by',)

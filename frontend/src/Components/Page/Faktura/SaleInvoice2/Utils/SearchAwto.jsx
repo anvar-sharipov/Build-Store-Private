@@ -4,12 +4,7 @@ import Fuse from "fuse.js";
 import { useTranslation } from "react-i18next";
 import { useFormikContext } from "formik";
 
-const SearchAwto = ({
-  awtoInputRef,
-  warehouseInputRef,
-  partnerInputRef,
-  fetchs,
-}) => {
+const SearchAwto = ({ awtoInputRef, warehouseInputRef, partnerInputRef, fetchs }) => {
   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
   const [list, setList] = useState([]);
   const listRefs = useRef([]);
@@ -29,10 +24,7 @@ const SearchAwto = ({
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        awtoInputRef.current &&
-        !awtoInputRef.current.contains(event.target)
-      ) {
+      if (awtoInputRef.current && !awtoInputRef.current.contains(event.target)) {
         setList([]); // скрыть список
       }
     };
@@ -80,11 +72,10 @@ const SearchAwto = ({
               if (e.key === "ArrowDown") {
                 e.preventDefault();
                 if (list.length > 0) {
-                   listRefs.current[0]?.focus(); 
+                  listRefs.current[0]?.focus();
                 } else {
-                    partnerInputRef.current?.focus();
+                  partnerInputRef.current?.focus();
                 }
-                
               } else if (e.key === "ArrowUp") {
                 e.preventDefault();
                 warehouseInputRef.current?.focus();
@@ -98,18 +89,17 @@ const SearchAwto = ({
                 setList([]);
                 return;
               }
-              const results = fuse.search(value).slice(0, 20).map((res) => res.item);
+              const results = fuse
+                .search(value)
+                .slice(0, 20)
+                .map((res) => res.item);
               setList(results);
             }}
             onBlur={handleBlur}
             className="border px-2 py-1 rounded-md print:hidden"
           />
 
-          {touched.awto && errors.awto && (
-            <div className="text-red-500 text-sm print:hidden">
-              {errors.awto}
-            </div>
-          )}
+          {touched.awto && errors.awto && <div className="text-red-500 text-sm print:hidden">{errors.awto}</div>}
 
           {list.length > 0 && (
             <ul className="absolute left-0 right-0 bg-white dark:bg-gray-800 border rounded shadow-md z-20">
@@ -146,13 +136,11 @@ const SearchAwto = ({
           )}
         </div>
       ) : (
-        <div className="flex items-center gap-2">
-          <span>{t("delivers")}: {values.awto?.name}</span>
-          <button
-            type="button"
-            onClick={handleClearSelection}
-            className="text-red-500 text-sm hover:underline print:hidden"
-          >
+        <div className="flex items-center gap-2 print:hidden">
+          <span>
+            {t("delivers")}: {values.awto?.name}
+          </span>
+          <button type="button" onClick={handleClearSelection} className="text-red-500 text-sm hover:underline">
             ✕
           </button>
         </div>

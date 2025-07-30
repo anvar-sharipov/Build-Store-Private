@@ -4,7 +4,7 @@
         console.log('refreshFrom === "TDPrice"');
         let footerTotalPrice = 0;
          const updatedProducts = values.products.forEach((product) => {
-            footerTotalPrice = product.selected_quantity * product.selected_price
+            footerTotalPrice += product.selected_quantity * product.selected_price
             })
             setFieldValue("footerTotalPrice", footerTotalPrice);
     } else if (refreshFrom === "TDQuantity") {
@@ -81,14 +81,14 @@
             let selected_price = 0
             if (changedPriceType) {
                 if (values.priceType === "wholesale") {
-                    footerTotalPrice = product.selected_quantity * product.wholesale_price
+                    footerTotalPrice += product.selected_quantity * product.wholesale_price
                     selected_price = product.wholesale_price
                 } else {
-                    footerTotalPrice = product.selected_quantity * product.retail_price
+                    footerTotalPrice += product.selected_quantity * product.retail_price
                     selected_price = product.retail_price
                 }
             } else {
-                footerTotalPrice = product.selected_quantity * product.selected_price
+                footerTotalPrice += product.selected_quantity * product.selected_price
                 selected_price = product.selected_price
             }
             

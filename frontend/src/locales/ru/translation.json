@@ -103,7 +103,7 @@
   "back": "Назад",
 
 
-  "commonSaveError": "Ошибка при сохранении.",
+  "commonSaveError": "Ошибка при сохранении",
 
   "pc": "штук",
 
@@ -323,7 +323,14 @@
   "productNotDeleted": "Товар не был удалён",
   "forSearchProductShooseWarehouse": "Для поиска продукта выберите склад",
   "OnStock": "На складе", 
-  "alreadyAdded": "Этот товар уже находится в списке."
+  "alreadyAdded": "Этот товар уже находится в списке",
+  "youNeedSelectWarehouse": "Выберите склад",
+  "chooseClient": "Выберите покупателя",
+  "chooseAwto": "Выберите авто", 
+  "comment": "Комментарий (необязательно)", 
+  "withPosting": "с проводкой",
+  "transactionChange": "Откат записи",
+  "successSave": "Успешно сохранён"
 
 
 

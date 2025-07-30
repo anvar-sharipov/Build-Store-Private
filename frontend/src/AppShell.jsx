@@ -24,7 +24,7 @@ import MainPage from "./Components/Page/Faktura/SaleInvoice2/MainPage";
 
 function AppShell() {
   const location = useLocation();
-  const isFullScreenPage = location.pathname === "/sale-invoices/new" || location.pathname.includes("/sale-invoices/update") || location.pathname.includes("/sale-invoices/main");
+  const isFullScreenPage = location.pathname === "/sale-invoices/new" || location.pathname.includes("/sale-invoices/update") || location.pathname.includes("/sale-invoices/create");
 
   return (
     <>
@@ -42,7 +42,8 @@ function AppShell() {
               <Routes>
                 <Route path={ROUTES.MAIN} element={<ProductList />} />
                 <Route path="/sale-invoices/new" element={<AddSaleInvoicePage /> } />
-                <Route path="/sale-invoices/main" element={<MainPage /> } />
+                <Route path="/sale-invoices/create" element={<MainPage /> } />
+                <Route path="/sale-invoices/update/:id" element={<MainPage /> } />
                 <Route path="/sale-invoices/update/:id" element={<UpdateSaleInvoice />} />
                 <Route path={ROUTES.REGISTER} element={<Register />} />
                 <Route path={ROUTES.LOGIN} element={<Login />} />

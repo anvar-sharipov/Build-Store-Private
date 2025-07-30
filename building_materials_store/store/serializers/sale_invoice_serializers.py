@@ -87,17 +87,17 @@ class SalesInvoiceItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SalesInvoiceItem
-        fields = ['id', 'product', 'product_id', 'quantity', 'sale_price', 'invoice']
+        fields = ['id', 'product', 'product_id', 'quantity', 'sale_price', 'invoice', 'is_gift']
 
-    def validate_quantity(self, value):
-        if value <= 0:
-            raise serializers.ValidationError("Количество должно быть положительным")
-        return value
+    # def validate_quantity(self, value):
+    #     if value <= 0:
+    #         raise serializers.ValidationError("Количество должно быть положительным")
+    #     return value
 
-    def validate_sale_price(self, value):
-        if value < 0:
-            raise serializers.ValidationError("Цена продажи не может быть отрицательной")
-        return value
+    # def validate_sale_price(self, value):
+    #     if value < 0:
+    #         raise serializers.ValidationError("Цена продажи не может быть отрицательной")
+    #     return value
 
 
 class SalesInvoiceSerializer(serializers.ModelSerializer):
@@ -107,107 +107,132 @@ class SalesInvoiceSerializer(serializers.ModelSerializer):
     delivered_by = EmployeeSerializer(read_only=True)
     delivered_by_id = serializers.PrimaryKeyRelatedField(queryset=Employee.objects.all(), write_only=True, required=False, allow_null=True)
     
-    created_by = serializers.StringRelatedField(read_only=True) 
-    # entry_type = serializers.ChoiceField(choices=SalesInvoice.ENTRY_TYPE_CHOICES, required=False, allow_null=True)
-    
-    # currency = serializers.StringRelatedField(read_only=True)
-    # currency_id = serializers.PrimaryKeyRelatedField(queryset=Currency.objects.all(), write_only=True, source='currency')
+    created_by = serializers.StringRelatedField(read_only=True)
 
     warehouse = WarehouseSerializer(read_only=True)
     warehouse_id = serializers.PrimaryKeyRelatedField(queryset=Warehouse.objects.all(), write_only=True, source='warehouse', required=False, allow_null=True)
     
-    items = SalesInvoiceItemSerializer(many=True)
+    items = SalesInvoiceItemSerializer(many=True, read_only=True)  # Только для чтения (чтобы не обрабатывать вложенные валидации создания)
 
-    # total_pay_summ = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, write_only=True)
-
-
-    
     class Meta:
         model = SalesInvoice
         fields = [
             'id',
             'buyer', 'buyer_id', 'delivered_by', 'delivered_by_id',
-            'created_by', 'created_at', 'total_amount',
+            'created_by', 'created_at', 'invoice_date', 'total_amount',
             'note', 'items',
             'warehouse', 'warehouse_id',
             'total_pay_summ', 'isEntry',
+            'type_price',
         ]
+    # buyer = PartnerSerializer(read_only=True)
+    # buyer_id = serializers.PrimaryKeyRelatedField(queryset=Partner.objects.all(), write_only=True, source='buyer')
+    
+    # delivered_by = EmployeeSerializer(read_only=True)
+    # delivered_by_id = serializers.PrimaryKeyRelatedField(queryset=Employee.objects.all(), write_only=True, required=False, allow_null=True)
+    
+    # created_by = serializers.StringRelatedField(read_only=True) 
+    # # entry_type = serializers.ChoiceField(choices=SalesInvoice.ENTRY_TYPE_CHOICES, required=False, allow_null=True)
+    
+    # # currency = serializers.StringRelatedField(read_only=True)
+    # # currency_id = serializers.PrimaryKeyRelatedField(queryset=Currency.objects.all(), write_only=True, source='currency')
+
+    # warehouse = WarehouseSerializer(read_only=True)
+    # warehouse_id = serializers.PrimaryKeyRelatedField(queryset=Warehouse.objects.all(), write_only=True, source='warehouse', required=False, allow_null=True)
+    
+    # items = SalesInvoiceItemSerializer(many=True)
+
+    # # total_pay_summ = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, write_only=True)
+
+
+    
+    # class Meta:
+    #     model = SalesInvoice
+    #     fields = [
+    #         'id',
+    #         'buyer', 'buyer_id', 'delivered_by', 'delivered_by_id',
+    #         'created_by', 'created_at', 'invoice_date', 'total_amount',
+    #         'note', 'items',
+    #         'warehouse', 'warehouse_id',
+    #         'total_pay_summ', 'isEntry',
+    #         'type_price',
+    #     ]
     
     
-    @transaction.atomic
-    def create(self, validated_data):
-        items_data = validated_data.pop('items', [])
-        buyer = validated_data.pop('buyer', None)
-        delivered_by = validated_data.pop('delivered_by_id', None)
-        # currency = validated_data.pop('currency', None)
-        print('validated_data === ', validated_data)
-        total_pay_summ = validated_data.pop('total_pay_summ', 0)
-        user = self.context['request'].user
+    # @transaction.atomic
+    # def create(self, validated_data):
+    #     items_data = validated_data.pop('items', [])
+    #     buyer = validated_data.pop('buyer', None)
+    #     delivered_by = validated_data.pop('delivered_by_id', None)
+    #     # currency = validated_data.pop('currency', None)
+    #     print('validated_data === ', validated_data)
+    #     total_pay_summ = validated_data.pop('total_pay_summ', 0)
+    #     user = self.context['request'].user
 
-        invoice = SalesInvoice.objects.create(
-            buyer=buyer,
-            delivered_by=delivered_by,
-            # currency=currency,
-            created_by=user,
-            total_amount=0,
-            total_pay_summ=total_pay_summ,
-            **validated_data
-        )
+    #     invoice = SalesInvoice.objects.create(
+    #         buyer=buyer,
+    #         delivered_by=delivered_by,
+    #         # currency=currency,
+    #         created_by=user,
+    #         total_amount=0,
+    #         total_pay_summ=total_pay_summ,
+    #         **validated_data
+    #     )
 
-        for item in items_data:
-            product = item.pop('product_id')
-            SalesInvoiceItem.objects.create(
-                invoice=invoice,
-                product=product,
-                **item
-            )
+    #     for item in items_data:
+    #         product = item.pop('product_id')
+    #         SalesInvoiceItem.objects.create(
+    #             invoice=invoice,
+    #             product=product,
+    #             **item
+    #         )
 
-        invoice.total_amount = invoice.calculate_total()
-        invoice.save(update_fields=['total_amount'])
-        # print('invoice 2 ===', invoice)
-        # print('invoice type === ', type(invoice))
-        # print('invoice 3 === ', invoice.note)
+    #     invoice.total_amount = invoice.calculate_total()
+    #     invoice.save(update_fields=['total_amount'])
+    #     # print('invoice 2 ===', invoice)
+    #     # print('invoice type === ', type(invoice))
+    #     # print('invoice 3 === ', invoice.note)
 
-        # Здесь вызываем функцию для создания проводок
-        # print('invoice', invoice.isEntry)
-        if invoice.isEntry:
-            create_transaction_for_invoice(invoice, buyer)
+    #     # Здесь вызываем функцию для создания проводок
+    #     # print('invoice', invoice.isEntry)
+    #     if invoice.isEntry:
+    #         create_transaction_for_invoice(invoice, buyer)
 
-        return invoice
+    #     return invoice
     
-    @transaction.atomic
-    def update(self, instance, validated_data):
-        items_data = validated_data.pop('items', [])
-        buyer = validated_data.pop('buyer', None)
-        delivered_by = validated_data.pop('delivered_by_id', None)
-        # currency = validated_data.pop('currency', None)
-        total_pay_summ = validated_data.pop('total_pay_summ', 0)
-        user = self.context['request'].user
+    # @transaction.atomic
+    # def update(self, instance, validated_data):
+    #     items_data = validated_data.pop('items', [])
+    #     buyer = validated_data.pop('buyer', None)
+    #     delivered_by = validated_data.pop('delivered_by_id', None)
+    #     # currency = validated_data.pop('currency', None)
+    #     total_pay_summ = validated_data.pop('total_pay_summ', 0)
+    #     user = self.context['request'].user
 
-        instance.buyer = buyer if buyer else instance.buyer
-        instance.delivered_by = delivered_by if delivered_by else instance.delivered_by
-        # instance.currency = currency if currency else instance.currency
-        instance.total_pay_summ = total_pay_summ
-        instance.created_by = user
+    #     instance.buyer = buyer if buyer else instance.buyer
+    #     instance.delivered_by = delivered_by if delivered_by else instance.delivered_by
+    #     # instance.currency = currency if currency else instance.currency
+    #     instance.total_pay_summ = total_pay_summ
+    #     instance.created_by = user
 
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
+    #     for attr, value in validated_data.items():
+    #         setattr(instance, attr, value)
+    #     instance.save()
 
-        # Обновляем позиции
-        instance.items.all().delete()
-        for item in items_data:
-            product = item.pop('product_id')
-            SalesInvoiceItem.objects.create(
-                invoice=instance,
-                product=product,
-                **item
-            )
+    #     # Обновляем позиции
+    #     instance.items.all().delete()
+    #     for item in items_data:
+    #         product = item.pop('product_id')
+    #         SalesInvoiceItem.objects.create(
+    #             invoice=instance,
+    #             product=product,
+    #             **item
+    #         )
 
-        instance.total_amount = instance.calculate_total()
-        instance.save(update_fields=['total_amount'])
+    #     instance.total_amount = instance.calculate_total()
+    #     instance.save(update_fields=['total_amount'])
 
-        if instance.isEntry:
-            create_transaction_for_invoice(instance, buyer)
+    #     if instance.isEntry:
+    #         create_transaction_for_invoice(instance, buyer)
 
-        return instance
+    #     return instance

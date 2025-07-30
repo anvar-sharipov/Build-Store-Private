@@ -1,21 +1,35 @@
 import { useTranslation } from "react-i18next";
 import { useFormikContext } from "formik";
+import { FaArrowLeft } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../../../../routes";
+import { useEffect } from "react";
 
 function Head() {
   const { values, setFieldValue, touched, errors } = useFormikContext();
   const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        navigate(ROUTES.MAIN);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [navigate]);
 
   return (
     <div className="flex justify-between items-center border-b-2 border-gray-700 dark:border-gray-300 print:!border-black pb-2">
       <img src="/polisem.png" alt="polisem" width={140} />
 
-      <div className="text-black dark:text-white print:!text-black">
-        {t("sales_invoice2")}
-      </div>
+      <div className="text-black dark:text-white print:!text-black">{t("sales_invoice2")}</div>
 
-      <span className="font-semibold hidden print:block text-black dark:text-white print:!text-black">
-        {values.invoice_date}
-      </span>
+      <span className="font-semibold hidden print:block text-black dark:text-white print:!text-black">{values.invoice_date}</span>
 
       <input
         type="date"
@@ -27,47 +41,74 @@ function Head() {
         className="border px-2 py-1 rounded-md print:hidden bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
       />
 
-      {touched.invoice_date && errors.invoice_date && (
-        <div className="text-red-500 text-sm print:hidden">
-          {errors.invoice_date}
-        </div>
-      )}
+      {touched.invoice_date && errors.invoice_date && <div className="text-red-500 text-sm print:hidden">{errors.invoice_date}</div>}
+
+      <button
+        className="print:hidden p-2 rounded-md bg-gray-200 hover:bg-gray-300 active:bg-gray-400 transition-colors duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center"
+        aria-label="Назад"
+        onClick={() => navigate(ROUTES.MAIN)}
+      >
+        <FaArrowLeft className="text-gray-700" size={24} />
+      </button>
     </div>
   );
 }
 
 function Button() {
-  const { values } = useFormikContext();
+  const { values, setFieldValue } = useFormikContext();
   const { t } = useTranslation();
 
   return (
     <div>
       {values.warehouses.id && values.products.length > 0 && (
-        <div className="mt-6 text-center print:hidden">
-          <button
-            type="submit"
-            className="group relative px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 ease-in-out hover:from-blue-700 hover:to-blue-800 dark:hover:from-blue-600 dark:hover:to-blue-700 active:transform active:translate-y-0 active:shadow-md focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 focus:ring-opacity-50"
-          >
-            <span className="flex items-center justify-center gap-2">
-              <svg
-                className="w-5 h-5 transition-transform group-hover:scale-110"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-              {t("submit") || "Сохранить"}
-            </span>
+        <div className="flex w-full gap-4 print:hidden">
+          {/* Текстовое поле для комментария (80%) */}
+          <div className="w-4/5">
+            <textarea
+              id="comment"
+              name="comment"
+              rows={3}
+              value={values.comment}
+              onChange={(e) => setFieldValue("comment", e.target.value)}
+              placeholder={t("comment")}
+              className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm
+                     dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:placeholder-gray-400"
+            />
+          </div>
 
-            {/* Блик эффект */}
-            <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-in-out"></div>
-          </button>
+          {/* Чекбокс и кнопка Submit (20%) */}
+          <div className="w-1/5 flex flex-col items-center justify-between">
+            {/* Чекбокс "с проводкой" */}
+            <div className="flex items-center gap-2 mb-2">
+              <input
+                type="checkbox"
+                id="withPosting"
+                name="withPosting"
+                checked={values.withPosting}
+                onChange={(e) => setFieldValue("withPosting", e.target.checked)}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500
+                       dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-blue-400"
+              />
+              <label htmlFor="withPosting" className="text-sm text-gray-700 dark:text-gray-200">
+                {t("withPosting")}
+              </label>
+            </div>
+
+            {/* Кнопка Submit */}
+            <button
+              type="submit"
+              className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 
+             text-white font-semibold rounded-md shadow-sm hover:shadow-md transition duration-200 
+             focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-300"
+            >
+              <span className="flex items-center justify-center gap-1 text-sm">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                {t("save") || "Сохранить"}
+              </span>
+            </button>
+          </div>
         </div>
       )}
     </div>

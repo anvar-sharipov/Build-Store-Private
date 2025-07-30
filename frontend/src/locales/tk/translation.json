@@ -101,7 +101,7 @@
 
   "back": "Yza",
 
-  "commonSaveError": "Ýatda saklamak bolmady.",
+  "commonSaveError": "Ýatda saklamak bolmady",
 
   "pc": "sany",
 
@@ -301,7 +301,16 @@
   "productNotDeleted": "Haryt pozulmady",
   "forSearchProductShooseWarehouse": "Harydy gözlemek üçin ammary saýlaň",
   "OnStock": "Ambarda",
-  "alreadyAdded": "Bu haryt eýýäm sanawda bar."
+  "alreadyAdded": "Bu haryt eýýäm sanawda bar",
+  "youNeedSelectWarehouse": "Ambar saýlaň",
+  "chooseClient": "Alyjyny saýlaň",
+  "chooseAwto": "Awto saýlaň",
+  "comment": "Kommentariya (hökmany däl)",
+  "withPosting": "Prowodka bilen",
+  "transactionChange": "Otkat zapisi",
+  "successSave": "Üstünlikli ýatda saklandy"
+
+
 
   
 

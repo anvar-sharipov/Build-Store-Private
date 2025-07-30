@@ -44,7 +44,7 @@ from rest_framework.permissions import IsAuthenticated
 # from openpyxl.styles import Font
 # from rest_framework.exceptions import PermissionDenied
 from django.db import transaction
-# from datetime import datetime
+from datetime import datetime   
 
 # from rest_framework.pagination import PageNumberPagination
 
@@ -84,58 +84,179 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
     def create(self, request, *args, **kwargs):
-        data = request.data  # вот здесь JSON из React
-        ic(data)
-
-        # Тут ты можешь делать любую логику сохранения вручную,
-        # например:
-        # 1. Проверить данные
-        # 2. Создать объект SalesInvoice
-        # 3. Создать связанные объекты, например, items
-
-        # Пример (условный, адаптируй под свою модель):
+        
         try:
-            # Например, создаём накладную:
-            invoice = SalesInvoice.objects.create(
-                invoice_date=data.get('invoice_date'),
-                buyer_id=data.get('buyer_id'),
-                created_by=request.user,
-                # ... остальные поля из data
-            )
+            with transaction.atomic():
+                data = request.data  # вот здесь JSON из React
+                created_by = request.user
+                total_amount = data['footerTotalPrice']
+                withPosting = data['withPosting']
+                comment = data['comment']
+                type_price = data['priceType']
+                
+                invoice_date_str = data.get('invoice_date')
+                invoice_date = None
+                if invoice_date_str:
+                    # invoice_date = datetime.strptime(invoice_date_str, '%Y-%m-%d')
+                    date_part = datetime.strptime(invoice_date_str, '%Y-%m-%d').date()
+                    time_part = datetime.now().time()
+                    invoice_date = datetime.combine(date_part, time_part)
+                    
+                # ic(data)
 
-            # Создаем связанные элементы (items) если есть
-            items = data.get('products', [])
-            for item_data in items:
-                invoice.items.create(
-                    product_id=item_data['id'],
-                    quantity=item_data['selected_quantity'],
-                    price=item_data['selected_price'],
-                    # ...
+                
+
+                warehouse_id = data.get('warehouses', {}).get('id')
+                if not warehouse_id:
+                    return Response({'detail': 'youNeedSelectWarehouse'}, status=status.HTTP_400_BAD_REQUEST)
+                warehouse = Warehouse.objects.get(pk=data['warehouses']['id'])
+
+                try:
+                    partner = Partner.objects.get(pk=data['partner']['id'])
+                except:
+                    partner = None
+
+                try:
+                    delivered_by = Employee.objects.get(pk=data['awto']['id'])
+                except:
+                    delivered_by = None
+
+            
+
+                if withPosting:
+                    if not partner:
+                        return Response({'detail': 'chooseClient'}, status=status.HTTP_400_BAD_REQUEST)
+                    if not delivered_by:
+                        return Response({'detail': 'chooseAwto'}, status=status.HTTP_400_BAD_REQUEST)
+
+                test = SalesInvoice.objects.get(pk=62)
+                ic(test.buyer)
+                invoice = SalesInvoice.objects.create(
+                    buyer=partner,
+                    created_by=created_by,
+                    warehouse=warehouse,
+                    total_amount=Decimal(total_amount),
+                    delivered_by=delivered_by,
+                    note=comment,
+                    invoice_date=invoice_date,
+                    total_pay_summ=Decimal("0.00"),
+                    isEntry=withPosting,
+                    type_price=type_price
                 )
 
-            serializer = self.get_serializer(invoice)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+                # Сохраняем позиции товаров
+                for product in data['products']:
+                    product_id = product['id']
+                    
+                    product_obj = Product.objects.get(pk=product_id)
+                    quantity = Decimal(product['selected_quantity'])
+                    sale_price = Decimal(product['selected_price'])
 
+
+                    SalesInvoiceItem.objects.create(
+                        invoice=invoice,
+                        product=product_obj,
+                        quantity=quantity,
+                        sale_price=sale_price
+                    )
+
+                # ic(data['gifts'])
+
+                for product in data['gifts']:
+                    product_id = product['gift_product']
+                    
+                    product_obj = Product.objects.get(pk=product_id)
+                    quantity = Decimal(product['selected_quantity'])
+                    sale_price = 0
+
+
+                    SalesInvoiceItem.objects.create(
+                        invoice=invoice,
+                        product=product_obj,
+                        quantity=quantity,
+                        sale_price=sale_price,
+                        is_gift=True
+                    )
+                serializer = self.get_serializer(invoice)
+                # return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response({'detail': 'successSave'}, status=status.HTTP_201_CREATED)
         except Exception as e:
-            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response({'detail': 'transactionChange'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # @transaction.atomic
-    # @action(detail=True, methods=['post'], url_path='cancel')
-    # def cancel(self, request, pk=None):
-    #     invoice = self.get_object()
-    #     if invoice.is_canceled:
-    #         return Response({'detail': 'Накладная уже отменена'}, status=status.HTTP_400_BAD_REQUEST)
-    #     reason = request.data.get('cancel_reason')
-    #     if not reason:
-    #         return Response({'cancel_reason': 'Это поле обязательно'}, status=status.HTTP_400_BAD_REQUEST)
+    def update(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                data = request.data
+                
+                invoice_id = self.kwargs.get('pk')
+                invoice = SalesInvoice.objects.get(pk=invoice_id)
 
-    #     invoice.is_canceled = True
-    #     invoice.canceled_at = timezone.now()
-    #     invoice.cancel_reason = reason
-    #     invoice.canceled_by = request.user
-    #     invoice.save()
+                invoice.total_amount = Decimal(data['footerTotalPrice'])
+                invoice.note = data['comment']
+                invoice.type_price = data['priceType']
+                invoice.isEntry = data['withPosting']
 
-    #     serializer = self.get_serializer(invoice)
-    #     return Response(serializer.data)
+                invoice_date_str = data.get('invoice_date')
+                if invoice_date_str:
+                    date_part = datetime.strptime(invoice_date_str, '%Y-%m-%d').date()
+                    time_part = datetime.now().time()
+                    invoice.invoice_date = datetime.combine(date_part, time_part)
+
+                try:
+                    partner = Partner.objects.get(pk=data['partner']['id'])
+                    invoice.buyer = partner
+                except:
+                    invoice.buyer = None
+
+                try:
+                    delivered_by = Employee.objects.get(pk=data['awto']['id'])
+                    invoice.delivered_by = delivered_by
+                except:
+                    invoice.delivered_by = None
+
+                warehouse_id = data.get('warehouses', {}).get('id')
+                if not warehouse_id:
+                    return Response({'detail': 'youNeedSelectWarehouse'}, status=status.HTTP_400_BAD_REQUEST)
+                invoice.warehouse = Warehouse.objects.get(pk=warehouse_id)
+
+                invoice.save()
+
+                # Удаляем старые позиции
+                invoice.items.all().delete()
+
+                # Добавляем заново товары
+                for product in data['products']:
+                    product_id = product['id']
+                    product_obj = Product.objects.get(pk=product_id)
+                    quantity = Decimal(product['selected_quantity'])
+                    sale_price = Decimal(product['selected_price'])
+
+                    SalesInvoiceItem.objects.create(
+                        invoice=invoice,
+                        product=product_obj,
+                        quantity=quantity,
+                        sale_price=sale_price
+                    )
+
+                # Подарки
+                ic(data)
+                for product in data['gifts']:
+                    product_id = product['id']
+                    product_obj = Product.objects.get(pk=product_id)
+                    quantity = Decimal(product['selected_quantity'])
+
+                    SalesInvoiceItem.objects.create(
+                        invoice=invoice,
+                        product=product_obj,
+                        quantity=quantity,
+                        sale_price=0,
+                        is_gift=True
+                    )
+
+                return Response({'detail': 'successSave'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            ic(e)
+            return Response({'detail': 'transactionChange'}, status=status.HTTP_400_BAD_REQUEST)
+
+            
 

@@ -16,6 +16,8 @@ import { defaultInitialValues, defaultValidationSchema } from "./Utils/DefaultIn
 import InvoiceTable from "./Utils/invoiceTable/InvoiceTable";
 import Notification from "../../../Notification";
 import PriceType from "./Utils/invoiceTable/PriceType";
+import { useParams } from "react-router-dom";
+import refreshTable from "./Utils/invoiceTable/refreshTable";
 
 const MainPage = () => {
   const { fetchs, loading } = useLoadOptions();
@@ -27,6 +29,8 @@ const MainPage = () => {
   const productQuantityRefs = useRef([]);
   const productPriceRefs = useRef([]);
   const { t } = useTranslation();
+  const { id } = useParams();
+  const [defaultValues, setDefaultValues] = useState(null);
   const [notification, setNotification] = useState({ message: "", type: "" });
   const showNotification = (message, type) => {
     setNotification({ message, type });
@@ -34,28 +38,53 @@ const MainPage = () => {
   };
 
   useEffect(() => {
+    if (id) {
+      // console.log("eto update ==");
+      const fetchInvoice = async () => {
+        try {
+          const res = await myAxios.get(`sales-invoices/${id}/`);
+          setDefaultValues(defaultInitialValues(fetchs, res.data));
+        } catch (error) {
+          console.log("oshobka pri zagrezke invoice", error);
+        } finally {
+        }
+      };
+      fetchInvoice();
+    } else {
+      setDefaultValues(defaultInitialValues(fetchs, false));
+    }
+  }, [id, fetchs]);
+
+  useEffect(() => {
     if (!loading) partnerInputRef.current?.focus();
   }, [loading]);
 
   const onSubmit = async (values) => {
-  try {
-    // Подготовь данные, если надо, например, без лишних полей
-    const dataToSend = { ...values };
+    try {
+      const dataToSend = { ...values };
+      if (id) {
+        const res = await myAxios.put(`sales-invoices/${id}/`, dataToSend);
+        showNotification(t(res.data.detail), "success");
+      } else {
+        const res = await myAxios.post("sales-invoices/", dataToSend);
+        showNotification(t(res.data.detail), "success");
+      }
 
-    const res = await myAxios.post("sales-invoices/", dataToSend);
-    console.log("Ответ сервера:", res.data);
-  } catch (error) {
-    console.error("Ошибка при отправке:", error);
-  }
-};
+      // console.log("Ответ сервера:", res.data);
+    } catch (error) {
+      showNotification(t(error.response.data.detail), "error");
+      console.error("Ошибка при отправке:", error.response.data.detail);
+    }
+  };
 
   return (
     <div className="px-5 py-2 print:border-none print:px-2 print:m-0">
-      {loading ? (
+      {loading || defaultValues === null ? (
         <MyLoading />
       ) : (
         <Formik
-          initialValues={defaultInitialValues(fetchs)}
+          key={JSON.stringify(defaultValues)}
+          initialValues={defaultValues}
           validationSchema={defaultValidationSchema(t)}
           onSubmit={onSubmit}
           validateOnChange={true}
@@ -70,13 +99,18 @@ const MainPage = () => {
               <Form>
                 <Head />
 
-                <SearchWarehouse warehouseInputRef={warehouseInputRef} awtoInputRef={awtoInputRef} fetchs={fetchs} />
+                <SearchWarehouse
+                  warehouseInputRef={warehouseInputRef}
+                  awtoInputRef={awtoInputRef}
+                  fetchs={fetchs}
+                  productInputRef={productInputRef}
+                />
 
                 <SearchAwto awtoInputRef={awtoInputRef} warehouseInputRef={warehouseInputRef} partnerInputRef={partnerInputRef} fetchs={fetchs} />
 
                 <SearchPartner partnerInputRef={partnerInputRef} productInputRef={productInputRef} awtoInputRef={awtoInputRef} fetchs={fetchs} />
 
-                {values.warehouses.id ? (
+                {values.warehouses && values.warehouses.id ? (
                   <SearchProduct
                     partnerInputRef={partnerInputRef}
                     productInputRef={productInputRef}
@@ -97,8 +131,13 @@ const MainPage = () => {
                     productListRefs={productListRefs}
                     productQuantityRefs={productQuantityRefs}
                     productPriceRefs={productPriceRefs}
+                    productInputRef={productInputRef}
                   />
                 )}
+
+                <div className="hidden print:block">
+                  {t("delivers")}: {values.awto?.name}
+                </div>
                 <Button />
               </Form>
             );

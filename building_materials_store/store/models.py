@@ -348,16 +348,23 @@ class Employee(models.Model):
 ########################################################################################################################################################################################################################
 ######################################################################## Расходная накладная (faktura) START
 class SalesInvoice(models.Model):  # накладная по продаже
+    TYPE_PRICE_CHOICES = [
+        ('wholesale', 'Опт'),
+        ('retail', 'Розница'),
+    ]
+
     # currency = models.ForeignKey('Currency', on_delete=models.PROTECT, verbose_name='Валюта', null=True, blank=True)
-    buyer = models.ForeignKey('Partner', on_delete=models.PROTECT, limit_choices_to={'type__in': ['klient', 'both']}, verbose_name='Покупатель')
+    buyer = models.ForeignKey('Partner', on_delete=models.PROTECT, limit_choices_to={'type__in': ['klient', 'both']}, verbose_name='Покупатель', null=True, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name='Создал')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания (автоматически)')
+    invoice_date = models.DateTimeField(verbose_name='Дата создания (фактура)')
     warehouse = models.ForeignKey('Warehouse', on_delete=models.PROTECT, verbose_name='Склад', null=True, blank=True)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"), verbose_name='Общая сумма')
     delivered_by = models.ForeignKey('Employee', on_delete=models.PROTECT, verbose_name='Доставил', null=True, blank=True)
     note = models.TextField(null=True, blank=True, verbose_name='Примечание')
     total_pay_summ = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"), verbose_name="Сумма оплаты", null=True, blank=True)
     isEntry = models.BooleanField(default=False, verbose_name="Проводка создана")
+    type_price = models.CharField(max_length=10, choices=TYPE_PRICE_CHOICES, default='wholesale', verbose_name="Тип продажи")
 
     class Meta:
         verbose_name = 'Расходная накладная'
@@ -373,14 +380,14 @@ class SalesInvoice(models.Model):  # накладная по продаже
     def calculate_total(self):
         return sum(item.get_line_total() for item in self.items.all())
 
-    def save(self, *args, **kwargs):
-        if self.pk is not None:  # Объект уже сохранён
-            self.total_amount = self.calculate_total()
-        else:
-            # Для нового объекта пока поставим total_amount 0, потом обновим после создания items
-            if not self.total_amount:
-                self.total_amount = 0
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if self.pk is not None:  # Объект уже сохранён
+    #         self.total_amount = self.calculate_total()
+    #     else:
+    #         # Для нового объекта пока поставим total_amount 0, потом обновим после создания items
+    #         if not self.total_amount:
+    #             self.total_amount = 0
+    #     super().save(*args, **kwargs)
 
 
 class SalesInvoiceItem(models.Model):
@@ -392,87 +399,88 @@ class SalesInvoiceItem(models.Model):
     product = models.ForeignKey('Product', on_delete=models.PROTECT)
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     sale_price = models.DecimalField(max_digits=10, decimal_places=2)
+    is_gift = models.BooleanField(default=False, verbose_name="Бесплатный товар")
 
     def get_line_total(self):
         quantity = self.quantity or 0
         sale_price = self.sale_price or 0
         return quantity * sale_price
 
-    def save(self, *args, **kwargs):
-        created = self.pk is None
-        warehouse = self.invoice.warehouse
+    # def save(self, *args, **kwargs):
+    #     created = self.pk is None
+    #     warehouse = self.invoice.warehouse
         
-        if warehouse is None:
-            raise ValidationError("Не выбран склад для накладной")
+    #     if warehouse is None:
+    #         raise ValidationError("Не выбран склад для накладной")
 
-        with transaction.atomic():
-            try:
-                # Блокируем запись для безопасного обновления
-                wp = WarehouseProduct.objects.select_for_update().get(
-                    product=self.product, 
-                    warehouse=warehouse
-                )
-            except WarehouseProduct.DoesNotExist:
-                raise ValidationError(
-                    f"Товар {self.product.name} отсутствует на складе {warehouse.name}"
-                )
+    #     with transaction.atomic():
+    #         try:
+    #             # Блокируем запись для безопасного обновления
+    #             wp = WarehouseProduct.objects.select_for_update().get(
+    #                 product=self.product, 
+    #                 warehouse=warehouse
+    #             )
+    #         except WarehouseProduct.DoesNotExist:
+    #             raise ValidationError(
+    #                 f"Товар {self.product.name} отсутствует на складе {warehouse.name}"
+    #             )
 
-            if created:
-                # Проверяем достаточность остатка
-                if self.quantity > wp.quantity:
-                    raise ValidationError(
-                        f"Недостаточно товара на складе {warehouse.name}: "
-                        f"{self.product.name}. Доступно: {wp.quantity}, "
-                        f"требуется: {self.quantity}"
-                    )
+    #         if created:
+    #             # Проверяем достаточность остатка
+    #             if self.quantity > wp.quantity:
+    #                 raise ValidationError(
+    #                     f"Недостаточно товара на складе {warehouse.name}: "
+    #                     f"{self.product.name}. Доступно: {wp.quantity}, "
+    #                     f"требуется: {self.quantity}"
+    #                 )
                 
-                # Сохраняем и обновляем остаток
-                super().save(*args, **kwargs)
-                wp.quantity -= self.quantity
+    #             # Сохраняем и обновляем остаток
+    #             super().save(*args, **kwargs)
+    #             wp.quantity -= self.quantity
                 
-            else:
-                # При обновлении
-                old_instance = SalesInvoiceItem.objects.get(pk=self.pk)
-                qty_diff = self.quantity - old_instance.quantity
+    #         else:
+    #             # При обновлении
+    #             old_instance = SalesInvoiceItem.objects.get(pk=self.pk)
+    #             qty_diff = self.quantity - old_instance.quantity
 
-                if qty_diff > 0 and qty_diff > wp.quantity:
-                    raise ValidationError(
-                        f"Недостаточно товара на складе для увеличения количества"
-                    )
+    #             if qty_diff > 0 and qty_diff > wp.quantity:
+    #                 raise ValidationError(
+    #                     f"Недостаточно товара на складе для увеличения количества"
+    #                 )
                 
-                super().save(*args, **kwargs)
-                wp.quantity -= qty_diff
+    #             super().save(*args, **kwargs)
+    #             wp.quantity -= qty_diff
 
-            # Проверяем, что остаток не отрицательный
-            if wp.quantity < 0:
-                raise ValidationError(
-                    f"Остаток на складе не может быть отрицательным"
-                )
+    #         # Проверяем, что остаток не отрицательный
+    #         if wp.quantity < 0:
+    #             raise ValidationError(
+    #                 f"Остаток на складе не может быть отрицательным"
+    #             )
             
-            wp.save()
+    #         wp.save()
 
-    def delete(self, *args, **kwargs):
-        with transaction.atomic():
-            try:
-                # Блокируем запись для обновления
-                wp = WarehouseProduct.objects.select_for_update().get(
-                    product=self.product, 
-                    warehouse=self.invoice.warehouse
-                )
-                # Восстанавливаем остаток
-                wp.quantity += self.quantity
-                wp.save()
+    # def delete(self, *args, **kwargs):
+    #     with transaction.atomic():
+    #         try:
+    #             # Блокируем запись для обновления
+    #             wp = WarehouseProduct.objects.select_for_update().get(
+    #                 product=self.product, 
+    #                 warehouse=self.invoice.warehouse
+    #             )
+    #             # Восстанавливаем остаток
+    #             wp.quantity += self.quantity
+    #             wp.save()
                 
-            except WarehouseProduct.DoesNotExist:
-                # Создаем запись, если её нет
-                WarehouseProduct.objects.create(
-                    product=self.product,
-                    warehouse=self.invoice.warehouse,
-                    quantity=self.quantity
-                )
+    #         except WarehouseProduct.DoesNotExist:
+    #             # Создаем запись, если её нет
+    #             WarehouseProduct.objects.create(
+    #                 product=self.product,
+    #                 warehouse=self.invoice.warehouse,
+    #                 quantity=self.quantity
+    #             )
             
-            # Удаляем только после успешного восстановления остатка
-            super().delete(*args, **kwargs)
+    #         # Удаляем только после успешного восстановления остатка
+    #         super().delete(*args, **kwargs)
 ######################################################################## Расходная накладная (faktura) END
 ########################################################################################################################################################################################################################
 # Типы счетов

@@ -9,11 +9,15 @@ const SearchWarehouse = ({
   warehouseInputRef,
   awtoInputRef,
   fetchs,
+  productInputRef,
 }) => {
   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
   const [list, setList] = useState([]);
   const listRefs = useRef([]);
   const { t } = useTranslation();
+
+  // console.log('values', values);
+  
 
   // Исправленная логика showSearchInput
   const [showSearchInput, setShowSearchInput] = useState(() => {
@@ -52,7 +56,9 @@ const SearchWarehouse = ({
     setFieldValue("warehouses", { id: item.id, name: item.name });
     setList([]);
     setShowSearchInput(false); // скрыть поиск после выбора
-    awtoInputRef.current?.focus();
+    
+    awtoInputRef.current?.focus(); // tut awtoInputRef wozmojen hidden, esli tak to focus nado na productInputRef.current?.focus();  
+    
     refreshTable(values, setFieldValue, item.id );
   };
 

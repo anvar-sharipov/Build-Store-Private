@@ -5,7 +5,7 @@ import TDQuantity from "./TDQuantity";
 import TDPrice from "./TDPrice";
 import THead from "./THead";
 
-const InvoiceTable = ({ showNotification, productListRefs, productQuantityRefs, productPriceRefs }) => {
+const InvoiceTable = ({ showNotification, productListRefs, productQuantityRefs, productPriceRefs, productInputRef }) => {
   const { t } = useTranslation();
   const { values, setFieldValue, validateField, setFieldTouched, errors } = useFormikContext();
   return (
@@ -24,7 +24,7 @@ const InvoiceTable = ({ showNotification, productListRefs, productQuantityRefs, 
                 <tr key={product.id} ref={(el) => (productListRefs.current[product.id] = el)} tabIndex={0}>
                   <td>{index + 1}</td>
                   <td>{product.name}</td>
-                  <TDQuantity product={product} index={index} showNotification={showNotification} productQuantityRefs={productQuantityRefs} />
+                  <TDQuantity product={product} index={index} showNotification={showNotification} productQuantityRefs={productQuantityRefs} productListRefs={productListRefs} productInputRef={productInputRef} />
                   <td>{product.unit_name_on_selected_warehouses}</td>
                   <TDPrice product={product} index={index} productPriceRefs={productPriceRefs} />
                   <td>{formatNumber(total)}</td>

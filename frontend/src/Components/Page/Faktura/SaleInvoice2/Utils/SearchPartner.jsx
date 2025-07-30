@@ -139,6 +139,7 @@ const SearchPartner = ({
                     } else if (e.key === "Enter") {
                       e.preventDefault();
                       handleSelectItem(item);
+                      productInputRef.current?.focus();
                     }
                   }}
                 >

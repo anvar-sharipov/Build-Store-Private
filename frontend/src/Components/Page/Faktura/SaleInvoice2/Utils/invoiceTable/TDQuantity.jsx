@@ -4,14 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { formatNumber } from "../../../../../UI/formatNumber";
 import refreshTable from "./refreshTable";
 
-const TDQuantity = ({ product, index, showNotification, productQuantityRefs }) => {
+const TDQuantity = ({ product, index, showNotification, productQuantityRefs, productListRefs, productInputRef }) => {
   const { values, setFieldValue, validateField, setFieldTouched, errors, touched } = useFormikContext();
   const { t } = useTranslation();
 
   const handleQuantityChange = async (e) => {
     const newQuantity = e.target.value;
     const fieldName = `products[${index}].selected_quantity`;
-    
+
     // Обновляем продукты
     const updatedProducts = values.products.map((p, idx) => {
       if (idx === index) {
@@ -31,21 +31,15 @@ const TDQuantity = ({ product, index, showNotification, productQuantityRefs }) =
     await validateField(fieldName);
 
     // Показываем уведомление о недостатке на складе
-    if (parseFloat(product.quantity_on_selected_warehouses) < parseFloat(newQuantity) && newQuantity !== '') {
-      showNotification(
-        `${t("OnStock")} ${formatNumber(product.quantity_on_selected_warehouses)} ${t("pc")}`,
-        "error"
-      );
-    }
+    // if (parseFloat(product.quantity_on_selected_warehouses) < parseFloat(newQuantity) && newQuantity !== '') {
+    //   showNotification(
+    //     `${t("OnStock")} ${formatNumber(product.quantity_on_selected_warehouses)} ${t("pc")}`,
+    //     "error"
+    //   );
+    // }
 
     // Обновляем таблицу
-    refreshTable(
-      { ...values, products: updatedProducts }, 
-      setFieldValue, 
-      values.warehouses.id, 
-      false, 
-      "TDQuantity"
-    );
+    refreshTable({ ...values, products: updatedProducts }, setFieldValue, values.warehouses.id, false, "TDQuantity");
   };
 
   const fieldName = `products[${index}].selected_quantity`;
@@ -56,7 +50,7 @@ const TDQuantity = ({ product, index, showNotification, productQuantityRefs }) =
       <input
         ref={(el) => (productQuantityRefs.current[product.id] = el)}
         tabIndex={0}
-        className={`
+        className={`dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-blue-400 border-gray-300 rounded focus:ring-blue-500
           ${parseFloat(product.quantity_on_selected_warehouses) < parseFloat(product.selected_quantity) ? "bg-red-200" : ""}
           ${hasError ? "border-red-500" : ""}
         `.trim()}
@@ -68,15 +62,21 @@ const TDQuantity = ({ product, index, showNotification, productQuantityRefs }) =
           setFieldTouched(fieldName, true);
           validateField(fieldName);
         }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            productInputRef.current?.focus();
+          }
+        }}
       />
 
       {hasError && (
         <div className="text-red-400 text-sm relative">
           {errors.products[index].selected_quantity}
-          {!errors.products[index].selected_quantity.includes("Минимум") && 
-           !errors.products[index].selected_quantity.includes("Количество обязательно") && 
-           <>: {formatNumber(product.quantity_on_selected_warehouses)}</>
-          }
+          {!errors.products[index].selected_quantity.includes("Минимум") &&
+            !errors.products[index].selected_quantity.includes("Количество обязательно") && (
+              <>: {formatNumber(product.quantity_on_selected_warehouses)}</>
+            )}
         </div>
       )}
     </td>
@@ -84,7 +84,6 @@ const TDQuantity = ({ product, index, showNotification, productQuantityRefs }) =
 };
 
 export default TDQuantity;
-
 
 // import { useFormikContext } from "formik";
 // import { useTranslation } from "react-i18next";

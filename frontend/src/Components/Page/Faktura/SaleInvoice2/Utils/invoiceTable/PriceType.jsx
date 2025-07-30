@@ -20,12 +20,12 @@ const PriceType = () => {
           value="retail"
           checked={priceType === "retail"}
           onChange={() => {
-            setFieldValue("priceType", "retail")
-            refreshTable({...values, priceType: "retail"}, setFieldValue, values.warehouses.id, true, "")
+            setFieldValue("priceType", "retail");
+            refreshTable({ ...values, priceType: "retail" }, setFieldValue, values.warehouses.id, true, "");
           }}
-          className="form-radio text-blue-600 focus:ring-blue-500"
+          className="form-radio text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
         />
-        <span className="ml-2 text-gray-700">{t("retailPrice")}</span>
+        <span className="ml-2 text-gray-700 dark:text-gray-200">{t("retailPrice")}</span>
       </label>
 
       <label className="inline-flex items-center cursor-pointer">
@@ -34,12 +34,12 @@ const PriceType = () => {
           value="wholesale"
           checked={priceType === "wholesale"}
           onChange={() => {
-            setFieldValue("priceType", "wholesale")
-            refreshTable({...values, priceType: "wholesale"}, setFieldValue, values.warehouses.id, true, "")
+            setFieldValue("priceType", "wholesale");
+            refreshTable({ ...values, priceType: "wholesale" }, setFieldValue, values.warehouses.id, true, "");
           }}
-          className="form-radio text-green-600 focus:ring-green-500"
+          className="form-radio text-green-600 focus:ring-green-500 dark:focus:ring-green-400"
         />
-        <span className="ml-2 text-gray-700">{t("wholesalePrice")}</span>
+        <span className="ml-2 text-gray-700 dark:text-gray-200">{t("wholesalePrice")}</span>
       </label>
     </div>
   );

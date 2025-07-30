@@ -88,6 +88,10 @@ const SearchProduct = ({ partnerInputRef, productInputRef, showNotification, pro
             if (list.length > 0) {
               listRefs.current[0]?.focus();
             } else {
+              if (values.products.length > 0) {
+                const firstId = values?.products[0].id
+                productQuantityRefs.current[firstId]?.focus();
+              }
             }
           }
         }}

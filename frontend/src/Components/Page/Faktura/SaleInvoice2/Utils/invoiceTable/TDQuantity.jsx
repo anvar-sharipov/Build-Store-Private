@@ -12,7 +12,6 @@ const TDQuantity = ({ product, index, showNotification, productQuantityRefs, pro
     const newQuantity = e.target.value;
     const fieldName = `products[${index}].selected_quantity`;
 
-    // Обновляем продукты
     const updatedProducts = values.products.map((p, idx) => {
       if (idx === index) {
         return { ...p, selected_quantity: newQuantity };
@@ -20,121 +19,92 @@ const TDQuantity = ({ product, index, showNotification, productQuantityRefs, pro
       return p;
     });
 
-    // Обновляем Formik состояние
     await setFieldValue("products", updatedProducts, false);
     await setFieldValue(fieldName, newQuantity, false);
-
-    // Помечаем поле как touched
     await setFieldTouched(fieldName, true, false);
-
-    // Валидируем поле немедленно
     await validateField(fieldName);
 
-    // Показываем уведомление о недостатке на складе
-    // if (parseFloat(product.quantity_on_selected_warehouses) < parseFloat(newQuantity) && newQuantity !== '') {
-    //   showNotification(
-    //     `${t("OnStock")} ${formatNumber(product.quantity_on_selected_warehouses)} ${t("pc")}`,
-    //     "error"
-    //   );
-    // }
-
-    // Обновляем таблицу
     refreshTable({ ...values, products: updatedProducts }, setFieldValue, values.warehouses.id, false, "TDQuantity");
   };
 
   const fieldName = `products[${index}].selected_quantity`;
   const hasError = touched.products?.[index]?.selected_quantity && errors.products?.[index]?.selected_quantity;
+  const hasLowStock = parseFloat(product.quantity_on_selected_warehouses) < parseFloat(product.selected_quantity);
 
   return (
-    <td>
-      <input
-        ref={(el) => (productQuantityRefs.current[product.id] = el)}
-        tabIndex={0}
-        className={`dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-blue-400 border-gray-300 rounded focus:ring-blue-500
-          ${parseFloat(product.quantity_on_selected_warehouses) < parseFloat(product.selected_quantity) ? "bg-red-200" : ""}
-          ${hasError ? "border-red-500" : ""}
-        `.trim()}
-        type="number"
-        value={product.selected_quantity || ""}
-        onChange={handleQuantityChange}
-        onBlur={() => {
-          // Дополнительная валидация при потере фокуса
-          setFieldTouched(fieldName, true);
-          validateField(fieldName);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            productInputRef.current?.focus();
-          }
-        }}
-      />
+    <td className="px-3 py-2 border border-gray-300 dark:border-gray-600">
+      <div className="relative">
+        <input
+          ref={(el) => (productQuantityRefs.current[product.id] = el)}
+          tabIndex={0}
+          className={`
+            w-full px-3 border rounded-md transition-colors
+            dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600
+            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent print:hidden
+            ${hasLowStock && !hasError ? "bg-red-50 border-red-300 dark:bg-red-900/20 dark:border-red-600" : ""}
+            ${hasError ? "border-red-500 bg-red-50 dark:bg-red-900/20 dark:border-red-500" : "border-gray-300"}
+            ${!hasError && !hasLowStock ? "hover:border-gray-400 dark:hover:border-gray-500" : ""}
+          `.trim()}
+          type="number"
+          min="0"
+          step="0.001"
+          value={product.selected_quantity || ""}
+          onChange={handleQuantityChange}
+          onBlur={() => {
+            setFieldTouched(fieldName, true);
+            validateField(fieldName);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              productInputRef.current?.focus();
+            } else if (e.key === "ArrowUp") {
+              e.preventDefault();
+              if (index === 0) {
+                productInputRef.current?.focus();
+                productInputRef.current?.select();
+              } else {
+                const prevProduct = values.products[index - 1];
+                const prevInput = productQuantityRefs.current[prevProduct.id];
+                if (prevInput) {
+                  prevInput.focus();
+                  prevInput.select(); // если хочешь выделить текст
+                }
+              }
+            } else if (e.key === "ArrowDown") {
+              e.preventDefault();
+              const nextProduct = values.products[index + 1];
+              if (nextProduct) {
+                const nextInput = productQuantityRefs.current[nextProduct.id];
+                if (nextInput) {
+                  nextInput.focus();
+                  nextInput.select(); // если хочешь выделить текст
+                }
+              }
+            }
+          }}
+        />
 
-      {hasError && (
-        <div className="text-red-400 text-sm relative">
-          {errors.products[index].selected_quantity}
-          {!errors.products[index].selected_quantity.includes("Минимум") &&
-            !errors.products[index].selected_quantity.includes("Количество обязательно") && (
-              <>: {formatNumber(product.quantity_on_selected_warehouses)}</>
-            )}
-        </div>
-      )}
+        <div className="hidden print:block">{formatNumber(product.selected_quantity)}</div>
+
+        {hasError && (
+          <div className="absolute top-full left-0 text-xs text-red-600 dark:text-red-400 font-medium z-10">
+            {errors.products[index].selected_quantity}
+            {!errors.products[index].selected_quantity.includes("Минимум") &&
+              !errors.products[index].selected_quantity.includes("Количество обязательно") && (
+                <>: {formatNumber(product.quantity_on_selected_warehouses)}</>
+              )}
+          </div>
+        )}
+
+        {hasLowStock && !hasError && (
+          <div className="absolute top-full left-0 text-xs text-amber-600 dark:text-amber-400 font-medium z-10">
+            {t("OnStock")}: {formatNumber(product.quantity_on_selected_warehouses)}
+          </div>
+        )}
+      </div>
     </td>
   );
 };
 
 export default TDQuantity;
-
-// import { useFormikContext } from "formik";
-// import { useTranslation } from "react-i18next";
-// import { useCallback, useEffect, useRef, useState } from "react";
-// import { formatNumber } from "../../../../../UI/formatNumber";
-// import refreshTable from "./refreshTable";
-
-// const TDQuantity = ({ product, index, showNotification, productQuantityRefs }) => {
-//   const { values, setFieldValue, validateField, setFieldTouched, errors } = useFormikContext();
-//   const { t } = useTranslation();
-
-//   return (
-//     <td>
-//       <input
-//         ref={(el) => (productQuantityRefs.current[product.id] = el)}
-//         tabIndex={0}
-//         className={parseFloat(product.quantity_on_selected_warehouses) < parseFloat(product.selected_quantity) ? "bg-red-200" : ""}
-//         type="number"
-//         // value={product.selected_quantity?.toString().replace(/^0+(?=\d)/, "") || "0"}
-//         value={product.selected_quantity}
-//         onChange={async (e) => {
-//         //   console.log("tut");
-
-//           const newQuantity = e.target.value;
-//           const updatedProducts = values.products.map((p, idx) => {
-//             if (idx === index) {
-//               return { ...p, selected_quantity: newQuantity };
-//             }
-//             return p;
-//           });
-
-//           setFieldValue("products", updatedProducts);
-
-//           // Помечаем поле как touched, чтобы ошибки показывались, ( говорит Formik, что поле "трогали", и ошибки можно показывать)
-//           setFieldTouched(`products[${index}].selected_quantity`, true, false);
-
-//           // Валидируем поле сразу же (запускает валидацию конкретного поля немедленно)
-//           await validateField(`products[${index}].selected_quantity`);
-
-//           refreshTable({ ...values, products: updatedProducts }, setFieldValue, values.warehouses.id, false, "TDQuantity");
-//         }}
-//       />
-
-//       {errors.products?.[index]?.selected_quantity && (
-//         <div className="text-red-400 text-sm relative">
-//           {errors.products[index].selected_quantity}
-//           {!errors.products[index].selected_quantity.includes("Минимум") && !errors.products[index].selected_quantity.includes("Количество обязательно") && <>: {formatNumber(product.quantity_on_selected_warehouses)}</>}
-//         </div>
-//       )}
-//     </td>
-//   );
-// };
-
-// export default TDQuantity;

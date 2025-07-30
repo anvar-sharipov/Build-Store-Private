@@ -59,7 +59,7 @@ function Button() {
   const { t } = useTranslation();
 
   return (
-    <div>
+    <div className="mt-2">
       {values.warehouses.id && values.products.length > 0 && (
         <div className="flex w-full gap-4 print:hidden">
           {/* Текстовое поле для комментария (80%) */}

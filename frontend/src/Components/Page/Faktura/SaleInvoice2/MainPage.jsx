@@ -52,12 +52,15 @@ const MainPage = () => {
       fetchInvoice();
     } else {
       setDefaultValues(defaultInitialValues(fetchs, false));
+      partnerInputRef.current?.focus();
     }
   }, [id, fetchs]);
 
+
+
   useEffect(() => {
     if (!loading) partnerInputRef.current?.focus();
-  }, [loading]);
+  }, [loading, defaultValues]);
 
   const onSubmit = async (values) => {
     try {
@@ -76,6 +79,7 @@ const MainPage = () => {
       console.error("Ошибка при отправке:", error.response.data.detail);
     }
   };
+
 
   return (
     <div className="px-5 py-2 print:border-none print:px-2 print:m-0">
@@ -134,10 +138,12 @@ const MainPage = () => {
                     productInputRef={productInputRef}
                   />
                 )}
-
-                <div className="hidden print:block">
+                {values.awto && Object.keys(values.awto).length > 0 && (
+                  <div className="hidden print:block mt-2">
                   {t("delivers")}: {values.awto?.name}
                 </div>
+                )}
+                
                 <Button />
               </Form>
             );

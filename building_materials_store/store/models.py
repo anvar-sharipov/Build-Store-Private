@@ -48,8 +48,8 @@ class Product(models.Model):
     created_at = models.DateTimeField(verbose_name='Создан', auto_now_add=True)
     updated_at = models.DateTimeField(verbose_name='Обновлён', auto_now=True)
     tags = models.ManyToManyField('Tag', verbose_name='Теги', blank=True)
-
-    @property
+    # weight volume length width height
+    @property 
     def total_quantity(self):
         return self.warehouse_products.aggregate(
             total=models.Sum('quantity')

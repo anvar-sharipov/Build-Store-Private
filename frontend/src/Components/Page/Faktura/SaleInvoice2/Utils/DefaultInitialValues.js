@@ -8,12 +8,32 @@ import * as Yup from "yup";
 
 const defaultInitialValues = (fetchs, data) => {
   if (data) {
-    console.log("s data", data);
-    console.log("data.items", data.items);
+    let footerTotalPricePurchae = 0;
+    let footerTotalPriceProfit = 0;
+    let footerTotalPriceDiscount = 0;
+
+    let footerTotalVolume = 0;
+    let footerTotalWeight = 0;
+    let footerTotalLength = 0;
+    let footerTotalWidth = 0;
+    let footerTotalHeight = 0;
+
     const products = data.items
       .filter((item) => !item.is_gift)
       .map((item) => {
         const product = item.product;
+        console.log("item", item);
+
+        footerTotalPricePurchae += item.quantity * product.purchase_price;
+
+        footerTotalVolume += item.quantity * product.volume;
+        footerTotalWeight += item.quantity * product.weight;
+        footerTotalLength += item.quantity * product.length;
+        footerTotalWidth += item.quantity * product.width;
+        footerTotalHeight += item.quantity * product.height;
+
+        footerTotalPriceProfit += item.quantity * item.sale_price - item.quantity * product.purchase_price;
+        footerTotalPriceDiscount += item.quantity * item.sale_price - item.quantity * product.wholesale_price;
         let unit_name_on_selected_warehouses = product.base_unit_obj.name;
         const units = product.units;
         if (units.length > 0) {
@@ -23,6 +43,7 @@ const defaultInitialValues = (fetchs, data) => {
             }
           });
         }
+        // console.log('update product', product);
         return {
           ...product,
           selected_quantity: item.quantity,
@@ -30,11 +51,19 @@ const defaultInitialValues = (fetchs, data) => {
           unit_name_on_selected_warehouses: unit_name_on_selected_warehouses,
         };
       });
+    // console.log('update products', products);
 
     const gifts = data.items
       .filter((product) => product.is_gift)
       .map((item) => {
         const product = item.product;
+
+        footerTotalVolume += item.quantity * product.volume;
+        footerTotalWeight += item.quantity * product.weight;
+        footerTotalLength += item.quantity * product.length;
+        footerTotalWidth += item.quantity * product.width;
+        footerTotalHeight += item.quantity * product.height;
+
         let unit_name_on_selected_warehouses = product.base_unit_obj.name;
         const units = product.units;
         if (units.length > 0) {
@@ -51,6 +80,7 @@ const defaultInitialValues = (fetchs, data) => {
           unit_name_on_selected_warehouses: unit_name_on_selected_warehouses,
         };
       });
+    console.log("footerTotalPricePurchae", footerTotalPricePurchae);
 
     return {
       invoice_date: new Date(data.invoice_date).toISOString().slice(0, 10),
@@ -65,6 +95,14 @@ const defaultInitialValues = (fetchs, data) => {
       footerTotalPrice: data.total_amount,
       withPosting: data.isEntry,
       comment: data.note,
+      footerTotalPricePurchae: footerTotalPricePurchae,
+      footerTotalPriceProfit: footerTotalPriceProfit,
+      footerTotalPriceDiscount: footerTotalPriceDiscount,
+      footerTotalVolume: footerTotalVolume,
+      footerTotalWeight: footerTotalWeight,
+      footerTotalLength: footerTotalLength,
+      footerTotalWidth: footerTotalWidth,
+      footerTotalHeight: footerTotalHeight,
       priceType: (() => {
         try {
           localStorage.setItem("priceType", JSON.stringify(data.type_price));

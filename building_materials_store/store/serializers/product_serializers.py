@@ -22,9 +22,22 @@ class ProductUnitSerializer(serializers.ModelSerializer):
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = ProductImage
-        fields = ['id', 'product', 'alt_text', 'image' ]
+        fields = ['id', 'product', 'alt_text', 'image']
+    
+    # daet polnuy put s htttp//:localhost:8000
+    # def get_image(self, obj):
+    #     request = self.context.get('request')
+    #     if request:
+    #         return request.build_absolute_uri(obj.image.url)
+    #     return obj.image.url
+    
+    # bez polnogo puti, bez # daet polnuy put s htttp//:localhost:8000
+    def get_image(self, obj):
+        return obj.image.url
 
 
 class WarehouseProductSerializer(serializers.ModelSerializer):

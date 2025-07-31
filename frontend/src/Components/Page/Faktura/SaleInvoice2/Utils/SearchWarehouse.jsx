@@ -9,7 +9,6 @@ const SearchWarehouse = ({
   warehouseInputRef,
   awtoInputRef,
   fetchs,
-  productInputRef,
 }) => {
   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
   const [list, setList] = useState([]);
@@ -149,7 +148,7 @@ const SearchWarehouse = ({
           )}
         </div>
       ) : (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 print:text-black">
           <span>
             {t("warehouse")}: {values.warehouses?.name}
           </span>

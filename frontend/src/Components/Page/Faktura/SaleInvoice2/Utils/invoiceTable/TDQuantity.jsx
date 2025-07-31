@@ -1,10 +1,9 @@
 import { useFormikContext } from "formik";
 import { useTranslation } from "react-i18next";
-import { useCallback, useEffect, useRef, useState } from "react";
 import { formatNumber } from "../../../../../UI/formatNumber";
 import refreshTable from "./refreshTable";
 
-const TDQuantity = ({ product, index, showNotification, productQuantityRefs, productListRefs, productInputRef }) => {
+const TDQuantity = ({ product, index, productQuantityRefs, productInputRef }) => {
   const { values, setFieldValue, validateField, setFieldTouched, errors, touched } = useFormikContext();
   const { t } = useTranslation();
 
@@ -85,7 +84,7 @@ const TDQuantity = ({ product, index, showNotification, productQuantityRefs, pro
           }}
         />
 
-        <div className="hidden print:block">{formatNumber(product.selected_quantity)}</div>
+        <div className="hidden print:block font-semibold">{formatNumber(product.selected_quantity)}</div>
 
         {hasError && (
           <div className="absolute top-full left-0 text-xs text-red-600 dark:text-red-400 font-medium z-10">

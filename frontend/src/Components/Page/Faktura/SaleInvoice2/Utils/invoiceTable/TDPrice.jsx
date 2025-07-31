@@ -53,7 +53,7 @@ const TDPrice = ({ product, index }) => {
           value={product.selected_price || ""}
           onChange={handlePriceChange}
         />
-        <div className="hidden print:block">{formatNumber(product.selected_price)}</div>
+        <div className="hidden print:block font-semibold">{formatNumber(product.selected_price)}</div>
         {showError && (
           <div className="absolute top-full left-0 mt-1 text-xs text-red-600 dark:text-red-400 font-medium z-10">
             {errors.products[index].selected_price}

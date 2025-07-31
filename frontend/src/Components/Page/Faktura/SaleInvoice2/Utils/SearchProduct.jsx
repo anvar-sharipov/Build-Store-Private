@@ -1,13 +1,12 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import MySearchInput from "../../../../UI/MySearchInput";
-import Fuse from "fuse.js";
 import { useTranslation } from "react-i18next";
 import myAxios from "../../../../axios";
 import { useFormikContext } from "formik";
 import refreshTable from "./invoiceTable/refreshTable";
 
 const SearchProduct = ({ partnerInputRef, productInputRef, showNotification, productQuantityRefs }) => {
-  const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
+  const { values, setFieldValue, handleBlur } = useFormikContext();
   const [list, setList] = useState([]);
   const [query, setQuery] = useState("");
   const listRefs = useRef([]);

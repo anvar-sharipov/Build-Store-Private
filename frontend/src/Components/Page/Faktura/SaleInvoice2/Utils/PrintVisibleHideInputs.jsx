@@ -19,7 +19,7 @@ const PrintVisibleHideInputs = ({ printVisibleColumns, setPrintVisibleColumns, u
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-slate-800 dark:to-gray-900 rounded-2xl opacity-60"></div>
       
       {/* Main container */}
-      <div className="relative backdrop-blur-sm bg-white/70 dark:bg-gray-800/70 border border-white/20 dark:border-gray-700/30 rounded-2xl p-6 shadow-2xl shadow-blue-500/10 dark:shadow-purple-500/10">
+      <div className="relative backdrop-blur-sm bg-gray-200 dark:bg-gray-800/70 border border-white/20 dark:border-gray-700/30 rounded-2xl p-6 shadow-2xl shadow-blue-500/10 dark:shadow-purple-500/10">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">

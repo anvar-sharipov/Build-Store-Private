@@ -58,46 +58,48 @@ const SearchAwto = ({ awtoInputRef, warehouseInputRef, partnerInputRef, fetchs }
   };
 
   return (
-    <div className="relative w-full mt-2">
+    <div className="relative w-full">
       {showSearchInput ? (
         <div>
-          <MySearchInput
-            type="text"
-            ref={awtoInputRef}
-            name="awto_name"
-            placeholder={t("delivers")}
-            autoComplete="off"
-            value={values.awto?.name || ""}
-            onKeyDown={(e) => {
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-                if (list.length > 0) {
-                  listRefs.current[0]?.focus();
-                } else {
-                  partnerInputRef.current?.focus();
+          {!values.disabled && (
+            <MySearchInput
+              type="text"
+              ref={awtoInputRef}
+              name="awto_name"
+              placeholder={t("delivers")}
+              autoComplete="off"
+              value={values.awto?.name || ""}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  if (list.length > 0) {
+                    listRefs.current[0]?.focus();
+                  } else {
+                    partnerInputRef.current?.focus();
+                  }
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  warehouseInputRef.current?.focus();
                 }
-              } else if (e.key === "ArrowUp") {
-                e.preventDefault();
-                warehouseInputRef.current?.focus();
-              }
-            }}
-            onChange={(e) => {
-              const value = e.target.value;
-              setFieldValue("awto", { id: null, name: value });
+              }}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFieldValue("awto", { id: null, name: value });
 
-              if (value.trim() === "") {
-                setList([]);
-                return;
-              }
-              const results = fuse
-                .search(value)
-                .slice(0, 20)
-                .map((res) => res.item);
-              setList(results);
-            }}
-            onBlur={handleBlur}
-            className="border px-2 py-1 rounded-md print:hidden"
-          />
+                if (value.trim() === "") {
+                  setList([]);
+                  return;
+                }
+                const results = fuse
+                  .search(value)
+                  .slice(0, 20)
+                  .map((res) => res.item);
+                setList(results);
+              }}
+              onBlur={handleBlur}
+              className="border px-2 py-1 rounded-md print:hidden"
+            />
+          )}
 
           {touched.awto && errors.awto && <div className="text-red-500 text-sm print:hidden">{errors.awto}</div>}
 
@@ -140,9 +142,11 @@ const SearchAwto = ({ awtoInputRef, warehouseInputRef, partnerInputRef, fetchs }
           <span>
             {t("delivers")}: {values.awto?.name}
           </span>
-          <button type="button" onClick={handleClearSelection} className="text-red-500 text-sm hover:underline">
-            ✕
-          </button>
+          {!values.disabled && (
+            <button type="button" onClick={handleClearSelection} className="text-red-500 text-sm hover:underline">
+              ✕
+            </button>
+          )}
         </div>
       )}
     </div>

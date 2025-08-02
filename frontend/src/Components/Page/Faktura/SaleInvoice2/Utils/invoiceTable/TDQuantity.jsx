@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { formatNumber } from "../../../../../UI/formatNumber";
 import refreshTable from "./refreshTable";
 
-const TDQuantity = ({ product, index, productQuantityRefs, productInputRef }) => {
+const TDQuantity = ({ product, index, productQuantityRefs, productInputRef, productPriceRefs }) => {
   const { values, setFieldValue, validateField, setFieldTouched, errors, touched } = useFormikContext();
   const { t } = useTranslation();
 
@@ -36,6 +36,7 @@ const TDQuantity = ({ product, index, productQuantityRefs, productInputRef }) =>
         <input
           ref={(el) => (productQuantityRefs.current[product.id] = el)}
           tabIndex={0}
+          disabled={values.disabled}
           className={`
             w-full px-3 border rounded-md transition-colors
             dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600
@@ -80,7 +81,12 @@ const TDQuantity = ({ product, index, productQuantityRefs, productInputRef }) =>
                   nextInput.select(); // если хочешь выделить текст
                 }
               }
-            }
+            } 
+            // else if (e.key === "ArrowRight") {
+            //   e.preventDefault();
+            //   productPriceRefs.current[product.id]?.focus()
+              
+            // }
           }}
         />
 

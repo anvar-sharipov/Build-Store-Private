@@ -17,6 +17,8 @@ import { useParams } from "react-router-dom";
 import VisibleHideInputs from "./Utils/VisibleHideInputs";
 import PrintVisibleHideInputs from "./Utils/PrintVisibleHideInputs";
 import { Settings } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
 
 const userVisibleColumns = {
   qr_code: false,
@@ -74,7 +76,7 @@ const MainPage = () => {
   const { t } = useTranslation();
   const { id } = useParams();
   const [defaultValues, setDefaultValues] = useState(null);
-  const [openParametrs, setOpenParametrs] = useState(false);
+  const navigate = useNavigate();
   const [notification, setNotification] = useState({ message: "", type: "" });
   const showNotification = (message, type) => {
     setNotification({ message, type });
@@ -104,7 +106,6 @@ const MainPage = () => {
 
   useEffect(() => {
     if (id) {
-      // console.log("eto update ==");
       const fetchInvoice = async () => {
         try {
           const res = await myAxios.get(`sales-invoices/${id}/`);
@@ -131,12 +132,12 @@ const MainPage = () => {
       if (id) {
         const res = await myAxios.put(`sales-invoices/${id}/`, dataToSend);
         showNotification(t(res.data.detail), "success");
+        if (values.withPosting) values.disabled = true;
       } else {
         const res = await myAxios.post("sales-invoices/", dataToSend);
         showNotification(t(res.data.detail), "success");
+        navigate(`/sale-invoices/update/${res.data.invoice_id}`);
       }
-
-      // console.log("Ответ сервера:", res.data);
     } catch (error) {
       showNotification(t(error.response.data.detail), "error");
       console.error("Ошибка при отправке:", error.response.data.detail);
@@ -158,19 +159,32 @@ const MainPage = () => {
               <Form>
                 <Head />
 
-                <SearchWarehouse warehouseInputRef={warehouseInputRef} awtoInputRef={awtoInputRef} fetchs={fetchs} />
+                <SearchWarehouse
+                  warehouseInputRef={warehouseInputRef}
+                  awtoInputRef={awtoInputRef}
+                  fetchs={fetchs}
+                  printVisibleColumns={printVisibleColumns}
+                  setPrintVisibleColumns={setPrintVisibleColumns}
+                  userPrintVisibleColumns={userPrintVisibleColumns}
+                  adminPrintVisibleColumns={adminPrintVisibleColumns}
+                  visibleColumns={visibleColumns}
+                  setVisibleColumns={setVisibleColumns}
+                  adminVisibleColumns={adminVisibleColumns}
+                  userVisibleColumns={userVisibleColumns}
+                />
 
                 <SearchAwto awtoInputRef={awtoInputRef} warehouseInputRef={warehouseInputRef} partnerInputRef={partnerInputRef} fetchs={fetchs} />
 
                 <SearchPartner partnerInputRef={partnerInputRef} productInputRef={productInputRef} awtoInputRef={awtoInputRef} fetchs={fetchs} />
 
-                {values.warehouses && values.warehouses.id ? (
-                  <SearchProduct partnerInputRef={partnerInputRef} productInputRef={productInputRef} showNotification={showNotification} productQuantityRefs={productQuantityRefs} />
-                ) : (
-                  <div className="text-center text-gray-700 dark:text-gray-200 text-lg font-semibold mb-4">{t("forSearchProductShooseWarehouse")}</div>
-                )}
+                {!values.disabled &&
+                  (values.warehouses && values.warehouses.id ? (
+                    <SearchProduct partnerInputRef={partnerInputRef} productInputRef={productInputRef} showNotification={showNotification} productQuantityRefs={productQuantityRefs} />
+                  ) : (
+                    <div className="text-center text-gray-700 dark:text-gray-200 text-lg font-semibold mb-4">{t("forSearchProductShooseWarehouse")}</div>
+                  ))}
 
-                <div className="relative print:hidden">
+                {/* <div className="relative print:hidden">
                   <button
                     onClick={() => setOpenParametrs((prev) => !prev)}
                     className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition"
@@ -194,7 +208,7 @@ const MainPage = () => {
                       </div>
                     </div>
                   )}
-                </div>
+                </div> */}
 
                 {/* // adminVisibleColumns userVisibleColumns  userPrintVisibleColumns adminPrintVisibleColumns */}
                 {values.products.length > 0 && (
@@ -206,6 +220,7 @@ const MainPage = () => {
                     productInputRef={productInputRef}
                     visibleColumns={visibleColumns}
                     printVisibleColumns={printVisibleColumns}
+                    id={id}
                   />
                 )}
                 {values.awto && Object.keys(values.awto).length > 0 && (
@@ -214,7 +229,7 @@ const MainPage = () => {
                   </div>
                 )}
 
-                <Button />
+                <Button productInputRef={productInputRef} />
               </Form>
             );
           }}

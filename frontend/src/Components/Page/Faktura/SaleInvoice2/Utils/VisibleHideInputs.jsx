@@ -20,7 +20,7 @@ const VisibleHideInputs = ({ visibleColumns, setVisibleColumns, adminVisibleColu
       <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-slate-800 dark:to-gray-900 rounded-2xl opacity-70"></div>
       
       {/* Main container */}
-      <div className="relative backdrop-blur-sm bg-white/80 dark:bg-gray-800/80 border border-white/30 dark:border-gray-700/40 rounded-2xl p-6 shadow-xl shadow-teal-500/10 dark:shadow-cyan-500/10">
+      <div className="relative backdrop-blur-sm bg-gray-200 dark:bg-gray-800/80 border border-white/30 dark:border-gray-700/40 rounded-2xl p-6 shadow-xl shadow-teal-500/10 dark:shadow-cyan-500/10">
         {/* Header with eye icon */}
         <div className="flex items-center gap-3 mb-6">
           <div className="relative">

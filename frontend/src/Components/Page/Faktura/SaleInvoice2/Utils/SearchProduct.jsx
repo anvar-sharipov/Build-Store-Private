@@ -43,7 +43,7 @@ const SearchProduct = ({ partnerInputRef, productInputRef, showNotification, pro
   }, [query]);
 
   const handleSelectItem = async (item) => {
-    // console.log("Выбран", item);
+    console.log("Выбран", item);
 
     const already_exists = values.products.some((p) => p.id === item.id);
     if (already_exists) {

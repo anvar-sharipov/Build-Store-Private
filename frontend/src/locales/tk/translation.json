@@ -308,7 +308,8 @@
   "comment": "Kommentariya (hökmany däl)",
   "withPosting": "Prowodka bilen",
   "transactionChange": "Otkat zapisi",
-  "successSave": "Üstünlikli ýatda saklandy"
+  "successSave": "Üstünlikli ýatda saklandy",
+  "errorDate": "Sene formaty nädogry"
 
 
 

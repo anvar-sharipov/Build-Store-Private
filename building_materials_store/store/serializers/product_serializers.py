@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from ..models import *
+import os
 
 from .base_serializers import *
 # from django.contrib.auth.models import Group
@@ -21,23 +22,78 @@ class ProductUnitSerializer(serializers.ModelSerializer):
         fields = ['id', 'unit', 'unit_name', 'conversion_factor', 'is_default_for_sale', 'base_unit_name']
 
 
-class ProductImageSerializer(serializers.ModelSerializer):
-    image = serializers.SerializerMethodField()
+# class ProductImageSerializer(serializers.ModelSerializer):
+#     image = serializers.SerializerMethodField()
 
+#     class Meta:
+#         model = ProductImage
+#         fields = ['id', 'product', 'alt_text', 'image']
+    
+#     # daet polnuy put s htttp//:localhost:8000
+#     # def get_image(self, obj):
+#     #     request = self.context.get('request')
+#     #     if request:
+#     #         return request.build_absolute_uri(obj.image.url)
+#     #     return obj.image.url
+    
+#     # bez polnogo puti, bez # daet polnuy put s htttp//:localhost:8000
+#     # def get_image(self, obj):
+#     #     return obj.image.url
+    
+#     def get_image_url(self, obj):
+#         if obj.image and hasattr(obj.image, 'url'):
+#             return obj.image.url
+#         return None
+    
+#     def get_image(self, obj):
+#         if obj.image and hasattr(obj.image, 'url'):
+#             return obj.image.url
+#         return None  # или "" если не хочешь null
+
+
+class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
         fields = ['id', 'product', 'alt_text', 'image']
     
-    # daet polnuy put s htttp//:localhost:8000
-    # def get_image(self, obj):
-    #     request = self.context.get('request')
-    #     if request:
-    #         return request.build_absolute_uri(obj.image.url)
-    #     return obj.image.url
+    def create(self, validated_data):
+        print("=== SERIALIZER CREATE DEBUG ===")
+        print("Validated data:", validated_data)
+        print("Image in validated_data:", validated_data.get('image'))
+        if 'image' in validated_data:
+            image_file = validated_data['image']
+            print("Image file name:", image_file.name)
+            print("Image file size:", image_file.size)
+            print("Image file type:", image_file.content_type)
+        
+        instance = super().create(validated_data)
+        
+        print("Created instance ID:", instance.id)
+        print("Instance image field:", instance.image)
+        if instance.image:
+            print("Instance image name:", instance.image.name)
+            print("Instance image path:", instance.image.path)
+            print("Instance image URL:", instance.image.url)
+            print("File exists on disk:", os.path.exists(instance.image.path) if instance.image else False)
+        print("=== END SERIALIZER DEBUG ===")
+        
+        return instance
     
-    # bez polnogo puti, bez # daet polnuy put s htttp//:localhost:8000
-    def get_image(self, obj):
-        return obj.image.url
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        print(f"=== TO_REPRESENTATION DEBUG ===")
+        print(f"Instance image: {instance.image}")
+        if instance.image:
+            request = self.context.get('request')
+            if request:
+                data['image'] = request.build_absolute_uri(instance.image.url)
+            else:
+                data['image'] = instance.image.url
+            print(f"Returning image URL: {data['image']}")
+        else:
+            print("No image found in instance")
+        print("=== END TO_REPRESENTATION DEBUG ===")
+        return data
 
 
 class WarehouseProductSerializer(serializers.ModelSerializer):

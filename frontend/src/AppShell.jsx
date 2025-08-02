@@ -44,7 +44,7 @@ function AppShell() {
                 <Route path="/sale-invoices/new" element={<AddSaleInvoicePage /> } />
                 <Route path="/sale-invoices/create" element={<MainPage /> } />
                 <Route path="/sale-invoices/update/:id" element={<MainPage /> } />
-                <Route path="/sale-invoices/update/:id" element={<UpdateSaleInvoice />} />
+                {/* <Route path="/sale-invoices/update/:id" element={<UpdateSaleInvoice />} /> */}
                 <Route path={ROUTES.REGISTER} element={<Register />} />
                 <Route path={ROUTES.LOGIN} element={<Login />} />
                 <Route path={ROUTES.HARYTLAR} element={<Harytlar />} />

@@ -85,9 +85,30 @@ class SalesInvoiceItemSerializer(serializers.ModelSerializer):
     )
     invoice = serializers.PrimaryKeyRelatedField(read_only=True)
 
+    line_total = serializers.SerializerMethodField()
+    total_purchase = serializers.SerializerMethodField()
+    total_retail = serializers.SerializerMethodField()
+    total_wholesale = serializers.SerializerMethodField()
+
     class Meta:
         model = SalesInvoiceItem
-        fields = ['id', 'product', 'product_id', 'quantity', 'sale_price', 'invoice', 'is_gift']
+        fields = [
+            'id', 'product', 'product_id', 'quantity', 'sale_price', 'invoice', 'is_gift',
+            'line_total', 'total_purchase', 'total_retail', 'total_wholesale', 
+            'wholesale_price', 'retail_price', 'purchase_price',
+        ]
+
+    def get_line_total(self, obj):
+        return obj.get_line_total()
+
+    def get_total_purchase(self, obj):
+        return obj.get_total_purchase()
+
+    def get_total_retail(self, obj):
+        return obj.get_total_retail()
+
+    def get_total_wholesale(self, obj):
+        return obj.get_total_wholesale()
 
     # def validate_quantity(self, value):
     #     if value <= 0:

@@ -20,16 +20,8 @@ const ImagesTab = ({ options, product, setProduct, t }) => {
       {/* QR код: инпут + изображение в 1 строку */}
       <div className="flex items-start gap-4">
         <div className="flex-1">
-          <label className="block text-sm font-medium mb-1">
-            {t("qrCodeLabel")}
-          </label>
-          <Field
-            name="qr_code"
-            className={myClass.input2}
-            placeholder={t("qrCodePlaceholder")}
-            autoComplete="off"
-            disabled
-          />
+          <label className="block text-sm font-medium mb-1">{t("qrCodeLabel")}</label>
+          <Field name="qr_code" className={myClass.input2} placeholder={t("qrCodePlaceholder")} autoComplete="off" disabled />
         </div>
         <div className="mt-6">
           <QRDisplay code={values.qr_code} />
@@ -39,33 +31,26 @@ const ImagesTab = ({ options, product, setProduct, t }) => {
       {/* Изображения продукта */}
       <div className="flex flex-wrap gap-2 mt-3">
         {Array.isArray(product?.images) &&
-          product.images.map((img) => (
-            <div key={img.id} className="relative w-16 h-16 group">
-              <img
-                src={img.image}
-                alt={img.alt_text || ""}
-                className="w-full h-full object-cover rounded border border-gray-300"
-              />
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    await myAxios.delete(`/product-images/${img.id}/`);
-                    setProduct((prev) => ({
-                      ...prev,
-                      images: prev.images.filter((i) => i.id !== img.id),
-                    }));
-                  } catch (err) {
-                    console.error("Ошибка при удалении изображения", err);
-                  }
-                }}
-                className="absolute top-0 right-0 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition"
-                title="Удалить"
-              >
-                ×
-              </button>
-            </div>
-          ))}
+          product.images.map((img) => {
+            console.log("Отображаем изображение:", img); // Добавить отладку
+            return (
+              <div key={img.id} className="relative w-16 h-16 group">
+                {img?.image && (
+                  <img
+                    src={img.image}
+                    alt={img.alt_text || ""}
+                    className="w-full h-full object-cover rounded border border-gray-300"
+                    onError={(e) => {
+                      console.error("Ошибка загрузки изображения:", img.image);
+                      e.target.style.display = "none";
+                    }}
+                    onLoad={() => console.log("Изображение загружено:", img.image)}
+                  />
+                )}
+                {/* кнопка удаления */}
+              </div>
+            );
+          })}
       </div>
 
       {/* Форма загрузки */}

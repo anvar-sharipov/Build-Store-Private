@@ -401,10 +401,29 @@ class SalesInvoiceItem(models.Model):
     sale_price = models.DecimalField(max_digits=10, decimal_places=2)
     is_gift = models.BooleanField(default=False, verbose_name="Бесплатный товар")
 
+    purchase_price = models.DecimalField(verbose_name='Цена закупки', max_digits=10, decimal_places=2, default=0)
+    retail_price = models.DecimalField(verbose_name='Розничная цена', max_digits=10, decimal_places=2, default=0)
+    wholesale_price = models.DecimalField(verbose_name='Оптовая цена', max_digits=10, decimal_places=2, default=0)
+
     def get_line_total(self):
         quantity = self.quantity or 0
         sale_price = self.sale_price or 0
         return quantity * sale_price
+    
+    def get_total_purchase(self):
+        quantity = self.quantity or 0
+        purchase_price = self.purchase_price or 0
+        return quantity * purchase_price
+    
+    def get_total_retail(self):
+        quantity = self.quantity or 0
+        retail_price = self.retail_price or 0
+        return quantity * retail_price
+    
+    def get_total_wholesale(self):
+        quantity = self.quantity or 0
+        wholesale_price = self.wholesale_price or 0
+        return quantity * wholesale_price
 
     # def save(self, *args, **kwargs):
     #     created = self.pk is None
@@ -489,15 +508,32 @@ ACCOUNT_TYPES = [
     ('liability', 'Пассив'),
     ('income', 'Доход'),
     ('expense', 'Расход'),
+    ('both', 'Актив и Пассив'),
 ]
 
-
 # Счёт
+# class Account(models.Model):
+#     number = models.CharField(max_length=20, unique=True)       # Пример: '50.1', '90.2'
+#     name = models.CharField(max_length=255)                     # Название: 'Касса в USD'
+#     type = models.CharField(max_length=20, choices=ACCOUNT_TYPES)
+
+#     def __str__(self):
+#         return f"{self.number} {self.name}"
+
 class Account(models.Model):
-    number = models.CharField(max_length=20, unique=True)       # Пример: '50.1', '90.2'
-    name = models.CharField(max_length=255)                     # Название: 'Касса в USD'
-    type = models.CharField(max_length=20, choices=ACCOUNT_TYPES)
-    # currency = models.ForeignKey(Currency, on_delete=models.PROTECT, null=True, blank=True)
+    number = models.CharField(max_length=20, unique=True, help_text="Номер счета, например: '50', '90.2', '60.1'")
+    name = models.CharField(max_length=255, help_text="Название счета, например: 'Касса в USD'")
+    type = models.CharField(max_length=20, choices=ACCOUNT_TYPES, help_text="Тип счета: актив, пассив, доход, расход")
+    description = models.TextField(blank=True, null=True, help_text="Дополнительное описание счета (необязательно)")
+    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='children', help_text="Если счет вложенный, укажите родительский счет")
+    is_active = models.BooleanField(default=True, help_text="Активен ли счет (можно отключить старые счета)")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['number']
+        verbose_name = 'Счёт'
+        verbose_name_plural = 'Счета'
 
     def __str__(self):
         return f"{self.number} {self.name}"
@@ -527,6 +563,12 @@ class Entry(models.Model):
     warehouse = models.ForeignKey('Warehouse', null=True, blank=True, on_delete=models.SET_NULL)
     debit = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), verbose_name='Дебет')
     credit = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), verbose_name='Кредит')
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=["account"]),
+            models.Index(fields=["transaction"]),
+        ]
 
     def __str__(self):
         return f"{self.account.number} | Дебет: {self.debit} | Кредит: {self.credit}"

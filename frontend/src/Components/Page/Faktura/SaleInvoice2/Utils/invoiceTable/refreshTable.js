@@ -114,8 +114,6 @@ const refreshTable = async (values, setFieldValue, warehouse, changedPriceType =
     // Добавляем уникальные подарки из текущего продукта в итоговый массив
     newGifts2.push(...combinedGiftsMap.values());
 
-    console.log("tut2", updatedProducts);
-
     setFieldValue("gifts", newGifts2);
     setFieldValue("products", updatedProducts);
     setFieldValue("footerTotalPrice", footerTotalPrice);
@@ -154,7 +152,6 @@ const refreshTable = async (values, setFieldValue, warehouse, changedPriceType =
           let selected_price = 0;
           if (changedPriceType) {
             if (values.priceType === "wholesale") {
-              console.log("rtrtrt");
 
               footerTotalPrice += product.selected_quantity * product.wholesale_price;
               footerTotalPricePurchae += product.selected_quantity * product.purchase_price;

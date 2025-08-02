@@ -9,7 +9,6 @@ import { useSearchParams } from "react-router-dom";
 import { myClass } from "../../tailwindClasses";
 import { useNavigate } from "react-router-dom";
 
-
 const Faktura = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -32,6 +31,19 @@ const Faktura = () => {
   const [nextPage, setNextPage] = useState(null);
   const [prevPage, setPrevPage] = useState(null);
   const [page, setPage] = useState(1); // текущая страница
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Insert") {
+        e.preventDefault();
+        navigate('/sale-invoices/create');
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [navigate]);
 
   useEffect(() => {
     const fetchInvoices = async () => {
@@ -59,9 +71,8 @@ const Faktura = () => {
         console.error("Ошибка при загрузке накладных", error);
       } finally {
         setLoading(false);
-        
+
         // console.log('invoices', invoices);
-        
       }
     };
 
@@ -129,10 +140,7 @@ const Faktura = () => {
                       } else if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
                         // setOpenEditModal({ open: true, data: item, index });
-                      } else if (
-                        e.key === "ArrowDown" &&
-                        index + 1 < invoices.length
-                      ) {
+                      } else if (e.key === "ArrowDown" && index + 1 < invoices.length) {
                         e.preventDefault();
                         listItemRefs.current[index + 1]?.focus();
                       } else if (e.key === "ArrowUp" && index !== 0) {
@@ -151,9 +159,7 @@ const Faktura = () => {
                       // }
                     }}
                   >
-                    <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">
-                      {index + 1}.
-                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">{index + 1}.</div>
                     <div className="font-medium text-gray-800 dark:text-gray-200 truncate">
                       {invoice.id} {invoice.buyer?.name}
                     </div>
@@ -164,8 +170,7 @@ const Faktura = () => {
                         </span>
                       ) : (
                         <span className="text-red-500 flex items-center gap-1">
-                          <FaTimesCircle className="text-red-500" /> не
-                          проведена
+                          <FaTimesCircle className="text-red-500" /> не проведена
                         </span>
                       )}
                     </div>
@@ -175,18 +180,10 @@ const Faktura = () => {
             </div>
 
             <div className="flex gap-4 mt-4">
-              <button
-                onClick={() => setPage((prev) => prev - 1)}
-                disabled={!prevPage}
-                className="bg-gray-200 dark:bg-gray-700 dark:text-white px-3 py-1 rounded"
-              >
+              <button onClick={() => setPage((prev) => prev - 1)} disabled={!prevPage} className="bg-gray-200 dark:bg-gray-700 dark:text-white px-3 py-1 rounded">
                 ⬅ Назад
               </button>
-              <button
-                onClick={() => setPage((prev) => prev + 1)}
-                disabled={!nextPage}
-                className="bg-blue-500 dark:bg-blue-600 text-white px-3 py-1 rounded"
-              >
+              <button onClick={() => setPage((prev) => prev + 1)} disabled={!nextPage} className="bg-blue-500 dark:bg-blue-600 text-white px-3 py-1 rounded">
                 Вперёд ➡
               </button>
             </div>

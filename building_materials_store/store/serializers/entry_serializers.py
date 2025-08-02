@@ -5,11 +5,32 @@ from .sale_invoice_serializers import *
 
 
 
-class AccountSerializer(serializers.ModelSerializer):
+# class AccountSerializer(serializers.ModelSerializer):
 
+#     class Meta:
+#         model = Account
+#         fields = ['id', 'number', 'name', 'type']
+
+
+
+class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
-        fields = ['id', 'number', 'name', 'type']
+        fields = ['id', 'number', 'name', 'type', 'description', 'parent', 'is_active', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
+
+    def validate_number(self, value):
+        import re
+        if not re.match(r'^\d+(\.\d+)*$', value):
+            raise serializers.ValidationError("Номер счета должен содержать только цифры и точки, например '50' или '90.2'")
+        return value
+
+    def validate_type(self, value):
+        valid_types = [choice[0] for choice in Account.ACCOUNT_TYPES] if hasattr(Account, 'ACCOUNT_TYPES') else ['asset', 'liability', 'income', 'expense', 'both']
+        if value not in valid_types:
+            raise serializers.ValidationError("Недопустимый тип счета.")
+        return value
+
 
 
 # dlya wywoda date w EntrySerializer

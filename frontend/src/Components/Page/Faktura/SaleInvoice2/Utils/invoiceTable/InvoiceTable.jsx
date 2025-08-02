@@ -7,7 +7,7 @@ import TDProducts from "./TDProducts";
 import TDGifts from "./TDGifts";
 
 
-const InvoiceTable = ({ showNotification, productListRefs, productQuantityRefs, productPriceRefs, productInputRef, visibleColumns, printVisibleColumns }) => {
+const InvoiceTable = ({ showNotification, productListRefs, productQuantityRefs, productPriceRefs, productInputRef, visibleColumns, printVisibleColumns, id }) => {
   const { t } = useTranslation();
   const { values, setFieldValue, validateField, setFieldTouched, errors } = useFormikContext();
   const handleDeleteProduct = (id) => {
@@ -23,7 +23,7 @@ const InvoiceTable = ({ showNotification, productListRefs, productQuantityRefs, 
   };
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto print:mt-3">
       {values.products.length > 0 && (
         <table className="w-full border-collapse bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 print:text-sm print:leading-tight print:!text-black">
           <THead visibleColumns={visibleColumns} printVisibleColumns={printVisibleColumns} />
@@ -37,6 +37,7 @@ const InvoiceTable = ({ showNotification, productListRefs, productQuantityRefs, 
               productListRefs={productListRefs}
               productInputRef={productInputRef}
               productPriceRefs={productPriceRefs}
+              id={id}
             />
 
             <TDGifts
@@ -49,6 +50,7 @@ const InvoiceTable = ({ showNotification, productListRefs, productQuantityRefs, 
               productInputRef={productInputRef}
               productPriceRefs={productPriceRefs}
               handleDeleteGift={handleDeleteGift}
+              id={id}
             />
 
             

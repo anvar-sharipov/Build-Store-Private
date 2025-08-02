@@ -4,13 +4,7 @@ import Fuse from "fuse.js";
 import { useTranslation } from "react-i18next";
 import { useFormikContext } from "formik";
 
-const SearchPartner = ({
-  partnerInputRef,
-  awtoInputRef,
-  productInputRef,
-  warehouseInputRef,
-  fetchs,
-}) => {
+const SearchPartner = ({ partnerInputRef, awtoInputRef, productInputRef, warehouseInputRef, fetchs }) => {
   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
   const [list, setList] = useState([]);
   const listRefs = useRef([]);
@@ -30,10 +24,7 @@ const SearchPartner = ({
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        partnerInputRef.current &&
-        !partnerInputRef.current.contains(event.target)
-      ) {
+      if (partnerInputRef.current && !partnerInputRef.current.contains(event.target)) {
         setList([]); // скрыть список
       }
     };
@@ -70,49 +61,50 @@ const SearchPartner = ({
   }, [list]);
 
   return (
-    <div className="relative w-full mt-2">
+    <div className="relative w-full mt-2 print:mt-0">
       {showSearchInput ? (
         <div>
-          <MySearchInput
-            type="text"
-            ref={partnerInputRef}
-            name="partner_name"
-            placeholder={t("partner")}
-            autoComplete="off"
-            value={values.partner?.name || ""}
-            onKeyDown={(e) => {
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-                if (list.length > 0) {
-                  listRefs.current[0]?.focus();
-                } else {
-                  productInputRef.current?.focus();
+          {!values.disabled && (
+            <MySearchInput
+              type="text"
+              ref={partnerInputRef}
+              name="partner_name"
+              placeholder={t("partner")}
+              autoComplete="off"
+              value={values.partner?.name || ""}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  if (list.length > 0) {
+                    listRefs.current[0]?.focus();
+                  } else {
+                    productInputRef.current?.focus();
+                  }
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  awtoInputRef.current?.focus();
                 }
-              } else if (e.key === "ArrowUp") {
-                e.preventDefault();
-                awtoInputRef.current?.focus();
-              }
-            }}
-            onChange={(e) => {
-              const value = e.target.value;
-              setFieldValue("partner", { id: null, name: value });
+              }}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFieldValue("partner", { id: null, name: value });
 
-              if (value.trim() === "") {
-                setList([]);
-                return;
-              }
-              const results = fuse.search(value).slice(0, 20).map((res) => res.item);
-              setList(results);
-            }}
-            onBlur={handleBlur}
-            className="border px-2 py-1 rounded-md print:hidden"
-          />
-
-          {touched.partner && errors.partner && (
-            <div className="text-red-500 text-sm print:hidden">
-              {errors.partner}
-            </div>
+                if (value.trim() === "") {
+                  setList([]);
+                  return;
+                }
+                const results = fuse
+                  .search(value)
+                  .slice(0, 20)
+                  .map((res) => res.item);
+                setList(results);
+              }}
+              onBlur={handleBlur}
+              className="border px-2 py-1 rounded-md print:hidden"
+            />
           )}
+
+          {touched.partner && errors.partner && <div className="text-red-500 text-sm print:hidden">{errors.partner}</div>}
 
           {list.length > 0 && (
             <ul className="absolute left-0 right-0 bg-white dark:bg-gray-800 border rounded shadow-md z-20">
@@ -133,9 +125,9 @@ const SearchPartner = ({
                       }
                     } else if (e.key === "ArrowDown") {
                       e.preventDefault();
-                        if (index + 1 < list.length) {
-                          listRefs.current[index + 1]?.focus();
-                        }
+                      if (index + 1 < list.length) {
+                        listRefs.current[index + 1]?.focus();
+                      }
                     } else if (e.key === "Enter") {
                       e.preventDefault();
                       handleSelectItem(item);
@@ -154,13 +146,11 @@ const SearchPartner = ({
           <span>
             {t("partner")}: {values.partner?.name}
           </span>
-          <button
-            type="button"
-            onClick={handleClearSelection}
-            className="text-red-500 text-sm hover:underline print:hidden"
-          >
-            ✕
-          </button>
+          {!values.disabled && (
+            <button type="button" onClick={handleClearSelection} className="text-red-500 text-sm hover:underline print:hidden">
+              ✕
+            </button>
+          )}
         </div>
       )}
     </div>

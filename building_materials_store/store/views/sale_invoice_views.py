@@ -85,6 +85,8 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
     
     def create(self, request, *args, **kwargs):
         
+        
+       
         try:
             with transaction.atomic():
                 data = request.data  # вот здесь JSON из React
@@ -95,12 +97,25 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                 type_price = data['priceType']
                 
                 invoice_date_str = data.get('invoice_date')
-                invoice_date = None
+                # if invoice_date_str:
+                #     # invoice_date = datetime.strptime(invoice_date_str, '%Y-%m-%d')
+                #     date_part = datetime.strptime(invoice_date_str, '%Y-%m-%d').date()
+                #     time_part = datetime.now().time()
+                #     invoice_date = datetime.combine(date_part, time_part)
+                
                 if invoice_date_str:
-                    # invoice_date = datetime.strptime(invoice_date_str, '%Y-%m-%d')
-                    date_part = datetime.strptime(invoice_date_str, '%Y-%m-%d').date()
-                    time_part = datetime.now().time()
-                    invoice_date = datetime.combine(date_part, time_part)
+                    try:
+                        date_part = datetime.strptime(invoice_date_str, '%Y-%m-%d').date()
+                        time_part = datetime.now().time()
+                        invoice_date = datetime.combine(date_part, time_part)
+                    except ValueError:
+                        return Response({'detail': 'errorDate'}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    return Response({'detail': 'errorDate'}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    
+                    
+                # ic(data)
                     
                 # ic(data)
 
@@ -129,8 +144,6 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     if not delivered_by:
                         return Response({'detail': 'chooseAwto'}, status=status.HTTP_400_BAD_REQUEST)
 
-                test = SalesInvoice.objects.get(pk=62)
-                ic(test.buyer)
                 invoice = SalesInvoice.objects.create(
                     buyer=partner,
                     created_by=created_by,
@@ -152,13 +165,30 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     quantity = Decimal(product['selected_quantity'])
                     sale_price = Decimal(product['selected_price'])
 
+                    
+                    if withPosting:
+                        purchase_price = product['purchase_price']
+                        retail_price = product['retail_price']
+                        wholesale_price = product['wholesale_price']
+                        # ic('purchase_price', purchase_price)
+                        # ic('product.purchase_price', product.purchase_price)
 
-                    SalesInvoiceItem.objects.create(
-                        invoice=invoice,
-                        product=product_obj,
-                        quantity=quantity,
-                        sale_price=sale_price
-                    )
+                        SalesInvoiceItem.objects.create(
+                            invoice=invoice,
+                            product=product_obj,
+                            quantity=quantity,
+                            sale_price=sale_price,
+                            purchase_price=purchase_price,
+                            retail_price=retail_price,
+                            wholesale_price=wholesale_price,
+                        )
+                    else:
+                        SalesInvoiceItem.objects.create(
+                            invoice=invoice,
+                            product=product_obj,
+                            quantity=quantity,
+                            sale_price=sale_price
+                        )
 
                 # ic(data['gifts'])
 
@@ -169,7 +199,8 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     quantity = Decimal(product['selected_quantity'])
                     sale_price = 0
 
-
+               
+      
                     SalesInvoiceItem.objects.create(
                         invoice=invoice,
                         product=product_obj,
@@ -179,7 +210,7 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     )
                 serializer = self.get_serializer(invoice)
                 # return Response(serializer.data, status=status.HTTP_201_CREATED)
-                return Response({'detail': 'successSave'}, status=status.HTTP_201_CREATED)
+                return Response({'detail': 'successSave', "invoice_id": invoice.id}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({'detail': 'transactionChange'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -187,32 +218,53 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
         try:
             with transaction.atomic():
                 data = request.data
-                
+                withPosting = data['withPosting']
+  
                 invoice_id = self.kwargs.get('pk')
                 invoice = SalesInvoice.objects.get(pk=invoice_id)
-
+                
                 invoice.total_amount = Decimal(data['footerTotalPrice'])
                 invoice.note = data['comment']
                 invoice.type_price = data['priceType']
                 invoice.isEntry = data['withPosting']
 
+
+                # invoice_date_str = data.get('invoice_date')
+                # if invoice_date_str:
+                #     date_part = datetime.strptime(invoice_date_str, '%Y-%m-%d').date()
+                #     time_part = datetime.now().time()
+                #     invoice.invoice_date = datetime.combine(date_part, time_part)
+                
                 invoice_date_str = data.get('invoice_date')
+                
                 if invoice_date_str:
-                    date_part = datetime.strptime(invoice_date_str, '%Y-%m-%d').date()
-                    time_part = datetime.now().time()
-                    invoice.invoice_date = datetime.combine(date_part, time_part)
+                    try:
+                        date_part = datetime.strptime(invoice_date_str, '%Y-%m-%d').date()
+                        time_part = datetime.now().time()
+                        invoice_date = datetime.combine(date_part, time_part)
+                    except ValueError:
+                        return Response({'detail': 'errorDate'}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    return Response({'detail': 'errorDate'}, status=status.HTTP_400_BAD_REQUEST)
+                
+                invoice.invoice_date = invoice_date
+                
 
                 try:
                     partner = Partner.objects.get(pk=data['partner']['id'])
                     invoice.buyer = partner
                 except:
                     invoice.buyer = None
+                    if withPosting:
+                        return Response({'detail': 'chooseClient'}, status=status.HTTP_400_BAD_REQUEST)
 
                 try:
                     delivered_by = Employee.objects.get(pk=data['awto']['id'])
                     invoice.delivered_by = delivered_by
                 except:
                     invoice.delivered_by = None
+                    if withPosting:
+                        return Response({'detail': 'chooseAwto'}, status=status.HTTP_400_BAD_REQUEST)
 
                 warehouse_id = data.get('warehouses', {}).get('id')
                 if not warehouse_id:
@@ -231,19 +283,37 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     quantity = Decimal(product['selected_quantity'])
                     sale_price = Decimal(product['selected_price'])
 
-                    SalesInvoiceItem.objects.create(
-                        invoice=invoice,
-                        product=product_obj,
-                        quantity=quantity,
-                        sale_price=sale_price
-                    )
+                    
+                    if withPosting:
+                        ic(product)
+                        purchase_price = product['purchase_price']
+                        retail_price = product['retail_price']
+                        wholesale_price = product['wholesale_price']
+                        SalesInvoiceItem.objects.create(
+                            invoice=invoice,
+                            product=product_obj,
+                            quantity=quantity,
+                            sale_price=sale_price,
+                            purchase_price=purchase_price,
+                            retail_price=retail_price,
+                            wholesale_price=wholesale_price,
+                        )
+                    else:
+                        SalesInvoiceItem.objects.create(
+                            invoice=invoice,
+                            product=product_obj,
+                            quantity=quantity,
+                            sale_price=sale_price
+                        )
 
                 # Подарки
-                ic(data)
+                # ic(data)
                 for product in data['gifts']:
                     product_id = product['id']
                     product_obj = Product.objects.get(pk=product_id)
                     quantity = Decimal(product['selected_quantity'])
+
+
 
                     SalesInvoiceItem.objects.create(
                         invoice=invoice,

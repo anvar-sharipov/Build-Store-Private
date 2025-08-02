@@ -1,4 +1,6 @@
-const THead = ({visibleColumns, printVisibleColumns}) => {
+import { useFormikContext } from "formik";
+const THead = ({ visibleColumns, printVisibleColumns }) => {
+  const { values } = useFormikContext();
   const th1 =
     "px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 tracking-wider text-center border border-gray-300 dark:border-gray-600 print:pl-1 print:py-0.5 print:text-[12px] print:!text-black";
   return (
@@ -31,7 +33,7 @@ const THead = ({visibleColumns, printVisibleColumns}) => {
         <th className={`${th1} ${visibleColumns.dimensions ? "table-cell" : "hidden"} ${printVisibleColumns.dimensions ? "print:table-cell" : "print:hidden"}`}>Ширина (см)</th>
         <th className={`${th1} ${visibleColumns.dimensions ? "table-cell" : "hidden"} ${printVisibleColumns.dimensions ? "print:table-cell" : "print:hidden"}`}>Высота (см)</th>
 
-        <th className={`${th1} print:hidden`}>X</th>
+        {!values.disabled && <th className={`${th1} print:hidden`}>X</th>}
       </tr>
     </thead>
   );

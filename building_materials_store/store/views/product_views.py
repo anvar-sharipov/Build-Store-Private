@@ -9,6 +9,8 @@ import time
 # from collections import OrderedDict
 # from collections import defaultdict
 from icecream import ic
+import os
+from django.conf import settings
 
 
 from rest_framework import viewsets
@@ -44,6 +46,7 @@ from django.db.models import F, Count
 from rest_framework.exceptions import PermissionDenied
 # from django.db import transaction
 # from datetime import datetime
+from rest_framework.parsers import MultiPartParser, FormParser
 
 # from rest_framework.pagination import PageNumberPagination
 
@@ -58,10 +61,37 @@ class ProductUnitViewSet(viewsets.ModelViewSet):
 
 
 
+# class ProductImageViewSet(viewsets.ModelViewSet):
+#     queryset = ProductImage.objects.all()
+#     serializer_class = ProductImageSerializer
+#     permission_classes = [IsAuthenticated]  
+#     parser_classes = [MultiPartParser, FormParser]
+
+
 class ProductImageViewSet(viewsets.ModelViewSet):
     queryset = ProductImage.objects.all()
     serializer_class = ProductImageSerializer
     permission_classes = [IsAuthenticated]  
+    parser_classes = [MultiPartParser, FormParser]
+    
+    def create(self, request, *args, **kwargs):
+        print("=== VIEWSET CREATE DEBUG ===")
+        print("Request data keys:", list(request.data.keys()))
+        print("Request FILES keys:", list(request.FILES.keys()))
+        print("Product ID:", request.data.get('product'))
+        print("Alt text:", request.data.get('alt_text'))
+        if 'image' in request.FILES:
+            image = request.FILES['image']
+            print("Image file:", image.name, image.size, image.content_type)
+        print("MEDIA_ROOT exists:", os.path.exists(settings.MEDIA_ROOT))
+        print("MEDIA_ROOT path:", settings.MEDIA_ROOT)
+        print("=== END VIEWSET DEBUG ===")
+        
+        response = super().create(request, *args, **kwargs)
+        print("=== RESPONSE DEBUG ===")
+        print("Response data:", response.data)
+        print("=== END RESPONSE DEBUG ===")
+        return response
 
 
 # dlya poiska producta for free add

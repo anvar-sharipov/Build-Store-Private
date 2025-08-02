@@ -330,7 +330,8 @@
   "comment": "Комментарий (необязательно)", 
   "withPosting": "с проводкой",
   "transactionChange": "Откат записи",
-  "successSave": "Успешно сохранён"
+  "successSave": "Успешно сохранён",
+  "errorDate": "Некорректный формат даты"
 
 
 

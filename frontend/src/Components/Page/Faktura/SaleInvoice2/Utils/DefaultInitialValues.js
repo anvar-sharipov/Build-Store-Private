@@ -8,6 +8,9 @@ import * as Yup from "yup";
 
 const defaultInitialValues = (fetchs, data) => {
   if (data) {
+    console.log('data', data);
+    
+
     let footerTotalPricePurchae = 0;
     let footerTotalPriceProfit = 0;
     let footerTotalPriceDiscount = 0;
@@ -18,13 +21,25 @@ const defaultInitialValues = (fetchs, data) => {
     let footerTotalWidth = 0;
     let footerTotalHeight = 0;
 
+    let disabled = false;
+    if (data.isEntry) {
+      disabled = true;
+    }
+
     const products = data.items
       .filter((item) => !item.is_gift)
       .map((item) => {
         const product = item.product;
-        console.log("item", item);
 
-        footerTotalPricePurchae += item.quantity * product.purchase_price;
+        if (data.isEntry) {
+          footerTotalPricePurchae += item.quantity * item.purchase_price;
+          footerTotalPriceProfit += item.quantity * item.sale_price - item.quantity * item.purchase_price;
+          footerTotalPriceDiscount += item.quantity * item.sale_price - item.quantity * item.wholesale_price;
+        } else {
+          footerTotalPricePurchae += item.quantity * product.purchase_price;
+          footerTotalPriceProfit += item.quantity * item.sale_price - item.quantity * product.purchase_price;
+          footerTotalPriceDiscount += item.quantity * item.sale_price - item.quantity * product.wholesale_price;
+        }
 
         footerTotalVolume += item.quantity * product.volume;
         footerTotalWeight += item.quantity * product.weight;
@@ -32,8 +47,6 @@ const defaultInitialValues = (fetchs, data) => {
         footerTotalWidth += item.quantity * product.width;
         footerTotalHeight += item.quantity * product.height;
 
-        footerTotalPriceProfit += item.quantity * item.sale_price - item.quantity * product.purchase_price;
-        footerTotalPriceDiscount += item.quantity * item.sale_price - item.quantity * product.wholesale_price;
         let unit_name_on_selected_warehouses = product.base_unit_obj.name;
         const units = product.units;
         if (units.length > 0) {
@@ -43,15 +56,26 @@ const defaultInitialValues = (fetchs, data) => {
             }
           });
         }
-        // console.log('update product', product);
-        return {
-          ...product,
-          selected_quantity: item.quantity,
-          selected_price: item.sale_price,
-          unit_name_on_selected_warehouses: unit_name_on_selected_warehouses,
-        };
+        if (data.isEntry) {
+
+          return {
+            ...product,
+            selected_quantity: item.quantity,
+            selected_price: item.sale_price,
+            purchase_price: item.purchase_price,
+            wholesale_price: item.wholesale_price,
+            retail_price: item.retail_price,
+            unit_name_on_selected_warehouses: unit_name_on_selected_warehouses,
+          };
+        } else {
+          return {
+            ...product,
+            selected_quantity: item.quantity,
+            selected_price: item.sale_price,
+            unit_name_on_selected_warehouses: unit_name_on_selected_warehouses,
+          };
+        }
       });
-    // console.log('update products', products);
 
     const gifts = data.items
       .filter((product) => product.is_gift)
@@ -80,7 +104,6 @@ const defaultInitialValues = (fetchs, data) => {
           unit_name_on_selected_warehouses: unit_name_on_selected_warehouses,
         };
       });
-    console.log("footerTotalPricePurchae", footerTotalPricePurchae);
 
     return {
       invoice_date: new Date(data.invoice_date).toISOString().slice(0, 10),
@@ -94,6 +117,7 @@ const defaultInitialValues = (fetchs, data) => {
       gifts: gifts,
       footerTotalPrice: data.total_amount,
       withPosting: data.isEntry,
+      disabled: disabled,
       comment: data.note,
       footerTotalPricePurchae: footerTotalPricePurchae,
       footerTotalPriceProfit: footerTotalPriceProfit,
@@ -103,6 +127,7 @@ const defaultInitialValues = (fetchs, data) => {
       footerTotalLength: footerTotalLength,
       footerTotalWidth: footerTotalWidth,
       footerTotalHeight: footerTotalHeight,
+      invoice_id: data.id,
       priceType: (() => {
         try {
           localStorage.setItem("priceType", JSON.stringify(data.type_price));
@@ -113,7 +138,6 @@ const defaultInitialValues = (fetchs, data) => {
       })(),
     };
   } else {
-    // console.log('bez data fetchsAllWarehouses[0]', fetchs.AllWarehouses[0]);
 
     return {
       invoice_date: new Date().toISOString().slice(0, 10),
@@ -126,7 +150,9 @@ const defaultInitialValues = (fetchs, data) => {
       products: [],
       gifts: [],
       withPosting: false,
+      disabled: false,
       comment: "",
+      invoice_id: false,
       priceType: (() => {
         try {
           const saved = localStorage.getItem("priceType");

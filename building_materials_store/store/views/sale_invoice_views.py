@@ -285,7 +285,7 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
 
                     
                     if withPosting:
-                        ic(product)
+                        # ic(product)
                         purchase_price = product['purchase_price']
                         retail_price = product['retail_price']
                         wholesale_price = product['wholesale_price']
@@ -322,6 +322,54 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                         sale_price=0,
                         is_gift=True
                     )
+                if withPosting:
+                    ic('tut')
+                    transaction_obj = Transaction.objects.create(
+                        description=data['comment'],
+                        invoice=invoice,
+                        partner=partner
+                    )
+
+                    # Счёт "62" – Покупатели
+                    if not Account.objects.filter(number='62').exists():
+                        return Response({'detail': 'createAccount62'}, status=status.HTTP_400_BAD_REQUEST)
+                    account_62 = Account.objects.get(number='62')
+
+                    # Счёт "90" – Выручка (если нет – можно тоже проверить)
+                    if not Account.objects.filter(number='90').exists():
+                        return Response({'detail': 'createAccount90'}, status=status.HTTP_400_BAD_REQUEST)
+                    account_90 = Account.objects.get(number='90')
+
+                    warehouse = Warehouse.objects.get(pk=warehouse_id)
+
+                    for product in data['products']:
+                        product_id = product['id']
+                        product_obj = Product.objects.get(pk=product_id)
+                        quantity = Decimal(product['selected_quantity'])
+                        sale_price = Decimal(product['selected_price'])
+                        total_amount = quantity * sale_price
+
+                        # Дебет 62 – Покупатель должен нам
+                        Entry.objects.create(
+                            transaction=transaction_obj,
+                            account=account_62,
+                            product=product_obj,
+                            warehouse=warehouse,
+                            debit=total_amount,
+                            credit=Decimal('0.00')
+                        )
+
+                        # Кредит 90 – Выручка
+                        Entry.objects.create(
+                            transaction=transaction_obj,
+                            account=account_90,
+                            product=product_obj,
+                            warehouse=warehouse,
+                            debit=Decimal('0.00'),
+                            credit=total_amount
+                        )
+                    
+                    # 1/0
 
                 return Response({'detail': 'successSave'}, status=status.HTTP_200_OK)
         except Exception as e:

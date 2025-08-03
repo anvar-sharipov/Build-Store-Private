@@ -3,6 +3,7 @@ import MySearchInput from "../../../../UI/MySearchInput";
 import Fuse from "fuse.js";
 import { useTranslation } from "react-i18next";
 import { useFormikContext } from "formik";
+import myAxios from "../../../../axios";
 
 const SearchPartner = ({ partnerInputRef, awtoInputRef, productInputRef, warehouseInputRef, fetchs }) => {
   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
@@ -40,8 +41,17 @@ const SearchPartner = ({ partnerInputRef, awtoInputRef, productInputRef, warehou
     setShowSearchInput(!values.partner?.id);
   }, [values.partner?.id]);
 
+ 
   const handleSelectItem = (item) => {
-    setFieldValue("partner", { id: item.id, name: item.name });
+    console.log('balance_on_date', item.balance_on_date);
+    console.log('today_sales', item.today_sales);
+    console.log('final_balance', item.final_balance);
+
+
+
+
+    
+    setFieldValue("partner", { ...item, id: item.id, name: item.name });
     setList([]);
     setShowSearchInput(false); // скрыть поиск после выбора
   };

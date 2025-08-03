@@ -19,7 +19,6 @@ import PrintVisibleHideInputs from "./Utils/PrintVisibleHideInputs";
 import { Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-
 const userVisibleColumns = {
   qr_code: false,
   image: true,
@@ -226,6 +225,73 @@ const MainPage = () => {
                 {values.awto && Object.keys(values.awto).length > 0 && (
                   <div className="hidden print:block mt-2">
                     {t("delivers")}: {values.awto?.name}
+                  </div>
+                )}
+
+                {/* {values.partner?.id > 0 && (
+                  <div className="mt-4 p-4 bg-gray-100 rounded-xl shadow">
+                    <h2 className="text-lg font-semibold mb-2 text-gray-700">Финансовая информация</h2>
+                    <div className="space-y-1 text-sm text-gray-600">
+                      <div className="flex justify-between">
+                        <span>Сальдо на начало дня:</span>
+                        <span className="font-medium text-gray-800">{values.partner.balance_on_date} сум</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Оборот за сегодня:</span>
+                        <span className="font-medium text-gray-800">{values.partner.today_sales} сум</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Конечное сальдо:</span>
+                        <span className="font-semibold text-blue-700">{values.partner.final_balance} сум</span>
+                      </div>
+                    </div>
+                  </div>
+                )} */}
+                {/* dlya pokaza i debet i kredet toje */}
+                {values.partner?.id > 0 && (
+                  <div className="mt-4 p-4 bg-white rounded-xl shadow text-sm text-gray-700 space-y-2">
+                    <h2 className="text-lg font-semibold text-gray-800">Финансовые показатели</h2>
+
+                    <div className="flex justify-between">
+                      <span>Сальдо на начало дня:</span>
+                      <span>{values.partner.balance_on_date} сум</span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span>Оборот за сегодня:</span>
+                      <span>{values.partner.today_sales} сум</span>
+                    </div>
+
+                    <div className="flex justify-between font-semibold text-blue-700">
+                      <span>Конечное сальдо:</span>
+                      <span>{values.partner.final_balance} сум</span>
+                    </div>
+
+                    <hr className="my-2" />
+
+                    <div className="flex justify-between">
+                      <span>Всего дебет:</span>
+                      <span>{values.partner.debit_total} сум</span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span>Всего кредит:</span>
+                      <span>{values.partner.credit_total} сум</span>
+                    </div>
+
+                    <hr className="my-2" />
+
+                    <h3 className="text-md font-semibold text-gray-700 mt-2">Проводка по счёту 62:</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="bg-gray-100 p-2 rounded">
+                        <div className="text-gray-600">Дебет 62:</div>
+                        <div className="font-semibold text-green-700">{values.partner.account_62_debit} сум</div>
+                      </div>
+                      <div className="bg-gray-100 p-2 rounded">
+                        <div className="text-gray-600">Кредит 62:</div>
+                        <div className="font-semibold text-red-700">{values.partner.account_62_credit} сум</div>
+                      </div>
+                    </div>
                   </div>
                 )}
 

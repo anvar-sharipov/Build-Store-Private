@@ -32,6 +32,7 @@ export function useLoadOptions() {
         }
         if (AllPartners) {
           const formatted = AllPartners.map((v) => ({
+            ...v,
             id: String(v.id),
             name: v.name,
             type: v.type,

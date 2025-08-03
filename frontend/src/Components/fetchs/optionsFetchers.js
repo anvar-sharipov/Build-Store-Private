@@ -67,6 +67,8 @@ export const fetchWarehouses = async () => {
 export const fetchPartners = async () => {
   try {
     const res = await myAxios.get("/partners");
+    console.log('rrrreeeessss.data', res.data);
+    
     return res.data;
   } catch (e) {
     console.error("Ошибка при загрузке partners:", e);

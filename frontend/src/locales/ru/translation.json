@@ -331,7 +331,9 @@
   "withPosting": "с проводкой",
   "transactionChange": "Откат записи",
   "successSave": "Успешно сохранён",
-  "errorDate": "Некорректный формат даты"
+  "errorDate": "Некорректный формат даты",
+  "createAccount62": "Создайте счет 62",
+  "createAccount90": "Создайте счет 90"
 
 
 

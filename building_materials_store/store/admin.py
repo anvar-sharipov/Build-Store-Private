@@ -362,3 +362,27 @@ class EntryAdmin(admin.ModelAdmin):
         'warehouse__name',
     )
     autocomplete_fields = ['transaction', 'account', 'product', 'warehouse']
+    
+    
+    
+# @admin.register(Transaction)
+# class TransactionAdmin(admin.ModelAdmin):
+#     list_display = ('date', 'partner_name', 'short_description', 'invoice_link')
+#     list_filter = ('date', 'partner')
+#     search_fields = ('description', 'partner__name', 'invoice__number')
+#     date_hierarchy = 'date'
+#     ordering = ('-date',)
+
+#     def short_description(self, obj):
+#         return (obj.description[:75] + '...') if len(obj.description) > 75 else obj.description
+#     short_description.short_description = 'Описание'
+
+#     def partner_name(self, obj):
+#         return obj.partner.name if obj.partner else '—'
+#     partner_name.short_description = 'Партнер'
+
+#     def invoice_link(self, obj):
+#         if obj.invoice:
+#             return f"Счет №{obj.invoice.number}"
+#         return '—'
+#     invoice_link.short_description = 'Счет'

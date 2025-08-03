@@ -70,27 +70,27 @@ class TransactionSerializer(serializers.ModelSerializer):
         fields = ['id', 'date', 'description', 'invoice', 'partner', 'entries', 'invoice_obj']
 
 
-class EntryWriteSerializer(serializers.ModelSerializer):
-    account_id = serializers.PrimaryKeyRelatedField(
-        queryset=Account.objects.all(), source='account'
-    )
+# class EntryWriteSerializer(serializers.ModelSerializer):
+#     account_id = serializers.PrimaryKeyRelatedField(
+#         queryset=Account.objects.all(), source='account'
+#     )
 
-    class Meta:
-        model = Entry
-        fields = ['account_id', 'debit', 'credit']
+#     class Meta:
+#         model = Entry
+#         fields = ['account_id', 'debit', 'credit']
 
 
-class TransactionWriteSerializer(serializers.ModelSerializer):
-    entries = EntryWriteSerializer(many=True)
+# class TransactionWriteSerializer(serializers.ModelSerializer):
+#     entries = EntryWriteSerializer(many=True)
 
-    class Meta:
-        model = Transaction
-        fields = ['description', 'partner', 'entries']
+#     class Meta:
+#         model = Transaction
+#         fields = ['description', 'partner', 'entries']
 
-    def create(self, validated_data):
-        entries_data = validated_data.pop('entries')
-        transaction = Transaction.objects.create(**validated_data)
-        for entry_data in entries_data:
-            Entry.objects.create(transaction=transaction, **entry_data)
-        return transaction
+#     def create(self, validated_data):
+#         entries_data = validated_data.pop('entries')
+#         transaction = Transaction.objects.create(**validated_data)
+#         for entry_data in entries_data:
+#             Entry.objects.create(transaction=transaction, **entry_data)
+#         return transaction
     

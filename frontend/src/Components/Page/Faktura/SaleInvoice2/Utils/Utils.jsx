@@ -107,7 +107,7 @@ function Button({ productInputRef }) {
                 type="checkbox"
                 id="withPosting"
                 name="withPosting"
-                disabled={values.disabled}
+                disabled={values.disabled || !values.partner?.id || !values.awto?.id}
                 checked={values.withPosting}
                 onChange={(e) => setFieldValue("withPosting", e.target.checked)}
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500

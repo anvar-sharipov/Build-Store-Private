@@ -14,9 +14,10 @@ from .sale_invoice_serializers import *
 
 
 class AccountSerializer(serializers.ModelSerializer):
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
     class Meta:
         model = Account
-        fields = ['id', 'number', 'name', 'type', 'description', 'parent', 'is_active', 'created_at', 'updated_at']
+        fields = ['id', 'number', 'name', 'type', 'description', 'parent', 'is_active', 'created_at', 'updated_at', 'type_display']
         read_only_fields = ['created_at', 'updated_at']
 
     def validate_number(self, value):

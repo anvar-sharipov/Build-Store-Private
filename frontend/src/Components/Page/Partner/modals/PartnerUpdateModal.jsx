@@ -31,13 +31,14 @@ const PartnerUpdateModal = ({
   updatePartner,
   refUpdateSaveButton,
   loadingEdit,
+  // accounts,
+  // selectedAccount,
+  // setSelectedAccount,
+  // accountUpdateInputRef,
 }) => {
   const [filteredAgents, setFilteredAgents] = useState([]);
   const agentItemRefs = useRef([]);
   const agentInputRef = useRef();
-
-  
-  
 
   // ckryt li podskazki esli kliknut w drugoe mesto
   const wrapperRef = useRef();
@@ -59,11 +60,7 @@ const PartnerUpdateModal = ({
       // Подождём чуть-чуть, чтобы учесть переход фокуса на элемент списка
       setTimeout(() => {
         const active = document.activeElement;
-        if (
-          agentInputRef.current &&
-          !agentInputRef.current.contains(active) &&
-          !agentItemRefs.current.some((ref) => ref === active)
-        ) {
+        if (agentInputRef.current && !agentInputRef.current.contains(active) && !agentItemRefs.current.some((ref) => ref === active)) {
           setShowAgentDropdown(false);
         }
       }, 100); // 100 мс — оптимально
@@ -84,9 +81,7 @@ const PartnerUpdateModal = ({
       setFilteredAgents([]);
       return;
     }
-    const matches = agentList.filter((agent) =>
-      agent.name.toLowerCase().includes(editAgent.toLowerCase())
-    );
+    const matches = agentList.filter((agent) => agent.name.toLowerCase().includes(editAgent.toLowerCase()));
     setFilteredAgents(matches);
   }, [editAgent, agentList]);
 
@@ -138,18 +133,13 @@ const PartnerUpdateModal = ({
                 <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-900 dark:from-white dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent">
                   {t("change")}
                 </h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  {t("changeInfoAboutPartner")}
-                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t("changeInfoAboutPartner")}</p>
               </div>
             </div>
 
             {loadingEdit && (
               <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full p-3 shadow-lg">
-                <MyLoading
-                  containerClass="h-8"
-                  spinnerClass="w-6 h-6 text-blue-500"
-                />
+                <MyLoading containerClass="h-8" spinnerClass="w-6 h-6 text-blue-500" />
               </div>
             )}
           </div>
@@ -169,7 +159,12 @@ const PartnerUpdateModal = ({
                   onChange={(e) => setEditName(e.target.value)}
                   placeholder={t("enterPartnerName")}
                   className="w-full pl-4 pr-4 py-3 text-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-2 border-gray-200/50 dark:border-gray-600/50 rounded-xl focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-all duration-300 shadow-sm hover:shadow-md focus:shadow-lg"
-                  onKeyDown={handleEditKeyDown}
+                  onKeyDown={(e) => {
+                    if (e.key == "ArrowDown") {
+                      e.preventDefault();
+                      editBalanceInputRef.current.focus();
+                    }
+                  }}
                 />
                 {editName && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -194,7 +189,16 @@ const PartnerUpdateModal = ({
                   onChange={(e) => setEditBalance(e.target.value)}
                   placeholder={t("enterPartnerBalance")}
                   className="w-full pl-4 pr-4 py-3 text-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-2 border-gray-200/50 dark:border-gray-600/50 rounded-xl focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-all duration-300 shadow-sm hover:shadow-md focus:shadow-lg"
-                  onKeyDown={handleEditKeyDown}
+                  onKeyDown={(e) => {
+                    if (e.key == "ArrowDown") {
+                      e.preventDefault();
+                      // accountUpdateInputRef.current.focus();\
+                      refUpdateRadioInput.current["supplier"]?.focus();
+                    } else if (e.key == "ArrowUp") {
+                      e.preventDefault();
+                      editInputRef.current.focus();
+                    }
+                  }}
                 />
                 {editName && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -203,6 +207,26 @@ const PartnerUpdateModal = ({
                 )}
               </div>
             </div>
+
+            {/* accountList */}
+            {/* <div className="mb-4">
+              <label htmlFor="account-select" className="block text-sm font-medium text-gray-700 mb-1">
+                Выберите счёт:
+              </label>
+              <select
+                id="account-select"
+                ref={accountUpdateInputRef}
+                value={selectedAccount}
+                onChange={(e) => setSelectedAccount(e.target.value)}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 bg-white"
+              >
+                {accounts.map((acc) => (
+                  <option key={acc.id} value={acc.id}>
+                    {acc.number} - {acc.name}
+                  </option>
+                ))}
+              </select>
+            </div> */}
 
             {/* Partner type */}
             <div className="group">
@@ -255,11 +279,7 @@ const PartnerUpdateModal = ({
                         <div
                           className={`
                           flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200
-                          ${
-                            editType === type
-                              ? "bg-blue-500 text-white"
-                              : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
-                          }
+                          ${editType === type ? "bg-blue-500 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"}
                         `}
                         >
                           {getTypeIcon(type)}
@@ -267,11 +287,7 @@ const PartnerUpdateModal = ({
                         <span
                           className={`
                           font-medium transition-colors duration-200
-                          ${
-                            editType === type
-                              ? "text-blue-700 dark:text-blue-300"
-                              : "text-gray-700 dark:text-gray-300"
-                          }
+                          ${editType === type ? "text-blue-700 dark:text-blue-300" : "text-gray-700 dark:text-gray-300"}
                         `}
                         >
                           {t(type)}
@@ -294,11 +310,7 @@ const PartnerUpdateModal = ({
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                 <div className="w-2 h-2 bg-green-500 rounded-full group-focus-within:scale-150 transition-transform duration-200"></div>
                 {t("agent")}
-                {selectedAgent && (
-                  <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
-                    Выбран
-                  </span>
-                )}
+                {selectedAgent && <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">Выбран</span>}
               </label>
               <div className="relative">
                 <MyInput

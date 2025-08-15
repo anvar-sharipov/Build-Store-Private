@@ -1,9 +1,5 @@
-import { useState, useEffect } from 'react';
-import {
-  fetchWarehouses,
-  fetchPartners,
-  fetchEmployeers,
-} from "../../../../fetchs/optionsFetchers";
+import { useState, useEffect } from "react";
+import { fetchWarehouses, fetchPartners_no_pag, fetchEmployeers } from "../../../../fetchs/optionsFetchers";
 
 export function useLoadOptions() {
   const [fetchs, setFetchs] = useState({
@@ -17,21 +13,21 @@ export function useLoadOptions() {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [AllWarehouses, AllPartners, AllEmployeers] = await Promise.all([
-          fetchWarehouses(),
-          fetchPartners(),
-          fetchEmployeers(),
-        ]);
+        const [AllWarehouses, AllPartners, AllEmployeers] = await Promise.all([fetchWarehouses(), fetchPartners_no_pag(), fetchEmployeers()]);
 
         if (AllWarehouses) {
-          const formatted = AllWarehouses.map((v) => ({
-            id: String(v.id),
-            name: v.name,
-          }));
+          const formatted = AllWarehouses.filter((v) => v.is_active) // фильтрация только активных
+            .map((v) => ({
+              id: String(v.id),
+              name: v.name,
+              is_active: v.is_active,
+            }));
+
           setFetchs((prev) => ({ ...prev, AllWarehouses: formatted }));
         }
+
         if (AllPartners) {
-          const formatted = AllPartners.map((v) => ({
+          const formatted = AllPartners.filter((v) => v.type !== "supplier").map((v) => ({
             ...v,
             id: String(v.id),
             name: v.name,
@@ -47,7 +43,7 @@ export function useLoadOptions() {
           setFetchs((prev) => ({ ...prev, AllEmployeers: formatted }));
         }
       } catch (e) {
-        console.error("Ошибка загрузки данных:", e);
+        console.error("Ошибка загрузки данных pri download partner:", e);
       } finally {
         setLoading(false);
       }

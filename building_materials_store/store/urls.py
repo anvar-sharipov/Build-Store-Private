@@ -5,6 +5,7 @@ from . views.entry_views import *
 from . views.partner_views import *
 from . views.product_views import *
 from . views.register_views import *
+from . views.query_views import *
 from . views.sale_invoice_views import *
 from . views.report_views import *
 from . views.utils import *
@@ -63,5 +64,13 @@ urlpatterns = [
 
     # dlya poiska baalansa partnera po schetam
     path('partner/<int:partner_id>/entries/', PartnerEntriesView.as_view()),
+    
+    
+    # search
+    path("search-agents/", search_agents_view, name="search-agents"),
+    path("search-accounts/", search_accounts_view, name="search-accounts"),
+    path('get-partner-by-name/', get_partner_by_name_view, name='get-partner-by-name'),
+    path('query-partners/', search_partners_view, name='query-partners'),
+    path('partner-transaction/', partner_transaction, name='partner-transaction'),
 ]
 

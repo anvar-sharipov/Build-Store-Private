@@ -85,3 +85,21 @@ class SalesInvoiceFilter(django_filters.FilterSet):
     class Meta:
         model = SalesInvoice
         fields = ['isEntry']
+
+
+class PartnerFilter(django_filters.FilterSet):
+    search = django_filters.CharFilter(method='filter_search')
+    is_active = django_filters.BooleanFilter()
+    type = django_filters.CharFilter(lookup_expr='iexact')
+    agent = django_filters.NumberFilter(field_name='agent_id')
+
+    class Meta:
+        model = Partner
+        fields = ['is_active', 'type', 'agent']
+
+    def filter_search(self, queryset, name, value):
+    
+        
+        return queryset.annotate(
+            similarity=TrigramSimilarity('name', value)
+        ).filter(similarity__gt=0.1).order_by('-similarity')

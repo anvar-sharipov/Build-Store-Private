@@ -226,16 +226,42 @@ class AgentAdmin(admin.ModelAdmin):
 
 
 # Партнеры
+# @admin.register(Partner)
+# class PartnerAdmin(admin.ModelAdmin):
+#     list_display = ('name', 'type', 'balance', 'agent', 'invoice_count')
+#     list_filter = ('type', 'agent')
+#     search_fields = ('name',)
+#     readonly_fields = ('balance',)
+    
+#     def invoice_count(self, obj):
+#         return obj.salesinvoice_set.count()
+#     invoice_count.short_description = 'Накладных'
+
+class PartnerAccountInline(admin.TabularInline):
+    model = PartnerAccount
+    extra = 1
+    autocomplete_fields = ('account',)
+    min_num = 0
+
+
 @admin.register(Partner)
 class PartnerAdmin(admin.ModelAdmin):
-    list_display = ('name', 'type', 'balance', 'agent', 'invoice_count')
-    list_filter = ('type', 'agent')
+    list_display = ('name', 'type', 'balance')
     search_fields = ('name',)
-    readonly_fields = ('balance',)
+    list_filter = ('type',)
+    inlines = [PartnerAccountInline]
+    autocomplete_fields = ('agent',)
     
-    def invoice_count(self, obj):
-        return obj.salesinvoice_set.count()
-    invoice_count.short_description = 'Накладных'
+    
+@admin.register(PartnerAccount)
+class PartnerAccountAdmin(admin.ModelAdmin):
+    list_display = ('partner', 'account', 'role')
+    list_filter = ('role',)
+    search_fields = ('partner__name', 'account__number', 'account__name')
+    autocomplete_fields = ('partner', 'account')  # Удобный выбор при большом количестве данных
+
+    # Для удобства в форме можно задать порядок полей (необязательно)
+    fields = ('partner', 'account', 'role')
 
 
 # Сотрудники

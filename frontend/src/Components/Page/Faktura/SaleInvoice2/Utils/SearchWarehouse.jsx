@@ -61,7 +61,12 @@ const SearchWarehouse = ({
   }, [values.warehouses?.id]);
 
   const handleSelectItem = (item) => {
-    setFieldValue("warehouses", { id: item.id, name: item.name });
+    const selectedWarehouse = { id: item.id, name: item.name };
+    setFieldValue("warehouses", selectedWarehouse);
+
+    // Сохраняем в localStorage
+    localStorage.setItem("selectedWarehouse", JSON.stringify(selectedWarehouse));
+
     setList([]);
     setShowSearchInput(false); // скрыть поиск после выбора
 
@@ -71,6 +76,7 @@ const SearchWarehouse = ({
   };
 
   const handleClearSelection = () => {
+    localStorage.removeItem("selectedWarehouse");
     setFieldValue("warehouses", { id: null, name: "" });
     setShowSearchInput(true);
     setList([]);
@@ -100,6 +106,8 @@ const SearchWarehouse = ({
                   } else {
                     awtoInputRef.current?.focus();
                   }
+                } else if (e.key === "Enter") {
+                  e.preventDefault();
                 }
               }}
               onChange={(e) => {

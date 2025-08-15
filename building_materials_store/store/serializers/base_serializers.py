@@ -58,7 +58,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class WarehouseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Warehouse
-        fields = ['id', 'name', 'location']
+        fields = ['id', 'name', 'location', 'is_active']
 
 
 class PriceChangeReportSerializer(serializers.ModelSerializer):

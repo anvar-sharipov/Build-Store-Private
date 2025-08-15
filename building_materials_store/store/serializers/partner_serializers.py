@@ -13,6 +13,21 @@ from django.utils import timezone
 # from django.db.models import Sum
 
 
+
+class AccountSerializerForRead(serializers.ModelSerializer):
+
+    class Meta:
+        model = Account
+        fields = ['id', 'number', 'name', 'type']
+
+class PartnerAccountSerializer(serializers.ModelSerializer):
+    account_id = serializers.PrimaryKeyRelatedField(queryset=Account.objects.all(), source="account")
+    account = AccountSerializerForRead()
+    
+    class Meta:
+        model = PartnerAccount
+        fields = ['account_id', 'role', 'account']
+
 class PartnerSerializer(serializers.ModelSerializer):
     # current_balance = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
     type_display = serializers.CharField(source='get_type_display', read_only=True)
@@ -26,42 +41,6 @@ class PartnerSerializer(serializers.ModelSerializer):
         allow_null=True       # ✅ разрешает null
     )
     
-    # balance_on_date = serializers.SerializerMethodField()
-    # today_sales = serializers.SerializerMethodField()
-    # final_balance = serializers.SerializerMethodField()
-    
-
-    # agent_name = serializers.CharField(source='agent.name', read_only=True)
-
-    # class Meta:
-    #     model = Partner
-    #     fields = ['id', 'name', 'type', 'type_display', 'agent', 'agent_id', 'agent_name', 'balance', 'balance_on_date', 'today_sales', 'final_balance']
-        
-    # def get_balance_on_date(self, obj):
-    #     today = timezone.now().date()
-    #     # Все операции до начала текущего дня
-    #     entries = Entry.objects.filter(
-    #         transaction__partner=obj,
-    #         transaction__date__lt=today
-    #     )
-    #     debit = entries.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
-    #     credit = entries.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
-    #     return debit - credit  # Дебет минус Кредит — сколько нам должен партнёр
-
-    # def get_today_sales(self, obj):
-    #     today = timezone.now().date()
-    #     entries = Entry.objects.filter(
-    #         transaction__partner=obj,
-    #         transaction__date__date=today
-    #     )
-    #     debit = entries.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
-    #     credit = entries.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
-    #     return debit - credit
-
-    # def get_final_balance(self, obj):
-    #     return self.get_balance_on_date(obj) + self.get_today_sales(obj)
-    
-    
     # #### dlya pokaza i debet i kredet toje
     balance_on_date = serializers.SerializerMethodField()
     today_sales = serializers.SerializerMethodField()
@@ -72,12 +51,15 @@ class PartnerSerializer(serializers.ModelSerializer):
     account_62_debit = serializers.SerializerMethodField()
     account_62_credit = serializers.SerializerMethodField()
     
+    partner_accounts = PartnerAccountSerializer(many=True, read_only=True)
+    accounts_id = PartnerAccountSerializer(many=True, write_only=True, required=False)
+    
 
     agent_name = serializers.CharField(source='agent.name', read_only=True)
 
     class Meta:
         model = Partner
-        fields = ['id', 'name', 'type', 'type_display', 'agent', 'agent_id', 'agent_name', 'balance', 'balance_on_date', 'today_sales', 'final_balance', 'debit_total', 'credit_total', 'account_62_debit', 'account_62_credit',]
+        fields = ['id', 'name', 'type', 'type_display', 'agent', 'agent_id', 'agent_name', 'balance', 'balance_on_date', 'today_sales', 'final_balance', 'debit_total', 'credit_total', 'account_62_debit', 'account_62_credit', 'is_active', 'partner_accounts', 'accounts_id']
         
     def get_balance_on_date(self, obj):
         today = timezone.now().date()

@@ -25,6 +25,10 @@ const PartnerAddModal = ({
   handleAddKeyDown,
   setNewBalance,
   newBalance,
+  // accounts,
+  // selectedAccount,
+  // setSelectedAccount,
+  // accountAddInputRef,
 }) => {
   const [agentQuery, setAgentQuery] = useState("");
   const [filteredAgents, setFilteredAgents] = useState([]);
@@ -32,6 +36,7 @@ const PartnerAddModal = ({
   const [choosedAgent, setChoosedAgent] = useState(false);
   const wrapperRef = useRef(null);
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
+  const [account, setAccount] = useState(null);
 
   useEffect(() => {
     const handleFocusOut = () => {
@@ -50,9 +55,7 @@ const PartnerAddModal = ({
       setFilteredAgents([]);
       return;
     }
-    const filtered = agentList.filter((agent) =>
-      agent.name.toLowerCase().includes(agentQuery.toLowerCase())
-    );
+    const filtered = agentList.filter((agent) => agent.name.toLowerCase().includes(agentQuery.toLowerCase()));
     if (choosedAgent) {
       setChoosedAgent(false);
     } else {
@@ -65,9 +68,7 @@ const PartnerAddModal = ({
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl px-6 py-8 sm:p-10 space-y-6 border border-gray-200 dark:border-gray-700">
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">
-            {t("addNewPartner")}
-          </h2>
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">{t("addNewPartner")}</h2>
           <button
             onClick={addPartner}
             disabled={loadingAdd}
@@ -107,18 +108,14 @@ const PartnerAddModal = ({
                   }
                 }}
               />
-              <span className="text-gray-800 dark:text-gray-200">
-                {t(type)}
-              </span>
+              <span className="text-gray-800 dark:text-gray-200">{t(type)}</span>
             </label>
           ))}
         </div>
 
         {/* Partner name input */}
         <div className="flex items-center gap-3">
-          <label className="w-24 text-gray-700 dark:text-gray-300 font-medium">
-            {t("partner")}
-          </label>
+          <label className="w-24 text-gray-700 dark:text-gray-300 font-medium">{t("partner")}</label>
           <MyInput
             ref={addInputRef}
             name="new_partner"
@@ -127,16 +124,19 @@ const PartnerAddModal = ({
             onChange={(e) => setNewPartner(e.target.value)}
             placeholder={`${t("addNewPartner")}...`}
             className="flex-grow focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-            onKeyDown={(e) => handleAddKeyDown(e)}
+            onKeyDown={(e) => {
+              if (e.key == "ArrowDown"){
+                e.preventDefault()
+                balanceInputRef.current.focus()
+              }
+            }}
             disabled={loadingAdd}
           />
         </div>
 
         {/* Partner balance input */}
         <div className="flex items-center gap-3">
-          <label className="w-24 text-gray-700 dark:text-gray-300 font-medium">
-            {t("balance")}
-          </label>
+          <label className="w-24 text-gray-700 dark:text-gray-300 font-medium">{t("balance")}</label>
           <MyInput
             ref={balanceInputRef}
             name="new_balance"
@@ -145,17 +145,40 @@ const PartnerAddModal = ({
             onChange={(e) => setNewBalance(e.target.value)}
             placeholder={`${t("addNewBalance")}...`}
             className="flex-grow focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-            onKeyDown={(e) => handleAddKeyDown(e)}
+            // onKeyDown={(e) => {
+            //   if (e.key == "ArrowDown"){
+            //     e.preventDefault()
+            //     refUpdateRadioInput.current["supplier"]?.focus();
+            //   }
+            // }}
             disabled={loadingAdd}
           />
         </div>
 
+        {/* accountList */}
+        {/* <div className="mb-4">
+          <label htmlFor="account-select" className="block text-sm font-medium text-gray-700 mb-1">
+            Выберите счёт:
+          </label>
+          <select
+            id="account-select"
+            ref={accountAddInputRef}
+            value={selectedAccount}
+            onChange={(e) => setSelectedAccount(e.target.value)}
+            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 bg-white"
+          >
+            {accounts.map((acc) => (
+              <option key={acc.id} value={acc.id}>
+                {acc.number} - {acc.name}
+              </option>
+            ))}
+          </select>
+        </div> */}
+
         {/* Agent search input */}
         <div className="relative" ref={wrapperRef}>
           <div className="flex items-center gap-3">
-            <label className="w-24 text-gray-700 dark:text-gray-300 font-medium">
-              {t("agent")}
-            </label>
+            <label className="w-24 text-gray-700 dark:text-gray-300 font-medium">{t("agent")}</label>
             <MyInput
               ref={addAgentInputRef}
               type="text"

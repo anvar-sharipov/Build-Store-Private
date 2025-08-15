@@ -52,13 +52,13 @@ const SearchProduct = ({ partnerInputRef, productInputRef, showNotification, pro
     }
     setList([]);
     setQuery("");
-    let selected_price = 0
+    let selected_price = 0;
     if (values.priceType === "wholesale") {
-        selected_price = item.wholesale_price
+      selected_price = item.wholesale_price;
     } else {
-        selected_price = item.retail_price
+      selected_price = item.retail_price;
     }
-    const newProducts = [...values.products, {...item, selected_price: selected_price}];
+    const newProducts = [...values.products, { ...item, selected_price: selected_price }];
     setFieldValue("products", newProducts);
     refreshTable({ ...values, products: newProducts }, setFieldValue, values.warehouses.id);
 
@@ -88,10 +88,12 @@ const SearchProduct = ({ partnerInputRef, productInputRef, showNotification, pro
               listRefs.current[0]?.focus();
             } else {
               if (values.products.length > 0) {
-                const firstId = values?.products[0].id
+                const firstId = values?.products[0].id;
                 productQuantityRefs.current[firstId]?.focus();
               }
             }
+          } else if (e.key === "Enter") {
+            e.preventDefault();
           }
         }}
         onChange={(e) => setQuery(e.target.value)}

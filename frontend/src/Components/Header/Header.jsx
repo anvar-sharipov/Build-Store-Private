@@ -81,7 +81,7 @@ const Header = () => {
         navigate(ROUTES.EMPLOYEERS);
       } else if (event.key === "F4") {
         event.preventDefault();
-        navigate(ROUTES.PARTNERS);
+        navigate(ROUTES.PARTNERS_new);
       } else if (event.key === "F5") {
         event.preventDefault();
         navigate(ROUTES.AGENTS);

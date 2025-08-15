@@ -80,6 +80,8 @@ const SearchAwto = ({ awtoInputRef, warehouseInputRef, partnerInputRef, fetchs }
                 } else if (e.key === "ArrowUp") {
                   e.preventDefault();
                   warehouseInputRef.current?.focus();
+                } else if (e.key === 'Enter') {
+                  e.preventDefault();
                 }
               }}
               onChange={(e) => {

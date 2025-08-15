@@ -2,7 +2,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import Header from "./Components/Header/Header";
 import SidebarLeft from "./Components/Sidebar/left/SidebarLeft";
 import SidebarRight from "./Components/Sidebar/right/SideRight";
-import { ROUTES, ROUTES_RAPORT } from "./routes";
+import { ROUTES, ROUTES_RAPORT, PROCHEE } from "./routes";
 import ProductList from "./Components/Page/Faktura/Faktura";
 import Register from "./Components/Register";
 import Login from "./Components/Login";
@@ -17,10 +17,12 @@ import Account from "./Components/Page/Account/Account";
 import AccountReports from "./Components/Page/Reports/Accounts/AccountReport/AccountReports";
 import UpdateSaleInvoice from "./Components/Page/Faktura/UpdateSaleInvoice/UpdateSaleInvoice";
 
-
 import { AuthProvider } from "./AuthContext";
 import { SearchProvider } from "./Components/context/SearchContext";
 import MainPage from "./Components/Page/Faktura/SaleInvoice2/MainPage";
+import Warehouse from "./Components/Page/Warehouse/Warehouse";
+import Partner2 from "./Components/Page/Partner2/Partner2";
+import PartnerTransactionEntry from "./Components/Page/PartnerTransactionEntry/PartnerTransactionEntry";
 
 function AppShell() {
   const location = useLocation();
@@ -31,36 +33,31 @@ function AppShell() {
       <Header />
       <AuthProvider>
         <SearchProvider>
-          <main
-            className={`flex flex-grow gap-4 mt-4 ${
-              isFullScreenPage ? "" : "lg:ml-52 lg:mr-72"
-            } print:w-full print:block print:p-0 print:m-0`}
-          >
+          <main className={`flex flex-grow gap-4 mt-4 ${isFullScreenPage ? "" : "lg:ml-52 lg:mr-72"} print:w-full print:block print:p-0 print:m-0`}>
             {!isFullScreenPage && <SidebarLeft />}
 
             <section className={`flex-grow flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-sm ${isFullScreenPage ? "p-0" : "p-4"}`}>
               <Routes>
                 <Route path={ROUTES.MAIN} element={<ProductList />} />
-                <Route path="/sale-invoices/new" element={<AddSaleInvoicePage /> } />
-                <Route path="/sale-invoices/create" element={<MainPage /> } />
-                <Route path="/sale-invoices/update/:id" element={<MainPage /> } />
+                <Route path="/sale-invoices/new" element={<AddSaleInvoicePage />} />
+                <Route path="/sale-invoices/create" element={<MainPage />} />
+                <Route path="/sale-invoices/update/:id" element={<MainPage />} />
                 {/* <Route path="/sale-invoices/update/:id" element={<UpdateSaleInvoice />} /> */}
                 <Route path={ROUTES.REGISTER} element={<Register />} />
                 <Route path={ROUTES.LOGIN} element={<Login />} />
                 <Route path={ROUTES.HARYTLAR} element={<Harytlar />} />
                 <Route path={ROUTES.EMPLOYEERS} element={<Employee />} />
-                <Route path={ROUTES.PARTNERS} element={<Partner />} />
+                <Route path={ROUTES.PARTNERS_new} element={<Partner2 />} />
                 <Route path={ROUTES.AGENTS} element={<Agent />} />
                 <Route path={ROUTES.ENTRIES} element={<Entries />} />
                 <Route path={ROUTES.ACCOUNT} element={<Account />} />
-                <Route
-                  path={ROUTES_RAPORT.PRICE_CHANGE_REPORT}
-                  element={<PriceChangeReport />}
-                />
-                <Route
-                  path={ROUTES_RAPORT.ACCOUNT_REPORTS}
-                  element={<AccountReports />}
-                />
+
+                <Route path={ROUTES_RAPORT.PRICE_CHANGE_REPORT} element={<PriceChangeReport />} />
+                <Route path={ROUTES_RAPORT.ACCOUNT_REPORTS} element={<AccountReports />} />
+
+                <Route path={PROCHEE.WAREHOUSE} element={<Warehouse />} />
+                <Route path={PROCHEE.PARTNER_TRANSACTION_ENTRY} element={<PartnerTransactionEntry />} />
+
               </Routes>
             </section>
 

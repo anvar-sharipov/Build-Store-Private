@@ -213,6 +213,7 @@ const Account = () => {
                   <input
                     type="text"
                     name="number"
+                    autoComplete='off'
                     value={formData.number}
                     onChange={handleChange}
                     className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-0 transition-colors"
@@ -226,6 +227,7 @@ const Account = () => {
                   <input
                     type="text"
                     name="name"
+                    autoComplete='off'
                     value={formData.name}
                     onChange={handleChange}
                     className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-0 transition-colors"

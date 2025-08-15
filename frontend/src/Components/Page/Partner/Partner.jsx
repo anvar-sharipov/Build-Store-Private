@@ -64,6 +64,8 @@ const Partner = () => {
   const refUpdateCancelButton = useRef(null);
   const refUpdateSaveButton = useRef(null);
   const refUpdateRadioInput = useRef({});
+  // const accountUpdateInputRef = useRef(null);
+  // const accountAddInputRef = useRef(null);
 
   // Modal states
   const [selectedPartner, setSelectedPartner] = useState(null);
@@ -78,6 +80,30 @@ const Partner = () => {
     data: null,
     index: null,
   });
+
+  // const [accounts, setAccounts] = useState([]);
+  // const [selectedAccount, setSelectedAccount] = useState("60");
+
+  useEffect(() => {
+    const getAccounts = async () => {
+      try {
+        const res = await myAxios.get("accounts/");
+
+        // const filteredAccounts = res.data.filter((acc) => parseFloat(acc.number) === 75 || parseFloat(acc.number) === 60);
+        // console.log('accounts res.data', res.data);
+        // console.log("filteredAccounts", filteredAccounts);
+        // По умолчанию выбрать счёт с number = "60"
+        // const account60 = filteredAccounts.find((acc) => acc.number === "60");
+        // if (account60) {
+        //   setSelectedAccount(account60.id); // ✅ ID
+        // }
+        // setAccounts(filteredAccounts);
+      } catch (error) {
+        console.log("nonono accounts", error);
+      }
+    };
+    getAccounts();
+  }, []);
 
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -151,6 +177,7 @@ const Partner = () => {
     try {
       const res = await myAxios.get("partners/");
       setPartnersRaw(res.data);
+      console.log("res.data", res.data);
     } catch (e) {
       console.error("Ошибка при загрузке:", e);
       showNotification("partnerLoadError", "error");
@@ -174,6 +201,7 @@ const Partner = () => {
         balance: newBalance,
         type: partnerType,
         agent_id: selectedAgent?.id ?? null,
+        // account: selectedAccount,
       });
       setPartnersRaw((prev) => [res.data, ...prev]);
       showNotification("newPartnerAdded", "success");
@@ -226,12 +254,11 @@ const Partner = () => {
         balance: editBalance,
         type: editType,
         agent_id: selectedAgent?.id ?? null,
+        // account: selectedAccount,
       });
 
       showNotification(t("partnerUpdated"), "success");
-      setPartnersRaw((prev) =>
-        prev.map((p) => (p.id === editId ? res.data : p))
-      );
+      setPartnersRaw((prev) => prev.map((p) => (p.id === editId ? res.data : p)));
       setOpenModal(false);
       listItemRefs.current[selectedListItemRef]?.focus();
     } catch (error) {
@@ -260,9 +287,7 @@ const Partner = () => {
 
   // Combined filtering
   const filteredPartners = useMemo(() => {
-    let filtered = search
-      ? fuse.search(search).map((r) => r.item)
-      : partnersRaw;
+    let filtered = search ? fuse.search(search).map((r) => r.item) : partnersRaw;
 
     // Apply type filter from URL
     if (filterType !== "all") {
@@ -374,7 +399,8 @@ const Partner = () => {
     }
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      refUpdateRadioInput.current["supplier"]?.focus(); // наведём фокус
+      balanceInputRef.current?.focus()
+      // refUpdateRadioInput.current["supplier"]?.focus(); // наведём фокус
     }
   };
 
@@ -446,6 +472,10 @@ const Partner = () => {
           setNewBalance={setNewBalance}
           newBalance={newBalance}
           handleAddKeyDown={handleAddKeyDown}
+          // accounts={accounts}
+          // selectedAccount={selectedAccount}
+          // setSelectedAccount={setSelectedAccount}
+          // accountAddInputRef={accountAddInputRef}
         />
       )}
 
@@ -476,14 +506,14 @@ const Partner = () => {
           updatePartner={updatePartner}
           refUpdateSaveButton={refUpdateSaveButton}
           loadingEdit={loadingEdit}
+          // accounts={accounts}
+          // selectedAccount={selectedAccount}
+          // setSelectedAccount={setSelectedAccount}
+          // accountUpdateInputRef={accountUpdateInputRef}
         />
       )}
 
-      <Notification
-        message={t(notification.message)}
-        type={notification.type}
-        onClose={() => setNotification({ message: "", type: "" })}
-      />
+      <Notification message={t(notification.message)} type={notification.type} onClose={() => setNotification({ message: "", type: "" })} />
 
       {/* for modile */}
       <div className="lg:hidden text-center">
@@ -493,16 +523,10 @@ const Partner = () => {
           <div className="text-gray-600 dark:text-gray-400 flex items-center gap-3">
             {filteredPartners.length > 0 && (
               <div className="flex gap-3 items-center">
-                <span>
-                  {search
-                    ? `${t("found")}: ${filteredPartners.length}`
-                    : `${t("total")}: ${filteredPartners.length}`}
-                </span>
+                <span>{search ? `${t("found")}: ${filteredPartners.length}` : `${t("total")}: ${filteredPartners.length}`}</span>
                 <RiFileExcel2Fill
                   size={30}
-                  className={`cursor-pointer rounded transition-transform duration-300 text-green-700 hover:text-green-600 ${
-                    isAnimating ? "scale-125" : "scale-100"
-                  }`}
+                  className={`cursor-pointer rounded transition-transform duration-300 text-green-700 hover:text-green-600 ${isAnimating ? "scale-125" : "scale-100"}`}
                   onClick={() => {
                     PartnerDownloadExcel(filteredPartners, t);
                     setIsAnimating(true);

@@ -84,16 +84,13 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
     def create(self, request, *args, **kwargs):
-        
-        
-       
         try:
             with transaction.atomic():
                 data = request.data  # вот здесь JSON из React
                 created_by = request.user
                 total_amount = data['footerTotalPrice']
                 withPosting = data['withPosting']
-                comment = data['comment']
+                comment = data['comment'] if data['comment'] != None else ''
                 type_price = data['priceType']
                 
                 invoice_date_str = data.get('invoice_date')
@@ -112,13 +109,6 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                         return Response({'detail': 'errorDate'}, status=status.HTTP_400_BAD_REQUEST)
                 else:
                     return Response({'detail': 'errorDate'}, status=status.HTTP_400_BAD_REQUEST)
-                    
-                    
-                    
-                # ic(data)
-                    
-                # ic(data)
-
                 
 
                 warehouse_id = data.get('warehouses', {}).get('id')
@@ -143,7 +133,18 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                         return Response({'detail': 'chooseClient'}, status=status.HTTP_400_BAD_REQUEST)
                     if not delivered_by:
                         return Response({'detail': 'chooseAwto'}, status=status.HTTP_400_BAD_REQUEST)
-
+                    
+                    if partner.type != "klient" and partner.type != "both" and partner.type != "founder":
+                        return Response({'detail': 'CantBeSaleForSupplier'}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    accounts = partner.partner_accounts.all()  # вернёт список PartnerAccount
+                    founder = False
+                    for pa in accounts:
+                        if pa.account.number == "75":
+                            founder = True
+                            break
+                        
+ 
                 invoice = SalesInvoice.objects.create(
                     buyer=partner,
                     created_by=created_by,
@@ -156,40 +157,80 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     isEntry=withPosting,
                     type_price=type_price
                 )
+            
+                if withPosting:
+                    if founder:
+                        comment += "dohod 46.2"
+                    else:
+                        comment += "dohod 46.1"
+                    transaction_obj = Transaction.objects.create(
+                        description=comment,
+                        invoice=invoice,
+                        partner=partner
+                    )
 
                 # Сохраняем позиции товаров
                 for product in data['products']:
                     product_id = product['id']
-                    
                     product_obj = Product.objects.get(pk=product_id)
                     quantity = Decimal(product['selected_quantity'])
                     sale_price = Decimal(product['selected_price'])
+                    
+                    
 
                     
-                    if withPosting:
-                        purchase_price = product['purchase_price']
-                        retail_price = product['retail_price']
-                        wholesale_price = product['wholesale_price']
-                        # ic('purchase_price', purchase_price)
-                        # ic('product.purchase_price', product.purchase_price)
-
-                        SalesInvoiceItem.objects.create(
-                            invoice=invoice,
-                            product=product_obj,
-                            quantity=quantity,
-                            sale_price=sale_price,
-                            purchase_price=purchase_price,
-                            retail_price=retail_price,
-                            wholesale_price=wholesale_price,
-                        )
+                 
+                    purchase_price = Decimal(product['purchase_price'])
+                    retail_price = Decimal(product['retail_price'])
+                    wholesale_price = Decimal(product['wholesale_price'])
+                    
+                    profit = (sale_price - purchase_price) * quantity
+                    ic(purchase_price)
+                    ic(sale_price)
+                    ic(quantity)
+                    ic(profit)
+                    if founder:
+                        account = Account.objects.get(number="46.2")
+                        account_klient = Account.objects.get(number="75")
                     else:
-                        SalesInvoiceItem.objects.create(
-                            invoice=invoice,
-                            product=product_obj,
-                            quantity=quantity,
-                            sale_price=sale_price
-                        )
+                        account = Account.objects.get(number="46.1")
+                        account_klient = Account.objects.get(number="60")
+                    Entry.objects.create(
+                        transaction=transaction_obj,
+                        account=account,
+                        product=product_obj,
+                        warehouse=warehouse,
+                        credit=profit,
+                        debit=0
+                    )
+                    
+                    Entry.objects.create(
+                        transaction=transaction_obj,
+                        account=account_klient,
+                        product=product_obj,
+                        warehouse=warehouse,
+                        credit=0,
+                        debit=sale_price * quantity
+                    )
+                 
+                    
 
+                    SalesInvoiceItem.objects.create(
+                        invoice=invoice,
+                        product=product_obj,
+                        quantity=quantity,
+                        sale_price=sale_price,
+                        purchase_price=purchase_price,
+                        retail_price=retail_price,
+                        wholesale_price=wholesale_price,
+                    )
+                    
+        
+                    
+                    # if withPosting:
+                    #     ic(product)
+                        
+            
                 # ic(data['gifts'])
 
                 for product in data['gifts']:
@@ -209,9 +250,11 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                         is_gift=True
                     )
                 serializer = self.get_serializer(invoice)
+                # 1/0
                 # return Response(serializer.data, status=status.HTTP_201_CREATED)
                 return Response({'detail': 'successSave', "invoice_id": invoice.id}, status=status.HTTP_201_CREATED)
         except Exception as e:
+            ic(e)
             return Response({'detail': 'transactionChange'}, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, *args, **kwargs):
@@ -253,10 +296,26 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                 try:
                     partner = Partner.objects.get(pk=data['partner']['id'])
                     invoice.buyer = partner
+                    
+                    if withPosting:
+                        if partner.type != "klient" and partner.type != "both" and partner.type != "founder":
+                            return Response({'detail': 'CantBeSaleForSupplier'}, status=status.HTTP_400_BAD_REQUEST)
+                        
+                        accounts = partner.partner_accounts.all()  # вернёт список PartnerAccount
+                        founder = False
+                        for pa in accounts:
+                            if pa.account.number == "75":
+                                founder = True
+                                break
+                            
+                        total_profit = data['footerTotalPriceProfit']
+                        
                 except:
                     invoice.buyer = None
                     if withPosting:
                         return Response({'detail': 'chooseClient'}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    
 
                 try:
                     delivered_by = Employee.objects.get(pk=data['awto']['id'])
@@ -283,28 +342,20 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     quantity = Decimal(product['selected_quantity'])
                     sale_price = Decimal(product['selected_price'])
 
-                    
-                    if withPosting:
-                        # ic(product)
-                        purchase_price = product['purchase_price']
-                        retail_price = product['retail_price']
-                        wholesale_price = product['wholesale_price']
-                        SalesInvoiceItem.objects.create(
-                            invoice=invoice,
-                            product=product_obj,
-                            quantity=quantity,
-                            sale_price=sale_price,
-                            purchase_price=purchase_price,
-                            retail_price=retail_price,
-                            wholesale_price=wholesale_price,
-                        )
-                    else:
-                        SalesInvoiceItem.objects.create(
-                            invoice=invoice,
-                            product=product_obj,
-                            quantity=quantity,
-                            sale_price=sale_price
-                        )
+                  
+                    purchase_price = product['purchase_price']
+                    retail_price = product['retail_price']
+                    wholesale_price = product['wholesale_price']
+                    SalesInvoiceItem.objects.create(
+                        invoice=invoice,
+                        product=product_obj,
+                        quantity=quantity,
+                        sale_price=sale_price,
+                        purchase_price=purchase_price,
+                        retail_price=retail_price,
+                        wholesale_price=wholesale_price,
+                    )
+          
 
                 # Подарки
                 # ic(data)
@@ -331,6 +382,7 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     )
 
                     # Счёт "62" – Покупатели
+                    
                     if not Account.objects.filter(number='62').exists():
                         return Response({'detail': 'createAccount62'}, status=status.HTTP_400_BAD_REQUEST)
                     account_62 = Account.objects.get(number='62')

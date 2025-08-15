@@ -76,6 +76,18 @@ export const fetchPartners = async () => {
   }
 };
 
+export const fetchPartners_no_pag = async () => {
+  try {
+    const res = await myAxios.get("/partners/?no_pagination=1");
+    console.log('rrrreeeessss.data', res.data);
+    
+    return res.data;
+  } catch (e) {
+    console.error("Ошибка при загрузке partners:", e);
+    return e;
+  }
+};
+
 export const fetchEmployeers = async () => {
   try {
     const res = await myAxios.get("/employeers");
@@ -86,3 +98,13 @@ export const fetchEmployeers = async () => {
   }
 };
 
+
+export const fetchAccounts = async () => {
+  try {
+    const res = await myAxios.get("/accounts");
+    return res.data;
+  } catch (e) {
+    console.error("Ошибка при загрузке accounts:", e);
+    return e;
+  }
+};

@@ -46,9 +46,17 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.pagination import PageNumberPagination
 # swoy pagination 
 class CustomPageNumberPagination(PageNumberPagination):
-    page_size = 10              # Кол-во элементов на странице по умолчанию
+    page_size = 100              # Кол-во элементов на странице по умолчанию
     page_size_query_param = 'page_size'  # Позволяет клиенту указать page_size в запросе (?page_size=50)
     max_page_size = 100          # Максимальное кол-во элементов на странице, чтобы не перегружать сервер
+    
+    # def get_paginated_response(self, data):
+    #     return Response({
+    #         'count': self.page.paginator.count,   # <-- общее количество
+    #         'total_pages': self.page.paginator.num_pages,
+    #         'current_page': self.page.number,
+    #         'results': data,
+    #     })
 
 
 # swoyo razgranichenie dostupa

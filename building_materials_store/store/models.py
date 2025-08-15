@@ -109,6 +109,7 @@ class Product(models.Model):
 class Warehouse(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name="Название склада")
     location = models.CharField(max_length=255, blank=True, verbose_name="Адрес (необязательно)")
+    is_active = models.BooleanField(default=True, verbose_name="Активен")
    
     class Meta:
         verbose_name = "Склад"
@@ -298,25 +299,28 @@ class Partner(models.Model):
     BUYER = 'klient'
     SUPPLIER = 'supplier'
     BOTH = 'both'
+    FOUNDER = 'founder'  # учредитель
 
     PARTNER_TYPE_CHOICES = [
         (BUYER, 'Alyjy (Покупатель)'),
         (SUPPLIER, 'Üpjünçi (Поставщик)'),
         (BOTH, 'Alyjy we Üpjünçi (Покупатель и поставщик)'),
+        (FOUNDER, 'Uchreditel (Учредитель)'),
     ]
 
     name = models.CharField(verbose_name='Partneryn ady', max_length=2000)
     # СВЯЗЬ С AGENT
     agent = models.ForeignKey('Agent', on_delete=models.PROTECT, null=True, blank=True, verbose_name='Agent'
     )
-    type = models.CharField(max_length=20, choices=PARTNER_TYPE_CHOICES, default=SUPPLIER, verbose_name='Partneriň görnüşi',)
-
+    type = models.CharField(max_length=20, choices=PARTNER_TYPE_CHOICES, default=SUPPLIER, verbose_name='Partneriň görnüşi')
+    # account = models.ForeignKey('Account', on_delete=models.PROTECT, null=True, blank=True, verbose_name='Account')
     balance = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), verbose_name='Balans (deb/kred)')
+    is_active = models.BooleanField(default=True, verbose_name='Активен')
 
     def __str__(self):
         return f'{self.name} ({self.get_type_display()})'
     
-
+   
     # @property
     # def current_balance(self):
     #     # Считаем обороты по дебету и кредиту партнёра до даты накладной (включительно)
@@ -333,6 +337,24 @@ class Partner(models.Model):
         verbose_name = 'Partner'
         verbose_name_plural = 'Partnerler'
 
+
+class PartnerAccount(models.Model):
+    partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='partner_accounts')
+    account = models.ForeignKey('Account', on_delete=models.PROTECT)
+    
+    ROLE_CHOICES = [
+        ('klient', 'Покупатель'),
+        ('supplier', 'Поставщик'),
+        ('both', 'Покупатель и поставщик'),
+        ('founder', 'Учредитель'),
+    ]
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=False, blank=False)
+
+    class Meta:
+        unique_together = ('partner', 'account', 'role')
+
+    def __str__(self):
+        return f"{self.partner.name} - {self.account.number} ({self.get_role_display()})"
 
 class Employee(models.Model):
     name = models.CharField(verbose_name='Işgär', max_length=2000)

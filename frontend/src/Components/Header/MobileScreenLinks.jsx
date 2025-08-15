@@ -50,7 +50,7 @@ const MobileScreenLinks = ({
               {t("employeers")}
             </Link>
             <Link
-              to={ROUTES.PARTNERS}
+              to={ROUTES.PARTNERS_new}
               className="hover:underline text-blue-500 hover:text-blue-700 flex gap-1 items-center"
               onClick={() => setIsMenuOpen(false)}
             >

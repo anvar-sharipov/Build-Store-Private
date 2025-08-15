@@ -8,8 +8,7 @@ import * as Yup from "yup";
 
 const defaultInitialValues = (fetchs, data) => {
   if (data) {
-    console.log('data', data);
-    
+    console.log("data", data);
 
     let footerTotalPricePurchae = 0;
     let footerTotalPriceProfit = 0;
@@ -57,7 +56,6 @@ const defaultInitialValues = (fetchs, data) => {
           });
         }
         if (data.isEntry) {
-
           return {
             ...product,
             selected_quantity: item.quantity,
@@ -138,14 +136,29 @@ const defaultInitialValues = (fetchs, data) => {
       })(),
     };
   } else {
+    // Получаем склад из localStorage
+    const savedWarehouse = JSON.parse(localStorage.getItem("selectedWarehouse"));
+    console.log("savedWarehouse", savedWarehouse);
+
+    // Находим первый активный склад
+    const firstActiveWarehouse = fetchs.AllWarehouses.find((w) => w.is_active);
+
+    // console.log('firstActiveWarehouse', firstActiveWarehouse);
+
+    if (savedWarehouse === null && firstActiveWarehouse) {
+      const selectedWarehouse = { id: firstActiveWarehouse.id, name: firstActiveWarehouse.name };
+      // Сохраняем в localStorage
+      localStorage.setItem("selectedWarehouse", JSON.stringify(selectedWarehouse));
+    }
 
     return {
       invoice_date: new Date().toISOString().slice(0, 10),
       awto: {},
       partner: {},
+      // Устанавливаем склад
       warehouses: {
-        id: fetchs.AllWarehouses[0]?.id || null,
-        name: fetchs.AllWarehouses[0]?.name || "",
+        id: savedWarehouse?.id || firstActiveWarehouse?.id || null,
+        name: savedWarehouse?.name || firstActiveWarehouse?.name || "",
       },
       products: [],
       gifts: [],

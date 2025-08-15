@@ -93,6 +93,8 @@ const SearchPartner = ({ partnerInputRef, awtoInputRef, productInputRef, warehou
                 } else if (e.key === "ArrowUp") {
                   e.preventDefault();
                   awtoInputRef.current?.focus();
+                } else if (e.key === 'Enter') {
+                  e.preventDefault();
                 }
               }}
               onChange={(e) => {

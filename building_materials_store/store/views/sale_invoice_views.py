@@ -189,30 +189,31 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     ic(sale_price)
                     ic(quantity)
                     ic(profit)
-                    if founder:
-                        account = Account.objects.get(number="46.2")
-                        account_klient = Account.objects.get(number="75")
-                    else:
-                        account = Account.objects.get(number="46.1")
-                        account_klient = Account.objects.get(number="60")
-                    Entry.objects.create(
-                        transaction=transaction_obj,
-                        account=account,
-                        product=product_obj,
-                        warehouse=warehouse,
-                        credit=profit,
-                        debit=0
-                    )
+                    if withPosting:
+                        if founder:
+                            account = Account.objects.get(number="46.2")
+                            account_klient = Account.objects.get(number="75")
+                        else:
+                            account = Account.objects.get(number="46.1")
+                            account_klient = Account.objects.get(number="60")
+                        Entry.objects.create(
+                            transaction=transaction_obj,
+                            account=account,
+                            product=product_obj,
+                            warehouse=warehouse,
+                            credit=profit,
+                            debit=0
+                        )
+                        
+                        Entry.objects.create(
+                            transaction=transaction_obj,
+                            account=account_klient,
+                            product=product_obj,
+                            warehouse=warehouse,
+                            credit=0,
+                            debit=sale_price * quantity
+                        )
                     
-                    Entry.objects.create(
-                        transaction=transaction_obj,
-                        account=account_klient,
-                        product=product_obj,
-                        warehouse=warehouse,
-                        credit=0,
-                        debit=sale_price * quantity
-                    )
-                 
                     
 
                     SalesInvoiceItem.objects.create(
@@ -224,8 +225,8 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                         retail_price=retail_price,
                         wholesale_price=wholesale_price,
                     )
-                    
-        
+                
+    
                     
                     # if withPosting:
                     #     ic(product)

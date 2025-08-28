@@ -83,9 +83,9 @@ function Button({ productInputRef }) {
   return (
     <div className="mt-2">
       {values.warehouses.id && values.products.length > 0 && (
-        <div className="flex w-full gap-4 print:hidden">
+        <div className="print:hidden">
           {/* Текстовое поле для комментария (80%) */}
-          <div className="w-4/5">
+          <div className="w-1/5 mx-auto">
             <textarea
               disabled={values.disabled}
               id="comment"
@@ -100,7 +100,7 @@ function Button({ productInputRef }) {
           </div>
 
           {/* Чекбокс и кнопка Submit (20%) */}
-          <div className="w-1/5 flex flex-col items-center justify-between">
+          <div className="w-1/5 flex flex-col items-center justify-between mx-auto">
             {/* Чекбокс "с проводкой" */}
             <div className="flex items-center gap-2 mb-2">
               <input

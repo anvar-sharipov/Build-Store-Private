@@ -68,11 +68,12 @@ const PartnerSearch = ({ partnerInputRef, pertnerRefs, debitInputRef, X_partner_
             onKeyDown={(e) => {
               if (e.key === "ArrowDown") {
                 e.preventDefault();
-                if (X_debet_ref.current) {
-                  X_debet_ref.current.focus();
-                } else {
-                  debitInputRef.current.focus();
-                }
+                price_inputRef.current?.focus();
+                // if (X_debet_ref.current) {
+                //   X_debet_ref.current.focus();
+                // } else {
+                //   debitInputRef.current.focus();
+                // }
               }
             }}
           >
@@ -81,13 +82,13 @@ const PartnerSearch = ({ partnerInputRef, pertnerRefs, debitInputRef, X_partner_
 
           <div className="flex flex-col gap-2">
             <span>
-              <span className="font-semibold">Имя:</span> {values.partner?.name || "-"}
+              <span className="font-semibold"></span> {values.partner?.name || "-"}
             </span>
             <span>
-              <span className="font-semibold">Тип:</span> {t(values.partner?.type === "both" ? `${values.partner?.type}2` : values.partner?.type)}
+              <span className="font-semibold"></span> {t(values.partner?.type === "both" ? `${values.partner?.type}2` : values.partner?.type)}
             </span>
             <span>
-              <span className="font-semibold">Balance:</span> {values.partner?.balance ?? "-"}
+              <span className="font-semibold">{t("balance")}:</span> {values.partner?.balance ?? "-"}
             </span>
           </div>
         </div>
@@ -105,11 +106,12 @@ const PartnerSearch = ({ partnerInputRef, pertnerRefs, debitInputRef, X_partner_
               if (partners.length > 0) {
                 pertnerRefs.current[0]?.focus();
               } else {
-                if (X_debet_ref.current) {
-                  X_debet_ref.current.focus();
-                } else {
-                  debitInputRef.current?.focus();
-                }
+                price_inputRef.current?.focus();
+                // if (X_debet_ref.current) {
+                //   X_debet_ref.current.focus();
+                // } else {
+                //   debitInputRef.current?.focus();
+                // }
               }
             } else if (e.key === "Enter") {
               e.preventDefault()
@@ -145,16 +147,18 @@ const PartnerSearch = ({ partnerInputRef, pertnerRefs, debitInputRef, X_partner_
                   e.preventDefault();
                   setFieldValue("partner", { ...item });
                   setPartners([]);
+                  price_inputRef.current?.focus();
+                  price_inputRef.current?.select();
 
-                  if (X_debet_ref.current) {
-                    if (X_kredit_ref.current) {
-                      price_inputRef.current.focus();
-                    } else {
-                      kreditInputRef.current?.focus();
-                    }
-                  } else {
-                    debitInputRef.current?.focus();
-                  }
+                  // if (X_debet_ref.current) {
+                  //   if (X_kredit_ref.current) {
+                  //     price_inputRef.current.focus();
+                  //   } else {
+                  //     kreditInputRef.current?.focus();
+                  //   }
+                  // } else {
+                  //   debitInputRef.current?.focus();
+                  // }
                 }
               }}
             >

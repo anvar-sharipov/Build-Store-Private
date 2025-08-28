@@ -72,5 +72,6 @@ urlpatterns = [
     path('get-partner-by-name/', get_partner_by_name_view, name='get-partner-by-name'),
     path('query-partners/', search_partners_view, name='query-partners'),
     path('partner-transaction/', partner_transaction, name='partner-transaction'),
+    path('get-osw/', get_osw, name='get-osw'),
 ]
 

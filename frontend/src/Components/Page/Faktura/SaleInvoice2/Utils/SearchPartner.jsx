@@ -71,7 +71,7 @@ const SearchPartner = ({ partnerInputRef, awtoInputRef, productInputRef, warehou
   }, [list]);
 
   return (
-    <div className="relative w-full mt-2 print:mt-0">
+    <div className="relative mt-2 print:mt-0">
       {showSearchInput ? (
         <div>
           {!values.disabled && (
@@ -155,7 +155,7 @@ const SearchPartner = ({ partnerInputRef, awtoInputRef, productInputRef, warehou
         </div>
       ) : (
         <div className="flex items-center gap-2">
-          <span>
+          <span className="print:text-black">
             {t("partner")}: {values.partner?.name}
           </span>
           {!values.disabled && (

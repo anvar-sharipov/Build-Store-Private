@@ -18,6 +18,9 @@ import VisibleHideInputs from "./Utils/VisibleHideInputs";
 import PrintVisibleHideInputs from "./Utils/PrintVisibleHideInputs";
 import { Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { formatNumber } from "../../../UI/formatNumber";
+import { MdPrint } from "react-icons/md";
+import { MdPrintDisabled } from "react-icons/md";
 
 const userVisibleColumns = {
   qr_code: false,
@@ -81,6 +84,14 @@ const MainPage = () => {
     setNotification({ message, type });
     setTimeout(() => setNotification({ message: "", type: "" }), 3000);
   };
+
+  const [letPrintSaldo, setLetPrintSaldo] = useState(() => {
+    const show = localStorage.getItem("letPrintSaldo");
+    return show === "true"; // вернёт true только если строка "true"
+  });
+  useEffect(() => {
+    localStorage.setItem("letPrintSaldo", letPrintSaldo);
+  }, [letPrintSaldo]);
 
   // localStorage.removeItem("visibleColumns");
   // localStorage.removeItem("printVisibleColumns");
@@ -222,8 +233,9 @@ const MainPage = () => {
                     id={id}
                   />
                 )}
+
                 {values.awto && Object.keys(values.awto).length > 0 && (
-                  <div className="hidden print:block mt-2">
+                  <div className="hidden print:block print:text-black print:mt-3">
                     {t("delivers")}: {values.awto?.name}
                   </div>
                 )}
@@ -248,50 +260,58 @@ const MainPage = () => {
                   </div>
                 )} */}
                 {/* dlya pokaza i debet i kredet toje */}
+
                 {values.partner?.id > 0 && (
-                  <div className="mt-4 p-4 bg-white rounded-xl shadow text-sm text-gray-700 space-y-2">
-                    <h2 className="text-lg font-semibold text-gray-800">Финансовые показатели</h2>
+                  <div className={`p-4 bg-white dark:bg-gray-900 rounded-xl shadow text-gray-700 dark:text-gray-200 mt-5 mx-auto max-w-2xl ${letPrintSaldo ? "print:block" : "print:hidden"}`}>
+                    <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 text-center flex justify-center items-center gap-2">
+                      Финансовые показатели{" "}
+                      {letPrintSaldo ? (
+                        <MdPrint
+                          onClick={() => {
+                            setLetPrintSaldo((v) => !v);
+                          }}
+                        />
+                      ) : (
+                        <MdPrintDisabled
+                          onClick={() => {
+                            setLetPrintSaldo((v) => !v);
+                          }}
+                        />
+                      )}{" "}
+                    </h2>
 
-                    <div className="flex justify-between">
-                      <span>Сальдо на начало дня:</span>
-                      <span>{values.partner.balance_on_date} сум</span>
-                    </div>
-
-                    <div className="flex justify-between">
-                      <span>Оборот за сегодня:</span>
-                      <span>{values.partner.today_sales} сум</span>
-                    </div>
-
-                    <div className="flex justify-between font-semibold text-blue-700">
-                      <span>Конечное сальдо:</span>
-                      <span>{values.partner.final_balance} сум</span>
-                    </div>
-
-                    <hr className="my-2" />
-
-                    <div className="flex justify-between">
-                      <span>Всего дебет:</span>
-                      <span>{values.partner.debit_total} сум</span>
-                    </div>
-
-                    <div className="flex justify-between">
-                      <span>Всего кредит:</span>
-                      <span>{values.partner.credit_total} сум</span>
-                    </div>
-
-                    <hr className="my-2" />
-
-                    <h3 className="text-md font-semibold text-gray-700 mt-2">Проводка по счёту 62:</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="bg-gray-100 p-2 rounded">
-                        <div className="text-gray-600">Дебет 62:</div>
-                        <div className="font-semibold text-green-700">{values.partner.account_62_debit} сум</div>
-                      </div>
-                      <div className="bg-gray-100 p-2 rounded">
-                        <div className="text-gray-600">Кредит 62:</div>
-                        <div className="font-semibold text-red-700">{values.partner.account_62_credit} сум</div>
-                      </div>
-                    </div>
+                    <table className="min-w-full table-auto border-collapse print:table-fixed print:border print:border-black mt-4">
+                      <thead>
+                        <tr className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 print:bg-white print:!text-black">
+                          <th className="px-2 py-1 border">Показатель</th>
+                          <th className="px-2 py-1 border">Дт</th>
+                          <th className="px-2 py-1 border">Кт</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
+                          <td className="px-2 py-1 border font-medium">На начало дня</td>
+                          <td className="px-2 py-1 border">{values.partner.balance_on_date[0]}</td>
+                          <td className="px-2 py-1 border">{values.partner.balance_on_date[1]}</td>
+                        </tr>
+                        <tr className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
+                          <td className="px-2 py-1 border font-medium">Обороты</td>
+                          <td className="px-2 py-1 border">{values.partner.today_sales[0]}</td>
+                          <td className="px-2 py-1 border">{values.partner.today_sales[1]}</td>
+                        </tr>
+                        <tr className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
+                          <td className="px-2 py-1 border font-medium">На конец дня</td>
+                          <td className="px-2 py-1 border">{values.partner.balance_on_date[0] + values.partner.today_sales[0]}</td>
+                          <td className="px-2 py-1 border">{values.partner.balance_on_date[1] + values.partner.today_sales[1]}</td>
+                        </tr>
+                        <tr>
+                          <td colSpan={3} className="px-2 py-1 border text-end font-semibold">
+                            Баланс: {values.partner.balance_on_date[0] + values.partner.today_sales[0] - (values.partner.balance_on_date[1] + values.partner.today_sales[1])}
+                            {/* Баланс: {formatNumber(values.partner.balance)} */}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 )}
 

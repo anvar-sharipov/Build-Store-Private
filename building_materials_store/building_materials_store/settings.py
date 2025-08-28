@@ -88,6 +88,8 @@ WSGI_APPLICATION = 'building_materials_store.wsgi.application'
 #         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
+
+# dlya local host
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',  
@@ -98,6 +100,19 @@ DATABASES = {
         'PORT': '5432',                             
     }
 }
+
+# dlya docker
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',  
+#         'NAME': config('DATABASE_NAME'),                  
+#         'USER': config('DATABASE_USER'),                      
+#         'PASSWORD': config('DATABASE_PASSWORD'),                            
+#         'HOST': 'db',                       
+#         'PORT': '5432',                             
+#     }
+# }
+
 
 
 # Password validation
@@ -149,6 +164,13 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True  # В продакшене — укажи точные домены
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 
 
 REST_FRAMEWORK = {

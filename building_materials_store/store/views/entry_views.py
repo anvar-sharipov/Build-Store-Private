@@ -86,11 +86,11 @@ class TransactionViewSet(viewsets.ModelViewSet):
 @api_view(['POST'])
 def partner_transaction(request):
     data = request.data  # JSON из фронтенда уже распарсен
-    time.sleep(2)
+    # time.sleep(2)
 
     partner = data.get('partner', {})
-    debet = data.get('debet', {})
-    kredit = data.get('kredit', {})
+    # debet = data.get('debet', {})
+    # kredit = data.get('kredit', {})
     amount = data.get('amount')
     comment = data.get('comment')
     
@@ -99,11 +99,11 @@ def partner_transaction(request):
     
     
     
-    if not debet:
-        return Response({'detail': 'youNeedSelectdebet'}, status=status.HTTP_400_BAD_REQUEST)
+    # if not debet:
+    #     return Response({'detail': 'youNeedSelectdebet'}, status=status.HTTP_400_BAD_REQUEST)
     
-    if not kredit:
-        return Response({'detail': 'youNeedSelectkredit'}, status=status.HTTP_400_BAD_REQUEST)
+    # if not kredit:
+    #     return Response({'detail': 'youNeedSelectkredit'}, status=status.HTTP_400_BAD_REQUEST)
     
     if not amount:
         return Response({'detail': 'writeAmount'}, status=status.HTTP_400_BAD_REQUEST)
@@ -114,14 +114,21 @@ def partner_transaction(request):
   
     try:
         partner_obj = Partner.objects.get(id=partner.get('id'))
-        debet_obj = Account.objects.get(id=debet.get('id'))
-        kredit_obj = Account.objects.get(id=kredit.get('id'))
-    except (Partner.DoesNotExist, Account.DoesNotExist):
-        return Response({'detail': 'Account or Partner not found'}, status=status.HTTP_404_NOT_FOUND)
+        # debet_obj = Account.objects.get(id=debet.get('id'))
+        # kredit_obj = Account.objects.get(id=kredit.get('id'))
+    except (Partner.DoesNotExist):
+        return Response({'detail': 'Partner not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    rules = CustomePostingRule.objects.filter(operation__code='pays')
+    if not rules:
+        return Response({'detail': 'create rule for pays'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # for rule in rules:
+    #     transaction_obj = Transaction.objects.create
     
     
-    if debet_obj.number != "75" and debet_obj.number != "60" and kredit_obj.number != "75" and kredit_obj.number != "60":
-        return Response({'detail': 'choose75Or60Account'}, status=status.HTTP_404_NOT_FOUND)
+    # if debet_obj.number != "75" and debet_obj.number != "60" and kredit_obj.number != "75" and kredit_obj.number != "60":
+    #     return Response({'detail': 'choose75Or60Account'}, status=status.HTTP_404_NOT_FOUND)
         
     
     

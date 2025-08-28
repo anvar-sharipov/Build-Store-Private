@@ -26,7 +26,7 @@ export function useLoadOptions() {
           setFetchs((prev) => ({ ...prev, AllWarehouses: formatted }));
         }
 
-        if (AllPartners) {
+        if (AllPartners) {          
           const formatted = AllPartners.filter((v) => v.type !== "supplier").map((v) => ({
             ...v,
             id: String(v.id),

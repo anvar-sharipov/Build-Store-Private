@@ -75,22 +75,22 @@ class ProductImageViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
     
     def create(self, request, *args, **kwargs):
-        print("=== VIEWSET CREATE DEBUG ===")
-        print("Request data keys:", list(request.data.keys()))
-        print("Request FILES keys:", list(request.FILES.keys()))
-        print("Product ID:", request.data.get('product'))
-        print("Alt text:", request.data.get('alt_text'))
+        # print("=== VIEWSET CREATE DEBUG ===")
+        # print("Request data keys:", list(request.data.keys()))
+        # print("Request FILES keys:", list(request.FILES.keys()))
+        # print("Product ID:", request.data.get('product'))
+        # print("Alt text:", request.data.get('alt_text'))
         if 'image' in request.FILES:
             image = request.FILES['image']
-            print("Image file:", image.name, image.size, image.content_type)
-        print("MEDIA_ROOT exists:", os.path.exists(settings.MEDIA_ROOT))
-        print("MEDIA_ROOT path:", settings.MEDIA_ROOT)
-        print("=== END VIEWSET DEBUG ===")
+        #     print("Image file:", image.name, image.size, image.content_type)
+        # print("MEDIA_ROOT exists:", os.path.exists(settings.MEDIA_ROOT))
+        # print("MEDIA_ROOT path:", settings.MEDIA_ROOT)
+        # print("=== END VIEWSET DEBUG ===")
         
         response = super().create(request, *args, **kwargs)
-        print("=== RESPONSE DEBUG ===")
-        print("Response data:", response.data)
-        print("=== END RESPONSE DEBUG ===")
+        # print("=== RESPONSE DEBUG ===")
+        # print("Response data:", response.data)
+        # print("=== END RESPONSE DEBUG ===")
         return response
 
 
@@ -319,11 +319,11 @@ class ProductViewSet(viewsets.ModelViewSet):
         return super().retrieve(request, *args, **kwargs)
     
     def update(self, request, *args, **kwargs):
-        time.sleep(2)
+        # time.sleep(2)
         return super().update(request, *args, **kwargs)
     
     def destroy(self, request, *args, **kwargs):
-        print('request.user.username', request.user.username)
+        # print('request.user.username', request.user.username)
         if request.user.username != 'anvar':
             raise PermissionDenied("Удаление товара разрешено только администратору")
         return super().destroy(request, *args, **kwargs)

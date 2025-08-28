@@ -107,7 +107,7 @@ const PartnerTransactionEntry = () => {
                 price_inputRef={price_inputRef}
               />
 
-              <DebitAccountSearch
+              {/* <DebitAccountSearch
                 debitInputRef={debitInputRef}
                 partnerInputRef={partnerInputRef}
                 debetRefs={debetRefs}
@@ -116,8 +116,8 @@ const PartnerTransactionEntry = () => {
                 kreditInputRef={kreditInputRef}
                 X_kredit_ref={X_kredit_ref}
                 price_inputRef={price_inputRef}
-              />
-              <KreditAccountSearch
+              /> */}
+              {/* <KreditAccountSearch
                 kreditRefs={kreditRefs}
                 debitInputRef={debitInputRef}
                 partnerInputRef={partnerInputRef}
@@ -127,8 +127,8 @@ const PartnerTransactionEntry = () => {
                 kreditInputRef={kreditInputRef}
                 X_kredit_ref={X_kredit_ref}
                 price_inputRef={price_inputRef}
-              />
-              <Amount price_inputRef={price_inputRef} X_kredit_ref={X_kredit_ref} kreditInputRef={kreditInputRef} comment_Ref={comment_Ref} />
+              /> */}
+              <Amount price_inputRef={price_inputRef} X_kredit_ref={X_kredit_ref} kreditInputRef={kreditInputRef} comment_Ref={comment_Ref} X_partner_ref={X_partner_ref} partnerInputRef={partnerInputRef} />
               <Comment comment_Ref={comment_Ref} price_inputRef={price_inputRef} />
 
               <SmartTooltip tooltip={t("Провести") || "Провести"} shortcut="Ctrl+Enter">
@@ -138,7 +138,7 @@ const PartnerTransactionEntry = () => {
                   disabled={isSubmitting || loading}
                   className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-2 rounded transition-colors duration-200"
                 >
-                  {t("do_entry")}
+                  {t("toPay")}
                 </button>
               </SmartTooltip>
             </Form>

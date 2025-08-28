@@ -374,7 +374,10 @@
   "writeAmount": "Введите сумму",
   "writeComment": "Введите комментарий",
   "Account or Partner not found": "Счет или партнёр не найден",
-  "choose75Or60Account": "Выберите счет 75 или 60"
+  "choose75Or60Account": "Выберите счет 75 или 60",
+  "toPay": "Оплатить",
+  "Partner not found":"Партнёр не найден",
+  "create rule for pays": "Создайте правило для проводки платежей"
 
 
 

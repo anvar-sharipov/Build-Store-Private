@@ -6,8 +6,8 @@ export const ROUTES = {
   PARTNERS_new: "/partners_new",
   EMPLOYEERS: "/employers",
   AGENTS: "/agents",
-  ENTRIES: "/entries",
-  ACCOUNT: "/account",
+  // ENTRIES: "/entries",
+  // ACCOUNT: "/account",
   
 };
 
@@ -20,4 +20,5 @@ export const ROUTES_RAPORT = {
 export const PROCHEE = {
   WAREHOUSE: "/warehouse",
   PARTNER_TRANSACTION_ENTRY: "/partner_transaction_entry",
+  OSW: "/osw",
 };

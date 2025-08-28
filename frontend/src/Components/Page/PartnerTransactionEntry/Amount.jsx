@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useFormikContext } from "formik";
 
-const Amount = ({ price_inputRef, X_kredit_ref, kreditInputRef, comment_Ref }) => {
+const Amount = ({ price_inputRef, X_kredit_ref, kreditInputRef, comment_Ref, X_partner_ref, partnerInputRef }) => {
   const { t } = useTranslation();
   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
   return (
@@ -12,10 +12,10 @@ const Amount = ({ price_inputRef, X_kredit_ref, kreditInputRef, comment_Ref }) =
         onKeyDown={(e) => {
           if (e.key === "ArrowUp") {
             e.preventDefault();
-            if (X_kredit_ref.current) {
-              X_kredit_ref.current.focus();
+            if (X_partner_ref.current) {
+              X_partner_ref.current.focus();
             } else {
-              kreditInputRef.current?.focus();
+              partnerInputRef.current?.focus();
             }
           } else if (e.key === "ArrowDown") {
             e.preventDefault();

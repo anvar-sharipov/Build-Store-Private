@@ -1,11 +1,14 @@
 from django.http import JsonResponse
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 from django.utils.decorators import method_decorator
+from decimal import Decimal
+from django.db.models import Q, Sum
 
 from django.db.models import F
 from django.contrib.postgres.search import TrigramSimilarity
-from ..models import Agent, Account, Partner
+from ..models import *
 from icecream import ic
+import json
 
 
 # query agent
@@ -68,3 +71,65 @@ def search_partners_view(request):
     )
     data = [{'id': a.id, 'name': a.name, "type":a.type, "balance":a.balance, "is_active":a.is_active} for a in partners]
     return JsonResponse(data, safe=False)
+
+
+
+
+
+
+def get_trial_balance(date_from, date_to):
+    accounts = Account.objects.all().order_by("number")
+
+    report = []
+
+    for acc in accounts:
+        # Начальное сальдо (все проводки ДО начала периода)
+        opening_debit = (
+            Entry.objects.filter(account=acc, transaction__date__lt=date_from)
+            .aggregate(total=Sum("debit"))
+            .get("total") or Decimal("0.00")
+        )
+        opening_credit = (
+            Entry.objects.filter(account=acc, transaction__date__lt=date_from)
+            .aggregate(total=Sum("credit"))
+            .get("total") or Decimal("0.00")
+        )
+        opening_balance = opening_debit - opening_credit
+
+        # Обороты за период
+        debit_turnover = (
+            Entry.objects.filter(account=acc, transaction__date__range=(date_from, date_to))
+            .aggregate(total=Sum("debit"))
+            .get("total") or Decimal("0.00")
+        )
+        credit_turnover = (
+            Entry.objects.filter(account=acc, transaction__date__range=(date_from, date_to))
+            .aggregate(total=Sum("credit"))
+            .get("total") or Decimal("0.00")
+        )
+
+        # Конечное сальдо
+        closing_balance = opening_balance + debit_turnover - credit_turnover
+
+        report.append({
+            "account": acc.number,
+            "name": acc.name,
+            "opening_balance": opening_balance,
+            "debit_turnover": debit_turnover,
+            "credit_turnover": credit_turnover,
+            "closing_balance": closing_balance,
+        })
+
+    return report
+# OSW
+@require_GET
+def get_osw(request):
+    date_from = request.GET.get("date_from")
+    date_to = request.GET.get("date_to")
+    ic(date_from, date_to)
+
+    report = get_trial_balance(date_from, date_to)  # твоя функция
+
+    return JsonResponse({"report": report}, safe=False)
+
+

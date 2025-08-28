@@ -1,0 +1,54 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+      # - ./init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    networks:
+      - appnet
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./building_materials_store
+    # image: polisem_docker-backend:latest
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy  # Ждём пока БД будет готова
+    ports:
+      - "8000:8000"
+    networks:
+      - appnet
+    command: ["./entrypoint.sh", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+  frontend:
+    build: ./frontend
+    # image: polisem_docker-frontend:latest
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    networks:
+      - appnet
+    depends_on:
+      backend:
+        condition: service_started  # Ждем запуска backend
+
+volumes:
+  postgres_data:
+
+networks:
+  appnet:

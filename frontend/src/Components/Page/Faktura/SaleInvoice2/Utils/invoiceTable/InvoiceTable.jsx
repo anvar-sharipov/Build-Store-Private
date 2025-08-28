@@ -23,9 +23,9 @@ const InvoiceTable = ({ showNotification, productListRefs, productQuantityRefs, 
   };
 
   return (
-    <div className="overflow-x-auto print:mt-3">
+    <div className="overflow-x-auto print:mt-3 print:ml-0 print:mr-0 print:mb-0 my-5">
       {values.products.length > 0 && (
-        <table className="w-full border-collapse bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 print:text-sm print:leading-tight print:!text-black">
+        <table className="table-auto border-collapse bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 print:leading-tight print:!text-black mx-auto print:mx-0">
           <THead visibleColumns={visibleColumns} printVisibleColumns={printVisibleColumns} />
           <tbody>
             <TDProducts

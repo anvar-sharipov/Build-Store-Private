@@ -11,6 +11,7 @@ from django.utils import timezone
 # from django.db import transaction
 # from datetime import datetime
 # from django.db.models import Sum
+from icecream import ic
 
 
 
@@ -63,29 +64,57 @@ class PartnerSerializer(serializers.ModelSerializer):
         
     def get_balance_on_date(self, obj):
         today = timezone.now().date()
-        entries = Entry.objects.filter(
-            transaction__partner=obj,
-            transaction__date__lt=today
-        )
+        rule = CustomePostingRule.objects.filter(operation__code="sale", directory_type=obj.type, amount_type="revenue").first() # berem wyruchku tolko
+        if not rule:
+            return [Decimal('0.00'), Decimal('0.00')]
+        
+        account = rule.debit_account
+        
+   
+        entries = Entry.objects.filter(transaction__partner=obj, transaction__date__lt=today).filter(account=account)
+       
         debit = entries.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
         credit = entries.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
-        return debit - credit
+
+        # if obj.name == "Merdan, magazin Oktyabrsk +99361325648":
+        #     ic("Merdan")
+        #     ic(debit)
+        #     ic(credit)
+        # if obj.name == "Anvar Sharipow":
+        #     ic("Anvar")
+        #     ic(rule.debit_account.number)
+        
+ 
+        # return debit - credit
+        return [debit, credit]
+        
 
     #  dlya pokaza saldo START
     def get_today_sales(self, obj):
         today = timezone.now().date()
-        entries = Entry.objects.filter(
-            transaction__partner=obj,
-            transaction__date__date=today,
-            account__number=62
-        )
+        rule = CustomePostingRule.objects.filter(operation__code="sale", directory_type=obj.type, amount_type="revenue").first()
+        if not rule:
+            return [Decimal('0.00'), Decimal('0.00')]
+        
+        account = rule.debit_account
+        
+        entries = Entry.objects.filter(transaction__partner=obj, transaction__date__date=today).filter(account=account)
+        
+        
+        # entries = Entry.objects.filter(
+        #     transaction__partner=obj,
+        #     transaction__date__date=today,
+        #     account__number=62
+        # )
         debit = entries.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
         credit = entries.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
         # print('TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT', debit, credit)
-        return debit - credit
+        # return debit - credit
+        return [debit, credit]
 
     def get_final_balance(self, obj):
-        return self.get_balance_on_date(obj) + self.get_today_sales(obj)
+        # ic(self.get_balance_on_date(obj))
+        return [(self.get_balance_on_date(obj)[0] - self.get_balance_on_date(obj)[1]), (self.get_today_sales(obj)[0] - self.get_today_sales(obj)[1])]
 
     def get_debit_total(self, obj):
         entries = Entry.objects.filter(transaction__partner=obj, account__number=62)

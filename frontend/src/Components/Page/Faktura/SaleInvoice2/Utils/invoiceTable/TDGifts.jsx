@@ -23,7 +23,7 @@ const TDGifts = ({ visibleColumns, printVisibleColumns, handleDeleteGift, id }) 
         return (
           <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors bg-green-50 dark:bg-green-900/20">
             <td className={td2}>{index + 1 + values.products.length}</td>
-            <td className="px-3 py-2 font-semibold text-gray-700 dark:text-gray-300 text-left border border-gray-300 dark:border-gray-600 print:text-[14px] print:!text-black print:px-1 print:py-0.5">
+            <td className="px-3 py-2 font-semibold text-gray-700 dark:text-gray-300 text-left border border-gray-300 dark:border-gray-600 print:!text-black print:px-1 print:py-0.5">
               {product.name}
             </td>
 

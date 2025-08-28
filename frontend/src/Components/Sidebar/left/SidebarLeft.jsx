@@ -82,8 +82,8 @@ export default function SidebarLeft() {
           // { to: ROUTES.PARTNERS, label: t("partners"), key: "F4" },
           { to: ROUTES.PARTNERS_new, label: t("partners"), key: "F4" },
           { to: ROUTES.AGENTS, label: t("agents"), key: "F5" },
-          { to: ROUTES.ENTRIES, label: t("entries"), key: "F6" },
-          { to: ROUTES.ACCOUNT, label: t("account"), key: "F7" },
+          // { to: ROUTES.ENTRIES, label: t("entries"), key: "F6" },
+          // { to: ROUTES.ACCOUNT, label: t("account"), key: "F7" },
         ].map(({ to, label, key }) => (
           <li key={to} className="flex justify-between items-center border-b border-gray-600">
             <Link to={to} className={` ${to === location.pathname ? "text-gray-200 font-bold" : "text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200"} `}>
@@ -154,6 +154,11 @@ export default function SidebarLeft() {
                   to: PROCHEE.PARTNER_TRANSACTION_ENTRY,
                   label: t("partner_transaction_entry"),
                   key: "none2",
+                },
+                {
+                  to: PROCHEE.OSW,
+                  label: t("oborotno-saldowaya wedemost"),
+                  key: "none3",
                 },
               ].map(({ to, label, key }) => (
                 <li key={to} className="flex justify-between items-center border-b border-gray-600 px-4 py-2 last:border-b-0">

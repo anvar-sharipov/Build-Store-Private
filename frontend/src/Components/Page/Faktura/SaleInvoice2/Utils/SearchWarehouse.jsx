@@ -87,8 +87,8 @@ const SearchWarehouse = ({
   };
 
   return (
-    <div className="relative w-full mt-2 flex justify-between">
-      <div className="w-full">
+    <div className="relative mt-2 flex justify-between">
+      <div className="">
         {showSearchInput ? (
           <div>
             <MySearchInput

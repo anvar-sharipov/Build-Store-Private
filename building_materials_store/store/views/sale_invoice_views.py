@@ -11,6 +11,7 @@ from rest_framework.decorators import action
 
 from django_filters.rest_framework import DjangoFilterBackend
 from .. filters import SalesInvoiceFilter
+from django.contrib.contenttypes.models import ContentType
 
 
 from rest_framework import viewsets, status
@@ -93,13 +94,18 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                 comment = data['comment'] if data['comment'] != None else ''
                 type_price = data['priceType']
                 
-                invoice_date_str = data.get('invoice_date')
-                # if invoice_date_str:
-                #     # invoice_date = datetime.strptime(invoice_date_str, '%Y-%m-%d')
-                #     date_part = datetime.strptime(invoice_date_str, '%Y-%m-%d').date()
-                #     time_part = datetime.now().time()
-                #     invoice_date = datetime.combine(date_part, time_part)
                 
+               
+                
+              
+                try:
+                    warehouse = data['warehouses']
+                    warehouse_obj = Warehouse.objects.get(pk=warehouse['id'])
+                except:
+                    return Response({'detail': 'youNeedSelectWarehouse'}, status=status.HTTP_400_BAD_REQUEST)
+                
+                invoice_date_str = data.get('invoice_date')
+
                 if invoice_date_str:
                     try:
                         date_part = datetime.strptime(invoice_date_str, '%Y-%m-%d').date()
@@ -125,6 +131,8 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     delivered_by = Employee.objects.get(pk=data['awto']['id'])
                 except:
                     delivered_by = None
+                    
+                
 
             
 
@@ -137,14 +145,8 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     if partner.type != "klient" and partner.type != "both" and partner.type != "founder":
                         return Response({'detail': 'CantBeSaleForSupplier'}, status=status.HTTP_400_BAD_REQUEST)
                     
-                    accounts = partner.partner_accounts.all()  # вернёт список PartnerAccount
-                    founder = False
-                    for pa in accounts:
-                        if pa.account.number == "75":
-                            founder = True
-                            break
-                        
- 
+     
+                
                 invoice = SalesInvoice.objects.create(
                     buyer=partner,
                     created_by=created_by,
@@ -157,65 +159,96 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     isEntry=withPosting,
                     type_price=type_price
                 )
+                
+                
             
+
+                
                 if withPosting:
-                    if founder:
-                        comment += "dohod 46.2"
-                    else:
-                        comment += "dohod 46.1"
+                    # Определяем операцию (например, 'sale')
+                    operation = Operation.objects.get(code="sale")  
+
+                    # Ищем правило проводки
+                    rules = CustomePostingRule.objects.filter(operation__code="sale", directory_type=partner.type)
+          
+                    if not rules:
+                        return Response({'detail': 'NoPostingRuleFound'}, status=status.HTTP_400_BAD_REQUEST)
+                    
                     transaction_obj = Transaction.objects.create(
                         description=comment,
                         invoice=invoice,
                         partner=partner
                     )
 
+                
                 # Сохраняем позиции товаров
                 for product in data['products']:
+                    
                     product_id = product['id']
                     product_obj = Product.objects.get(pk=product_id)
-                    quantity = Decimal(product['selected_quantity'])
+                    quantity = product['selected_quantity']
                     sale_price = Decimal(product['selected_price'])
-                    
-                    
-
-                    
-                 
+                     
                     purchase_price = Decimal(product['purchase_price'])
                     retail_price = Decimal(product['retail_price'])
                     wholesale_price = Decimal(product['wholesale_price'])
+                    ic('tut')
+                    profit = (Decimal(sale_price) - Decimal(purchase_price)) * Decimal(quantity)
                     
-                    profit = (sale_price - purchase_price) * quantity
-                    ic(purchase_price)
-                    ic(sale_price)
-                    ic(quantity)
-                    ic(profit)
-                    if withPosting:
-                        if founder:
-                            account = Account.objects.get(number="46.2")
-                            account_klient = Account.objects.get(number="75")
-                        else:
-                            account = Account.objects.get(number="46.1")
-                            account_klient = Account.objects.get(number="60")
-                        Entry.objects.create(
-                            transaction=transaction_obj,
-                            account=account,
-                            product=product_obj,
-                            warehouse=warehouse,
-                            credit=profit,
-                            debit=0
-                        )
-                        
-                        Entry.objects.create(
-                            transaction=transaction_obj,
-                            account=account_klient,
-                            product=product_obj,
-                            warehouse=warehouse,
-                            credit=0,
-                            debit=sale_price * quantity
-                        )
+                    conversion_factor = 1
+                    units = product['units']
+                    for u in units:
+                        if u['is_default_for_sale']:
+                            conversion_factor = Decimal(u['conversion_factor'])
+                            
+                    minus_to_stock = conversion_factor * Decimal(quantity)
+                    ic(minus_to_stock)
+                    wp = WarehouseProduct.objects.get(warehouse=warehouse, product=product_obj)
+                    wp.quantity -= Decimal(minus_to_stock)
+                    wp.save()
                     
                     
 
+                    if withPosting:
+                        partner.balance -= Decimal(sale_price * quantity) 
+                        for rule in rules:
+                            if rule.amount_type == 'revenue': # Выручка (12)
+                                revenue_price = Decimal(sale_price * quantity)
+                                Entry.objects.create(
+                                    transaction=transaction_obj,
+                                    account=rule.debit_account,
+                                    product=product_obj,
+                                    warehouse=warehouse,
+                                    debit=revenue_price,
+                                )
+                                
+                                Entry.objects.create(
+                                    transaction=transaction_obj,
+                                    account=rule.credit_account,
+                                    product=product_obj,
+                                    warehouse=warehouse,
+                                    credit=revenue_price
+                                )
+                                
+                            elif rule.amount_type == 'profit': # прибыль (12)
+                                profit_price = Decimal((sale_price - purchase_price) * quantity)
+                                Entry.objects.create(
+                                    transaction=transaction_obj,
+                                    account=rule.debit_account,
+                                    product=product_obj,
+                                    warehouse=warehouse,
+                                    debit=profit_price,
+                                )
+                                
+                                Entry.objects.create(
+                                    transaction=transaction_obj,
+                                    account=rule.credit_account,
+                                    product=product_obj,
+                                    warehouse=warehouse,
+                                    credit=profit_price
+                                )
+                            
+            
                     SalesInvoiceItem.objects.create(
                         invoice=invoice,
                         product=product_obj,
@@ -227,12 +260,6 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     )
                 
     
-                    
-                    # if withPosting:
-                    #     ic(product)
-                        
-            
-                # ic(data['gifts'])
 
                 for product in data['gifts']:
                     product_id = product['gift_product']
@@ -240,6 +267,18 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     product_obj = Product.objects.get(pk=product_id)
                     quantity = Decimal(product['selected_quantity'])
                     sale_price = 0
+                    
+                    conversion_factor = 1
+                    units = product['units']
+                    for u in units:
+                        if u['is_default_for_sale']:
+                            conversion_factor = Decimal(u['conversion_factor'])
+                            
+                    minus_to_stock = conversion_factor * quantity
+                    ic(minus_to_stock)
+                    wp = WarehouseProduct.objects.get(warehouse=warehouse, product=product_obj)
+                    wp.quantity -= Decimal(minus_to_stock)
+                    wp.save()
 
                
       
@@ -250,6 +289,8 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                         sale_price=sale_price,
                         is_gift=True
                     )
+                if withPosting:
+                    partner.save()
                 serializer = self.get_serializer(invoice)
                 # 1/0
                 # return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -263,22 +304,22 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
             with transaction.atomic():
                 data = request.data
                 withPosting = data['withPosting']
+                comment = data['comment'] if data['comment'] != None else ''
   
                 invoice_id = self.kwargs.get('pk')
                 invoice = SalesInvoice.objects.get(pk=invoice_id)
+                
+                if invoice.isEntry:  
+                    return Response({'detail': 'alreadyPosted'}, status=status.HTTP_400_BAD_REQUEST)
                 
                 invoice.total_amount = Decimal(data['footerTotalPrice'])
                 invoice.note = data['comment']
                 invoice.type_price = data['priceType']
                 invoice.isEntry = data['withPosting']
-
-
-                # invoice_date_str = data.get('invoice_date')
-                # if invoice_date_str:
-                #     date_part = datetime.strptime(invoice_date_str, '%Y-%m-%d').date()
-                #     time_part = datetime.now().time()
-                #     invoice.invoice_date = datetime.combine(date_part, time_part)
                 
+                
+
+
                 invoice_date_str = data.get('invoice_date')
                 
                 if invoice_date_str:
@@ -329,12 +370,33 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                 warehouse_id = data.get('warehouses', {}).get('id')
                 if not warehouse_id:
                     return Response({'detail': 'youNeedSelectWarehouse'}, status=status.HTTP_400_BAD_REQUEST)
-                invoice.warehouse = Warehouse.objects.get(pk=warehouse_id)
+                
+                try:
+                    warehouse = Warehouse.objects.get(pk=warehouse_id)
+                except:
+                    return Response({'detail': 'youNeedSelectWarehouse'}, status=status.HTTP_400_BAD_REQUEST)
+                
+                invoice.warehouse = warehouse
 
                 invoice.save()
 
                 # Удаляем старые позиции
                 invoice.items.all().delete()
+                
+                if withPosting:
+                    operation = Operation.objects.get(code="sale")  
+
+                    # Ищем правило проводки
+                    rules = CustomePostingRule.objects.filter(operation=operation, directory_type=partner.type)
+        
+                    if not rules:
+                        return Response({'detail': 'NoPostingRuleFound'}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    transaction_obj = Transaction.objects.create(
+                        description=comment,
+                        invoice=invoice,
+                        partner=partner
+                    )
 
                 # Добавляем заново товары
                 for product in data['products']:
@@ -342,11 +404,14 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     product_obj = Product.objects.get(pk=product_id)
                     quantity = Decimal(product['selected_quantity'])
                     sale_price = Decimal(product['selected_price'])
+                    
+                    
+           
 
                   
-                    purchase_price = product['purchase_price']
-                    retail_price = product['retail_price']
-                    wholesale_price = product['wholesale_price']
+                    purchase_price = Decimal(product['purchase_price'])
+                    retail_price = Decimal(product['retail_price'])
+                    wholesale_price = Decimal(product['wholesale_price'])
                     SalesInvoiceItem.objects.create(
                         invoice=invoice,
                         product=product_obj,
@@ -356,74 +421,65 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                         retail_price=retail_price,
                         wholesale_price=wholesale_price,
                     )
-          
+                    
+                    if withPosting:  
+                        partner.balance -= Decimal(sale_price * quantity) 
+                        for rule in rules:
+                            if rule.amount_type == 'revenue': # Выручка (12)
+                                revenue_price = Decimal(sale_price * quantity)
+                                Entry.objects.create(
+                                    transaction=transaction_obj,
+                                    account=rule.debit_account,
+                                    product=product_obj,
+                                    warehouse=warehouse,
+                                    debit=revenue_price,
+                                )
+                                
+                                Entry.objects.create(
+                                    transaction=transaction_obj,
+                                    account=rule.credit_account,
+                                    product=product_obj,
+                                    warehouse=warehouse,
+                                    credit=revenue_price
+                                )
+                                
+                            elif rule.amount_type == 'profit': # прибыль (12)
+                             
+                                profit_price = Decimal((sale_price - purchase_price) * quantity)
+                                Entry.objects.create(
+                                    transaction=transaction_obj,
+                                    account=rule.debit_account,
+                                    product=product_obj,
+                                    warehouse=warehouse,
+                                    debit=profit_price,
+                                )
+                                
+                                Entry.objects.create(
+                                    transaction=transaction_obj,
+                                    account=rule.credit_account,
+                                    product=product_obj,
+                                    warehouse=warehouse,
+                                    credit=profit_price
+                                )
+            
 
                 # Подарки
-                # ic(data)
                 for product in data['gifts']:
                     product_id = product['id']
                     product_obj = Product.objects.get(pk=product_id)
-                    quantity = Decimal(product['selected_quantity'])
-
-
-
+                    quantity = Decimal(product['selected_quantity']) 
+                    
+                    
                     SalesInvoiceItem.objects.create(
                         invoice=invoice,
                         product=product_obj,
                         quantity=quantity,
-                        sale_price=0,
+                        sale_price=Decimal(0),
                         is_gift=True
                     )
+                    
                 if withPosting:
-                    ic('tut')
-                    transaction_obj = Transaction.objects.create(
-                        description=data['comment'],
-                        invoice=invoice,
-                        partner=partner
-                    )
-
-                    # Счёт "62" – Покупатели
-                    
-                    if not Account.objects.filter(number='62').exists():
-                        return Response({'detail': 'createAccount62'}, status=status.HTTP_400_BAD_REQUEST)
-                    account_62 = Account.objects.get(number='62')
-
-                    # Счёт "90" – Выручка (если нет – можно тоже проверить)
-                    if not Account.objects.filter(number='90').exists():
-                        return Response({'detail': 'createAccount90'}, status=status.HTTP_400_BAD_REQUEST)
-                    account_90 = Account.objects.get(number='90')
-
-                    warehouse = Warehouse.objects.get(pk=warehouse_id)
-
-                    for product in data['products']:
-                        product_id = product['id']
-                        product_obj = Product.objects.get(pk=product_id)
-                        quantity = Decimal(product['selected_quantity'])
-                        sale_price = Decimal(product['selected_price'])
-                        total_amount = quantity * sale_price
-
-                        # Дебет 62 – Покупатель должен нам
-                        Entry.objects.create(
-                            transaction=transaction_obj,
-                            account=account_62,
-                            product=product_obj,
-                            warehouse=warehouse,
-                            debit=total_amount,
-                            credit=Decimal('0.00')
-                        )
-
-                        # Кредит 90 – Выручка
-                        Entry.objects.create(
-                            transaction=transaction_obj,
-                            account=account_90,
-                            product=product_obj,
-                            warehouse=warehouse,
-                            debit=Decimal('0.00'),
-                            credit=total_amount
-                        )
-                    
-                    # 1/0
-
+                    partner.save()
                 return Response({'detail': 'successSave'}, status=status.HTTP_200_OK)
         except Exception as e:
             ic(e)

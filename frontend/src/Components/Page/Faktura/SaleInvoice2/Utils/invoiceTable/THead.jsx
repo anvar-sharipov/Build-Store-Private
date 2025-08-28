@@ -2,7 +2,7 @@ import { useFormikContext } from "formik";
 const THead = ({ visibleColumns, printVisibleColumns }) => {
   const { values } = useFormikContext();
   const th1 =
-    "px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 tracking-wider text-center border border-gray-300 dark:border-gray-600 print:pl-1 print:py-0.5 print:text-[12px] print:!text-black";
+    "px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 tracking-wider text-center border border-gray-300 dark:border-gray-600 print:pl-1 print:py-0.5 print:!text-black";
   return (
     <thead className="bg-gray-100 dark:bg-gray-700">
       <tr>

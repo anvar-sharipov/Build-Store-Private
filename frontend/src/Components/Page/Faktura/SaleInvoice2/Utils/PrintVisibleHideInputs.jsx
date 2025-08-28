@@ -11,6 +11,7 @@ const PrintVisibleHideInputs = ({ printVisibleColumns, setPrintVisibleColumns, u
     { key: "volume", label: "Объём (м³)", icon: "📦" },
     { key: "weight", label: "Вес (кг)", icon: "⚖️" },
     { key: "dimensions", label: "Размеры", icon: "📏" },
+    // { key: "saldo", label: "Сальдо", icon: "$" },
   ];
 
   return (
@@ -132,6 +133,8 @@ const PrintVisibleHideInputs = ({ printVisibleColumns, setPrintVisibleColumns, u
             </div>
             <div className="absolute inset-0 -translate-x-full group-hover:translate-x-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700"></div>
           </button>
+
+          
         </div>
       </div>
     </div>

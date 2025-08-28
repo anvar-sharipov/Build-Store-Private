@@ -20,7 +20,7 @@ const TFoot = ({ visibleColumns, printVisibleColumns }) => {
 
         <td className="px-3 py-2 border border-gray-300 dark:border-gray-600"></td>
         <td className="px-3 py-2 border border-gray-300 dark:border-gray-600"></td>
-        <td className="px-3 py-2 text-sm font-bold text-gray-900 dark:text-gray-100 text-right border border-gray-300 dark:border-gray-600 print:!text-black">Итого:</td>
+        <td className="px-3 py-2 font-bold text-gray-900 dark:text-gray-100 text-right border border-gray-300 dark:border-gray-600 print:!text-black">Итого:</td>
 
         <td className="px-3 py-2 font-bold text-gray-900 dark:text-gray-100 text-right border border-gray-300 dark:border-gray-600 print:!text-black">{formatNumber(values.footerTotalPrice)}</td>
 

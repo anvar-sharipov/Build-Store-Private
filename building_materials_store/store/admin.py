@@ -3,6 +3,9 @@ from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 from django.db.models import Sum
 from .models import *
+from django.contrib.contenttypes.admin import GenericTabularInline
+from django.contrib.contenttypes.models import ContentType
+from django import forms
 
 # Фильтры для админки
 class ActiveFilter(admin.SimpleListFilter):
@@ -412,3 +415,84 @@ class EntryAdmin(admin.ModelAdmin):
 #             return f"Счет №{obj.invoice.number}"
 #         return '—'
 #     invoice_link.short_description = 'Счет'
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+############################################################################################################################### Форма для PostingRule с фильтром content_object START
+# class PostingRuleForm(forms.ModelForm):
+#     class Meta:
+#         model = PostingRule
+#         fields = '__all__'
+
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+
+#         # Ограничиваем content_type только для нужных моделей
+#         self.fields['content_type'].queryset = ContentType.objects.filter(
+#             model__in=['partner', 'salesinvoiceitem', 'product', 'warehouse']
+#         )
+
+#         # object_id можно оставить пустым для общих правил
+#         self.fields['object_id'].help_text = "Оставьте пустым для общих правил или правил по типу партнёра"
+
+# @admin.register(Operation)
+# class OperationAdmin(admin.ModelAdmin):
+#     list_display = ('name', 'code')
+#     search_fields = ('name', 'code')
+
+# @admin.register(PostingRule)
+# class PostingRuleAdmin(admin.ModelAdmin):
+#     form = PostingRuleForm
+#     list_display = ('operation', 'display_object', 'partner_type', 'debit_account', 'credit_account', 'description')
+#     list_filter = ('operation', 'partner_type', 'content_type')
+#     search_fields = ('description',)
+
+#     def display_object(self, obj):
+#         if obj.content_object:
+#             return f"{obj.content_object}"
+#         return "Общее правило"
+#     display_object.short_description = "Объект"
+
+# # Опционально: добавить inline в Partner, чтобы сразу создавать правила для конкретного партнёра
+# from django.contrib.contenttypes.admin import GenericTabularInline
+
+# class PostingRuleInline(GenericTabularInline):
+#     model = PostingRule
+#     ct_field = "content_type"
+#     ct_fk_field = "object_id"
+#     extra = 0
+############################################################################################################################### Форма для PostingRule с фильтром content_object END
+
+
+
+@admin.register(Operation)
+class OperationAdmin(admin.ModelAdmin):
+    list_display = ('code', 'name')
+    search_fields = ('code', 'name')
+    ordering = ('code',)
+
+
+@admin.register(CustomePostingRule)
+class CustomePostingRuleAdmin(admin.ModelAdmin):
+    list_display = ('operation', 'directory_type', 'debit_account', 'credit_account', 'amount_type', 'description')
+    list_filter = ('operation', 'directory_type', 'amount_type')
+    search_fields = ('operation__name', 'directory_type', 'debit_account__code', 'credit_account__code', 'description')
+    ordering = ('operation', 'directory_type')
+    
+
+
+@admin.register(WarehouseAccount)
+class WarehouseAccountAdmin(admin.ModelAdmin):
+    list_display = ('warehouse', 'account', 'description')
+    list_filter = ('warehouse',)
+    search_fields = ('warehouse__name', 'account__code')

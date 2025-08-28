@@ -33,7 +33,7 @@ const TDProducts = ({ handleDeleteProduct, visibleColumns, printVisibleColumns, 
         return (
           <tr key={product.id} ref={(el) => (productListRefs.current[product.id] = el)} tabIndex={0} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
             <td className={td1}>{index + 1}</td>
-            <td className="px-3 py-2 font-semibold text-gray-900 dark:text-gray-100 text-left border border-gray-300 dark:border-gray-600 print:px-1 print:py-0.5 print:text-[14px] print:!text-black">
+            <td className="px-3 py-2 font-semibold text-gray-900 dark:text-gray-100 text-left border border-gray-300 dark:border-gray-600 print:px-1 print:py-0.5 print:!text-black">
               {product.name}
             </td>
 

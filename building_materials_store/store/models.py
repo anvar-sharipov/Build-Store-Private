@@ -5,6 +5,8 @@ from django.contrib.auth import get_user_model
 from decimal import Decimal
 from django.utils import timezone
 from django.db.models import Sum
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 
 class CustomUser(AbstractUser):
@@ -600,4 +602,80 @@ class Entry(models.Model):
         verbose_name = 'Проводка'
         verbose_name_plural = 'Проводки'
 
+
+
+
+# prawila prowodok ################################################################################################################################################################################################
+class Operation(models.Model):
+    code = models.CharField(max_length=50, unique=True, verbose_name="Код операции")
+    name = models.CharField(max_length=255, verbose_name="Наименование")
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+    class Meta:
+        verbose_name = "Операция"
+        verbose_name_plural = "Операции"
+        
+
+class CustomePostingRule(models.Model):
+    CONTENT_TYPE_CHOICES = [('klient', 'Покупатель'), ('supplier', 'Поставщик'), ('founder', 'Учредитель')]
+    AMOUNT_TYPE_CHOICES = [('revenue', 'Выручка'), ('cogs', 'Себестоимость'), ('profit', 'Прибыль'), ('pays', 'Оплата долга')]
+    
+    operation = models.ForeignKey(Operation, on_delete=models.PROTECT, verbose_name="Операция")
+    # warehouse = models.ForeignKey('Warehouse', on_delete=models.PROTECT, null=True, blank=True, verbose_name="Склад")
+    directory_type = models.CharField(max_length=1000, choices=CONTENT_TYPE_CHOICES, null=True, blank=True, verbose_name="Вид справочника")
+    debit_account = models.ForeignKey('Account', on_delete=models.PROTECT, related_name='postingrule_debit', verbose_name="Дебетовый счёт")
+    credit_account = models.ForeignKey('Account', on_delete=models.PROTECT, related_name='postingrule_credit', verbose_name="Кредитовый счёт")
+    description = models.CharField(max_length=255, blank=True, null=True, verbose_name="Описание") 
+    amount_type = models.CharField(max_length=20, choices=AMOUNT_TYPE_CHOICES, verbose_name="Тип суммы", blank=True, null=True,)
+    
+    class Meta:
+        verbose_name = "Правило проводки"
+        verbose_name_plural = "Правила проводок"
+
+    
+class WarehouseAccount(models.Model):
+    warehouse = models.ForeignKey('Warehouse', on_delete=models.PROTECT, verbose_name="Склад")
+    account = models.ForeignKey('Account', on_delete=models.PROTECT, verbose_name="Счёт")
+    description = models.CharField(max_length=255, blank=True, null=True, verbose_name="Описание")
+
+    def __str__(self):
+        return f"{self.warehouse} → {self.account}"
+
+    class Meta:
+        verbose_name = "Склад → Счёт"
+        verbose_name_plural = "Склады → Счета"
+    
+    
+    
+    
+# class PostingRule(models.Model):
+#     operation = models.ForeignKey(Operation, on_delete=models.PROTECT)
+    
+#     partner_type = models.CharField(
+#         max_length=20,
+#         choices=Partner.PARTNER_TYPE_CHOICES,
+#         blank=True,
+#         null=True,
+#         verbose_name="Тип партнёра"
+#     )
+    
+#     content_type = models.ForeignKey(ContentType, null=True, blank=True, on_delete=models.PROTECT)
+#     object_id = models.PositiveIntegerField(null=True, blank=True)
+#     content_object = GenericForeignKey('content_type', 'object_id')
+
+#     debit_account = models.ForeignKey('Account', on_delete=models.PROTECT, related_name='postingrule_debit')
+#     credit_account = models.ForeignKey('Account', on_delete=models.PROTECT, related_name='postingrule_credit')
+#     description = models.CharField(max_length=255, blank=True, null=True)
+    
+#     AMOUNT_TYPE_CHOICES = [
+#         ('revenue', 'Выручка'),
+#         ('cogs', 'Себестоимость'),
+#         ('profit', 'Прибыль'),
+#     ]
+#     amount_type = models.CharField(max_length=20, choices=AMOUNT_TYPE_CHOICES, default='revenue')
+        
+        
+    
 

@@ -12,7 +12,6 @@ from icecream import ic
 from decimal import Decimal, InvalidOperation
 
 
-
 from rest_framework import viewsets, status
 
 from store.filters import PartnerFilter
@@ -43,9 +42,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 # from django.views.decorators.http import require_GET
 # from django.http import JsonResponse
 from django.contrib.postgres.search import TrigramSimilarity
-# from django.db.models import Q
+from django.db.models import Q, Sum
 # from django.utils.dateparse import parse_datetime, parse_date
-# from django.db.models import Sum, F, Count
+# from django.db.models import F, Count
 # from openpyxl.styles import Font
 # from rest_framework.exceptions import PermissionDenied
 from django.db import transaction
@@ -80,7 +79,7 @@ class PartnerViewSet(viewsets.ModelViewSet):
 
 
     def paginate_queryset(self, queryset):
-        ic('tut2222')
+        ic('tut2222')        
         """
         Если в query-параметрах есть ?no_pagination=1, 
         то отключаем пагинацию и отдаём весь queryset.
@@ -111,7 +110,7 @@ class PartnerViewSet(viewsets.ModelViewSet):
     
     def create(self, request, *args, **kwargs):
         ic('tut5')
-        time.sleep(2)
+        # time.sleep(2)
         try:
             with transaction.atomic():
                 data = request.data
@@ -175,7 +174,7 @@ class PartnerViewSet(viewsets.ModelViewSet):
     
     
     def update(self, request, *args, **kwargs):
-        time.sleep(2)
+        # time.sleep(2)
         try:
             with transaction.atomic():
                 data = request.data

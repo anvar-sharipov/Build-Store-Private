@@ -141,7 +141,7 @@ const SearchAwto = ({ awtoInputRef, warehouseInputRef, partnerInputRef, fetchs }
         </div>
       ) : (
         <div className="flex items-center gap-2 print:hidden">
-          <span>
+          <span className="print:text-black">
             {t("delivers")}: {values.awto?.name}
           </span>
           {!values.disabled && (

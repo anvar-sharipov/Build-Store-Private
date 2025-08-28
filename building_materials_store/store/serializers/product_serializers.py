@@ -57,42 +57,42 @@ class ProductImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'product', 'alt_text', 'image']
     
     def create(self, validated_data):
-        print("=== SERIALIZER CREATE DEBUG ===")
-        print("Validated data:", validated_data)
-        print("Image in validated_data:", validated_data.get('image'))
+        # print("=== SERIALIZER CREATE DEBUG ===")
+        # print("Validated data:", validated_data)
+        # print("Image in validated_data:", validated_data.get('image'))
         if 'image' in validated_data:
             image_file = validated_data['image']
-            print("Image file name:", image_file.name)
-            print("Image file size:", image_file.size)
-            print("Image file type:", image_file.content_type)
+            # print("Image file name:", image_file.name)
+            # print("Image file size:", image_file.size)
+            # print("Image file type:", image_file.content_type)
         
         instance = super().create(validated_data)
         
-        print("Created instance ID:", instance.id)
-        print("Instance image field:", instance.image)
-        if instance.image:
-            print("Instance image name:", instance.image.name)
-            print("Instance image path:", instance.image.path)
-            print("Instance image URL:", instance.image.url)
-            print("File exists on disk:", os.path.exists(instance.image.path) if instance.image else False)
-        print("=== END SERIALIZER DEBUG ===")
+        # print("Created instance ID:", instance.id)
+        # print("Instance image field:", instance.image)
+        # if instance.image:
+        #     print("Instance image name:", instance.image.name)
+        #     print("Instance image path:", instance.image.path)
+        #     print("Instance image URL:", instance.image.url)
+        #     print("File exists on disk:", os.path.exists(instance.image.path) if instance.image else False)
+        # print("=== END SERIALIZER DEBUG ===")
         
         return instance
     
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        print(f"=== TO_REPRESENTATION DEBUG ===")
-        print(f"Instance image: {instance.image}")
+        # print(f"=== TO_REPRESENTATION DEBUG ===")
+        # print(f"Instance image: {instance.image}")
         if instance.image:
             request = self.context.get('request')
             if request:
                 data['image'] = request.build_absolute_uri(instance.image.url)
             else:
                 data['image'] = instance.image.url
-            print(f"Returning image URL: {data['image']}")
-        else:
-            print("No image found in instance")
-        print("=== END TO_REPRESENTATION DEBUG ===")
+            # print(f"Returning image URL: {data['image']}")
+        # else:
+        #     print("No image found in instance")
+        # print("=== END TO_REPRESENTATION DEBUG ===")
         return data
 
 

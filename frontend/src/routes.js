@@ -13,12 +13,10 @@ export const ROUTES = {
 
 export const ROUTES_RAPORT = {
   PRICE_CHANGE_REPORT: "/report/price-changes",
-  ACCOUNT_REPORTS: "/report/accounts",
 };
 
 
 export const PROCHEE = {
-  WAREHOUSE: "/warehouse",
   PARTNER_TRANSACTION_ENTRY: "/partner_transaction_entry",
   OSW: "/osw",
 };

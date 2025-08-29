@@ -101,7 +101,7 @@ DATABASES = {
     }
 }
 
-# dlya docker
+# # dlya docker
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',  

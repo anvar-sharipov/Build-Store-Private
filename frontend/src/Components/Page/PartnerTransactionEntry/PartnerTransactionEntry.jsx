@@ -26,6 +26,10 @@ const PartnerTransactionEntry = () => {
     setTimeout(() => setNotification({ message: "", type: "" }), 3000);
   };
 
+  //  radio button
+  const income_btn = useRef(null);
+  const expense_btn = useRef(null);
+
   // partner
   const partnerInputRef = useRef(null);
   const pertnerRefs = useRef([]);
@@ -96,7 +100,58 @@ const PartnerTransactionEntry = () => {
 
           return (
             <Form className="max-w-2xl w-full mx-auto space-y-4 bg-gray-50 dark:bg-gray-800 p-6 rounded-md shadow-md">
+              {/* Radio buttons для выбора типа платежа */}
+              <div className="space-y-2">
+                <label className="block text-lg font-medium">{t("Тип платежа")}</label>
+                <div className="flex items-center space-x-6">
+                  <label className="flex items-center space-x-2">
+                    <Field
+                      onKeyDown={(e) => {
+                        if (e.key === "ArrowDown") {
+                          e.preventDefault();
+                          expense_btn.current?.focus();
+                        } else if (e.key === "ArrowRight" || e.key === "ArrowLeft" ) {
+                          e.preventDefault()
+                        }
+                      }}
+                      ref={income_btn}
+                      type="radio"
+                      name="type"
+                      value="income"
+                      className="form-radio text-blue-600"
+                    />
+                    <span>{t("Приход")}</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <Field
+                      onKeyDown={(e) => {
+                        if (e.key === "ArrowDown") {
+                          e.preventDefault();
+                          if (!X_partner_ref.current) {
+                            partnerInputRef.current?.focus();
+                          } else {
+                            X_partner_ref.current.focus();
+                          }
+                        } else if (e.key === "ArrowUp") {
+                          e.preventDefault();
+                          income_btn.current?.focus();
+                        } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+                          e.preventDefault()
+                        }
+                      }}
+                      ref={expense_btn}
+                      type="radio"
+                      name="type"
+                      value="expense"
+                      className="form-radio text-blue-600"
+                    />
+                    <span>{t("Расход")}</span>
+                  </label>
+                </div>
+              </div>
+
               <PartnerSearch
+                expense_btn={expense_btn}
                 partnerInputRef={partnerInputRef}
                 pertnerRefs={pertnerRefs}
                 debitInputRef={debitInputRef}
@@ -128,7 +183,14 @@ const PartnerTransactionEntry = () => {
                 X_kredit_ref={X_kredit_ref}
                 price_inputRef={price_inputRef}
               /> */}
-              <Amount price_inputRef={price_inputRef} X_kredit_ref={X_kredit_ref} kreditInputRef={kreditInputRef} comment_Ref={comment_Ref} X_partner_ref={X_partner_ref} partnerInputRef={partnerInputRef} />
+              <Amount
+                price_inputRef={price_inputRef}
+                X_kredit_ref={X_kredit_ref}
+                kreditInputRef={kreditInputRef}
+                comment_Ref={comment_Ref}
+                X_partner_ref={X_partner_ref}
+                partnerInputRef={partnerInputRef}
+              />
               <Comment comment_Ref={comment_Ref} price_inputRef={price_inputRef} />
 
               <SmartTooltip tooltip={t("Провести") || "Провести"} shortcut="Ctrl+Enter">

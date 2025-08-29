@@ -6,7 +6,7 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { myClass } from "../../tailwindClasses";
 import { useFormikContext } from "formik";
 
-const PartnerSearch = ({ partnerInputRef, pertnerRefs, debitInputRef, X_partner_ref, X_debet_ref, X_kredit_ref, kreditInputRef, price_inputRef }) => {
+const PartnerSearch = ({ partnerInputRef, pertnerRefs, debitInputRef, X_partner_ref, X_debet_ref, X_kredit_ref, kreditInputRef, price_inputRef, expense_btn }) => {
   const { t } = useTranslation();
   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
   const [partners, setPartners] = useState([]);
@@ -74,6 +74,9 @@ const PartnerSearch = ({ partnerInputRef, pertnerRefs, debitInputRef, X_partner_
                 // } else {
                 //   debitInputRef.current.focus();
                 // }
+              } else if (e.key === "ArrowUp") {
+                e.preventDefault()
+                expense_btn.current?.focus();
               }
             }}
           >
@@ -115,6 +118,9 @@ const PartnerSearch = ({ partnerInputRef, pertnerRefs, debitInputRef, X_partner_
               }
             } else if (e.key === "Enter") {
               e.preventDefault()
+            } else if (e.key === "ArrowUp") {
+              e.preventDefault()
+              expense_btn.current?.focus()
             }
           }}
           placeholder={t("partner")}

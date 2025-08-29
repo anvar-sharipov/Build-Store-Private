@@ -131,9 +131,16 @@ def partner_transaction(request):
     #     return Response({'detail': 'choose75Or60Account'}, status=status.HTTP_404_NOT_FOUND)
         
     
+    if "type" not in data:
+        return Response({'detail': 'choose one of type of pays income or expense'}, status=status.HTTP_404_NOT_FOUND)
     
+    if data['type'] == 'income':
+        ic("da income GGGGG")
+    elif data['type'] == 'expense':
+        ic("da expense GGGGG")
+    else:
+        return Response({'detail': 'choose one of type of pays income or expense'}, status=status.HTTP_404_NOT_FOUND)
     
-
     try:
         with transaction.atomic():
             transaction_obj = Transaction.objects.create(

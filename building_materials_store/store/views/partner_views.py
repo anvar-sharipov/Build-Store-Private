@@ -121,7 +121,7 @@ class PartnerViewSet(viewsets.ModelViewSet):
                 is_active = data['is_active']
                 name = data['name']
                 partner_type  = data['type']
-                accounts_id = data['accounts_id']
+                # accounts_id = data['accounts_id']
                 
                 ic(data)
                 
@@ -154,14 +154,14 @@ class PartnerViewSet(viewsets.ModelViewSet):
                     agent=agent_obj
                 )
                 
-                if accounts_id:
-                    for acc in accounts_id:
-                        a = Account.objects.get(id=acc['id'])
-                        PartnerAccount.objects.create(
-                            partner=partner,
-                            account=a,
-                            role=partner_type
-                        )
+                # if accounts_id:
+                #     for acc in accounts_id:
+                #         a = Account.objects.get(id=acc['id'])
+                #         PartnerAccount.objects.create(
+                #             partner=partner,
+                #             account=a,
+                #             role=partner_type
+                #         )
                                 
                 # return Response({"message": "данные получены"}, status=200)
                 serializer = PartnerSerializer(partner)
@@ -184,7 +184,7 @@ class PartnerViewSet(viewsets.ModelViewSet):
                 is_active = data.get("is_active")
                 name = data.get("name")
                 partner_type = data.get("type")
-                accounts_id = data.get("accounts_id")
+                # accounts_id = data.get("accounts_id")
 
                 if not partner_id:
                     return Response({'detail': 'missingPartnerId'}, status=status.HTTP_400_BAD_REQUEST)
@@ -220,16 +220,16 @@ class PartnerViewSet(viewsets.ModelViewSet):
                 partner.agent = Agent.objects.get(id=agent["id"]) if agent else None
                 partner.save()
 
-                # Обновим аккаунты
-                PartnerAccount.objects.filter(partner=partner).delete()
-                if accounts_id:
-                    for acc in accounts_id:
-                        a = Account.objects.get(id=acc['id'])
-                        PartnerAccount.objects.create(
-                            partner=partner,
-                            account=a,
-                            role=partner_type
-                        )
+                # # Обновим аккаунты
+                # PartnerAccount.objects.filter(partner=partner).delete()
+                # if accounts_id:
+                #     for acc in accounts_id:
+                #         a = Account.objects.get(id=acc['id'])
+                #         PartnerAccount.objects.create(
+                #             partner=partner,
+                #             account=a,
+                #             role=partner_type
+                #         )
                 serializer = PartnerSerializer(partner)
                 return Response({'detail': 'successUpdated', 'partner': serializer.data}, status=status.HTTP_200_OK)
 

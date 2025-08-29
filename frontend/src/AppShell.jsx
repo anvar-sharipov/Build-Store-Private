@@ -12,13 +12,11 @@ import Partner from "./Components/Page/Partner/Partner";
 import Agent from "./Components/Page/Agent/Agent";
 import PriceChangeReport from "./Components/Page/Reports/PriceChangeReport/PriceChangeReport";
 import AddSaleInvoicePage from "./Components/Page/Faktura/SaleInvoice/AddSaleInvoicePage";
-import AccountReports from "./Components/Page/Reports/Accounts/AccountReport/AccountReports";
 import UpdateSaleInvoice from "./Components/Page/Faktura/UpdateSaleInvoice/UpdateSaleInvoice";
 
 import { AuthProvider } from "./AuthContext";
 import { SearchProvider } from "./Components/context/SearchContext";
 import MainPage from "./Components/Page/Faktura/SaleInvoice2/MainPage";
-import Warehouse from "./Components/Page/Warehouse/Warehouse";
 import Partner2 from "./Components/Page/Partner2/Partner2";
 import PartnerTransactionEntry from "./Components/Page/PartnerTransactionEntry/PartnerTransactionEntry";
 import OSW from "./Components/Page/OSW/OSW";
@@ -52,9 +50,7 @@ function AppShell() {
                 {/* <Route path={ROUTES.ACCOUNT} element={<Account />} /> */}
 
                 <Route path={ROUTES_RAPORT.PRICE_CHANGE_REPORT} element={<PriceChangeReport />} />
-                <Route path={ROUTES_RAPORT.ACCOUNT_REPORTS} element={<AccountReports />} />
-
-                <Route path={PROCHEE.WAREHOUSE} element={<Warehouse />} />
+            
                 <Route path={PROCHEE.PARTNER_TRANSACTION_ENTRY} element={<PartnerTransactionEntry />} />
                 <Route path={PROCHEE.OSW} element={<OSW />} />
 

@@ -377,7 +377,8 @@
   "choose75Or60Account": "Выберите счет 75 или 60",
   "toPay": "Оплатить",
   "Partner not found":"Партнёр не найден",
-  "create rule for pays": "Создайте правило для проводки платежей"
+  "create rule for pays": "Создайте правило для проводки платежей",
+  "choose one of type of pays income or expense": "Выберите один из типов платежей: приход или расход"
 
 
 

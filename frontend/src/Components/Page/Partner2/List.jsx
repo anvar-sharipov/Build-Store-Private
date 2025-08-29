@@ -25,16 +25,16 @@ const List = ({
     if (partner.agent) {
       agent_obj = { id: partner.agent, name: partner.agent_name };
     }
-    let accounts_id = [];
-    if (partner.partner_accounts.length > 0) {
-      partner.partner_accounts.forEach((p) => {
-        accounts_id.push({ id: p.account.id, number: p.account.number, type: p.role });
-      });
-    }
+    // let accounts_id = [];
+    // if (partner.partner_accounts.length > 0) {
+    //   partner.partner_accounts.forEach((p) => {
+    //     accounts_id.push({ id: p.account.id, number: p.account.number, type: p.role });
+    //   });
+    // }
     setPartnerValue({
       name: partner.name,
       balance: partner.balance,
-      accounts_id: accounts_id,
+      // accounts_id: accounts_id,
       type: partner.type,
       agent: agent_obj,
       is_active: partner.is_active,

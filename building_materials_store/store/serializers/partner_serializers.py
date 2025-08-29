@@ -21,13 +21,13 @@ class AccountSerializerForRead(serializers.ModelSerializer):
         model = Account
         fields = ['id', 'number', 'name', 'type']
 
-class PartnerAccountSerializer(serializers.ModelSerializer):
-    account_id = serializers.PrimaryKeyRelatedField(queryset=Account.objects.all(), source="account")
-    account = AccountSerializerForRead()
+# class PartnerAccountSerializer(serializers.ModelSerializer):
+#     account_id = serializers.PrimaryKeyRelatedField(queryset=Account.objects.all(), source="account")
+#     account = AccountSerializerForRead()
     
-    class Meta:
-        model = PartnerAccount
-        fields = ['account_id', 'role', 'account']
+#     class Meta:
+#         model = PartnerAccount
+#         fields = ['account_id', 'role', 'account']
 
 class PartnerSerializer(serializers.ModelSerializer):
     # current_balance = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
@@ -52,15 +52,15 @@ class PartnerSerializer(serializers.ModelSerializer):
     account_62_debit = serializers.SerializerMethodField()
     account_62_credit = serializers.SerializerMethodField()
     
-    partner_accounts = PartnerAccountSerializer(many=True, read_only=True)
-    accounts_id = PartnerAccountSerializer(many=True, write_only=True, required=False)
+    # partner_accounts = PartnerAccountSerializer(many=True, read_only=True)
+    # accounts_id = PartnerAccountSerializer(many=True, write_only=True, required=False)
     
 
     agent_name = serializers.CharField(source='agent.name', read_only=True)
 
     class Meta:
         model = Partner
-        fields = ['id', 'name', 'type', 'type_display', 'agent', 'agent_id', 'agent_name', 'balance', 'balance_on_date', 'today_sales', 'final_balance', 'debit_total', 'credit_total', 'account_62_debit', 'account_62_credit', 'is_active', 'partner_accounts', 'accounts_id']
+        fields = ['id', 'name', 'type', 'type_display', 'agent', 'agent_id', 'agent_name', 'balance', 'balance_on_date', 'today_sales', 'final_balance', 'debit_total', 'credit_total', 'account_62_debit', 'account_62_credit', 'is_active']
         
     def get_balance_on_date(self, obj):
         today = timezone.now().date()

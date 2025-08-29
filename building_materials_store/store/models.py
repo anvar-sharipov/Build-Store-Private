@@ -340,23 +340,23 @@ class Partner(models.Model):
         verbose_name_plural = 'Partnerler'
 
 
-class PartnerAccount(models.Model):
-    partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='partner_accounts')
-    account = models.ForeignKey('Account', on_delete=models.PROTECT)
+# class PartnerAccount(models.Model):
+#     partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='partner_accounts')
+#     account = models.ForeignKey('Account', on_delete=models.PROTECT)
     
-    ROLE_CHOICES = [
-        ('klient', 'Покупатель'),
-        ('supplier', 'Поставщик'),
-        ('both', 'Покупатель и поставщик'),
-        ('founder', 'Учредитель'),
-    ]
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=False, blank=False)
+#     ROLE_CHOICES = [
+#         ('klient', 'Покупатель'),
+#         ('supplier', 'Поставщик'),
+#         ('both', 'Покупатель и поставщик'),
+#         ('founder', 'Учредитель'),
+#     ]
+#     role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=False, blank=False)
 
-    class Meta:
-        unique_together = ('partner', 'account', 'role')
+#     class Meta:
+#         unique_together = ('partner', 'account', 'role')
 
-    def __str__(self):
-        return f"{self.partner.name} - {self.account.number} ({self.get_role_display()})"
+#     def __str__(self):
+#         return f"{self.partner.name} - {self.account.number} ({self.get_role_display()})"
 
 class Employee(models.Model):
     name = models.CharField(verbose_name='Işgär', max_length=2000)
@@ -621,6 +621,7 @@ class Operation(models.Model):
 class CustomePostingRule(models.Model):
     CONTENT_TYPE_CHOICES = [('klient', 'Покупатель'), ('supplier', 'Поставщик'), ('founder', 'Учредитель')]
     AMOUNT_TYPE_CHOICES = [('revenue', 'Выручка'), ('cogs', 'Себестоимость'), ('profit', 'Прибыль'), ('pays', 'Оплата долга')]
+    PAYS_TYPE_CHOICES = [('income', 'Приход'), ('expense', 'Расход')]
     
     operation = models.ForeignKey(Operation, on_delete=models.PROTECT, verbose_name="Операция")
     # warehouse = models.ForeignKey('Warehouse', on_delete=models.PROTECT, null=True, blank=True, verbose_name="Склад")
@@ -629,6 +630,7 @@ class CustomePostingRule(models.Model):
     credit_account = models.ForeignKey('Account', on_delete=models.PROTECT, related_name='postingrule_credit', verbose_name="Кредитовый счёт")
     description = models.CharField(max_length=255, blank=True, null=True, verbose_name="Описание") 
     amount_type = models.CharField(max_length=20, choices=AMOUNT_TYPE_CHOICES, verbose_name="Тип суммы", blank=True, null=True,)
+    pays_type = models.CharField(max_length=20, choices=PAYS_TYPE_CHOICES, verbose_name="Тип платежа", blank=True, null=True,)
     
     class Meta:
         verbose_name = "Правило проводки"

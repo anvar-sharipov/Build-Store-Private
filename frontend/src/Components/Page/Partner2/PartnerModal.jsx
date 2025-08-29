@@ -465,7 +465,7 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                 </div>
 
                 {/* Accounts */}
-                <div className="relative">
+                {/* <div className="relative">
                   <label htmlFor="account" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t("account")}
                   </label>
@@ -598,7 +598,7 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                         </button>
                       </div>
                     ))}
-                </div>
+                </div> */}
 
                 {/* Активность партнёра */}
                 <div className="mb-4">

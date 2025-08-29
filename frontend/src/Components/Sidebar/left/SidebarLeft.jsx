@@ -111,11 +111,6 @@ export default function SidebarLeft() {
                   label: t("PRICE_CHANGE_REPORT"),
                   key: "none",
                 },
-                {
-                  to: ROUTES_RAPORT.ACCOUNT_REPORTS,
-                  label: t("ACCOUNT_REPORTS"),
-                  key: "none2",
-                },
               ].map(({ to, label, key }) => (
                 <li key={to} className="flex justify-between items-center border-b border-gray-600 px-4 py-2 last:border-b-0">
                   <Link
@@ -145,11 +140,6 @@ export default function SidebarLeft() {
           <div className="absolute mt-2 w-56 rounded-md shadow-lg bg-gray-800 ring-1 ring-black ring-opacity-5 z-10">
             <ul>
               {[
-                {
-                  to: PROCHEE.WAREHOUSE,
-                  label: t("warehouse"),
-                  key: "none",
-                },
                 {
                   to: PROCHEE.PARTNER_TRANSACTION_ENTRY,
                   label: t("partner_transaction_entry"),

@@ -155,7 +155,7 @@ const SearchPartner = ({ partnerInputRef, awtoInputRef, productInputRef, warehou
         </div>
       ) : (
         <div className="flex items-center gap-2">
-          <span className="print:text-black">
+          <span className="print:text-black font-semibold">
             {t("partner")}: {values.partner?.name}
           </span>
           {!values.disabled && (

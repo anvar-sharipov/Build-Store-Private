@@ -309,6 +309,39 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                 invoice_id = self.kwargs.get('pk')
                 invoice = SalesInvoice.objects.get(pk=invoice_id)
                 
+                
+                # nado wernut na sklad wse pered update, chtoby zatem snowa wzyat is sklada s nowymi dannymi
+                for i in invoice.items.all():
+                    product_last_obj = i.product
+                    quantity_last = i.quantity
+                    sale_price_last = i.sale_price
+                    is_gift_last = i.is_gift
+
+                    purchase_price_last = i.purchase_price
+                    retail_price_last = i.retail_price
+                    wholesale_price_last = i.wholesale_price
+                    
+                    ic(product_last_obj)
+                    ic(quantity_last)
+                    ic(sale_price_last)
+                    ic(is_gift_last)
+                    ic(purchase_price_last)
+                    ic(retail_price_last)
+                    ic(wholesale_price_last)
+                    
+                    
+                    units_last = ProductUnit.objects.filter(product=product_last_obj)
+                    conversion_factor_last = 1
+                    if units_last.exists():
+                        for u in units_last:
+                            if u.is_default_for_sale:
+                                conversion_factor_last = Decimal(u.conversion_factor)
+                            
+                    minus_to_stock_last = conversion_factor_last * Decimal(quantity_last)
+                    wp = WarehouseProduct.objects.get(warehouse=invoice.warehouse, product=product_last_obj)
+                    wp.quantity += Decimal(minus_to_stock_last)
+                    wp.save()
+                
                 if invoice.isEntry:  
                     return Response({'detail': 'alreadyPosted'}, status=status.HTTP_400_BAD_REQUEST)
                 
@@ -334,27 +367,29 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                 
                 invoice.invoice_date = invoice_date
                 
-
+                ic(data['partner']['id'])
                 try:
                     partner = Partner.objects.get(pk=data['partner']['id'])
+                    
                     invoice.buyer = partner
                     
                     if withPosting:
                         if partner.type != "klient" and partner.type != "both" and partner.type != "founder":
                             return Response({'detail': 'CantBeSaleForSupplier'}, status=status.HTTP_400_BAD_REQUEST)
                         
-                        accounts = partner.partner_accounts.all()  # вернёт список PartnerAccount
-                        founder = False
-                        for pa in accounts:
-                            if pa.account.number == "75":
-                                founder = True
-                                break
+                        # accounts = partner.partner_accounts.all()  # вернёт список PartnerAccount
+                        # founder = False
+                        # for pa in accounts:
+                        #     if pa.account.number == "75":
+                        #         founder = True
+                        #         break
                             
-                        total_profit = data['footerTotalPriceProfit']
+                        # total_profit = data['footerTotalPriceProfit']
                         
                 except:
                     invoice.buyer = None
                     if withPosting:
+                        ic('tut')
                         return Response({'detail': 'chooseClient'}, status=status.HTTP_400_BAD_REQUEST)
                     
                     
@@ -412,6 +447,19 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     purchase_price = Decimal(product['purchase_price'])
                     retail_price = Decimal(product['retail_price'])
                     wholesale_price = Decimal(product['wholesale_price'])
+                    
+                    conversion_factor = 1
+                    units = product['units']
+                    for u in units:
+                        if u['is_default_for_sale']:
+                            conversion_factor = Decimal(u['conversion_factor'])
+                            
+                    minus_to_stock = conversion_factor * Decimal(quantity)
+                    ic(minus_to_stock)
+                    wp = WarehouseProduct.objects.get(warehouse=warehouse, product=product_obj)
+                    wp.quantity -= Decimal(minus_to_stock)
+                    wp.save()
+                    
                     SalesInvoiceItem.objects.create(
                         invoice=invoice,
                         product=product_obj,
@@ -468,6 +516,18 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     product_id = product['id']
                     product_obj = Product.objects.get(pk=product_id)
                     quantity = Decimal(product['selected_quantity']) 
+                    
+                    conversion_factor = 1
+                    units = product['units']
+                    for u in units:
+                        if u['is_default_for_sale']:
+                            conversion_factor = Decimal(u['conversion_factor'])
+                            
+                    minus_to_stock = conversion_factor * quantity
+                    ic(minus_to_stock)
+                    wp = WarehouseProduct.objects.get(warehouse=warehouse, product=product_obj)
+                    wp.quantity -= Decimal(minus_to_stock)
+                    wp.save()
                     
                     
                     SalesInvoiceItem.objects.create(

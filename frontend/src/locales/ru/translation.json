@@ -378,7 +378,13 @@
   "toPay": "Оплатить",
   "Partner not found":"Партнёр не найден",
   "create rule for pays": "Создайте правило для проводки платежей",
-  "choose one of type of pays income or expense": "Выберите один из типов платежей: приход или расход"
+  "choose one of type of pays income or expense": "Выберите один из типов платежей: приход или расход",
+  "dont have a rule":"Нет правила проводок",
+  "dont have account debit in entry rule": "В правиле проводки нет счёта дебета",
+  "dont have account credit in entry rule": "В правиле проводки нет счёта кредита",
+  "amount must be a digit": "сумма должна быть числом",
+  "choose founder or client": "Выберите учредителя или клиента",
+  "successPay": "Успешная оплата"
 
 
 

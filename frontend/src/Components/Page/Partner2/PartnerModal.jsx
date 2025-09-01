@@ -11,6 +11,7 @@ import Notification from "../../Notification";
 import SmartTooltip from "../../SmartTooltip";
 import MyLoading from "../../UI/MyLoading";
 import { ROUTES } from "../../../routes";
+import { myClass } from "../../tailwindClasses";
 
 const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, setFocusedPartnerId, openModal }) => {
   // const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
@@ -67,7 +68,6 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
       setAgents([]); // если строка пустая, очищаем список
       return;
     }
-    
 
     const handler = setTimeout(() => {
       const queryAgent = async () => {
@@ -85,7 +85,6 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
   }, [query]);
 
   useEffect(() => {
-    
     if (!queryAccount) {
       setAccounts([]);
       return;
@@ -171,7 +170,7 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
             return (
               <Form className="space-y-5">
                 {/* radio */}
-                <div>
+                <div className={myClass.border}>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("selectType")}</label>
                   <div className="flex flex-wrap gap-4">
                     <label className="inline-flex items-center space-x-2">
@@ -184,7 +183,7 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                         onKeyDown={(e) => {
                           if (e.key === "ArrowDown" || e.key === "ArrowRight") {
                             e.preventDefault();
-                            supplierRef.current?.focus();
+                            founderRef.current?.focus();
                           } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
                             e.preventDefault();
                           } else if (e.key === "Enter") {
@@ -199,7 +198,7 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                       <span className="text-gray-700 dark:text-gray-300">{t("klient")}</span>
                     </label>
 
-                    <label className="inline-flex items-center space-x-2">
+                    {/* <label className="inline-flex items-center space-x-2">
                       <input
                         type="radio"
                         name="type"
@@ -223,9 +222,9 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                         checked={values.type === "supplier"}
                       />
                       <span className="text-gray-700 dark:text-gray-300">{t("supplier")}</span>
-                    </label>
+                    </label> */}
 
-                    <label className="inline-flex items-center space-x-2">
+                    {/* <label className="inline-flex items-center space-x-2">
                       <input
                         type="radio"
                         name="type"
@@ -249,7 +248,7 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                         checked={values.type === "both"}
                       />
                       <span className="text-gray-700 dark:text-gray-300">{t("both2")}</span>
-                    </label>
+                    </label> */}
 
                     <label className="inline-flex items-center space-x-2">
                       <input
@@ -265,7 +264,7 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                             nameRef.current?.select();
                           } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
                             e.preventDefault();
-                            client_and_supplierRef.current?.focus();
+                            clientRef.current?.focus();
                           } else if (e.key === "Enter") {
                             e.preventDefault();
                           }
@@ -275,14 +274,16 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                         }}
                         checked={values.type === "founder"}
                       />
-                      <span className="text-gray-700 dark:text-gray-300">{t("founder")}</span>
+                      <span className="text-gray-700 dark:text-gray-300">
+                        {t("founder")} ({t("supplier")})
+                      </span>
                     </label>
                   </div>
                   {touched.type && errors.type && <div className="text-sm text-red-500 mt-1">{errors.type}</div>}
                 </div>
 
                 {/* Name input */}
-                <div>
+                <div className={myClass.border}>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t("name")}
                   </label>
@@ -298,8 +299,14 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                       onKeyDown={(e) => {
                         if (e.key === "ArrowDown") {
                           e.preventDefault();
-                          balanceRef.current?.focus();
-                          balanceRef.current?.select();
+                          // balanceRef.current?.focus();
+                          // balanceRef.current?.select();
+                          e.preventDefault();
+                          if (values.agent) {
+                            X_btn_agentRef.current?.focus();
+                          } else {
+                            agentRef.current?.focus();
+                          }
                         } else if (e.key === "ArrowUp") {
                           e.preventDefault();
                           founderRef.current?.focus();
@@ -321,10 +328,11 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                 </div>
 
                 {/* Name balance */}
-                <div>
+                {/* <div className={myClass.border}>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t("balance")}
                   </label>
+                  <span>{values.balance}</span>
                   <Field
                     onKeyDown={(e) => {
                       if (e.key === "ArrowUp") {
@@ -351,10 +359,10 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                     } bg-gray-100 dark:bg-gray-800 text-black dark:text-white`}
                   />
                   {touched.balance && errors.balance && <div className="text-sm text-red-500 mt-1">{errors.balance}</div>}
-                </div>
+                </div> */}
 
                 {/* Name agent */}
-                <div className="relative">
+                <div className={myClass.border}>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t("agent")}
                   </label>
@@ -366,12 +374,15 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                         onKeyDown={(e) => {
                           if (e.key === "ArrowUp") {
                             e.preventDefault();
-                            balanceRef.current?.focus();
-                            balanceRef.current?.select();
+                            // balanceRef.current?.focus();
+                            // balanceRef.current?.select();
+                            nameRef.current?.focus();
+                            nameRef.current?.select();
                           } else if (e.key === "ArrowDown") {
                             e.preventDefault();
-                            accountRef.current?.focus();
-                            accountRef.current?.select();
+                            is_activeRef.current?.focus();
+                            // accountRef.current?.focus();
+                            // accountRef.current?.select();
                           }
                         }}
                         ref={X_btn_agentRef}
@@ -396,18 +407,21 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                       onKeyDown={(e) => {
                         if (e.key === "ArrowUp") {
                           e.preventDefault();
-                          balanceRef.current?.focus();
-                          balanceRef.current?.select();
+                          // balanceRef.current?.focus();
+                          // balanceRef.current?.select();
+                          nameRef.current?.focus();
+                          nameRef.current?.select();
                         } else if (e.key === "ArrowDown") {
                           e.preventDefault();
                           if (agents.length > 0) {
                             agentRefs.current[0]?.focus();
                           } else {
-                            if (values.accounts) {
-                            } else {
-                              accountRef.current?.focus();
-                              accountRef.current?.select();
-                            }
+                            is_activeRef.current?.focus();
+                            // if (values.accounts) {
+                            // } else {
+                            //   accountRef.current?.focus();
+                            //   accountRef.current?.select();
+                            // }
                           }
                         } else if (e.key === "Enter") {
                           e.preventDefault();
@@ -441,6 +455,7 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                               setFieldValue("agent", agent);
                               setAgents([]);
                               setQuery("");
+                              is_activeRef.current?.focus();
                               accountRef.current?.focus();
                             } else if (e.key === "ArrowDown") {
                               e.preventDefault();
@@ -601,7 +616,14 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                 </div> */}
 
                 {/* Активность партнёра */}
-                <div className="mb-4">
+                <div
+                  className={`
+                    ${myClass.border}
+                    focus-within:ring-2 focus-within:ring-blue-400 focus-within:border-blue-400
+                    dark:focus-within:ring-blue-500 dark:focus-within:border-blue-500
+                    rounded-lg transition
+                  `}
+                >
                   <label htmlFor="is_active" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t("status")}
                   </label>
@@ -613,10 +635,11 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                           e.preventDefault();
                         } else if (e.key === "ArrowUp") {
                           e.preventDefault();
-                          if (values.accounts_id.length > 0) {
-                            X_btn_accountRefs.current[values.accounts_id.length - 1]?.focus();
+                          if (!values.agent) {
+                            agentRef.current?.focus();
+                            agentRef.current?.select();
                           } else {
-                            accountRef.current?.focus();
+                            X_btn_agentRef.current?.focus();
                           }
                         }
                       }}
@@ -625,7 +648,7 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                       name="is_active"
                       checked={values.is_active}
                       onChange={(e) => setFieldValue("is_active", e.target.checked)}
-                      className="h-5 w-10 rounded-full appearance-none bg-gray-300 checked:bg-blue-600 dark:bg-gray-600 dark:checked:bg-blue-500 transition duration-300 relative cursor-pointer outline-none focus:ring-2 focus:ring-blue-400"
+                      className="h-5 w-10 rounded-full appearance-none bg-gray-300 checked:bg-blue-600 dark:bg-gray-600 dark:checked:bg-blue-500 transition duration-300 relative cursor-pointer outline-none"
                       style={{
                         backgroundImage: values.is_active ? "linear-gradient(to right, #3b82f6 50%, transparent 50%)" : "linear-gradient(to right, transparent 50%, #d1d5db 50%)",
                         backgroundSize: "200% 100%",
@@ -634,6 +657,40 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                     />
                     <span className="text-sm text-gray-800 dark:text-gray-100">{values.is_active ? t("active") : t("inactive")}</span>
                   </div>
+                </div>
+
+                {/* Name balance */}
+                <div className="flex gap-4 items-center">
+                  <label htmlFor="name" className="block font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {t("balance")}
+                  </label>
+                  <span>{values.balance}</span>
+                  {/* <Field
+                    onKeyDown={(e) => {
+                      if (e.key === "ArrowUp") {
+                        e.preventDefault();
+                        nameRef.current?.focus();
+                      } else if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        if (values.agent) {
+                          X_btn_agentRef.current?.focus();
+                        } else {
+                          agentRef.current?.focus();
+                        }
+                      } else if (e.key === "Enter") {
+                        e.preventDefault();
+                      }
+                    }}
+                    id="balanceRef"
+                    name="balance"
+                    type="number"
+                    onBlur={handleBlur}
+                    ref={balanceRef}
+                    className={`w-full p-2 rounded border ${
+                      touched.balance && errors.balance ? "border-red-500" : "border-gray-300 dark:border-gray-700"
+                    } bg-gray-100 dark:bg-gray-800 text-black dark:text-white`}
+                  /> */}
+                  {/* {touched.balance && errors.balance && <div className="text-sm text-red-500 mt-1">{errors.balance}</div>} */}
                 </div>
 
                 {/* Submit Button */}

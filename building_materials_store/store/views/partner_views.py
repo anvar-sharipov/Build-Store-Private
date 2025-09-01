@@ -205,8 +205,8 @@ class PartnerViewSet(viewsets.ModelViewSet):
                 except (InvalidOperation, TypeError):
                     return Response({'detail': 'balanceInvalid'}, status=status.HTTP_400_BAD_REQUEST)
 
-                if balance_value < 0:
-                    return Response({'detail': 'balanceNegative'}, status=status.HTTP_400_BAD_REQUEST)
+                # if balance_value < 0:
+                #     return Response({'detail': 'balanceNegative'}, status=status.HTTP_400_BAD_REQUEST)
 
                 # Проверка на дубликат имени
                 if Partner.objects.filter(name=name).exclude(id=partner_id).exists():

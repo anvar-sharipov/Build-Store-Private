@@ -619,8 +619,8 @@ class Operation(models.Model):
         
 
 class CustomePostingRule(models.Model):
-    CONTENT_TYPE_CHOICES = [('klient', 'Покупатель'), ('supplier', 'Поставщик'), ('founder', 'Учредитель')]
-    AMOUNT_TYPE_CHOICES = [('revenue', 'Выручка'), ('cogs', 'Себестоимость'), ('profit', 'Прибыль'), ('pays', 'Оплата долга')]
+    CONTENT_TYPE_CHOICES = [('klient', 'Покупатель'), ('founder', 'Учредитель')] # ('supplier', 'Поставщик'),
+    AMOUNT_TYPE_CHOICES = [('revenue', 'Продажа'), ('cogs', 'Себестоимость'), ('profit', 'Прибыль')] # ('pays', 'Платежи')
     PAYS_TYPE_CHOICES = [('income', 'Приход'), ('expense', 'Расход')]
     
     operation = models.ForeignKey(Operation, on_delete=models.PROTECT, verbose_name="Операция")
@@ -629,8 +629,8 @@ class CustomePostingRule(models.Model):
     debit_account = models.ForeignKey('Account', on_delete=models.PROTECT, related_name='postingrule_debit', verbose_name="Дебетовый счёт")
     credit_account = models.ForeignKey('Account', on_delete=models.PROTECT, related_name='postingrule_credit', verbose_name="Кредитовый счёт")
     description = models.CharField(max_length=255, blank=True, null=True, verbose_name="Описание") 
-    amount_type = models.CharField(max_length=20, choices=AMOUNT_TYPE_CHOICES, verbose_name="Тип суммы", blank=True, null=True,)
-    pays_type = models.CharField(max_length=20, choices=PAYS_TYPE_CHOICES, verbose_name="Тип платежа", blank=True, null=True,)
+    amount_type = models.CharField(max_length=20, choices=AMOUNT_TYPE_CHOICES, verbose_name="Тип суммы (использоваит при Фактурах)", blank=True, null=True,)
+    pays_type = models.CharField(max_length=20, choices=PAYS_TYPE_CHOICES, verbose_name="Тип платежа (использоваит при платежах)", blank=True, null=True,)
     
     class Meta:
         verbose_name = "Правило проводки"

@@ -13,8 +13,8 @@ const FILTER_CONFIG = {
   "/partners_new": {
     type: [
       { key: "klient", labelKey: "klient" },
-      { key: "supplier", labelKey: "supplier" },
-      { key: "both2", labelKey: "both2" },
+      // { key: "supplier", labelKey: "supplier" },
+      // { key: "both2", labelKey: "both2" },
       { key: "founder", labelKey: "founder" },
       { key: "all", labelKey: "all" },
     ],

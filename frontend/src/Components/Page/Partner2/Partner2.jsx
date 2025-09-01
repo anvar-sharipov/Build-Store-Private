@@ -184,7 +184,7 @@ const Partner2 = () => {
         return !exists;
       }),
 
-    balance: Yup.number().typeError("Баланс должен быть числом").required("Введите начальный баланс").min(0, "Баланс не может быть отрицательным"),
+    // balance: Yup.number().typeError("Баланс должен быть числом").required("Введите начальный баланс").min(0, "Баланс не может быть отрицательным"),
 
     // accounts_id: Yup.array()
     //   .of(Yup.number().typeError("ID счета должен быть числом"))

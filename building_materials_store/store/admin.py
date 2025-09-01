@@ -229,16 +229,16 @@ class AgentAdmin(admin.ModelAdmin):
 
 
 # Партнеры
-# @admin.register(Partner)
-# class PartnerAdmin(admin.ModelAdmin):
-#     list_display = ('name', 'type', 'balance', 'agent', 'invoice_count')
-#     list_filter = ('type', 'agent')
-#     search_fields = ('name',)
-#     readonly_fields = ('balance',)
+@admin.register(Partner)
+class PartnerAdmin(admin.ModelAdmin):
+    list_display = ('name', 'type', 'balance', 'agent', 'invoice_count')
+    list_filter = ('type', 'agent')
+    search_fields = ('name',)
+    readonly_fields = ('balance',)
     
-#     def invoice_count(self, obj):
-#         return obj.salesinvoice_set.count()
-#     invoice_count.short_description = 'Накладных'
+    def invoice_count(self, obj):
+        return obj.salesinvoice_set.count()
+    invoice_count.short_description = 'Накладных'
 
 # class PartnerAccountInline(admin.TabularInline):
 #     model = PartnerAccount

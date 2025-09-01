@@ -24,6 +24,8 @@ from .. serializers.partner_serializers import *
 from .. serializers.product_serializers import *
 from .. serializers.register_serializers import *
 from .. serializers.sale_invoice_serializers import *
+from rest_framework.exceptions import APIException
+
 
 # from rest_framework.views import APIView
 # from rest_framework.permissions import AllowAny, BasePermission, IsAuthenticated, SAFE_METHODS
@@ -82,15 +84,17 @@ class TransactionViewSet(viewsets.ModelViewSet):
     
     
 
-
+class RuleError(APIException):
+    status_code = 404
+    default_detail = "Rule error"
+    default_code = "rule_error"
 @api_view(['POST'])
 def partner_transaction(request):
+
     data = request.data  # JSON из фронтенда уже распарсен
     # time.sleep(2)
 
     partner = data.get('partner', {})
-    # debet = data.get('debet', {})
-    # kredit = data.get('kredit', {})
     amount = data.get('amount')
     comment = data.get('comment')
     
@@ -98,15 +102,12 @@ def partner_transaction(request):
         return Response({'detail': 'youNeedSelectPartner'}, status=status.HTTP_400_BAD_REQUEST)
     
     
-    
-    # if not debet:
-    #     return Response({'detail': 'youNeedSelectdebet'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    # if not kredit:
-    #     return Response({'detail': 'youNeedSelectkredit'}, status=status.HTTP_400_BAD_REQUEST)
-    
     if not amount:
         return Response({'detail': 'writeAmount'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        amount = Decimal(amount)
+    except:
+        return Response({'detail': 'amount must be a digit'}, status=status.HTTP_400_BAD_REQUEST)
     
     if not comment:
         return Response({'detail': 'writeComment'}, status=status.HTTP_400_BAD_REQUEST)
@@ -114,101 +115,51 @@ def partner_transaction(request):
   
     try:
         partner_obj = Partner.objects.get(id=partner.get('id'))
-        # debet_obj = Account.objects.get(id=debet.get('id'))
-        # kredit_obj = Account.objects.get(id=kredit.get('id'))
     except (Partner.DoesNotExist):
         return Response({'detail': 'Partner not found'}, status=status.HTTP_404_NOT_FOUND)
     
-    rules = CustomePostingRule.objects.filter(operation__code='pays')
-    if not rules:
-        return Response({'detail': 'create rule for pays'}, status=status.HTTP_404_NOT_FOUND)
-    
-    # for rule in rules:
-    #     transaction_obj = Transaction.objects.create
-    
-    
-    # if debet_obj.number != "75" and debet_obj.number != "60" and kredit_obj.number != "75" and kredit_obj.number != "60":
-    #     return Response({'detail': 'choose75Or60Account'}, status=status.HTTP_404_NOT_FOUND)
-        
-    
+
     if "type" not in data:
         return Response({'detail': 'choose one of type of pays income or expense'}, status=status.HTTP_404_NOT_FOUND)
     
-    if data['type'] == 'income':
-        ic("da income GGGGG")
-    elif data['type'] == 'expense':
-        ic("da expense GGGGG")
-    else:
-        return Response({'detail': 'choose one of type of pays income or expense'}, status=status.HTTP_404_NOT_FOUND)
+    if data["partner"]["type"] not in ["founder", "klient"]:
+        return Response({'detail': 'choose founder or client'}, status=status.HTTP_404_NOT_FOUND)
+    
+    rules = CustomePostingRule.objects.filter(operation__code="pays", pays_type=data['type'], directory_type=data["partner"]["type"])
+    if not rules:
+        return Response({'detail': 'create rule for pays'}, status=status.HTTP_404_NOT_FOUND)
+        
     
     try:
         with transaction.atomic():
-            transaction_obj = Transaction.objects.create(
-                description=comment,
-                partner=partner_obj
-            )
-            
-            Entry.objects.create(
-                transaction=transaction_obj,
-                account=debet_obj,
-                debit=Decimal(amount),
-                credit=Decimal('0.00')
-                )
-            
-            Entry.objects.create(
-                transaction=transaction_obj,
-                account=kredit_obj,
-                debit=Decimal('0.00'),
-                credit=Decimal(amount)
-                )
-            
-            # if kredit_obj.number == "75" or kredit_obj.number == "60":
-            #     partner_obj.balance -= Decimal(amount)
-            #     partner_obj.save()
+            ic("da income GGGGG", data)
+
+            trasnaction_obj = Transaction.objects.create(description=data["comment"], partner=partner_obj)
+            for rule in rules:
                 
-            # if debet_obj.number == "75" or debet_obj.number == "60":
-            #     partner_obj.balance += Decimal(amount)
-            #     partner_obj.save()
+                if not rule.debit_account:
+                    raise RuleError("dont have account debit in entry rule")
+                Entry.objects.create(transaction=trasnaction_obj, account=rule.debit_account, debit=amount)
             
-            if kredit_obj.number in ["75", "60"]:
-                partner_obj.balance -= Decimal(amount)  # кредит уменьшает долг
-            elif debet_obj.number in ["75", "60"]:
-                partner_obj.balance += Decimal(amount)  # дебет увеличивает долг
-            
-            # return Response({"message": "данные получены"}, status=200)
-            partner_data = {
-                "id": partner_obj.id,
-                "name": partner_obj.name,
-                "balance": str(partner_obj.balance),  # отправляем как строку, чтобы не было проблем с Decimal
-                "type": partner_obj.type,
-            }
-            return Response({'detail': 'successSave', 'partner': partner_data}, status=status.HTTP_201_CREATED)
+                if not rule.credit_account:
+                    raise RuleError("dont have account credit in entry rule")
+                Entry.objects.create(transaction=trasnaction_obj, account=rule.credit_account, credit=amount)
+      
+            if data['type'] == 'income':
+                partner_obj.balance += amount
+            elif data['type'] == 'expense':
+                partner_obj.balance -= amount
+            else:
+                raise RuleError("choose one of type of pays income or expense")
+                
+            partner_obj.save()
+                
+            # 1/0
+    except RuleError as e:
+        return Response({'detail': str(e)}, status=e.status_code)
     except Exception as e:
-        ic(e)
         return Response({'detail': 'transactionChange'}, status=status.HTTP_400_BAD_REQUEST)
-
-    # # Тут можно добавить валидацию данных
-    # if not all([partner_id, debet_id, kredit_id, amount]):
-    #     return Response({"error": "Некоторые поля отсутствуют"}, status=status.HTTP_400_BAD_REQUEST)
-
-    # # Пример: создание записи в модели Transaction (предположим, есть такая модель)
-
-    # try:
-    #     partner = Partner.objects.get(id=partner_id)
-    #     debet_account = Account.objects.get(id=debet_id)
-    #     kredit_account = Account.objects.get(id=kredit_id)
-        
-    #     transaction = Transaction.objects.create(
-    #         partner=partner,
-    #         debet=debet_account,
-    #         kredit=kredit_account,
-    #         amount=amount,
-    #         comment=comment
-    #     )
-
-    #     return Response({"success": True, "transaction_id": transaction.id})
-
-    # except Partner.DoesNotExist:
-    #     return Response({"error": "Partner not found"}, status=status.HTTP_404_NOT_FOUND)
-    # except Account.DoesNotExist:
-    #     return Response({"error": "Account not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    partnerSerializer = PartnerSerializer(partner_obj)
+    return Response({'detail': 'successPay', "partner": partnerSerializer.data}, status=status.HTTP_200_OK)
+    

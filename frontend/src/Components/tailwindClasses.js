@@ -20,5 +20,7 @@ export const myClass = {
     
     input2: "w-full px-4 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-150",
     buttonRounded: "flex items-center justify-center w-8 h-8 rounded-full bg-green-600 hover:bg-green-700 text-white shadow-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-400 dark:focus:ring-green-500",
+    hr:"h-px w-full bg-gradient-to-r from-transparent via-gray-300 to-transparent dark:via-gray-600",
+    border:"border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 p-4"
 
 }

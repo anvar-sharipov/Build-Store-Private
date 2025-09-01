@@ -40,6 +40,7 @@ def search_accounts_view(request):
 # poisk partnera po imeni (get)
 @require_GET
 def get_partner_by_name_view(request):
+    # ic('tut')
     name = request.GET.get('name', '').strip()
 
     if not name:

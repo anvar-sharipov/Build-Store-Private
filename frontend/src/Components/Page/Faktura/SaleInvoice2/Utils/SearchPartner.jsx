@@ -105,10 +105,14 @@ const SearchPartner = ({ partnerInputRef, awtoInputRef, productInputRef, warehou
                   setList([]);
                   return;
                 }
+                console.log("",);
+                
+                
                 const results = fuse
                   .search(value)
                   .slice(0, 20)
-                  .map((res) => res.item);
+                  .map((res) => res.item)
+                  .filter((item) => item.is_active !== false);
                 setList(results);
               }}
               onBlur={handleBlur}

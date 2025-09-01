@@ -354,7 +354,13 @@
   "toPay": "Tölemek",
   "Partner not found":"Hyzmatdaş tapylmady",
   "create rule for pays": "Tölegleriň geçirilmegi üçin düzgün dörediň",
-  "choose one of type of pays income or expense": "Tölegiň görnüşlerinden birini saýlaň: gelip gowuşan ýa-da çykdaýjy"
+  "choose one of type of pays income or expense": "Tölegiň görnüşlerinden birini saýlaň: gelip gowuşan ýa-da çykdaýjy",
+  "dont have a rule":"Töleg düzgünçiligi ýok",
+  "dont have account debit in entry rule": "Giriş düzgünçiliginde debet hasaby ýok",
+  "dont have account credit in entry rule": "Giriş düzgünçiliginde kredit hasaby ýok",
+  "amount must be a digit": "möçber san bolmaly",
+  "choose founder or client": "Düýpdaryjy ýa-da müşderi saýlaň",
+  "successPay": "Üstünlikli töleg"
 
 
 

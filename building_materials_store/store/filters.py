@@ -2,6 +2,7 @@ from django.db.models import Q, Func, F, Value
 from django.contrib.postgres.search import TrigramSimilarity
 import django_filters
 from .models import *
+from icecream import ic
 
 # Для фильтрации по списку значений (например, ?categories=1,2)
 class NumberInFilter(django_filters.BaseInFilter, django_filters.NumberFilter):
@@ -92,6 +93,7 @@ class PartnerFilter(django_filters.FilterSet):
     is_active = django_filters.BooleanFilter()
     type = django_filters.CharFilter(lookup_expr='iexact')
     agent = django_filters.NumberFilter(field_name='agent_id')
+    
 
     class Meta:
         model = Partner

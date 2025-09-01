@@ -283,7 +283,7 @@ const MainPage = () => {
                     <table className="min-w-full table-auto border-collapse print:table-fixed print:border print:border-black mt-4">
                       <thead>
                         <tr className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 print:bg-white print:!text-black">
-                          <th className="px-2 py-1 border">Показатель</th>
+                          <th className="px-2 py-1 border">Показатель (клиент 60)</th>
                           <th className="px-2 py-1 border">Дт</th>
                           <th className="px-2 py-1 border">Кт</th>
                         </tr>
@@ -306,8 +306,8 @@ const MainPage = () => {
                         </tr>
                         <tr>
                           <td colSpan={3} className="px-2 py-1 border text-end font-semibold">
-                            {/* Баланс: {values.partner.balance_on_date[0] + values.partner.today_sales[0] - (values.partner.balance_on_date[1] + values.partner.today_sales[1])} */}
-                            Баланс: {formatNumber(values.partner.balance)}
+                            Баланс: {(values.partner.balance_on_date[1] + values.partner.today_sales[1]) - values.partner.balance_on_date[0] - values.partner.today_sales[0]}
+                            {/* Баланс: {formatNumber(values.partner.balance)} */}
                           </td>
                         </tr>
                       </tbody>

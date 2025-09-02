@@ -21,14 +21,6 @@ class AccountSerializerForRead(serializers.ModelSerializer):
         model = Account
         fields = ['id', 'number', 'name', 'type']
 
-# class PartnerAccountSerializer(serializers.ModelSerializer):
-#     account_id = serializers.PrimaryKeyRelatedField(queryset=Account.objects.all(), source="account")
-#     account = AccountSerializerForRead()
-    
-#     class Meta:
-#         model = PartnerAccount
-#         fields = ['account_id', 'role', 'account']
-
 class PartnerSerializer(serializers.ModelSerializer):
     # current_balance = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
     type_display = serializers.CharField(source='get_type_display', read_only=True)
@@ -41,102 +33,11 @@ class PartnerSerializer(serializers.ModelSerializer):
         required=False,       # ✅ не обязательно
         allow_null=True       # ✅ разрешает null
     )
-    
-    # #### dlya pokaza i debet i kredet toje
-    balance_on_date = serializers.SerializerMethodField()
-    today_sales = serializers.SerializerMethodField()
-    final_balance = serializers.SerializerMethodField()
-    debit_total = serializers.SerializerMethodField()
-    credit_total = serializers.SerializerMethodField()
-    
-    account_62_debit = serializers.SerializerMethodField()
-    account_62_credit = serializers.SerializerMethodField()
-    
-    # partner_accounts = PartnerAccountSerializer(many=True, read_only=True)
-    # accounts_id = PartnerAccountSerializer(many=True, write_only=True, required=False)
-    
 
     agent_name = serializers.CharField(source='agent.name', read_only=True)
 
     class Meta:
         model = Partner
-        fields = ['id', 'name', 'type', 'type_display', 'agent', 'agent_id', 'agent_name', 'balance', 'balance_on_date', 'today_sales', 'final_balance', 'debit_total', 'credit_total', 'account_62_debit', 'account_62_credit', 'is_active']
+        # fields = ['id', 'name', 'type', 'type_display', 'agent', 'agent_id', 'agent_name', 'balance', 'balance_on_date', 'today_sales', 'final_balance', 'debit_total', 'credit_total', 'account_62_debit', 'account_62_credit', 'is_active']
+        fields = ['id', 'name', 'type', 'type_display', 'agent', 'agent_id', 'agent_name', 'balance', 'is_active']
         
-    def get_balance_on_date(self, obj):
-        today = timezone.now().date()
-        rule = CustomePostingRule.objects.filter(operation__code="sale", directory_type=obj.type, amount_type="revenue").first() # berem wyruchku tolko
-        if not rule:
-            return [Decimal('0.00'), Decimal('0.00')]
-        
-        account = rule.debit_account
-        
-   
-        entries = Entry.objects.filter(transaction__partner=obj, transaction__date__lt=today).filter(account=account)
-       
-        debit = entries.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
-        credit = entries.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
-
-        # if obj.name == "Merdan, magazin Oktyabrsk +99361325648":
-        #     ic("Merdan")
-        #     ic(debit)
-        #     ic(credit)
-        # if obj.name == "Anvar Sharipow":
-        #     ic("Anvar")
-        #     ic(rule.debit_account.number)
-        
- 
-        # return debit - credit
-        return [debit, credit]
-        
-
-    #  dlya pokaza saldo START
-    def get_today_sales(self, obj):
-        today = timezone.now().date()
-        rule = CustomePostingRule.objects.filter(operation__code="sale", directory_type=obj.type, amount_type="revenue").first()
-        if not rule:
-            return [Decimal('0.00'), Decimal('0.00')]
-        
-        account = rule.debit_account
-        
-        entries = Entry.objects.filter(transaction__partner=obj, transaction__date__date=today).filter(account=account)
-        
-        
-        # entries = Entry.objects.filter(
-        #     transaction__partner=obj,
-        #     transaction__date__date=today,
-        #     account__number=62
-        # )
-        debit = entries.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
-        credit = entries.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
-        # print('TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT', debit, credit)
-        # return debit - credit
-        return [debit, credit]
-
-    def get_final_balance(self, obj):
-        # ic(self.get_balance_on_date(obj))
-        return [(self.get_balance_on_date(obj)[0] - self.get_balance_on_date(obj)[1]), (self.get_today_sales(obj)[0] - self.get_today_sales(obj)[1])]
-
-    def get_debit_total(self, obj):
-        entries = Entry.objects.filter(transaction__partner=obj, account__number=62)
-        # print('GGGGGGGGGGGGGGGGGGGGGG', entries.aggregate(total=Sum('debit'))['total'] or Decimal('0.00'))
-        return entries.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
-
-    def get_credit_total(self, obj):
-        entries = Entry.objects.filter(transaction__partner=obj, account__number=62)
-        return entries.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
-    
-    def get_account_62_debit(self, obj):
-        entries = Entry.objects.filter(
-            transaction__partner=obj,
-            account__number='62'
-        )
-        return entries.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
-
-    def get_account_62_credit(self, obj):
-        entries = Entry.objects.filter(
-            transaction__partner=obj,
-            account__number='62'
-        )
-        return entries.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
-    #  dlya pokaza saldo END
-    

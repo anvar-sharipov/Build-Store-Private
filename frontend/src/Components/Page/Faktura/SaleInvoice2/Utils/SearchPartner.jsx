@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useFormikContext } from "formik";
 import myAxios from "../../../../axios";
 
-const SearchPartner = ({ partnerInputRef, awtoInputRef, productInputRef, warehouseInputRef, fetchs }) => {
+const SearchPartner = ({ partnerInputRef, awtoInputRef, productInputRef, warehouseInputRef, fetchs, setGlobalPartnerId, setSaldo, setGlobalDate, getSaldo }) => {
   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
   const [list, setList] = useState([]);
   const listRefs = useRef([]);
@@ -41,17 +41,14 @@ const SearchPartner = ({ partnerInputRef, awtoInputRef, productInputRef, warehou
     setShowSearchInput(!values.partner?.id);
   }, [values.partner?.id]);
 
- 
   const handleSelectItem = (item) => {
-    console.log('balance_on_date', item.balance_on_date);
-    console.log('today_sales', item.today_sales);
-    console.log('final_balance', item.final_balance);
-
-
-
-
-    
     setFieldValue("partner", { ...item, id: item.id, name: item.name });
+    if (item.id && values.invoice_date) {
+      getSaldo(values.invoice_date, item.id);
+    }
+
+    // setGlobalPartnerId(item.id)
+    // setGlobalDate(values.invoice_date)
     setList([]);
     setShowSearchInput(false); // скрыть поиск после выбора
   };
@@ -60,6 +57,7 @@ const SearchPartner = ({ partnerInputRef, awtoInputRef, productInputRef, warehou
     setFieldValue("partner", { id: null, name: "" });
     setShowSearchInput(true);
     setList([]);
+    setSaldo(null);
     // Фокус на input после очистки
     setTimeout(() => {
       partnerInputRef.current?.focus();
@@ -93,7 +91,7 @@ const SearchPartner = ({ partnerInputRef, awtoInputRef, productInputRef, warehou
                 } else if (e.key === "ArrowUp") {
                   e.preventDefault();
                   awtoInputRef.current?.focus();
-                } else if (e.key === 'Enter') {
+                } else if (e.key === "Enter") {
                   e.preventDefault();
                 }
               }}
@@ -105,9 +103,8 @@ const SearchPartner = ({ partnerInputRef, awtoInputRef, productInputRef, warehou
                   setList([]);
                   return;
                 }
-                console.log("",);
-                
-                
+                // console.log("");
+
                 const results = fuse
                   .search(value)
                   .slice(0, 20)

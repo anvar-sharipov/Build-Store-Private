@@ -33,6 +33,8 @@ services:
       - "8000:8000"
     networks:
       - appnet
+    volumes:
+      - media_data:/app/media    # подключаем отдельный volume для media
     command: ["./entrypoint.sh", "python", "manage.py", "runserver", "0.0.0.0:8000"]
 
   frontend:
@@ -49,6 +51,7 @@ services:
 
 volumes:
   postgres_data:
+  media_data:  # теперь volume для media явно создан
 
 networks:
   appnet:

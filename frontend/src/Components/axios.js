@@ -1,9 +1,14 @@
 // axiosInstance.js
 import axios from "axios";
 import { useEffect } from "react";
+const API_BASE = import.meta.env.VITE_BASE_URL;
+console.log('API_BASE', API_BASE);
+
+
 
 const myAxios = axios.create({
-  baseURL: "http://localhost:8000/api/",
+  // baseURL: "http://localhost:8000/api/",
+  baseURL: `${API_BASE}/api/`,
 });
 
 // Добавляем access токен в каждый запрос
@@ -19,7 +24,8 @@ myAxios.interceptors.request.use((config) => {
 
 // Создаем отдельный экземпляр для refresh запросов (без interceptors)
 const refreshAxios = axios.create({
-  baseURL: "http://localhost:8000/api/",
+  // baseURL: "http://localhost:8000/api/",
+  baseURL: `${API_BASE}/api/`,
 });
 
 // Обработка 401 ошибок и попытка обновить токен

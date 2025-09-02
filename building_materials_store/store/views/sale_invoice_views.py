@@ -153,12 +153,15 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     warehouse=warehouse,
                     total_amount=Decimal(total_amount),
                     delivered_by=delivered_by,
-                    note=comment,
+                    # note=comment,
                     invoice_date=invoice_date,
                     total_pay_summ=Decimal("0.00"),
                     isEntry=withPosting,
                     type_price=type_price
                 )
+                
+                invoice.note = f"Faktura № {invoice.pk}\n{comment}"
+                invoice.save()
                 
                 
             

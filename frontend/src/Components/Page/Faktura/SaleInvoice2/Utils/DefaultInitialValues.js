@@ -102,7 +102,8 @@ const defaultInitialValues = (fetchs, data) => {
           unit_name_on_selected_warehouses: unit_name_on_selected_warehouses,
         };
       });
-
+      // console.log('updatedadad', new Date(data.invoice_date).toISOString().slice(0, 10));
+      
     return {
       invoice_date: new Date(data.invoice_date).toISOString().slice(0, 10),
       awto: data.delivered_by,
@@ -138,7 +139,7 @@ const defaultInitialValues = (fetchs, data) => {
   } else {
     // Получаем склад из localStorage
     const savedWarehouse = JSON.parse(localStorage.getItem("selectedWarehouse"));
-    console.log("savedWarehouse", savedWarehouse);
+    // console.log("savedWarehouse", savedWarehouse);
 
     // Находим первый активный склад
     const firstActiveWarehouse = fetchs.AllWarehouses.find((w) => w.is_active);
@@ -150,6 +151,8 @@ const defaultInitialValues = (fetchs, data) => {
       // Сохраняем в localStorage
       localStorage.setItem("selectedWarehouse", JSON.stringify(selectedWarehouse));
     }
+
+    // console.log('createdadad', new Date().toISOString().slice(0, 10));
 
     return {
       invoice_date: new Date().toISOString().slice(0, 10),

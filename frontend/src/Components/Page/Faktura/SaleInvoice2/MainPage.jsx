@@ -78,8 +78,11 @@ const MainPage = () => {
   const { t } = useTranslation();
   const { id } = useParams();
   const [defaultValues, setDefaultValues] = useState(null);
+  const [saldo, setSaldo] = useState(null);
   const navigate = useNavigate();
   const [notification, setNotification] = useState({ message: "", type: "" });
+  const [globalPartnerId, setGlobalPartnerId] = useState(null);
+  const [globalDate, setGlobalDate] = useState(null);
   const showNotification = (message, type) => {
     setNotification({ message, type });
     setTimeout(() => setNotification({ message: "", type: "" }), 3000);
@@ -114,12 +117,26 @@ const MainPage = () => {
     localStorage.setItem("printVisibleColumns", JSON.stringify(printVisibleColumns));
   }, [printVisibleColumns]);
 
+  const getSaldo = async (date, partnerId) => {
+    try {
+      const saldo = await myAxios.get("get_saldo_for_partner_for_selected_date", {
+        params: { date: date, partnerId: partnerId },
+      });
+      // console.log("saldo", saldo.data.saldo);
+      setSaldo(saldo.data.saldo);
+    } catch (error) {
+      console.log("error get_saldo_for_partner_for_selected_date", error);
+    }
+  };
+
   useEffect(() => {
     if (id) {
       const fetchInvoice = async () => {
         try {
           const res = await myAxios.get(`sales-invoices/${id}/`);
           setDefaultValues(defaultInitialValues(fetchs, res.data));
+          // console.log("updateaafafaf res.data", res.data);
+          getSaldo(res.data.invoice_date.split("T")[0], res.data.buyer.id)
         } catch (error) {
           console.log("oshobka pri zagrezke invoice", error);
         } finally {
@@ -128,9 +145,19 @@ const MainPage = () => {
       fetchInvoice();
     } else {
       setDefaultValues(defaultInitialValues(fetchs, false));
+      // console.log("createaafafaf");
       partnerInputRef.current?.focus();
     }
   }, [id, fetchs]);
+
+  useEffect(() => {
+    // console.log('vcgdhc', globalPartnerId, globalDate);
+    if (globalPartnerId && globalDate) {
+      getSaldo(globalDate, globalPartnerId);
+    } else {
+      setSaldo(null);
+    }
+  }, [globalPartnerId, globalDate]);
 
   useEffect(() => {
     if (!loading) partnerInputRef.current?.focus();
@@ -162,12 +189,12 @@ const MainPage = () => {
         <Formik key={JSON.stringify(defaultValues)} initialValues={defaultValues} validationSchema={defaultValidationSchema(t)} onSubmit={onSubmit} validateOnChange={true} validateOnBlur={true}>
           {({ values, setFieldValue, errors, touched, handleBlur }) => {
             useEffect(() => {
-              // console.log("Formik values changed:", values);
+              // console.log("Formik values changed:", values.partner);
             }, [values]);
 
             return (
               <Form>
-                <Head />
+                <Head getSaldo={getSaldo} setGlobalDate={setGlobalDate} />
 
                 <SearchWarehouse
                   warehouseInputRef={warehouseInputRef}
@@ -185,7 +212,16 @@ const MainPage = () => {
 
                 <SearchAwto awtoInputRef={awtoInputRef} warehouseInputRef={warehouseInputRef} partnerInputRef={partnerInputRef} fetchs={fetchs} />
 
-                <SearchPartner partnerInputRef={partnerInputRef} productInputRef={productInputRef} awtoInputRef={awtoInputRef} fetchs={fetchs} />
+                <SearchPartner
+                  partnerInputRef={partnerInputRef}
+                  productInputRef={productInputRef}
+                  awtoInputRef={awtoInputRef}
+                  fetchs={fetchs}
+                  setGlobalPartnerId={setGlobalPartnerId}
+                  setSaldo={setSaldo}
+                  setGlobalDate={setGlobalDate}
+                  getSaldo={getSaldo}
+                />
 
                 {!values.disabled &&
                   (values.warehouses && values.warehouses.id ? (
@@ -194,33 +230,6 @@ const MainPage = () => {
                     <div className="text-center text-gray-700 dark:text-gray-200 text-lg font-semibold mb-4">{t("forSearchProductShooseWarehouse")}</div>
                   ))}
 
-                {/* <div className="relative print:hidden">
-                  <button
-                    onClick={() => setOpenParametrs((prev) => !prev)}
-                    className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-                    title="Настройки отображения"
-                    type="button"
-                  >
-                    <Settings className="w-6 h-6 text-gray-700 dark:text-gray-200" />
-                  </button>
-
-                  {openParametrs && (
-                    <div className="absolute z-50 mt-2 p-4 bg-white dark:bg-gray-900 border rounded-lg shadow-lg space-y-4">
-                      <PriceType />
-                      <div className="flex justify-between">
-                        <VisibleHideInputs visibleColumns={visibleColumns} setVisibleColumns={setVisibleColumns} adminVisibleColumns={adminVisibleColumns} userVisibleColumns={userVisibleColumns} />
-                        <PrintVisibleHideInputs
-                          printVisibleColumns={printVisibleColumns}
-                          setPrintVisibleColumns={setPrintVisibleColumns}
-                          userPrintVisibleColumns={userPrintVisibleColumns}
-                          adminPrintVisibleColumns={adminPrintVisibleColumns}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div> */}
-
-                {/* // adminVisibleColumns userVisibleColumns  userPrintVisibleColumns adminPrintVisibleColumns */}
                 {values.products.length > 0 && (
                   <InvoiceTable
                     showNotification={showNotification}
@@ -240,28 +249,7 @@ const MainPage = () => {
                   </div>
                 )}
 
-                {/* {values.partner?.id > 0 && (
-                  <div className="mt-4 p-4 bg-gray-100 rounded-xl shadow">
-                    <h2 className="text-lg font-semibold mb-2 text-gray-700">Финансовая информация</h2>
-                    <div className="space-y-1 text-sm text-gray-600">
-                      <div className="flex justify-between">
-                        <span>Сальдо на начало дня:</span>
-                        <span className="font-medium text-gray-800">{values.partner.balance_on_date} сум</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Оборот за сегодня:</span>
-                        <span className="font-medium text-gray-800">{values.partner.today_sales} сум</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Конечное сальдо:</span>
-                        <span className="font-semibold text-blue-700">{values.partner.final_balance} сум</span>
-                      </div>
-                    </div>
-                  </div>
-                )} */}
-                {/* dlya pokaza i debet i kredet toje */}
-
-                {values.partner?.id > 0 && (
+                {saldo && (
                   <div className={`p-4 bg-white dark:bg-gray-900 rounded-xl shadow text-gray-700 dark:text-gray-200 mt-5 mx-auto max-w-2xl ${letPrintSaldo ? "print:block" : "print:hidden"}`}>
                     <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 text-center flex justify-center items-center gap-2">
                       Финансовые показатели{" "}
@@ -290,25 +278,24 @@ const MainPage = () => {
                       </thead>
                       <tbody>
                         <tr className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
-                          <td className="px-2 py-1 border font-medium">На начало дня</td>
-                          <td className="px-2 py-1 border">{values.partner.balance_on_date[0]}</td>
-                          <td className="px-2 py-1 border">{values.partner.balance_on_date[1]}</td>
+                          <td className="px-2 py-1 border font-medium">На начало</td>
+                          <td className="px-2 py-1 border">{saldo.start[0]}</td>
+                          <td className="px-2 py-1 border">{saldo.start[1]}</td>
                         </tr>
                         <tr className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
-                          <td className="px-2 py-1 border font-medium">Обороты</td>
-                          <td className="px-2 py-1 border">{values.partner.today_sales[0]}</td>
-                          <td className="px-2 py-1 border">{values.partner.today_sales[1]}</td>
+                          <td className="px-2 py-1 border font-medium">Оборот</td>
+                          <td className="px-2 py-1 border">{saldo.oborot[0]}</td>
+                          <td className="px-2 py-1 border">{saldo.oborot[1]}</td>
                         </tr>
                         <tr className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
-                          <td className="px-2 py-1 border font-medium">На конец дня</td>
-                          <td className="px-2 py-1 border">{values.partner.balance_on_date[0] + values.partner.today_sales[0]}</td>
-                          <td className="px-2 py-1 border">{values.partner.balance_on_date[1] + values.partner.today_sales[1]}</td>
+                          <td className="px-2 py-1 border font-medium">На конец</td>
+                          <td className="px-2 py-1 border">{saldo.final[0]}</td>
+                          <td className="px-2 py-1 border">{saldo.final[1]}</td>
                         </tr>
                         <tr>
-                          <td colSpan={3} className="px-2 py-1 border text-end font-semibold">
-                            Баланс: {(values.partner.balance_on_date[1] + values.partner.today_sales[1]) - values.partner.balance_on_date[0] - values.partner.today_sales[0]}
-                            {/* Баланс: {formatNumber(values.partner.balance)} */}
-                          </td>
+                          <td className="px-2 py-1 border font-semibold"></td>
+                          <td className="px-2 py-1 border font-semibold">{saldo.saldo[0]}</td>
+                          <td className="px-2 py-1 border font-semibold">{saldo.saldo[1]}</td>
                         </tr>
                       </tbody>
                     </table>

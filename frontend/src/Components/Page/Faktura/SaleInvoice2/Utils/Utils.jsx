@@ -5,8 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../../../routes";
 import { useEffect } from "react";
 import SmartTooltip from "../../../../SmartTooltip";
+import myAxios from "../../../../axios";
 
-function Head() {
+function Head({getSaldo, setGlobalDate}) {
   const { values, setFieldValue, touched, errors } = useFormikContext();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -23,6 +24,8 @@ function Head() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [navigate]);
+
+  
 
   return (
     <div className="flex justify-between items-center border-b-2 border-gray-700 dark:border-gray-300 print:!border-black pb-2">
@@ -41,7 +44,22 @@ function Head() {
           name="invoice_date"
           value={values.invoice_date}
           onChange={(e) => {
+            const selectedDate = e.target.value;
+            const parsedDate = new Date(selectedDate);
+            setGlobalDate(e.target.value)
+
+
+            if (!isNaN(parsedDate.getTime()) && values.partner?.id) {
+              // console.log("Дата выбрана:", e.target.value);
+              getSaldo(e.target.value, values.partner.id)
+              
+            }
             setFieldValue("invoice_date", e.target.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+            }
           }}
           className="border px-2 py-1 rounded-md print:hidden bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
         />

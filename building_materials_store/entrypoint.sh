@@ -119,25 +119,25 @@ for pdata in partners_data:
     else:
         print(f'Partner "{partner.name}" already exists.')
 
-    # --- Привязка account через PartnerAccount ---
-    account = None
-    role = pdata["type"]
-    if pdata["type"] == Partner.FOUNDER:
-        account = Account.objects.get(number="75")
-    elif pdata["type"] in [Partner.BOTH, Partner.BUYER]:
-        account = Account.objects.get(number="60")
-    # SUPPLIER оставляем без account
+    # # --- Привязка account через PartnerAccount ---
+    # account = None
+    # role = pdata["type"]
+    # if pdata["type"] == Partner.FOUNDER:
+    #     account = Account.objects.get(number="75")
+    # elif pdata["type"] in [Partner.BOTH, Partner.BUYER]:
+    #     account = Account.objects.get(number="60")
+    # # SUPPLIER оставляем без account
 
-    if account:
-        pa, pa_created = PartnerAccount.objects.get_or_create(
-            partner=partner,
-            account=account,
-            role=role
-        )
-        if pa_created:
-            print(f'PartnerAccount created for "{partner.name}" with account {account.number} ({role})')
-        else:
-            print(f'PartnerAccount already exists for "{partner.name}" with account {account.number} ({role})')
+    # if account:
+    #     pa, pa_created = PartnerAccount.objects.get_or_create(
+    #         partner=partner,
+    #         account=account,
+    #         role=role
+    #     )
+    #     if pa_created:
+    #         print(f'PartnerAccount created for "{partner.name}" with account {account.number} ({role})')
+    #     else:
+    #         print(f'PartnerAccount already exists for "{partner.name}" with account {account.number} ({role})')
 
 
 # --- Создание категорий ---

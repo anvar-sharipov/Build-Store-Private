@@ -134,3 +134,40 @@ def get_osw(request):
     return JsonResponse({"report": report}, safe=False)
 
 
+########################################################################################################################################################################## START
+# get saldo       ishem saldo dlya partnera na wybrannuyu daty, saleInvoice
+
+def get_saldo(partner_obj, getDate):
+    rule = CustomePostingRule.objects.filter(operation__code="sale", directory_type=partner_obj.type, amount_type="revenue").first()
+    if not rule:
+        value = [Decimal('0.00'), Decimal('0.00')]
+        return {"start": value, "oborot": value, "final": value, "saldo": value}
+    account = rule.debit_account
+    entries_start = Entry.objects.filter(transaction__partner=partner_obj, transaction__date__lt=getDate).filter(account=account)
+    debit_start = entries_start.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
+    credit_start = entries_start.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
+    
+    entries_oborot = Entry.objects.filter(transaction__partner=partner_obj, transaction__date__date=getDate).filter(account=account)
+    debit_oborot = entries_oborot.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
+    credit_oborot = entries_oborot.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
+    
+    debit_end = debit_start + debit_oborot
+    credit_end = credit_start + credit_oborot
+    
+    saldo = debit_end - credit_end
+    saldo_debit = abs(saldo) if saldo > 0 else 0
+    saldo_credit = abs(saldo) if saldo < 0 else 0
+
+    return {"start": [debit_start, credit_start], "oborot": [debit_oborot, credit_oborot], "final": [debit_end, credit_end], "saldo": [saldo_debit, saldo_credit]}  
+@require_GET
+def get_saldo_for_partner_for_selected_date(request):
+    getDate = request.GET.get('date')
+    partnerId = request.GET.get('partnerId')
+    partner_obj = Partner.objects.get(pk=partnerId)
+    # ic(get_balance_on_date(partner_obj, getDate))
+    saldo = get_saldo(partner_obj, getDate)
+    return JsonResponse({"saldo": saldo}, safe=False)
+# get saldo
+########################################################################################################################################################################## END
+
+

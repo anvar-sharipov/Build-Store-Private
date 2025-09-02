@@ -79,7 +79,7 @@ class PartnerViewSet(viewsets.ModelViewSet):
 
 
     def paginate_queryset(self, queryset):
-        ic('tut2222')        
+        ic('tut2222', self)        
         """
         Если в query-параметрах есть ?no_pagination=1, 
         то отключаем пагинацию и отдаём весь queryset.

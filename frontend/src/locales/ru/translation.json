@@ -384,7 +384,12 @@
   "dont have account credit in entry rule": "В правиле проводки нет счёта кредита",
   "amount must be a digit": "сумма должна быть числом",
   "choose founder or client": "Выберите учредителя или клиента",
-  "successPay": "Успешная оплата"
+  "successPay": "Успешная оплата",
+  "osw":"Оборотно-сальдовая ведомость",
+  "po schyotu": "по счёту",
+  "saldo start": "Сальдо на начало",
+  "oborot za periud": "Обороты",
+  "saldo end": "Сальдо на конец"
 
 
 

@@ -82,6 +82,7 @@ def get_trial_balance(date_from, date_to):
     accounts = Account.objects.all().order_by("number")
 
     report = []
+    detail_report = {}
 
     for acc in accounts:
         # Начальное сальдо (все проводки ДО начала периода)
@@ -120,8 +121,128 @@ def get_trial_balance(date_from, date_to):
             "credit_turnover": credit_turnover,
             "closing_balance": closing_balance,
         })
+        
+        # get_account_number_klient = rule = CustomePostingRule.objects.filter(operation__code="sale", amount_type="revenue").first()
+        # if acc.number == "60":
+        # allEntryes = Entry.objects.filter(account=acc)
+        # detail_report[acc.number] = {}
+        # for e in allEntryes:
+        #     if e.transaction.partner.name not in detail_report[acc.number]:
+        #         detail_report[acc.number][e.transaction.partner.name] = {
+        #             'debit_start':Decimal(0), 
+        #             'credit_start':Decimal(0), 
+        #             'debit_oborot':Decimal(0), 
+        #             'credit_oborot':Decimal(0),
+        #             'debit_end':Decimal(0),
+        #             'credit_end':Decimal(0),
+        #             }
+        #     else:
+        #         detail_report[acc.number]['subkonto']['debit_start'] = Decimal(0)
+               
+        
+        
+        
+        detail_report[acc.number] = {}
+        entry_start = Entry.objects.filter(account=acc, transaction__date__lt=date_from)
+        
+        if entry_start:
+            for e in entry_start:
+                if e.transaction.partner.name not in detail_report[acc.number]:
+                    detail_report[acc.number][e.transaction.partner.name] = {
+                        'debit_start': Decimal(e.debit),
+                        'credit_start': Decimal(e.credit),
+                        'debit_oborot': Decimal(0),
+                        'credit_oborot': Decimal(0),
+                        'debit_end': Decimal(0),
+                        'credit_end': Decimal(0),
+                        }
+                else:
+                    detail_report[acc.number][e.transaction.partner.name]['debit_start'] += Decimal(e.debit)
+                    detail_report[acc.number][e.transaction.partner.name]['credit_start'] += Decimal(e.credit)
+                    
+            
+        entry_oborot = Entry.objects.filter(account=acc, transaction__date__range=(date_from, date_to))
+        if entry_oborot:
+            for e in entry_oborot:
+                if e.transaction.partner.name not in detail_report[acc.number]:
+                    detail_report[acc.number][e.transaction.partner.name] = {
+                        'debit_start': Decimal(0),
+                        'credit_start': Decimal(0),
+                        'debit_oborot': Decimal(e.debit),
+                        'credit_oborot': Decimal(e.credit),
+                        'debit_end': Decimal(0),
+                        'credit_end': Decimal(0),
+                        }
+                else:
+                    detail_report[acc.number][e.transaction.partner.name]['debit_oborot'] += Decimal(e.debit)
+                    detail_report[acc.number][e.transaction.partner.name]['credit_oborot'] += Decimal(e.credit)
+     
+    
+    detail_report_total = {}
+    saldo_total = {}
+    for acc_number, partners in detail_report.items():
+        start_summ_debit = Decimal(0)
+        start_summ_credit = Decimal(0)
+        
+        oborot_summ_debit = Decimal(0)
+        oborot_summ_credit = Decimal(0)
+        
+        end_summ_debit = Decimal(0)
+        end_summ_credit = Decimal(0)
+        
+        
+        
+        
 
-    return report
+        for partner, data in partners.items():
+            debit_end = data['debit_start'] + data['debit_oborot']
+            credit_end = data['credit_start'] + data['credit_oborot']
+            data['debit_end'] = debit_end
+            data['credit_end'] = credit_end
+            
+            start_summ_debit += data['debit_start']
+            start_summ_credit += data['credit_start']
+            
+            oborot_summ_debit += data['debit_oborot']
+            oborot_summ_credit += data['credit_oborot']
+            
+            end_summ_debit += debit_end
+            end_summ_credit += credit_end
+         
+        detail_report_total[acc_number] = {
+            'start_summ_debit': start_summ_debit,
+            'start_summ_credit': start_summ_credit,
+            'oborot_summ_debit': oborot_summ_debit,
+            'oborot_summ_credit': oborot_summ_credit,
+            'end_summ_debit': end_summ_debit,
+            'end_summ_credit': end_summ_credit,
+        }
+        
+        
+        start_saldo = start_summ_debit - start_summ_credit
+        start_saldo_debit = start_saldo if start_saldo > 0 else Decimal(0)
+        start_saldo_credit = abs(start_saldo) if start_saldo < 0 else Decimal(0)
+        
+        oborot_saldo = oborot_summ_debit - oborot_summ_credit
+        oborot_saldo_debit = oborot_saldo if oborot_saldo > 0 else Decimal(0)
+        oborot_saldo_credit = abs(oborot_saldo) if oborot_saldo < 0 else Decimal(0)
+        
+        end_saldo = end_summ_debit - end_summ_credit
+        end_saldo_debit = end_saldo if end_saldo > 0 else Decimal(0)
+        end_saldo_credit = abs(end_saldo) if end_saldo < 0 else Decimal(0)
+        
+        saldo_total[acc_number] = {
+            'start_saldo_debit': start_saldo_debit,
+            'start_saldo_credit': start_saldo_credit,
+            'oborot_saldo_debit': oborot_saldo_debit,
+            'oborot_saldo_credit': oborot_saldo_credit,
+            'end_saldo_debit': end_saldo_debit,
+            'end_saldo_credit': end_saldo_credit,
+        }
+        
+        
+    ic(saldo_total)
+    return {"report":report, "detail_report":detail_report, "detail_report_total":detail_report_total, "saldo_total":saldo_total}
 # OSW
 @require_GET
 def get_osw(request):
@@ -129,9 +250,13 @@ def get_osw(request):
     date_to = request.GET.get("date_to")
     ic(date_from, date_to)
 
-    report = get_trial_balance(date_from, date_to)  # твоя функция
+    reports = get_trial_balance(date_from, date_to)  # твоя функция
+    report = reports['report']
+    detail_report = reports['detail_report']
+    detail_report_total=reports["detail_report_total"]
+    saldo_total=reports["saldo_total"]
 
-    return JsonResponse({"report": report}, safe=False)
+    return JsonResponse({"report": report, "detail_report":detail_report, "detail_report_total":detail_report_total, "saldo_total":saldo_total}, safe=False)
 
 
 ########################################################################################################################################################################## START
@@ -148,8 +273,20 @@ def get_saldo(partner_obj, getDate):
     credit_start = entries_start.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
     
     entries_oborot = Entry.objects.filter(transaction__partner=partner_obj, transaction__date__date=getDate).filter(account=account)
+    desc = ''
+    if entries_oborot:
+        count = 0
+        for e in entries_oborot:
+            count += 1
+            desc += f"{count}) {e.transaction.description}"
+            desc += "\n"
+            
+    # ic(desc)
+            
+            
     debit_oborot = entries_oborot.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
     credit_oborot = entries_oborot.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
+  
     
     debit_end = debit_start + debit_oborot
     credit_end = credit_start + credit_oborot
@@ -158,7 +295,7 @@ def get_saldo(partner_obj, getDate):
     saldo_debit = abs(saldo) if saldo > 0 else 0
     saldo_credit = abs(saldo) if saldo < 0 else 0
 
-    return {"start": [debit_start, credit_start], "oborot": [debit_oborot, credit_oborot], "final": [debit_end, credit_end], "saldo": [saldo_debit, saldo_credit]}  
+    return {"start": [debit_start, credit_start], "oborot": [debit_oborot, credit_oborot, desc], "final": [debit_end, credit_end], "saldo": [saldo_debit, saldo_credit]}  
 @require_GET
 def get_saldo_for_partner_for_selected_date(request):
     getDate = request.GET.get('date')

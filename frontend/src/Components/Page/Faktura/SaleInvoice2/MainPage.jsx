@@ -271,7 +271,7 @@ const MainPage = () => {
                     <table className="min-w-full table-auto border-collapse print:table-fixed print:border print:border-black mt-4">
                       <thead>
                         <tr className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 print:bg-white print:!text-black">
-                          <th className="px-2 py-1 border">Показатель (клиент 60)</th>
+                          <th colSpan={2} className="px-2 py-1 border">Показатель (клиент 60)</th>
                           <th className="px-2 py-1 border">Дт</th>
                           <th className="px-2 py-1 border">Кт</th>
                         </tr>
@@ -279,20 +279,24 @@ const MainPage = () => {
                       <tbody>
                         <tr className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
                           <td className="px-2 py-1 border font-medium">На начало</td>
+                          <td className="px-2 py-1 border font-medium"></td>
                           <td className="px-2 py-1 border">{saldo.start[0]}</td>
                           <td className="px-2 py-1 border">{saldo.start[1]}</td>
                         </tr>
                         <tr className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
                           <td className="px-2 py-1 border font-medium">Оборот</td>
+                          <td className="px-2 py-1 border whitespace-pre-line">{saldo.oborot[2]}</td>
                           <td className="px-2 py-1 border">{saldo.oborot[0]}</td>
                           <td className="px-2 py-1 border">{saldo.oborot[1]}</td>
                         </tr>
                         <tr className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
                           <td className="px-2 py-1 border font-medium">На конец</td>
+                          <td className="px-2 py-1 border font-medium"></td>
                           <td className="px-2 py-1 border">{saldo.final[0]}</td>
                           <td className="px-2 py-1 border">{saldo.final[1]}</td>
                         </tr>
                         <tr>
+                          <td className="px-2 py-1 border font-semibold"></td>
                           <td className="px-2 py-1 border font-semibold"></td>
                           <td className="px-2 py-1 border font-semibold">{saldo.saldo[0]}</td>
                           <td className="px-2 py-1 border font-semibold">{saldo.saldo[1]}</td>

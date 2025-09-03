@@ -160,7 +160,7 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     type_price=type_price
                 )
                 
-                invoice.note = f"Faktura № {invoice.pk}\n{comment}"
+                invoice.note = f"Faktura № {str(invoice.pk)}\n{comment}"
                 invoice.save()
                 
                 
@@ -178,10 +178,13 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                         return Response({'detail': 'NoPostingRuleFound'}, status=status.HTTP_400_BAD_REQUEST)
                     
                     transaction_obj = Transaction.objects.create(
-                        description=comment,
+                        # description=comment,
                         invoice=invoice,
                         partner=partner
                     )
+                    
+                    transaction_obj.description = f"Faktura № {str(invoice.pk)}\n{comment}"
+                    transaction_obj.save()
 
                 
                 # Сохраняем позиции товаров
@@ -195,7 +198,7 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     purchase_price = Decimal(product['purchase_price'])
                     retail_price = Decimal(product['retail_price'])
                     wholesale_price = Decimal(product['wholesale_price'])
-                    ic('tut')
+                    # ic('tut')
                     profit = (Decimal(sale_price) - Decimal(purchase_price)) * Decimal(quantity)
                     
                     conversion_factor = 1

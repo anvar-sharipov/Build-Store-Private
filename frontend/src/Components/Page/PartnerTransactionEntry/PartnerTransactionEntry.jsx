@@ -4,7 +4,7 @@ import Notification from "../../Notification";
 import MyModal from "../../UI/MyModal";
 import MyLoading from "../../UI/MyLoading";
 import { Formik, Form, Field } from "formik";
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, useContext } from "react";
 import MySearchInput from "../../UI/MySearchInput";
 import PartnerSearch from "./PartnerSearch";
 import DebitAccountSearch from "./DebitAccountSearch";
@@ -13,12 +13,14 @@ import Comment from "./Comment";
 import Amount from "./Amount";
 import SmartTooltip from "../../SmartTooltip";
 import MyLoading2 from "../../UI/MyLoading2";
+import { DateContext } from "../../UI/DateProvider";
 
 const PartnerTransactionEntry = () => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const price_inputRef = useRef(null);
   const comment_Ref = useRef(null);
+  const { dateFrom, setDateFrom, dateTo, setDateTo, dateProwodok, setDateProwodok } = useContext(DateContext);
 
   const [notification, setNotification] = useState({ message: "", type: "" });
   const showNotification = (message, type) => {
@@ -45,6 +47,19 @@ const PartnerTransactionEntry = () => {
   const kreditInputRef = useRef(null);
   const X_kredit_ref = useRef(null);
 
+  // // Создаем initialValues с useMemo для реактивности
+  // const initialValues = useMemo(
+  //   () => ({
+  //     partner: null,
+  //     debet: null,
+  //     kredit: null,
+  //     amount: 0,
+  //     comment: "",
+  //     entry_date: dateProwodok || "", // Теперь реактивно обновляется
+  //   }),
+  //   [dateProwodok]
+  // );
+
   useEffect(() => {
     document.title = t("entrys");
   }, []);
@@ -61,7 +76,9 @@ const PartnerTransactionEntry = () => {
           kredit: null,
           amount: 0,
           comment: "",
+          entry_date: dateProwodok || "",
         }}
+        enableReinitialize={false}
         onSubmit={(values, actions) => {
           if (loading) return;
           const sendTransactions = async () => {
@@ -83,7 +100,12 @@ const PartnerTransactionEntry = () => {
           actions.setSubmitting(false);
         }}
       >
-        {({ isSubmitting, submitForm }) => {
+        {({ isSubmitting, submitForm, values, setFieldValue }) => {
+          useEffect(() => {
+            // Меняем только entry_date, остальные поля остаются
+            setFieldValue("entry_date", dateProwodok || "");
+          }, [dateProwodok, setFieldValue]);
+
           useEffect(() => {
             const handleKeyDown = (event) => {
               if (event.ctrlKey && event.key === "Enter") {
@@ -110,8 +132,8 @@ const PartnerTransactionEntry = () => {
                         if (e.key === "ArrowDown") {
                           e.preventDefault();
                           expense_btn.current?.focus();
-                        } else if (e.key === "ArrowRight" || e.key === "ArrowLeft" ) {
-                          e.preventDefault()
+                        } else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+                          e.preventDefault();
                         }
                       }}
                       ref={income_btn}
@@ -136,7 +158,7 @@ const PartnerTransactionEntry = () => {
                           e.preventDefault();
                           income_btn.current?.focus();
                         } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
-                          e.preventDefault()
+                          e.preventDefault();
                         }
                       }}
                       ref={expense_btn}

@@ -27,18 +27,18 @@ class UnitOfMeasurement(models.Model):
 
 
 class Product(models.Model):
-    name = models.CharField(verbose_name='Наименование', max_length=1000)
+    name = models.CharField(verbose_name='Наименование', max_length=1000, unique=True) # 
     description = models.TextField(verbose_name='Описание', blank=True, null=True)
     base_unit = models.ForeignKey('UnitOfMeasurement', verbose_name='Базовая единица', on_delete=models.PROTECT)
     category = models.ForeignKey('Category', verbose_name='Категория', on_delete=models.PROTECT, blank=True, null=True)
     sku = models.CharField(verbose_name='Артикул (SKU)', max_length=100, unique=True, null=True, blank=True)
     qr_code = models.CharField(verbose_name='QR-код', max_length=1000, blank=True, null=True, unique=True)
-    purchase_price = models.DecimalField(verbose_name='Цена закупки', max_digits=10, decimal_places=2, default=0)
-    retail_price = models.DecimalField(verbose_name='Розничная цена', max_digits=10, decimal_places=2, default=0)
-    wholesale_price = models.DecimalField(verbose_name='Оптовая цена', max_digits=10, decimal_places=2, default=0)
-    discount_price = models.DecimalField(verbose_name='Цена со скидкой', max_digits=10, decimal_places=2, blank=True, null=True)
+    purchase_price = models.DecimalField(verbose_name='Цена закупки', max_digits=10, decimal_places=3, default=0)
+    retail_price = models.DecimalField(verbose_name='Розничная цена', max_digits=10, decimal_places=3, default=0)
+    wholesale_price = models.DecimalField(verbose_name='Оптовая цена', max_digits=10, decimal_places=3, default=0)
+    discount_price = models.DecimalField(verbose_name='Цена со скидкой', max_digits=10, decimal_places=3, blank=True, null=True)
     # Poprosil Makem aga sdelat porogowuyu senu (purchase_price) esho odnu, ne ponyal pochemu no sdelayu raz poprosili
-    firma_price = models.DecimalField(verbose_name='Цена Firma', max_digits=10, decimal_places=2, blank=True, null=True)
+    firma_price = models.DecimalField(verbose_name='Цена Firma', max_digits=10, decimal_places=3, blank=True, null=True)
     brand = models.ForeignKey('Brand', verbose_name='Бренд', on_delete=models.PROTECT, blank=True, null=True)
     model = models.ForeignKey('Model', verbose_name='Модель', on_delete=models.PROTECT, blank=True, null=True)
     weight = models.DecimalField(verbose_name='Вес (кг)', max_digits=10, decimal_places=3, blank=True, null=True)
@@ -310,7 +310,7 @@ class Partner(models.Model):
         (FOUNDER, 'Uchreditel (Учредитель)'),
     ]
 
-    name = models.CharField(verbose_name='Partneryn ady', max_length=2000)
+    name = models.CharField(verbose_name='Partneryn ady', max_length=2000, unique=True)
     # СВЯЗЬ С AGENT
     agent = models.ForeignKey('Agent', on_delete=models.PROTECT, null=True, blank=True, verbose_name='Agent'
     )
@@ -448,84 +448,50 @@ class SalesInvoiceItem(models.Model):
         quantity = self.quantity or 0
         wholesale_price = self.wholesale_price or 0
         return quantity * wholesale_price
-
-    # def save(self, *args, **kwargs):
-    #     created = self.pk is None
-    #     warehouse = self.invoice.warehouse
-        
-    #     if warehouse is None:
-    #         raise ValidationError("Не выбран склад для накладной")
-
-    #     with transaction.atomic():
-    #         try:
-    #             # Блокируем запись для безопасного обновления
-    #             wp = WarehouseProduct.objects.select_for_update().get(
-    #                 product=self.product, 
-    #                 warehouse=warehouse
-    #             )
-    #         except WarehouseProduct.DoesNotExist:
-    #             raise ValidationError(
-    #                 f"Товар {self.product.name} отсутствует на складе {warehouse.name}"
-    #             )
-
-    #         if created:
-    #             # Проверяем достаточность остатка
-    #             if self.quantity > wp.quantity:
-    #                 raise ValidationError(
-    #                     f"Недостаточно товара на складе {warehouse.name}: "
-    #                     f"{self.product.name}. Доступно: {wp.quantity}, "
-    #                     f"требуется: {self.quantity}"
-    #                 )
-                
-    #             # Сохраняем и обновляем остаток
-    #             super().save(*args, **kwargs)
-    #             wp.quantity -= self.quantity
-                
-    #         else:
-    #             # При обновлении
-    #             old_instance = SalesInvoiceItem.objects.get(pk=self.pk)
-    #             qty_diff = self.quantity - old_instance.quantity
-
-    #             if qty_diff > 0 and qty_diff > wp.quantity:
-    #                 raise ValidationError(
-    #                     f"Недостаточно товара на складе для увеличения количества"
-    #                 )
-                
-    #             super().save(*args, **kwargs)
-    #             wp.quantity -= qty_diff
-
-    #         # Проверяем, что остаток не отрицательный
-    #         if wp.quantity < 0:
-    #             raise ValidationError(
-    #                 f"Остаток на складе не может быть отрицательным"
-    #             )
-            
-    #         wp.save()
-
-    # def delete(self, *args, **kwargs):
-    #     with transaction.atomic():
-    #         try:
-    #             # Блокируем запись для обновления
-    #             wp = WarehouseProduct.objects.select_for_update().get(
-    #                 product=self.product, 
-    #                 warehouse=self.invoice.warehouse
-    #             )
-    #             # Восстанавливаем остаток
-    #             wp.quantity += self.quantity
-    #             wp.save()
-                
-    #         except WarehouseProduct.DoesNotExist:
-    #             # Создаем запись, если её нет
-    #             WarehouseProduct.objects.create(
-    #                 product=self.product,
-    #                 warehouse=self.invoice.warehouse,
-    #                 quantity=self.quantity
-    #             )
-            
-    #         # Удаляем только после успешного восстановления остатка
-    #         super().delete(*args, **kwargs)
 ######################################################################## Расходная накладная (faktura) END
 ########################################################################################################################################################################################################################
+########################################################################################################################################################################################################################
+######################################################################## Приход накладная (faktura) START
+
+class PurchaseInvoice(models.Model):
+    TRANSACTION_TYPE_CHOICES = [('purchase', 'Покупка'), ('return', 'Возврат'),]
+    
+    supplier = models.ForeignKey('Partner', on_delete=models.PROTECT, verbose_name='Поставщик', null=True, blank=True)
+    transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPE_CHOICES, default='purchase', verbose_name='Тип операции')
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name='Создал')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания (автоматически)')
+    invoice_date = models.DateTimeField(verbose_name='Дата накладной (фактура)')
+    warehouse = models.ForeignKey('Warehouse', on_delete=models.PROTECT, verbose_name='Склад', null=True, blank=True)
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"), verbose_name='Общая сумма')
+    received_by = models.ForeignKey('Employee', on_delete=models.PROTECT, verbose_name='Принял', null=True, blank=True)
+    note = models.TextField(null=True, blank=True, verbose_name='Примечание')
+    total_pay_summ = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"), verbose_name="Сумма оплаты", null=True, blank=True)
+    isEntry = models.BooleanField(default=False, verbose_name="Проводка создана")
+
+    class Meta:
+        verbose_name = 'Приходная накладная'
+        verbose_name_plural = 'Приходные накладные'
+        indexes = [models.Index(fields=['created_at']), models.Index(fields=['supplier', 'created_at'])]
+
+    def __str__(self):
+        return f"Закупка №{self.id} от {self.created_at.strftime('%Y-%m-%d')}"
+
+    def calculate_total(self):
+        return sum(item.get_line_total() for item in self.items.all())
+
+
+class PurchaseInvoiceItem(models.Model):
+    invoice = models.ForeignKey('PurchaseInvoice', on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey('Product', on_delete=models.PROTECT)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    purchase_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def get_line_total(self):
+        return (self.quantity or 0) * (self.purchase_price or 0)
+
+######################################################################## Приход накладная (faktura) END
+########################################################################################################################################################################################################################
+
 # Типы счетов
 ACCOUNT_TYPES = [
     ('asset', 'Актив'),
@@ -566,7 +532,7 @@ class Account(models.Model):
 # # Хозяйственная операция
 class Transaction(models.Model):
     description = models.TextField(verbose_name='Описание операции')
-    date = models.DateTimeField(auto_now_add=True, verbose_name='Дата операции')
+    date = models.DateTimeField(verbose_name='Дата операции')
     invoice = models.ForeignKey(SalesInvoice, null=True, blank=True, on_delete=models.SET_NULL)
     partner = models.ForeignKey(Partner, null=True, blank=True, on_delete=models.SET_NULL, verbose_name='Партнер')
 

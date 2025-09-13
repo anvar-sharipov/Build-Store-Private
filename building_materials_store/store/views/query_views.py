@@ -80,6 +80,7 @@ def search_partners_view(request):
 
 def get_trial_balance(date_from, date_to):
     accounts = Account.objects.all().order_by("number")
+    # ic("this is get_trial_balance")
 
     report = []
     detail_report = {}
@@ -273,10 +274,14 @@ def get_saldo(partner_obj, getDate):
     credit_start = entries_start.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
     
     entries_oborot = Entry.objects.filter(transaction__partner=partner_obj, transaction__date__date=getDate).filter(account=account)
+    today_entries = []
     desc = ''
     if entries_oborot:
         count = 0
         for e in entries_oborot:
+            str_date = e.transaction.date.strftime("%d-%m-%Y %H:%M")
+            ic(e.transaction.date)
+            today_entries.append([str_date, e.transaction.description, e.debit, e.credit])
             count += 1
             desc += f"{count}) {e.transaction.description}"
             desc += "\n"
@@ -295,7 +300,7 @@ def get_saldo(partner_obj, getDate):
     saldo_debit = abs(saldo) if saldo > 0 else 0
     saldo_credit = abs(saldo) if saldo < 0 else 0
 
-    return {"start": [debit_start, credit_start], "oborot": [debit_oborot, credit_oborot, desc], "final": [debit_end, credit_end], "saldo": [saldo_debit, saldo_credit]}  
+    return {"start": [debit_start, credit_start], "oborot": [debit_oborot, credit_oborot, desc], "final": [debit_end, credit_end], "saldo": [saldo_debit, saldo_credit], "today_entries":today_entries}  
 @require_GET
 def get_saldo_for_partner_for_selected_date(request):
     getDate = request.GET.get('date')

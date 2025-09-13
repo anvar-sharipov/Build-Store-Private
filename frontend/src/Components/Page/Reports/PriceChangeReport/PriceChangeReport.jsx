@@ -4,11 +4,26 @@ import { useTranslation } from "react-i18next";
 import { AuthContext } from "../../../../AuthContext";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../../routes";
+import { DateContext } from "../../../UI/DateProvider";
 
 const PriceChangeReport = () => {
   const { authUser, authGroup } = useContext(AuthContext);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const { dateFrom, setDateFrom, dateTo, setDateTo } = useContext(DateContext);
+
+//   const today = new Date().toISOString().split("T")[0];
+//   const [startDate, setStartDate] = useState(() => localStorage.getItem("dateFrom") || today);
+//   const [endDate, setEndDate] = useState(() => localStorage.getItem("dateTo") || today);
+//   useEffect(() => {
+//   function handleStorageChange(e) {
+//     if (e.key === "dateFrom") setStartDate(e.newValue);
+//     if (e.key === "dateTo") setEndDate(e.newValue);
+//   }
+
+//   window.addEventListener("storage", handleStorageChange);
+//   return () => window.removeEventListener("storage", handleStorageChange);
+// }, []);
+  
+
   const [report, setReport] = useState([]);
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
@@ -27,7 +42,7 @@ const PriceChangeReport = () => {
     return !isNaN(d.getTime());
   };
 
-  const isDatesValid = isValidDate(startDate) && isValidDate(endDate);
+  const isDatesValid = isValidDate(dateFrom) && isValidDate(dateTo);
 
   const fetchReport = async () => {
     if (!isDatesValid) return;
@@ -35,8 +50,8 @@ const PriceChangeReport = () => {
     try {
       const response = await myAxios.get("/price-change-report/", {
         params: {
-          start_date: startDate,
-          end_date: endDate,
+          start_date: dateFrom,
+          end_date: dateTo,
           price_type: priceType,
         },
       });
@@ -58,10 +73,7 @@ const PriceChangeReport = () => {
     }
 
     try {
-      const response = await myAxios.get(
-        `/price-change-report/excel/?start_date=${startDate}&end_date=${endDate}&price_type=${priceType}`,
-        { responseType: "blob" }
-      );
+      const response = await myAxios.get(`/price-change-report/excel/?start_date=${dateFrom}&end_date=${dateTo}&price_type=${priceType}`, { responseType: "blob" });
 
       const blob = new Blob([response.data], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -106,35 +118,17 @@ const PriceChangeReport = () => {
       <button
         onClick={downloadExcel}
         disabled={!isDatesValid}
-        className={`px-4 py-1 rounded mb-4 print:hidden text-white ${
-          isDatesValid ? "bg-green-600 hover:bg-green-700" : "bg-gray-400 cursor-not-allowed"
-        }`}
+        className={`px-4 py-1 rounded mb-4 print:hidden text-white ${isDatesValid ? "bg-green-600 hover:bg-green-700" : "bg-gray-400 cursor-not-allowed"}`}
       >
         {t("download_excel")}
       </button>
 
-      <h2 className="text-xl font-bold mb-4 print:text-center print:text-black">
-        {t("report_title")}
-      </h2>
+      <h2 className="text-xl font-bold mb-4 print:text-center print:text-black">{t("report_title")}</h2>
 
       <div className="mb-4 flex gap-2 print:flex print:justify-center print:items-center">
-        <input
-          type="date"
-          className="border px-2 py-1 bg-white dark:bg-gray-700 dark:text-white print:text-black"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-        />
-        <input
-          type="date"
-          className="border px-2 py-1 bg-white dark:bg-gray-700 dark:text-white print:text-black"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-        />
-        <select
-          className="border px-2 py-1 bg-white dark:bg-gray-700 dark:text-white print:text-black"
-          value={priceType}
-          onChange={(e) => setPriceType(e.target.value)}
-        >
+        <input type="date" className="border px-2 py-1 bg-white dark:bg-gray-700 dark:text-white print:!text-black hidden print:block" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} disabled={true} />
+        <input type="date" className="border px-2 py-1 bg-white dark:bg-gray-700 dark:text-white print:!text-black hidden print:block" value={dateTo} onChange={(e) => setDateTo(e.target.value)} disabled={true} />
+        <select className="border px-2 py-1 bg-white dark:bg-gray-700 dark:text-white print:!text-black" value={priceType} onChange={(e) => setPriceType(e.target.value)}>
           {VALID_PRICE_TYPES.map(({ value, label }) => (
             <option key={value} value={value}>
               {label}
@@ -144,9 +138,7 @@ const PriceChangeReport = () => {
         <button
           onClick={fetchReport}
           disabled={!isDatesValid}
-          className={`px-4 py-1 rounded text-white print:hidden ${
-            isDatesValid ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"
-          }`}
+          className={`px-4 py-1 rounded text-white print:hidden ${isDatesValid ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"}`}
         >
           {t("show")}
         </button>
@@ -167,12 +159,8 @@ const PriceChangeReport = () => {
               <th className="border border-gray-400 px-2 py-1">{t("new_price")}</th>
               <th className="border border-gray-400 px-2 py-1">{t("quantity")}</th>
               <th className="border border-gray-400 px-2 py-1">{t("new_sum")}</th>
-              <th className="border border-gray-400 px-2 py-1 text-red-600 dark:text-red-400 print:text-black">
-                {t("loss")}
-              </th>
-              <th className="border border-gray-400 px-2 py-1 text-green-600 dark:text-green-400 print:text-black">
-                {t("profit")}
-              </th>
+              <th className="border border-gray-400 px-2 py-1 text-red-600 dark:text-red-400 print:text-black">{t("loss")}</th>
+              <th className="border border-gray-400 px-2 py-1 text-green-600 dark:text-green-400 print:text-black">{t("profit")}</th>
             </tr>
           </thead>
           <tbody>
@@ -191,12 +179,8 @@ const PriceChangeReport = () => {
                   <td className="border border-gray-400 px-2 py-1">{row.new_price}</td>
                   <td className="border border-gray-400 px-2 py-1">{row.quantity_at_change}</td>
                   <td className="border border-gray-400 px-2 py-1">{newTotal.toFixed(2)}</td>
-                  <td className="border border-gray-400 px-2 py-1 text-red-600 dark:text-red-400 print:text-black">
-                    {diff < 0 ? diff.toFixed(2) : "-"}
-                  </td>
-                  <td className="border border-gray-400 px-2 py-1 text-green-600 dark:text-green-400 print:text-black">
-                    {diff > 0 ? diff.toFixed(2) : "-"}
-                  </td>
+                  <td className="border border-gray-400 px-2 py-1 text-red-600 dark:text-red-400 print:text-black">{diff < 0 ? diff.toFixed(2) : "-"}</td>
+                  <td className="border border-gray-400 px-2 py-1 text-green-600 dark:text-green-400 print:text-black">{diff > 0 ? diff.toFixed(2) : "-"}</td>
                 </tr>
               );
             })}

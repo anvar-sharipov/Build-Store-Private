@@ -7,7 +7,7 @@ import TDPrice from "./TDPrice";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-const td1 = "px-3 py-2 font-semibold text-gray-900 dark:text-gray-100 text-right border border-gray-300 dark:border-gray-600 print:px-1 print:py-0.5 print:!text-black";
+const td1 = "px-3 py-2 font-semibold text-gray-900 dark:text-gray-100 text-right border border-black dark:border-gray-600 print:px-1 print:py-0.5 print:!text-black";
 
 const TDProducts = ({ handleDeleteProduct, visibleColumns, printVisibleColumns, showNotification, productQuantityRefs, productListRefs, productInputRef, productPriceRefs, id }) => {
   const { values } = useFormikContext();
@@ -33,12 +33,12 @@ const TDProducts = ({ handleDeleteProduct, visibleColumns, printVisibleColumns, 
         return (
           <tr key={product.id} ref={(el) => (productListRefs.current[product.id] = el)} tabIndex={0} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
             <td className={td1}>{index + 1}</td>
-            <td className="px-3 py-2 font-semibold text-gray-900 dark:text-gray-100 text-left border border-gray-300 dark:border-gray-600 print:px-1 print:py-0.5 print:!text-black">
+            <td className="px-3 py-2 font-semibold text-gray-900 dark:text-gray-100 text-left border border-black dark:border-gray-600 print:px-1 print:py-0.5 print:!text-black">
               {product.name}
             </td>
 
             <td
-              className={`px-3 py-2 border border-gray-300 dark:border-gray-600 print:px-1 print:py-0.5 print:!text-black text-center ${visibleColumns.image ? "table-cell" : "hidden"} ${
+              className={`px-3 py-2 border border-black dark:border-gray-600 print:px-1 print:py-0.5 print:!text-black text-center ${visibleColumns.image ? "table-cell" : "hidden"} ${
                 printVisibleColumns.image ? "print:table-cell" : "print:hidden"
               }`}
             >
@@ -51,7 +51,7 @@ const TDProducts = ({ handleDeleteProduct, visibleColumns, printVisibleColumns, 
             </td>
 
             <td
-              className={`px-3 py-2 border border-gray-300 dark:border-gray-600 print:px-1 print:py-0.5 print:!text-black text-center ${visibleColumns.qr_code ? "table-cell" : "hidden"} ${
+              className={`px-3 py-2 border border-black dark:border-gray-600 print:px-1 print:py-0.5 print:!text-black text-center ${visibleColumns.qr_code ? "table-cell" : "hidden"} ${
                 printVisibleColumns.qr_code ? "print:table-cell" : "print:hidden"
               }`}
             >
@@ -59,31 +59,31 @@ const TDProducts = ({ handleDeleteProduct, visibleColumns, printVisibleColumns, 
             </td>
 
             <TDQuantity product={product} index={index} productQuantityRefs={productQuantityRefs} productInputRef={productInputRef} productPriceRefs={productPriceRefs} />
-            <td className="px-3 py-2 text-gray-900 dark:text-gray-100 text-left border border-gray-300 dark:border-gray-600 print:px-1 print:py-0.5 print:!text-black">
+            <td className="px-3 py-2 text-gray-900 dark:text-gray-100 text-left border border-black dark:border-gray-600 print:px-1 print:py-0.5 print:!text-black">
               {product.unit_name_on_selected_warehouses}
             </td>
             <TDPrice product={product} index={index} productPriceRefs={productPriceRefs} productInputRef={productInputRef} />
-            <td className={td1}>{formatNumber(total)}</td>
+            <td className={td1}>{formatNumber(total, 3)}</td>
 
             <td className={`${td1} ${visibleColumns.purchase ? "table-cell" : "hidden"} ${printVisibleColumns.purchase ? "print:table-cell" : "print:hidden"}`}>
-              {formatNumber(product.purchase_price)}
+              {formatNumber(product.purchase_price, 3)}
             </td>
-            <td className={`${td1} ${visibleColumns.purchase ? "table-cell" : "hidden"} ${printVisibleColumns.purchase ? "print:table-cell" : "print:hidden"}`}>{formatNumber(total_purchase)}</td>
+            <td className={`${td1} ${visibleColumns.purchase ? "table-cell" : "hidden"} ${printVisibleColumns.purchase ? "print:table-cell" : "print:hidden"}`}>{formatNumber(total_purchase, 3)}</td>
 
             <td className={`${td1} ${visibleColumns.income ? "table-cell" : "hidden"} ${printVisibleColumns.income ? "print:table-cell" : "print:hidden"}`}>
-              {formatNumber(product.selected_price - product.purchase_price)}
+              {formatNumber((product.selected_price - product.purchase_price), 3)}
             </td>
-            <td className={`${td1} ${visibleColumns.income ? "table-cell" : "hidden"} ${printVisibleColumns.income ? "print:table-cell" : "print:hidden"}`}>{formatNumber(total_profit)}</td>
+            <td className={`${td1} ${visibleColumns.income ? "table-cell" : "hidden"} ${printVisibleColumns.income ? "print:table-cell" : "print:hidden"}`}>{formatNumber(total_profit, 3)}</td>
 
-            <td className={`${td1} ${visibleColumns.discount ? "table-cell" : "hidden"} ${printVisibleColumns.discount ? "print:table-cell" : "print:hidden"}`}>{formatNumber(discount)}</td>
-            <td className={`${td1} ${visibleColumns.discount ? "table-cell" : "hidden"} ${printVisibleColumns.discount ? "print:table-cell" : "print:hidden"}`}>{formatNumber(discount_total)}</td>
+            <td className={`${td1} ${visibleColumns.discount ? "table-cell" : "hidden"} ${printVisibleColumns.discount ? "print:table-cell" : "print:hidden"}`}>{formatNumber(discount, 3)}</td>
+            <td className={`${td1} ${visibleColumns.discount ? "table-cell" : "hidden"} ${printVisibleColumns.discount ? "print:table-cell" : "print:hidden"}`}>{formatNumber(discount_total, 3)}</td>
 
             <td className={`${td1} ${visibleColumns.volume ? "table-cell" : "hidden"} ${printVisibleColumns.volume ? "print:table-cell" : "print:hidden"}`}>{formatNumber(total_volume, 3)}</td>
-            <td className={`${td1} ${visibleColumns.weight ? "table-cell" : "hidden"} ${printVisibleColumns.weight ? "print:table-cell" : "print:hidden"}`}>{formatNumber(total_weight)}</td>
+            <td className={`${td1} ${visibleColumns.weight ? "table-cell" : "hidden"} ${printVisibleColumns.weight ? "print:table-cell" : "print:hidden"}`}>{formatNumber(total_weight, 3)}</td>
 
-            <td className={`${td1} ${visibleColumns.dimensions ? "table-cell" : "hidden"} ${printVisibleColumns.dimensions ? "print:table-cell" : "print:hidden"}`}>{formatNumber(total_length)}</td>
-            <td className={`${td1} ${visibleColumns.dimensions ? "table-cell" : "hidden"} ${printVisibleColumns.dimensions ? "print:table-cell" : "print:hidden"}`}>{formatNumber(total_width)}</td>
-            <td className={`${td1} ${visibleColumns.dimensions ? "table-cell" : "hidden"} ${printVisibleColumns.dimensions ? "print:table-cell" : "print:hidden"}`}>{formatNumber(total_height)}</td>
+            <td className={`${td1} ${visibleColumns.dimensions ? "table-cell" : "hidden"} ${printVisibleColumns.dimensions ? "print:table-cell" : "print:hidden"}`}>{formatNumber(total_length, 3)}</td>
+            <td className={`${td1} ${visibleColumns.dimensions ? "table-cell" : "hidden"} ${printVisibleColumns.dimensions ? "print:table-cell" : "print:hidden"}`}>{formatNumber(total_width, 3)}</td>
+            <td className={`${td1} ${visibleColumns.dimensions ? "table-cell" : "hidden"} ${printVisibleColumns.dimensions ? "print:table-cell" : "print:hidden"}`}>{formatNumber(total_height, 3)}</td>
             {!values.disabled && (
               <td className={`${td1} print:hidden`}>
                 <button

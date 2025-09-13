@@ -75,7 +75,7 @@ const Header = () => {
         navigate(ROUTES.MAIN);
       } else if (event.key === "F2") {
         event.preventDefault();
-        navigate(ROUTES.HARYTLAR);
+        navigate(ROUTES.PURCHASEINVOICE);
       } else if (event.key === "F3") {
         event.preventDefault();
         navigate(ROUTES.EMPLOYEERS);
@@ -87,10 +87,13 @@ const Header = () => {
         navigate(ROUTES.AGENTS);
       } else if (event.key === "F6") {
         event.preventDefault();
-        navigate(ROUTES.ENTRIES);
-      } else if (event.key === "F7") {
-        event.preventDefault();
-        navigate(ROUTES.ACCOUNT);
+        navigate(ROUTES.HARYTLAR);
+      // else if (event.key === "F6") {
+      //   event.preventDefault();
+      //   navigate(ROUTES.ENTRIES);
+      // } else if (event.key === "F7") {
+      //   event.preventDefault();
+      //   navigate(ROUTES.ACCOUNT);
       } 
     };
     window.addEventListener("keydown", handleKeyDown);

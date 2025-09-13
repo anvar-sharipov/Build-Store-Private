@@ -6,6 +6,9 @@ export const ROUTES = {
   PARTNERS_new: "/partners_new",
   EMPLOYEERS: "/employers",
   AGENTS: "/agents",
+  PURCHASEINVOICE: "/purchase_invoice",
+  PURCHASE_INVOICE_CREATE: "/purchase-invoices/create",
+  PURCHASE_INVOICE_UPDATE: "/purchase-invoices/update/:id",
   // ENTRIES: "/entries",
   // ACCOUNT: "/account",
   
@@ -19,4 +22,10 @@ export const ROUTES_RAPORT = {
 export const PROCHEE = {
   PARTNER_TRANSACTION_ENTRY: "/partner_transaction_entry",
   OSW: "/osw",
+};
+
+
+export const ADMIN_PANEL = {
+  IMPORT_PRODUCTS: "/import_products",
+  IMPORT_PARTNERS: "/import_partners",
 };

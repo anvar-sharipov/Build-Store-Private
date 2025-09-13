@@ -8,6 +8,8 @@ import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { useSearchParams } from "react-router-dom";
 import { myClass } from "../../tailwindClasses";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import Notification from "../../Notification";
 
 const Faktura = () => {
   const { t } = useTranslation();
@@ -32,11 +34,23 @@ const Faktura = () => {
   const [prevPage, setPrevPage] = useState(null);
   const [page, setPage] = useState(1); // текущая страница
 
+  const [notification, setNotification] = useState({ message: "", type: "" });
+  const showNotification = (message, type) => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification({ message: "", type: "" }), 3000);
+  };
+  const location = useLocation();
+  useEffect(() => {
+    if (location.state?.notification) {
+      showNotification(location.state.notification, "success");
+    }
+  }, [location.state]);
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Insert") {
         e.preventDefault();
-        navigate('/sale-invoices/create');
+        navigate("/sale-invoices/create");
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -116,14 +130,17 @@ const Faktura = () => {
         <div>
           <div>
             <div className="border border-gray-300 dark:border-gray-600 rounded-sm overflow-hidden">
-              <ul className={myClass.ul}>
+              <ul className="divide-y divide-gray-900 dark:divide-gray-600 mt-2 space-y-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 border border-black dark:border-gray-700/50 backdrop-blur-sm p-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent transition-all duration-300">
                 {invoices.map((invoice, index) => (
                   <li
                     key={invoice.id}
-                    className={myClass.li}
+                    className="flex justify-between px-2 py-0 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-yellow-400 focus:bg-yellow-100 dark:focus:bg-yellow-500/20 transition-colors cursor-pointer gap-2"
                     ref={(el) => (listItemRefs.current[index] = el)}
                     tabIndex={0}
                     // onClick={() => setFocusedIndex(index)}
+                    onDoubleClick={() => {
+                      navigate(`/sale-invoices/update/${invoice.id}`);
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === "Delete") {
                         e.preventDefault();
@@ -137,7 +154,7 @@ const Faktura = () => {
                         //   data: item,
                         //   index,
                         // });
-                      } else if (e.key === "Enter" || e.key === " ") {
+                      } else if (e.key === " ") {
                         e.preventDefault();
                         // setOpenEditModal({ open: true, data: item, index });
                       } else if (e.key === "ArrowDown" && index + 1 < invoices.length) {
@@ -159,9 +176,10 @@ const Faktura = () => {
                       // }
                     }}
                   >
-                    <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">{index + 1}.</div>
-                    <div className="font-medium text-gray-800 dark:text-gray-200 truncate">
-                      {invoice.id} {invoice.buyer?.name}
+                    {/* <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">{index + 1}.</div> */}
+                    <div className="flex items-center gap-3 font-medium text-gray-800 dark:text-gray-200 truncate">
+                      <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">{index + 1}.</div>
+                      {invoice.buyer?.name}
                     </div>
                     <div className="flex gap-1 justify-end">
                       {invoice.isEntry ? (
@@ -190,6 +208,7 @@ const Faktura = () => {
           </div>
         </div>
       )}
+      <Notification message={t(notification.message)} type={notification.type} onClose={() => setNotification({ message: "", type: "" })} />
     </div>
   );
 };

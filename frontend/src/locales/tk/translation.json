@@ -365,7 +365,28 @@
   "po schyotu": "sçýot",
   "saldo start": "Öňki saldosy",
   "oborot za periud": "Dolanyşyk",
-  "saldo end": "Soňundaky saldosy"
+  "saldo end": "Soňundaky saldosy",
+  "successDeleteInvoice": "Faktura pozuldy",
+  "cantDeleteIsEtriedInvoice": "Geçirilen fakturany pozup bolmaýar",
+  "purchase_invoice": "Gelen faktura",
+  "purchase_invoice2": "Gelen faktura",
+  "date_future_not_allowed": "Gelejek senesi gadagan",
+  "date_required": "Sene boş bolup bilmez",
+  "awto": "Awto",
+  "search warehouse": "Sklad gözle...",
+  "search awto": "Awto gözle...",
+  "search partner": "Pertner gözle...",
+  "search product": "Haryt gözle...",
+  "for search product choose warehouse": "Haryt gözlemek üçin ammary saýlaň",
+  "entry_date is required": "Senesi boş bolup bilmez",
+  "is_active": "Active",
+  "type_invalid": "Type founder ýa-da klient bolmaly",
+  "name_cant_be_empty": "Ad boş bolup bilmez",
+  "is_active_invalid": "is_active True ýa-da False bolmaly",
+  "balance_cant_be_empty": "Balans boş bolup bilmez",
+  "balance_not_digit": "Balans san bolmaly",
+  "success imported": "üstiňlikli import edildi"
+
 
 
 

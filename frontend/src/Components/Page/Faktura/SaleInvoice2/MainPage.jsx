@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, useContext } from "react";
 import { useTranslation } from "react-i18next";
 import { useLoadOptions } from "./Utils/useLoadOptions";
 import MyLoading from "../../../UI/MyLoading";
@@ -21,6 +21,8 @@ import { useNavigate } from "react-router-dom";
 import { formatNumber } from "../../../UI/formatNumber";
 import { MdPrint } from "react-icons/md";
 import { MdPrintDisabled } from "react-icons/md";
+import { tr } from "framer-motion/client";
+import { DateContext } from "../../../UI/DateProvider";
 
 const userVisibleColumns = {
   qr_code: false,
@@ -88,6 +90,8 @@ const MainPage = () => {
     setTimeout(() => setNotification({ message: "", type: "" }), 3000);
   };
 
+  const { dateFrom, setDateFrom, dateTo, setDateTo, dateProwodok, setDateProwodok } = useContext(DateContext);
+
   const [letPrintSaldo, setLetPrintSaldo] = useState(() => {
     const show = localStorage.getItem("letPrintSaldo");
     return show === "true"; // вернёт true только если строка "true"
@@ -122,7 +126,7 @@ const MainPage = () => {
       const saldo = await myAxios.get("get_saldo_for_partner_for_selected_date", {
         params: { date: date, partnerId: partnerId },
       });
-      // console.log("saldo", saldo.data.saldo);
+      console.log("saldo", saldo.data.saldo);
       setSaldo(saldo.data.saldo);
     } catch (error) {
       console.log("error get_saldo_for_partner_for_selected_date", error);
@@ -134,9 +138,9 @@ const MainPage = () => {
       const fetchInvoice = async () => {
         try {
           const res = await myAxios.get(`sales-invoices/${id}/`);
-          setDefaultValues(defaultInitialValues(fetchs, res.data));
+          setDefaultValues(defaultInitialValues(fetchs, res.data, dateProwodok));
           // console.log("updateaafafaf res.data", res.data);
-          getSaldo(res.data.invoice_date.split("T")[0], res.data.buyer.id)
+          getSaldo(res.data.invoice_date.split("T")[0], res.data.buyer.id);
         } catch (error) {
           console.log("oshobka pri zagrezke invoice", error);
         } finally {
@@ -144,7 +148,7 @@ const MainPage = () => {
       };
       fetchInvoice();
     } else {
-      setDefaultValues(defaultInitialValues(fetchs, false));
+      setDefaultValues(defaultInitialValues(fetchs, false, dateProwodok));
       // console.log("createaafafaf");
       partnerInputRef.current?.focus();
     }
@@ -192,9 +196,15 @@ const MainPage = () => {
               // console.log("Formik values changed:", values.partner);
             }, [values]);
 
+            useEffect(() => {
+              if (!id) {
+                setFieldValue("invoice_date", dateProwodok);
+              }
+            }, [dateProwodok]);
+
             return (
               <Form>
-                <Head getSaldo={getSaldo} setGlobalDate={setGlobalDate} />
+                <Head getSaldo={getSaldo} setGlobalDate={setGlobalDate} id={id} />
 
                 <SearchWarehouse
                   warehouseInputRef={warehouseInputRef}
@@ -251,10 +261,11 @@ const MainPage = () => {
 
                 {saldo && (
                   <div className={`p-4 bg-white dark:bg-gray-900 rounded-xl shadow text-gray-700 dark:text-gray-200 mt-5 mx-auto max-w-2xl ${letPrintSaldo ? "print:block" : "print:hidden"}`}>
-                    <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 text-center flex justify-center items-center gap-2">
-                      Финансовые показатели{" "}
+                    <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 text-center flex justify-center items-center gap-2 print:!text-black">
+                      Карточка: {values.partner.name}
                       {letPrintSaldo ? (
                         <MdPrint
+                          className="print:hidden"
                           onClick={() => {
                             setLetPrintSaldo((v) => !v);
                           }}
@@ -271,35 +282,53 @@ const MainPage = () => {
                     <table className="min-w-full table-auto border-collapse print:table-fixed print:border print:border-black mt-4">
                       <thead>
                         <tr className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 print:bg-white print:!text-black">
-                          <th colSpan={2} className="px-2 py-1 border">Показатель (клиент 60)</th>
-                          <th className="px-2 py-1 border">Дт</th>
-                          <th className="px-2 py-1 border">Кт</th>
+                          <th colSpan={2} className="px-2 py-1 border border-black">
+                            Показатель
+                          </th>
+                          <th className="px-2 py-1 border border-black">Дебет</th>
+                          <th className="px-2 py-1 border border-black">Кредит</th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
-                          <td className="px-2 py-1 border font-medium">На начало</td>
-                          <td className="px-2 py-1 border font-medium"></td>
-                          <td className="px-2 py-1 border">{saldo.start[0]}</td>
-                          <td className="px-2 py-1 border">{saldo.start[1]}</td>
+                          <td colSpan={2} className="px-2 py-1 border font-semibold border-black">
+                            Остаток на начало
+                          </td>
+                          <td className="px-2 py-1 border border-black font-semibold">{saldo.start[0]}</td>
+                          <td className="px-2 py-1 border border-black font-semibold">{saldo.start[1]}</td>
+                        </tr>
+                        {saldo.today_entries.length > 0 ? (
+                          saldo.today_entries.map((e, idx) => {
+                            return (
+                              <tr key={idx} className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
+                                <td className="px-2 py-1 border border-black">{e[0]}</td>
+                                <td className="px-2 py-1 border border-black">{e[1]}</td>
+                                <td className="px-2 py-1 border whitespace-pre-line border-black">{parseFloat(e[2]) !== 0 ? e[2] : "-"}</td>
+                                <td className="px-2 py-1 border border-black">{parseFloat(e[3]) !== 0 ? e[3] : "-"}</td>
+                              </tr>
+                            );
+                          })
+                        ) : (
+                          <tr className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
+                            <td className="px-2 py-1 border border-black">-</td>
+                            <td className="px-2 py-1 border border-black">-</td>
+                            <td className="px-2 py-1 border whitespace-pre-line border-black">-</td>
+                            <td className="px-2 py-1 border border-black">-</td>
+                          </tr>
+                        )}
+                        <tr className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
+                          <td colSpan={2} className="px-2 py-1 border font-semibold border-black">
+                            Итого оборот
+                          </td>
+                          <td className="px-2 py-1 border border-black font-semibold">{saldo.final[0]}</td>
+                          <td className="px-2 py-1 border border-black font-semibold">{saldo.final[1]}</td>
                         </tr>
                         <tr className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
-                          <td className="px-2 py-1 border font-medium">Оборот</td>
-                          <td className="px-2 py-1 border whitespace-pre-line">{saldo.oborot[2]}</td>
-                          <td className="px-2 py-1 border">{saldo.oborot[0]}</td>
-                          <td className="px-2 py-1 border">{saldo.oborot[1]}</td>
-                        </tr>
-                        <tr className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
-                          <td className="px-2 py-1 border font-medium">На конец</td>
-                          <td className="px-2 py-1 border font-medium"></td>
-                          <td className="px-2 py-1 border">{saldo.final[0]}</td>
-                          <td className="px-2 py-1 border">{saldo.final[1]}</td>
-                        </tr>
-                        <tr>
-                          <td className="px-2 py-1 border font-semibold"></td>
-                          <td className="px-2 py-1 border font-semibold"></td>
-                          <td className="px-2 py-1 border font-semibold">{saldo.saldo[0]}</td>
-                          <td className="px-2 py-1 border font-semibold">{saldo.saldo[1]}</td>
+                          <td colSpan={2} className="px-2 py-1 border font-semibold border-black">
+                            Остаток на конец
+                          </td>
+                          <td className="px-2 py-1 border font-semibold border-black">{parseFloat(saldo.saldo[0]) !== 0 ? saldo.saldo[0] : "-"}</td>
+                          <td className="px-2 py-1 border font-semibold border-black">{parseFloat(saldo.saldo[1]) !== 0 ? saldo.saldo[1] : "-"}</td>
                         </tr>
                       </tbody>
                     </table>

@@ -41,9 +41,9 @@ const PartnerSearch = ({ partnerInputRef, pertnerRefs, debitInputRef, X_partner_
         setPartners([]); // скрыть список
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
   }, [partnerInputRef]);
 
@@ -75,7 +75,7 @@ const PartnerSearch = ({ partnerInputRef, pertnerRefs, debitInputRef, X_partner_
                 //   debitInputRef.current.focus();
                 // }
               } else if (e.key === "ArrowUp") {
-                e.preventDefault()
+                e.preventDefault();
                 expense_btn.current?.focus();
               }
             }}
@@ -117,10 +117,10 @@ const PartnerSearch = ({ partnerInputRef, pertnerRefs, debitInputRef, X_partner_
                 // }
               }
             } else if (e.key === "Enter") {
-              e.preventDefault()
+              e.preventDefault();
             } else if (e.key === "ArrowUp") {
-              e.preventDefault()
-              expense_btn.current?.focus()
+              e.preventDefault();
+              expense_btn.current?.focus();
             }
           }}
           placeholder={t("partner")}
@@ -136,6 +136,18 @@ const PartnerSearch = ({ partnerInputRef, pertnerRefs, debitInputRef, X_partner_
               tabIndex={0}
               ref={(el) => (pertnerRefs.current[index] = el)}
               className={myClass.li}
+              onClick={(e) => {
+                setFieldValue("partner", { ...item });
+                setPartners([]);
+                price_inputRef.current?.focus();
+                price_inputRef.current?.select();
+              }}
+              // onClick={(e) => {
+              //   console.log("Click triggered!", e); // Добавьте объект события
+              //   console.log("Item:", item);
+              //   e.stopPropagation(); // Предотвратить всплытие
+              // }}
+              // onClick={() => console.log("dadad")}
               onKeyDown={(e) => {
                 if (e.key === "ArrowDown") {
                   e.preventDefault();

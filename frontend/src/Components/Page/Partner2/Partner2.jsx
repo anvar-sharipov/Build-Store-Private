@@ -97,6 +97,7 @@ const Partner2 = () => {
 
       // Основные параметры
       params.set("page", page);
+      params.set("page_size", pageSize); 
       if (search) {
         params.set("search", search);
       }

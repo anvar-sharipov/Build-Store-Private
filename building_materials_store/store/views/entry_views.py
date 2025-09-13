@@ -17,6 +17,7 @@ from rest_framework import status
 from rest_framework import viewsets
 from .. models import *
 # from .serializers import *
+from datetime import datetime
 
 from .. serializers.base_serializers import *
 from .. serializers.entry_serializers import *
@@ -97,6 +98,17 @@ def partner_transaction(request):
     partner = data.get('partner', {})
     amount = data.get('amount')
     comment = data.get('comment')
+    entry_date = data.get('entry_date')
+    ic("entry_date", entry_date)
+    
+    if entry_date:
+        try:
+            entry_date_obj = datetime.strptime(entry_date, '%Y-%m-%d')
+        except ValueError:
+            return Response({'detail': 'entry_date must be in YYYY-MM-DD format'}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({'detail': 'entry_date is required'}, status=status.HTTP_400_BAD_REQUEST)
+
     
     if not partner:
         return Response({'detail': 'youNeedSelectPartner'}, status=status.HTTP_400_BAD_REQUEST)
@@ -134,7 +146,7 @@ def partner_transaction(request):
         with transaction.atomic():
             ic("da income GGGGG", data)
 
-            trasnaction_obj = Transaction.objects.create(description=data["comment"], partner=partner_obj)
+            trasnaction_obj = Transaction.objects.create(description=f'Toleg: {data["comment"]}', partner=partner_obj, date=entry_date)
             for rule in rules:
                 
                 if not rule.debit_account:
@@ -154,7 +166,7 @@ def partner_transaction(request):
                 
             partner_obj.save()
                 
-            # 1/0
+            
     except RuleError as e:
         return Response({'detail': str(e)}, status=e.status_code)
     except Exception as e:

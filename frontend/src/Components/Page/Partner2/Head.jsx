@@ -4,9 +4,37 @@ import SmartTooltip from "../../SmartTooltip";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState, useRef, useMemo } from "react";
 import MySearchInput from "../../UI/MySearchInput";
+import { RiFileExcel2Fill } from "react-icons/ri";
+import { partnerDownloadExcel } from "./partnerDownloadExcel";
+import myAxios from "../../axios";
 
 const Head = ({ setOpenModal, openModal, searchInputRef, setQuery, query, createButtonRef, fetchPartners, page, setPage, partnersListRefs, partners, setUpdateMode, count }) => {
   const { t } = useTranslation();
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const handleDownload = () => {
+    setIsAnimating(true);
+    const getAllPatners = async () => {
+      try {
+        const res = await myAxios.get("partners");
+        const allPartnersData = res.data.results;
+        partnerDownloadExcel(allPartnersData, t);
+      } catch (error) {
+        console.error("Error fetching all partners:", error);
+      } finally {
+        // setIsAnimating(false);
+      }
+    };
+    getAllPatners();
+  };
+
+  useEffect(() => {
+    if (isAnimating) {
+      const timer = setTimeout(() => setIsAnimating(false), 300); // длина анимации 300мс
+      return () => clearTimeout(timer);
+    }
+  }, [isAnimating]);
+
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === "Insert") {
@@ -59,8 +87,14 @@ const Head = ({ setOpenModal, openModal, searchInputRef, setQuery, query, create
         </button>
       </SmartTooltip>
 
-      <div>
+      <div className="flex gap-3 items-center">
         {t("total")}: {count}
+        <RiFileExcel2Fill
+          role="button"
+          size={30}
+          className={`cursor-pointer rounded transition-transform duration-300 text-green-700 hover:text-green-600 ${isAnimating ? "scale-125" : "scale-100"}`}
+          onClick={handleDownload}
+        />
       </div>
 
       <div className="flex items-end gap-3">

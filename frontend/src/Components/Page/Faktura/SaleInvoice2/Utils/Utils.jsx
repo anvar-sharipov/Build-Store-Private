@@ -3,11 +3,13 @@ import { useFormikContext } from "formik";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../../../routes";
-import { useEffect } from "react";
+import { useEffect, useContext } from "react";
 import SmartTooltip from "../../../../SmartTooltip";
 import myAxios from "../../../../axios";
 
-function Head({getSaldo, setGlobalDate}) {
+
+
+function Head({getSaldo, setGlobalDate, id}) {
   const { values, setFieldValue, touched, errors } = useFormikContext();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -29,7 +31,7 @@ function Head({getSaldo, setGlobalDate}) {
 
   return (
     <div className="flex justify-between items-center border-b-2 border-gray-700 dark:border-gray-300 print:!border-black pb-2">
-      <img src="/polisem.png" alt="polisem" width={140} />
+      <img src="/polisem.png" alt="polisem" width={140} className="hidden sm:block" />
 
       <div className="text-black dark:text-white print:!text-black">
         {t("sales_invoice2")}
@@ -41,6 +43,7 @@ function Head({getSaldo, setGlobalDate}) {
       {!values.disabled && (
         <input
           type="date"
+          disabled={id ? false : true}
           name="invoice_date"
           value={values.invoice_date}
           onChange={(e) => {
@@ -61,7 +64,7 @@ function Head({getSaldo, setGlobalDate}) {
               e.preventDefault();
             }
           }}
-          className="border px-2 py-1 rounded-md print:hidden bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
+          className="border px-2 py-1 rounded-md print:hidden bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600 hidden print:block"
         />
       )}
 

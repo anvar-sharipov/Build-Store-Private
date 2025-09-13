@@ -31,7 +31,7 @@ const TDPrice = ({ product, index, productInputRef, productPriceRefs }) => {
   const showError = (touched.products?.[index]?.selected_price || product.selected_price !== undefined) && errors.products?.[index]?.selected_price;
 
   return (
-    <td className="px-3 py-2 border border-gray-300 dark:border-gray-600">
+    <td className="px-3 py-2 border border-black dark:border-gray-600">
       <div className="relative">
         <input
           ref={(el) => (productPriceRefs.current[product.id] = el)}

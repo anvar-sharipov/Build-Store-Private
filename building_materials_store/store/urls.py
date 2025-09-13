@@ -1,5 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+
+from store.views.adminPanel_views.import_products import *
+from store.views.adminPanel_views.import_partners import *
 from . views.base_views import *
 from . views.entry_views import *
 from . views.partner_views import *
@@ -74,5 +77,9 @@ urlpatterns = [
     path('partner-transaction/', partner_transaction, name='partner-transaction'),
     path('get-osw/', get_osw, name='get-osw'),
     path('get_saldo_for_partner_for_selected_date/', get_saldo_for_partner_for_selected_date, name='get_saldo_for_partner_for_selected_date'),
+    
+    # admin
+    path("admin-import-products/", import_products, name="admin-import-products"),
+    path("admin-import-partners/", import_partners, name="admin-import-partners"),
 ]
 

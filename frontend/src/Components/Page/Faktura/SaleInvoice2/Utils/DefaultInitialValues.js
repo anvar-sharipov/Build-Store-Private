@@ -6,7 +6,7 @@ import * as Yup from "yup";
 
 // const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
-const defaultInitialValues = (fetchs, data) => {
+const defaultInitialValues = (fetchs, data, dateProwodok) => {
   if (data) {
     console.log("data", data);
 
@@ -155,7 +155,7 @@ const defaultInitialValues = (fetchs, data) => {
     // console.log('createdadad', new Date().toISOString().slice(0, 10));
 
     return {
-      invoice_date: new Date().toISOString().slice(0, 10),
+      invoice_date: dateProwodok, // localStorage.getItem("dateProwodok"), //new Date().toISOString().slice(0, 10),
       awto: {},
       partner: {},
       // Устанавливаем склад

@@ -93,6 +93,15 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                 withPosting = data['withPosting']
                 comment = data['comment'] if data['comment'] != None else ''
                 type_price = data['priceType']
+                entry_date = data["invoice_date"]
+                
+                if entry_date:
+                    try:
+                        entry_date_obj = datetime.strptime(entry_date, '%Y-%m-%d')
+                    except ValueError:
+                        return Response({'detail': 'entry_date must be in YYYY-MM-DD format'}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    return Response({'detail': 'entry_date is required'}, status=status.HTTP_400_BAD_REQUEST)
                 
                 
                
@@ -179,6 +188,7 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     
                     transaction_obj = Transaction.objects.create(
                         # description=comment,
+                        date=entry_date,
                         invoice=invoice,
                         partner=partner
                     )
@@ -192,8 +202,9 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     
                     product_id = product['id']
                     product_obj = Product.objects.get(pk=product_id)
-                    quantity = product['selected_quantity']
+                    quantity = Decimal(product['selected_quantity'])
                     sale_price = Decimal(product['selected_price'])
+                    ic(quantity)
                      
                     purchase_price = Decimal(product['purchase_price'])
                     retail_price = Decimal(product['retail_price'])
@@ -315,6 +326,16 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                 invoice_id = self.kwargs.get('pk')
                 invoice = SalesInvoice.objects.get(pk=invoice_id)
                 
+                entry_date = data["invoice_date"]
+                
+                if entry_date:
+                    try:
+                        entry_date_obj = datetime.strptime(entry_date, '%Y-%m-%d')
+                    except ValueError:
+                        return Response({'detail': 'entry_date must be in YYYY-MM-DD format'}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    return Response({'detail': 'entry_date is required'}, status=status.HTTP_400_BAD_REQUEST)
+                
                 
                 # nado wernut na sklad wse pered update, chtoby zatem snowa wzyat is sklada s nowymi dannymi
                 for i in invoice.items.all():
@@ -435,6 +456,7 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     
                     transaction_obj = Transaction.objects.create(
                         description=comment,
+                        date=entry_date,
                         invoice=invoice,
                         partner=partner
                     )
@@ -552,4 +574,82 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'transactionChange'}, status=status.HTTP_400_BAD_REQUEST)
 
             
+    def destroy(self, request, *args, **kwargs):
+        invoice_id = self.kwargs.get('pk')
+        invoice = SalesInvoice.objects.get(pk=invoice_id)
+        ic(invoice)
+        if invoice.isEntry:
+            return Response({'detail': 'cantDeleteIsEtriedInvoice'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            with transaction.atomic():
+                #  wozwrat towarow na sklad
+                for i in invoice.items.all():
+                    product_last_obj = i.product
+                    quantity_last = i.quantity
+                    
+                    units_last = ProductUnit.objects.filter(product=product_last_obj)
+                    conversion_factor_last = 1
+                    if units_last.exists():
+                        for u in units_last:
+                            if u.is_default_for_sale:
+                                conversion_factor_last = Decimal(u.conversion_factor)
+                            
+                    minus_to_stock_last = conversion_factor_last * Decimal(quantity_last)
+                    wp = WarehouseProduct.objects.get(warehouse=invoice.warehouse, product=product_last_obj)
+                    wp.quantity += Decimal(minus_to_stock_last)
+                    wp.save()
+                    
+                invoice.items.all().delete()
+                invoice.delete()
+                return Response({'detail': 'successDeleteInvoice'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            ic(e)
+            return Response({'detail': 'transactionChange'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        
+        # try:
+        #     with transaction.atomic():
+        #         invoice_id = self.kwargs.get('pk')
+        #         invoice = SalesInvoice.objects.get(pk=invoice_id)
+
+        #         # Если накладная уже проведена
+        #         if invoice.isEntry:
+        #             # Вернуть баланс партнёра
+        #             if invoice.buyer:
+        #                 total_amount = sum(
+        #                     [item.sale_price * item.quantity for item in invoice.items.all() if not item.is_gift]
+        #                 )
+        #                 invoice.buyer.balance += total_amount
+        #                 invoice.buyer.save()
+
+        #             # Удаляем связанные транзакции и проводки
+        #             Transaction.objects.filter(invoice=invoice).delete()
+        #             Entry.objects.filter(transaction__invoice=invoice).delete()
+
+        #         # Вернуть все товары на склад
+        #         for i in invoice.items.all():
+        #             product_last_obj = i.product
+        #             quantity_last = i.quantity
+
+        #             units_last = ProductUnit.objects.filter(product=product_last_obj)
+        #             conversion_factor_last = 1
+        #             if units_last.exists():
+        #                 for u in units_last:
+        #                     if u.is_default_for_sale:
+        #                         conversion_factor_last = Decimal(u.conversion_factor)
+
+        #             plus_to_stock = conversion_factor_last * Decimal(quantity_last)
+        #             wp = WarehouseProduct.objects.get(warehouse=invoice.warehouse, product=product_last_obj)
+        #             wp.quantity += Decimal(plus_to_stock)
+        #             wp.save()
+
+        #         # Удалить саму накладную
+        #         invoice.delete()
+
+        #         return Response({'detail': 'successDelete'}, status=status.HTTP_204_NO_CONTENT)
+
+        # except Exception as e:
+        #     ic(e)
+        #     return Response({'detail': 'transactionChange'}, status=status.HTTP_400_BAD_REQUEST)
 

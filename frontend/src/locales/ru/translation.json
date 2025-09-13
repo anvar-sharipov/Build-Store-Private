@@ -389,7 +389,27 @@
   "po schyotu": "по счёту",
   "saldo start": "Сальдо на начало",
   "oborot za periud": "Обороты",
-  "saldo end": "Сальдо на конец"
+  "saldo end": "Сальдо на конец",
+  "successDeleteInvoice": "Фактура удалена",
+  "cantDeleteIsEtriedInvoice": "Нельзя удалить проведённую накладную",
+  "purchase_invoice": "Приход. фактура",
+  "purchase_invoice2": "Приходная фактура",
+  "date_future_not_allowed": "Запрет будущей даты",
+  "date_required": "Дата не может быть пустой",
+  "awto": "Авто",
+  "search warehouse": "Поиск склада...",
+  "search awto": "Поиск авто...",
+  "search partner": "Поиск партнера...",
+  "search product": "Поиск продукта...",
+  "for search product choose warehouse": "Для поиска продукта выберите склад",
+  "entry_date is required": "Дата проводки обязательна",
+  "is_active": "Активный",
+  "type_invalid": "Тип должен быть founder или klient",
+  "name_cant_be_empty": "Имя не может быть пустым",
+  "is_active_invalid": "is_active должен быть True или False",
+  "balance_cant_be_empty": "Баланс не может быть пустым",
+  "balance_not_digit": "Баланс должен быть числом",
+  "success imported": "успешно импортировано"
 
 
 

@@ -38,3 +38,5 @@ npm install qrcode.react           for view image
 npm install react-qrcode-logo      for view image
 npm install react-select           for search input in base
 npm install react-table classnames
+npm install @reduxjs/toolkit react-redux
+

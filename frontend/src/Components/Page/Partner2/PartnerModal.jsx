@@ -135,6 +135,7 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                 } finally {
                   setLoading(false);
                   setOpenModal(false);
+                  
                 }
               };
               handleCreate();

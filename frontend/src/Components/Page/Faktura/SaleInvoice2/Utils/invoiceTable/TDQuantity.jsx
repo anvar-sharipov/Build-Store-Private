@@ -31,7 +31,7 @@ const TDQuantity = ({ product, index, productQuantityRefs, productInputRef, prod
   const hasLowStock = parseFloat(product.quantity_on_selected_warehouses) < parseFloat(product.selected_quantity);
 
   return (
-    <td className="px-3 py-2 border border-gray-300 dark:border-gray-600">
+    <td className="px-3 py-2 border border-black dark:border-gray-600">
       <div className="relative">
         <input
           ref={(el) => (productQuantityRefs.current[product.id] = el)}
@@ -47,7 +47,7 @@ const TDQuantity = ({ product, index, productQuantityRefs, productInputRef, prod
           `.trim()}
           type="number"
           min="0"
-          step="0.001"
+          step="0.01"
           value={product.selected_quantity || ""}
           onChange={handleQuantityChange}
           onBlur={() => {

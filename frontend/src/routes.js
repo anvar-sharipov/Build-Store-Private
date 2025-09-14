@@ -28,4 +28,5 @@ export const PROCHEE = {
 export const ADMIN_PANEL = {
   IMPORT_PRODUCTS: "/import_products",
   IMPORT_PARTNERS: "/import_partners",
+  DELETE_MODELS: "/delete_models",
 };

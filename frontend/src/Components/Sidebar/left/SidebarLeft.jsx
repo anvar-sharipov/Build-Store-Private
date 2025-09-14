@@ -241,6 +241,11 @@ export default function SidebarLeft() {
                   label: t("import_partners"),
                   key: "admin2",
                 },
+                {
+                  to: ADMIN_PANEL.DELETE_MODELS,
+                  label: t("delete models"),
+                  key: "admin3",
+                },
               ].map(({ to, label, key }) => (
                 <li key={to} className="flex justify-between items-center border-b border-gray-600 px-4 py-2 last:border-b-0">
                   <Link

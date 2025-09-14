@@ -25,6 +25,7 @@ import ImportProducts from "./Components/Page/Admin/ImportProducts";
 import PurchaseInvoice from "./Components/Page/PurchaseInvoice/PurchaseInvoice";
 import { DateProvider } from "./Components/UI/DateProvider";
 import ImportPartners from "./Components/Page/Admin/ImportPartners";
+import DeleteData from "./Components/Page/Admin/DeleteData";
 
 function AppShell() {
   const location = useLocation();
@@ -74,6 +75,7 @@ function AppShell() {
                   {/* adminPanel */}
                   <Route path={ADMIN_PANEL.IMPORT_PRODUCTS} element={<ImportProducts />} />
                   <Route path={ADMIN_PANEL.IMPORT_PARTNERS} element={<ImportPartners />} />
+                  <Route path={ADMIN_PANEL.DELETE_MODELS} element={<DeleteData />} />
                 </Routes>
               </section>
 

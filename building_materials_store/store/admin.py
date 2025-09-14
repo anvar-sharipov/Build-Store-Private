@@ -145,9 +145,8 @@ class BrandAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     
     def product_count(self, obj):
-        return obj.products.count()
+        return obj.product_set.count()  # <-- используем default
     product_count.short_description = 'Товаров'
-
 
 # Модели
 @admin.register(Model)
@@ -157,7 +156,7 @@ class ModelAdmin(admin.ModelAdmin):
     search_fields = ('name', 'brand__name')
     
     def product_count(self, obj):
-        return obj.products.count()
+        return obj.product_set.count()  # <- исправлено
     product_count.short_description = 'Товаров'
 
 
@@ -173,14 +172,13 @@ class CategoryAdmin(admin.ModelAdmin):
     product_count.short_description = 'Товаров'
 
 
-# Теги
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'product_count')
     search_fields = ('name',)
     
     def product_count(self, obj):
-        return obj.products.count()
+        return obj.product_set.count()  # <- исправлено
     product_count.short_description = 'Товаров'
 
 

@@ -81,5 +81,6 @@ urlpatterns = [
     # admin
     path("admin-import-products/", import_products, name="admin-import-products"),
     path("admin-import-partners/", import_partners, name="admin-import-partners"),
+    path("delete_data/", delete_data, name="delete_data"),
 ]
 

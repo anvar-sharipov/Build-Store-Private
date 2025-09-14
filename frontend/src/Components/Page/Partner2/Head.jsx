@@ -16,8 +16,8 @@ const Head = ({ setOpenModal, openModal, searchInputRef, setQuery, query, create
     setIsAnimating(true);
     const getAllPatners = async () => {
       try {
-        const res = await myAxios.get("partners");
-        const allPartnersData = res.data.results;
+        const res = await myAxios.get("partners/?no_pagination=1");
+        const allPartnersData = res.data;
         partnerDownloadExcel(allPartnersData, t);
       } catch (error) {
         console.error("Error fetching all partners:", error);

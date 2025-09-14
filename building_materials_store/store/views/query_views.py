@@ -313,3 +313,24 @@ def get_saldo_for_partner_for_selected_date(request):
 ########################################################################################################################################################################## END
 
 
+@require_GET
+def delete_data(request):
+    models_name = request.GET.get('models_name')
+    password = request.GET.get('password')
+
+    if password != "91456":
+        return JsonResponse({"success": False, "error": "Неверный пароль"})
+    
+    
+    if models_name == "delete_products":
+        SalesInvoiceItem.objects.all().delete()
+        Product.objects.all().delete()
+        Category.objects.all().delete()
+        Tag.objects.all().delete()
+        UnitOfMeasurement.objects.all().delete()
+        Brand.objects.all().delete()
+        WarehouseProduct.objects.all().delete()
+        Model.objects.all().delete()
+        PriceChangeHistory.objects.all().delete()
+    # Логика удаления
+    return JsonResponse({"success": True, "models_name": models_name})

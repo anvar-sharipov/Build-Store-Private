@@ -409,7 +409,18 @@
   "is_active_invalid": "is_active должен быть True или False",
   "balance_cant_be_empty": "Баланс не может быть пустым",
   "balance_not_digit": "Баланс должен быть числом",
-  "success imported": "успешно импортировано"
+  "success imported": "успешно импортировано",
+  "close day": "Закрыть день",
+  "If you are reopening the day, please provide a reason": "При отмене закрытия обязательно укажите причину",
+  "choose day": "Выберите день",
+  "day is closed": "День закрыт",
+  "entries": "Проводки",
+  "select_warehouse": "Выберите склад",
+  "prihod": "Приход",
+  "wozwrat": "Возврат", 
+  "rashod": "Расход", 
+  "type faktura": "Тип фактуры",
+  "CannotBeZero": "Не может быть 0"
 
 
 

@@ -1,4 +1,4 @@
-import MyModal from "../../../UI/MyModal";
+import MyModal2 from "../../../UI/MyModal2";
 import MyButton from "../../../UI/MyButton";
 import MyInput from "../../../UI/MyInput";
 import { useEffect, useRef, useState } from "react";
@@ -21,7 +21,7 @@ const AgentEditModal = ({
         inputRef.current?.focus()
     })
   return (
-    <MyModal
+    <MyModal2
       onClose={() => {
         setOpenEditModal({ open: false, data: null, index: null });
       }}
@@ -97,7 +97,7 @@ const AgentEditModal = ({
           </MyButton>
         </div>
       </div>
-    </MyModal>
+    </MyModal2>
   );
 };
 

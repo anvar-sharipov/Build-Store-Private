@@ -1,7 +1,7 @@
 import { CiNoWaitingSign } from "react-icons/ci";
 import { IoIosAddCircleOutline } from "react-icons/io";
 import MyInput from "../../../UI/MyInput";
-import MyModal from "../../../UI/MyModal";
+import MyModal2 from "../../../UI/MyModal2";
 import { useTranslation } from "react-i18next";
 
 
@@ -16,7 +16,7 @@ const EmployeeAddModal = ({
 }) => {
   const { t } = useTranslation();
   return (
-    <MyModal
+    <MyModal2
       onClose={() => {
         setOpenModalAdd(false);
       }}
@@ -51,7 +51,7 @@ const EmployeeAddModal = ({
           />
         </div>
       </div>
-    </MyModal>
+    </MyModal2>
   );
 };
 

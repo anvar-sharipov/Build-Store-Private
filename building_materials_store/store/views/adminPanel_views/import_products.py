@@ -74,11 +74,12 @@ def import_products(request):
                     # total_price = row[6]
                     # test_total_price += price
                     # test_total_price2 += total_price
-                    
+                    # ic(unit)
                     if unit in units_obj_dict:
                         unit_obj = units_obj_dict[unit]
                     else:
                         unit_obj = UnitOfMeasurement.objects.create(name=unit)
+                        units_obj_dict[unit] = unit_obj
                          
                     product = Product.objects.create(name=name, base_unit=unit_obj, purchase_price=price, retail_price=price, wholesale_price=price, category=cat_obj)
                     WarehouseProduct.objects.create(product=product, warehouse=warehouse, quantity=quantity)

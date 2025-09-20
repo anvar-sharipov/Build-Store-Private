@@ -1,4 +1,4 @@
-import MyModal from "../../../UI/MyModal";
+import MyModal2 from "../../../UI/MyModal2";
 import MyInput from "../../../UI/MyInput";
 import { CiNoWaitingSign } from "react-icons/ci";
 import { IoIosAddCircleOutline } from "react-icons/io";
@@ -13,7 +13,7 @@ const AgentAddModal = ({
   addInputRef
 }) => {
   return (
-    <MyModal onClose={() => setOpenAddModal(false)} loading={loading}>
+    <MyModal2 onClose={() => setOpenAddModal(false)} loading={loading}>
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
         <h2 className="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-300">
           {t("addNewAgent")}
@@ -47,7 +47,7 @@ const AgentAddModal = ({
           />
         </div>
       </div>
-    </MyModal>
+    </MyModal2>
   );
 };
 

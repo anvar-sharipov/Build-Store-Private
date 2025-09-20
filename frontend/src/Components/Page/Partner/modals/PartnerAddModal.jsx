@@ -1,4 +1,4 @@
-import MyModal from "../../../UI/MyModal";
+import MyModal2 from "../../../UI/MyModal2";
 import MyInput from "../../../UI/MyInput";
 import { CiNoWaitingSign } from "react-icons/ci";
 import { IoIosAddCircleOutline } from "react-icons/io";
@@ -64,7 +64,7 @@ const PartnerAddModal = ({
   }, [agentQuery, agentList]);
 
   return (
-    <MyModal onClose={() => setOpenModalAdd(false)}>
+    <MyModal2 onClose={() => setOpenModalAdd(false)}>
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl px-6 py-8 sm:p-10 space-y-6 border border-gray-200 dark:border-gray-700">
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
@@ -258,7 +258,7 @@ const PartnerAddModal = ({
           )}
         </div>
       </div>
-    </MyModal>
+    </MyModal2>
   );
 };
 

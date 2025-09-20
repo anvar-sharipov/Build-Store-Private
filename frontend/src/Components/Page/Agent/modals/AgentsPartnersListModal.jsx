@@ -1,4 +1,4 @@
-import MyModal from "../../../UI/MyModal";
+import MyModal2 from "../../../UI/MyModal2";
 import TypeBadge from "../../Partner/TypeBadge";
 import { CiNoWaitingSign } from "react-icons/ci";
 import { RiDeleteBin2Fill } from "react-icons/ri";
@@ -173,7 +173,7 @@ const AgentsPartnersListModal = ({
   };
   return (
     <div>
-      <MyModal
+      <MyModal2
         onClose={() =>
           setOpenPartnerListModal({ open: false, data: null, index: null })
         }
@@ -181,7 +181,7 @@ const AgentsPartnersListModal = ({
         fullWidth={true}
       >
         {openModalSelectPartner && (
-          <MyModal
+          <MyModal2
             onClose={() => setOpenModalSelectPartner(false)}
             fullWidth={true}
           >
@@ -352,7 +352,7 @@ const AgentsPartnersListModal = ({
                 {t("save")}
               </button>
             </div>
-          </MyModal>
+          </MyModal2>
         )}
 
         {openDeleteModal && (
@@ -513,7 +513,7 @@ const AgentsPartnersListModal = ({
             <IoIosAddCircleOutline size={24} />
           </button>
         </div>
-      </MyModal>
+      </MyModal2>
     </div>
   );
 };

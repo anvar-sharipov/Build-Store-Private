@@ -1,8 +1,11 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from decimal import Decimal
 from django.db.models import Q, Sum
+from datetime import datetime
+from django.utils.dateparse import parse_date
 
 from django.db.models import F
 from django.contrib.postgres.search import TrigramSimilarity
@@ -81,11 +84,14 @@ def search_partners_view(request):
 def get_trial_balance(date_from, date_to):
     accounts = Account.objects.all().order_by("number")
     # ic("this is get_trial_balance")
+    ACCOUNT_FOR_START_NEW_PROJECT = CustomePostingRule.objects.filter(operation__code="ACCOUNT_FOR_START_NEW_PROJECT").first()
 
     report = []
     detail_report = {}
 
     for acc in accounts:
+        if acc.number == ACCOUNT_FOR_START_NEW_PROJECT.debit_account.number:  
+            continue
         # Начальное сальдо (все проводки ДО начала периода)
         opening_debit = (
             Entry.objects.filter(account=acc, transaction__date__lt=date_from)
@@ -148,25 +154,57 @@ def get_trial_balance(date_from, date_to):
         
         if entry_start:
             for e in entry_start:
-                if e.transaction.partner.name not in detail_report[acc.number]:
-                    detail_report[acc.number][e.transaction.partner.name] = {
-                        'debit_start': Decimal(e.debit),
-                        'credit_start': Decimal(e.credit),
-                        'debit_oborot': Decimal(0),
-                        'credit_oborot': Decimal(0),
-                        'debit_end': Decimal(0),
-                        'credit_end': Decimal(0),
-                        }
+                if e.transaction.partner:
+                    if e.transaction.partner.name not in detail_report[acc.number]:
+                        detail_report[acc.number][e.transaction.partner.name] = {
+                            'debit_start': Decimal(e.debit),
+                            'credit_start': Decimal(e.credit),
+                            'debit_oborot': Decimal(0),
+                            'credit_oborot': Decimal(0),
+                            'debit_end': Decimal(0),
+                            'credit_end': Decimal(0),
+                            }
+                    else:
+                        detail_report[acc.number][e.transaction.partner.name]['debit_start'] += Decimal(e.debit)
+                        detail_report[acc.number][e.transaction.partner.name]['credit_start'] += Decimal(e.credit)
                 else:
-                    detail_report[acc.number][e.transaction.partner.name]['debit_start'] += Decimal(e.debit)
-                    detail_report[acc.number][e.transaction.partner.name]['credit_start'] += Decimal(e.credit)
+                    if 'prochee' not in detail_report[acc.number]:
+                        detail_report[acc.number]['prochee'] = {
+                                'debit_start': Decimal(e.debit),
+                                'credit_start': Decimal(e.credit),
+                                'debit_oborot': Decimal(0),
+                                'credit_oborot': Decimal(0),
+                                'debit_end': Decimal(0),
+                                'credit_end': Decimal(0),
+                                }
+                    else:
+                        detail_report[acc.number]['prochee']['debit_start'] += Decimal(e.debit)
+                        detail_report[acc.number]['prochee']['credit_start'] += Decimal(e.credit)
+                        
+                    
+                    
+                
                     
             
         entry_oborot = Entry.objects.filter(account=acc, transaction__date__range=(date_from, date_to))
         if entry_oborot:
             for e in entry_oborot:
-                if e.transaction.partner.name not in detail_report[acc.number]:
-                    detail_report[acc.number][e.transaction.partner.name] = {
+                if e.transaction.partner:
+                    if e.transaction.partner.name not in detail_report[acc.number]:
+                        detail_report[acc.number][e.transaction.partner.name] = {
+                            'debit_start': Decimal(0),
+                            'credit_start': Decimal(0),
+                            'debit_oborot': Decimal(e.debit),
+                            'credit_oborot': Decimal(e.credit),
+                            'debit_end': Decimal(0),
+                            'credit_end': Decimal(0),
+                            }
+                    else:
+                        detail_report[acc.number][e.transaction.partner.name]['debit_oborot'] += Decimal(e.debit)
+                        detail_report[acc.number][e.transaction.partner.name]['credit_oborot'] += Decimal(e.credit)
+            else:
+                if 'prochee' not in detail_report[acc.number]:
+                    detail_report[acc.number]['prochee'] = {
                         'debit_start': Decimal(0),
                         'credit_start': Decimal(0),
                         'debit_oborot': Decimal(e.debit),
@@ -175,8 +213,9 @@ def get_trial_balance(date_from, date_to):
                         'credit_end': Decimal(0),
                         }
                 else:
-                    detail_report[acc.number][e.transaction.partner.name]['debit_oborot'] += Decimal(e.debit)
-                    detail_report[acc.number][e.transaction.partner.name]['credit_oborot'] += Decimal(e.credit)
+                    detail_report[acc.number]['prochee']['debit_oborot'] += Decimal(e.debit)
+                    detail_report[acc.number]['prochee']['credit_oborot'] += Decimal(e.credit)
+            
      
     
     detail_report_total = {}
@@ -334,3 +373,165 @@ def delete_data(request):
         PriceChangeHistory.objects.all().delete()
     # Логика удаления
     return JsonResponse({"success": True, "models_name": models_name})
+
+
+
+########################################################################################################################################################################## START
+# close day
+
+
+# checkDate
+@require_GET
+def check_day_closed(request):
+    date_str = request.GET.get('date')  # ожидаем формат 'YYYY-MM-DD'
+    if not date_str:
+        return JsonResponse({"success": False, "error": "Дата не указана"})
+
+    try:
+        chosen_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        return JsonResponse({"success": False, "error": "Неверный формат даты. Используйте YYYY-MM-DD"})
+
+    day = DayClosing.objects.filter(date=chosen_date).first()
+    if day:
+        return JsonResponse({"success": True, "is_closed": day.is_closed})
+    else:
+        # Если день ещё не создавался, считаем его открытым
+        return JsonResponse({"success": True, "is_closed": False})
+    
+    
+    
+    
+
+@csrf_exempt  # если фронт и бэк на разных портах, можно убрать с DRF Token
+def close_day(request):
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "Только POST запросы разрешены"})
+
+    try:
+        data = json.loads(request.body)
+        date = data.get("date")  # формат YYYY-MM-DD
+        action = data.get("action")  # "close" или "reopen"
+        reason = data.get("reason", "")
+        user_id = data.get("user_id")  # id текущего пользователя
+
+        user = User.objects.get(id=user_id)
+    except Exception as e:
+        return JsonResponse({"success": False, "error": f"Неверные данные: {str(e)}"})
+
+    try:
+        with transaction.atomic():
+            day_closing, created = DayClosing.objects.get_or_create(date=date)
+
+            if action == "close":
+                # Если уже закрыт
+                if day_closing.is_closed:
+                    return JsonResponse({"success": False, "error": "День уже закрыт"})
+                day_closing.is_closed = True
+                day_closing.closed_at = timezone.now()
+                day_closing.closed_by = user
+                day_closing.save()
+
+                # Лог
+                DayClosingLog.objects.create(
+                    day_closing=day_closing,
+                    action="close",
+                    performed_by=user,
+                    reason=reason
+                )
+
+                # Снимки баланса партнеров
+                for partner in Partner.objects.all():
+                    PartnerBalanceSnapshot.objects.create(
+                        closing=day_closing,
+                        partner=partner,
+                        balance=partner.balance
+                    )
+
+                # Снимки остатков по складам
+                for wp in WarehouseProduct.objects.all():
+                    StockSnapshot.objects.create(
+                        closing=day_closing,
+                        warehouse=wp.warehouse,
+                        product=wp.product,
+                        quantity=wp.quantity
+                    )
+
+            elif action == "reopen":
+                # Если день уже открыт
+                if not day_closing.is_closed:
+                    return JsonResponse({"success": False, "error": "День ещё не закрыт"})
+                day_closing.is_closed = False
+                day_closing.closed_at = None
+                day_closing.closed_by = None
+                day_closing.save()
+
+                DayClosingLog.objects.create(
+                    day_closing=day_closing,
+                    action="reopen",
+                    performed_by=user,
+                    reason=reason
+                )
+
+                # Можно при необходимости удалить снимки балансов/складов для этого дня:
+                PartnerBalanceSnapshot.objects.filter(closing=day_closing).delete()
+                StockSnapshot.objects.filter(closing=day_closing).delete()
+            else:
+                return JsonResponse({"success": False, "error": "Неверное действие"})
+
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)})
+
+    return JsonResponse({"success": True, "action": action, "date": date})
+
+# close day
+########################################################################################################################################################################## END
+
+@csrf_exempt
+def universal_entries(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST request required"}, status=400)
+    
+    try:
+        data = json.loads(request.body)
+        date = parse_date(data.get("date"))
+        debit_number = data.get("debit")
+        credit_number = data.get("credit")
+        amount = Decimal(data.get("amount"))
+        description = data.get("description", "")
+        
+        # Найти счета
+        debit_account = Account.objects.get(number=debit_number)
+        credit_account = Account.objects.get(number=credit_number)
+        
+        try:
+            with transaction.atomic():
+        
+                # Создать транзакцию
+                transaction_obj = Transaction.objects.create(
+                    date=date,
+                    description=description
+                )
+                
+                # Создать проводки
+                Entry.objects.create(
+                    transaction=transaction_obj,
+                    account=debit_account,
+                    debit=amount,
+                    credit=Decimal('0.00')
+                )
+                Entry.objects.create(
+                    transaction=transaction_obj,
+                    account=credit_account,
+                    debit=Decimal('0.00'),
+                    credit=amount
+                )
+                
+                return JsonResponse({"success": True, "transaction_id": transaction_obj.id})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+    
+    except Account.DoesNotExist:
+        return JsonResponse({"error": "Дебет или кредит счет не найден"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)

@@ -57,13 +57,16 @@ urlpatterns = [
     path('user/', current_user),
     path('userinfo/', MySecureView.as_view()),
     path('assign-partners/', AssignPartnersToAgentView.as_view(), name='assign_partners'),
-
+    path('close_day/', close_day, name='close_day'),
+    path('check_day_closed/', check_day_closed, name='check_day_closed'),
+    
     path("check-name-unique/", check_name_unique, name="check_name_unique"),
     path("search-products/", search_products, name="search-products"), # dlya poiska producta for free add
 
     path('price-change-report/', PriceChangeReportView.as_view(), name='price-change-report'),
     path('price-change-report/excel/', PriceChangeExcelDownloadView.as_view(), name='price-change-excel'),
     path('products-download/export-excel/', ProductExportExcelView.as_view(), name='products_export_excel'),
+    path('universal_entries/', universal_entries, name='universal_entries'),
 
     # dlya poiska baalansa partnera po schetam
     path('partner/<int:partner_id>/entries/', PartnerEntriesView.as_view()),

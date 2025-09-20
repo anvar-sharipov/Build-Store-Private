@@ -134,7 +134,7 @@ export default function SidebarLeft() {
           { to: ROUTES.PARTNERS_new, label: t("partners"), key: "F4" },
           { to: ROUTES.AGENTS, label: t("agents"), key: "F5" },
           { to: ROUTES.HARYTLAR, label: t("towary"), key: "F6" },
-          // { to: ROUTES.ENTRIES, label: t("entries"), key: "F6" },
+          { to: ROUTES.ENTRIES, label: t("entries"), key: "F7" },
           // { to: ROUTES.ACCOUNT, label: t("account"), key: "F7" },
         ].map(({ to, label, key }) => (
           <li key={to} className="flex justify-between items-center border-b border-gray-600">

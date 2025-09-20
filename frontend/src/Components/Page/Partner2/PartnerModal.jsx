@@ -1,6 +1,6 @@
 import myAxios from "../../axios";
 import { Formik, Form, Field } from "formik";
-import MyModal from "../../UI/MyModal";
+import MyModal2 from "../../UI/MyModal2";
 import { useRef, useState } from "react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -107,7 +107,7 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
   return (
     <div>
       <Notification message={t(notification.message)} type={notification.type} onClose={() => setNotification({ message: "", type: "" })} />
-      <MyModal onClose={() => setOpenModal(false)}>
+      <MyModal2 onClose={() => setOpenModal(false)}>
         <div className="text-center mb-6">
           <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">{t("addPartner2")}</h2>
         </div>
@@ -714,7 +714,7 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
             );
           }}
         </Formik>
-      </MyModal>
+      </MyModal2>
     </div>
   );
 };

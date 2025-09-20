@@ -647,3 +647,81 @@ class WarehouseAccount(models.Model):
         
     
 
+
+
+########################################################################################################################################################################################################################
+######################################################################## close day START
+class DayClosing(models.Model):
+    date = models.DateField(verbose_name="Дата", unique=True)
+    is_closed = models.BooleanField(verbose_name="Закрыт", default=False)
+    closed_at = models.DateTimeField(verbose_name="Время закрытия", null=True, blank=True)
+    closed_by = models.ForeignKey(User, verbose_name="Закрыл", on_delete=models.SET_NULL, null=True, blank=True, related_name="closed_days")
+
+    class Meta:
+        verbose_name = "Закрытие дня"
+        verbose_name_plural = "Закрытия дней"
+        ordering = ["-date"]
+
+    def __str__(self):
+        return f"Закрытие {self.date} - {'Закрыт' if self.is_closed else 'Открыт'}"
+
+
+class DayClosingLog(models.Model):
+    ACTION_CHOICES = [
+        ("close", "Закрытие дня"),
+        ("reopen", "Отмена закрытия"),
+    ]
+
+    day_closing = models.ForeignKey(DayClosing, verbose_name="Закрытый день", on_delete=models.CASCADE, related_name="logs")
+    action = models.CharField(verbose_name="Действие", max_length=20, choices=ACTION_CHOICES)
+    performed_by = models.ForeignKey(User, verbose_name="Пользователь", on_delete=models.SET_NULL, null=True, blank=True)
+    performed_at = models.DateTimeField(verbose_name="Время действия", auto_now_add=True)
+    reason = models.TextField(verbose_name="Причина", blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Журнал закрытия дня"
+        verbose_name_plural = "Журнал закрытия дней"
+        ordering = ["-performed_at"]
+
+    def __str__(self):
+        return f"{self.get_action_display()} {self.day_closing.date} пользователем {self.performed_by}"
+    
+    
+    
+class PartnerBalanceSnapshot(models.Model):
+    """
+    Баланс каждого партнёра на момент закрытия дня.
+    """
+    closing = models.ForeignKey(DayClosing, on_delete=models.CASCADE, related_name="partner_balances")
+    partner = models.ForeignKey("Partner", on_delete=models.CASCADE)
+    balance = models.DecimalField(max_digits=12, decimal_places=2)
+
+    class Meta:
+        unique_together = ("closing", "partner")
+
+    def __str__(self):
+        return f"{self.partner.name} — {self.balance} ({self.closing.date})"
+    
+    
+    
+class StockSnapshot(models.Model):
+    """
+    Остатки товаров по складам на момент закрытия дня.
+    """
+    closing = models.ForeignKey(DayClosing, on_delete=models.CASCADE, related_name="stock_snapshots")
+    warehouse = models.ForeignKey("Warehouse", on_delete=models.CASCADE)
+    product = models.ForeignKey("Product", on_delete=models.CASCADE)
+    quantity = models.DecimalField(max_digits=12, decimal_places=2)
+
+    class Meta:
+        unique_together = ("closing", "warehouse", "product")
+
+    def __str__(self):
+        return f"{self.product.name} ({self.warehouse.name}) — {self.quantity} шт. ({self.closing.date})"
+
+
+
+
+
+######################################################################## close day END
+########################################################################################################################################################################################################################

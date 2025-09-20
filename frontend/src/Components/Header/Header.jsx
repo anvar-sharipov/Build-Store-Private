@@ -88,9 +88,9 @@ const Header = () => {
       } else if (event.key === "F6") {
         event.preventDefault();
         navigate(ROUTES.HARYTLAR);
-      // else if (event.key === "F6") {
-      //   event.preventDefault();
-      //   navigate(ROUTES.ENTRIES);
+      } else if (event.key === "F7") {
+        event.preventDefault();
+        navigate(ROUTES.ENTRIES);
       // } else if (event.key === "F7") {
       //   event.preventDefault();
       //   navigate(ROUTES.ACCOUNT);

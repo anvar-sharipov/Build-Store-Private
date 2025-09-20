@@ -385,7 +385,18 @@
   "is_active_invalid": "is_active True ýa-da False bolmaly",
   "balance_cant_be_empty": "Balans boş bolup bilmez",
   "balance_not_digit": "Balans san bolmaly",
-  "success imported": "üstiňlikli import edildi"
+  "success imported": "üstiňlikli import edildi",
+  "close day": "Günüň tamamlanmagy",
+  "If you are reopening the day, please provide a reason": "Eger günüň ýapylmagyny ýatyrmak isleseňiz, sebäbini görkezmegiňiz zerurdyr",
+  "choose day": "Gün saýla",
+  "day is closed": "Gün ýapylan",
+  "entries": "Prowodkalar",
+  "select_warehouse": "Ammary sayla",
+  "prihod": "Geliş",
+  "wozwrat": "Gaýtaryş",
+  "rashod": "Rashod",
+  "type faktura": "Faktura görnüşi",
+  "CannotBeZero": "0 bolup bilmez"
 
 
 

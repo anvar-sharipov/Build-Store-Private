@@ -1,35 +1,94 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useFormikContext } from "formik";
 import invoiceClasses from "./classes";
+import { Settings } from "lucide-react";
+import MyModal2 from "../../../UI/MyModal2";
+import SettingsModal from "../Modal/SettingsModal";
+import TypeFaktura from "../Modal/TypeFaktura";
+import TypePrice from "../Modal/TypePrice";
 
-const InvoiceHead = () => {
+const InvoiceHead = ({
+  refs,
+  printVisibleColumns,
+  setPrintVisibleColumns,
+  userPrintVisibleColumns,
+  adminPrintVisibleColumns,
+  visibleColumns,
+  setVisibleColumns,
+  adminVisibleColumns,
+  userVisibleColumns,
+}) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
+  const [openModal, setOpenModal] = useState(false);
   const handleClick = () => {
     navigate(-1); // возвращаемся на предыдущую страницу
   };
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
+    if (!openModal) {
+      const handleKeyDown = (e) => {
+        if (e.key === "Escape") {
+          e.preventDefault();
+          handleClick();
+        }
+      };
 
-        handleClick();
-      }
-    };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [openModal, handleClick]);
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
+  useEffect(() => {
+    if (!openModal) {
+      refs.productRef.current?.focus();
+    }
+  }, [openModal]);
 
   return (
-    <div className="flex justify-between items-center border-b-2 border-gray-700 dark:border-gray-300 print:!border-black pb-2">
+    <div className="flex justify-between items-center border-b-2 border-gray-700 dark:border-gray-500 print:!border-black pb-2">
+      {openModal && (
+        <SettingsModal
+          setOpenModal={setOpenModal}
+          printVisibleColumns={printVisibleColumns}
+          setPrintVisibleColumns={setPrintVisibleColumns}
+          userPrintVisibleColumns={userPrintVisibleColumns}
+          adminPrintVisibleColumns={adminPrintVisibleColumns}
+          visibleColumns={visibleColumns}
+          setVisibleColumns={setVisibleColumns}
+          adminVisibleColumns={adminVisibleColumns}
+          userVisibleColumns={userVisibleColumns}
+        />
+      )}
+
+      <div className="flex gap-5 items-center print:hidden">
+        <button
+          onClick={() => setOpenModal(true)}
+          className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition print:hidden focus:bg-indigo-200"
+          title="Настройки отображения"
+          type="button"
+        >
+          <Settings className="w-6 h-6 text-gray-700 dark:text-gray-200" />
+        </button>
+        <div className="px-1">
+          <TypeFaktura />
+        </div>
+
+        |
+
+        <div className="px-1">
+          <TypePrice />
+        </div>
+      </div>
+
+      
+
       {/* Дата */}
       <div>
         <input
@@ -50,12 +109,12 @@ const InvoiceHead = () => {
 
       {/* Заголовок */}
       <div className={invoiceClasses.zagolowok}>
-        {t("purchase_invoice2")} {values.id && values.id}
+        {t(values.wozwrat_or_prihod)} {t("faktura")} {values.id && values.id}
       </div>
 
       {/* Логотип */}
       <div>
-        <img src="/polisem.png" alt="polisem" width={140} className="rounded-lg hidden sm:block" />
+        <img src="/polisem.png" alt="polisem" width={140} className="rounded-lg hidden print:block" />
       </div>
 
       {/* Кнопка назад */}

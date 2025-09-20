@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import myAxios from "../../../axios";
 import Fuse from "fuse.js";
 
-const FetchPartner = ({partnerInputRef}) => {
+const FetchPartner = ({ refs }) => {
   const { t } = useTranslation();
   const { values, setFieldValue, handleBlur } = useFormikContext();
   const [allPartners, setAllPartners] = useState([]);
@@ -18,10 +18,9 @@ const FetchPartner = ({partnerInputRef}) => {
     try {
       const res = await myAxios.get("/partners/?no_pagination=1");
       // console.log('res', res);
-        const activePartners = res.data.filter((emp) => emp.is_active);
+      const activePartners = res.data.filter((emp) => emp.is_active);
       setAllPartners(activePartners);
       // console.log('activePartners', activePartners);
-      
     } catch (error) {
       console.log("Ошибка при загрузке Partners", error);
     }
@@ -34,13 +33,13 @@ const FetchPartner = ({partnerInputRef}) => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-        setFilteredPartners([])
+        setFilteredPartners([]);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Настраиваем Fuse
   const fuse = useMemo(
@@ -55,6 +54,13 @@ const FetchPartner = ({partnerInputRef}) => {
   // Обработчик поиска
   const handleSearch = (e) => {
     const value = e.target.value;
+    if (!value) {
+      setFilteredPartners([]);
+      setTimeout(() => {
+        refs.partnerListRef.current = [];
+      }, 0);
+      return;
+    }
     if (!value) return setFilteredPartners([]);
     const results = value
       ? fuse
@@ -68,22 +74,48 @@ const FetchPartner = ({partnerInputRef}) => {
 
   if (values.partner?.id) {
     return (
-      <div className="flex-1 flex items-center print:hidden my-5">
+      <div className="flex-1 flex items-center print:hidden my-1 gap-3">
         {values.partner?.name && (
           <button
             type="button"
+            ref={refs.partnerX_Ref}
+            onKeyDown={(e) => {
+              if (e.key == "ArrowUp") {
+                e.preventDefault();
+                if (refs.awtoX_Ref.current) {
+                  refs.awtoX_Ref.current?.focus();
+                } else {
+                  refs.awtoRef.current?.focus();
+                }
+              } else if (e.key == "Enter") {
+                e.preventDefault();
+                setFieldValue("partner", null);
+                setFilteredPartners([]);
+                refs.partnerListRef.current = [];
+                setTimeout(() => {
+                  refs.partnerRef.current?.focus();
+                }, 0);
+              } else if (e.key == "ArrowDown") {
+                e.preventDefault();
+                refs.productRef.current?.focus();
+              }
+            }}
             onClick={() => {
               setFieldValue("partner", null);
               setFilteredPartners([]);
+              refs.partnerListRef.current = [];
+              setTimeout(() => {
+                refs.partnerRef.current?.focus();
+              }, 0);
             }}
-            className="ml-3 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-700 text-red-500 dark:text-red-400 transition-colors duration-200 flex items-center justify-center"
+            className="ml-3 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-700 text-red-500 dark:text-red-400 transition-colors duration-200 flex items-center justify-center focus:bg-indigo-200"
           >
             <FaTimes className="text-sm" />
           </button>
         )}
-        <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
-          <span className="text-gray-600 dark:text-gray-400 font-medium">{t("partner")}:</span>
-          <span className="text-gray-800 dark:text-gray-100 font-semibold">{values.partner?.name}</span>
+        <div className="flex items-center gap-2 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-800 shadow-sm">
+          <span className="text-gray-600 dark:text-gray-400 text-sm">{t("partner")}:</span>
+          <span className="text-gray-800 dark:text-gray-100 font-medium">{values.partner?.name}</span>
         </div>
       </div>
     );
@@ -97,9 +129,25 @@ const FetchPartner = ({partnerInputRef}) => {
           type="text"
           onChange={handleSearch}
           autoComplete="off"
-          ref={partnerInputRef}
+          ref={refs.partnerRef}
           onBlur={handleBlur}
-          onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+            } else if (e.key == "ArrowUp") {
+              e.preventDefault();
+              if (refs.awtoX_Ref.current) {
+                refs.awtoX_Ref.current?.focus();
+              } else {
+                refs.awtoRef.current?.focus();
+              }
+            } else if (e.key == "ArrowDown") {
+              e.preventDefault();
+              if (refs.partnerListRef.current?.length > 0) {
+                refs.partnerListRef.current[0]?.focus();
+              } else refs.productRef.current?.focus();
+            }
+          }}
           name="partner"
           className="
             w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300
@@ -107,6 +155,8 @@ const FetchPartner = ({partnerInputRef}) => {
             dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100
             dark:placeholder-gray-400
             transition-all duration-200
+            focus:bg-indigo-200
+            dark:focus:bg-indigo-600
           "
           placeholder={t("search partner")}
         />
@@ -115,14 +165,36 @@ const FetchPartner = ({partnerInputRef}) => {
 
       {/* Список результатов */}
       {filteredPartners.length > 0 && (
-        <ul className="absolute z-10 mt-1 w-full max-h-70 border border-black dark:border-black rounded-md shadow-sm dark:bg-white bg-gray-300 dark:text-gray-800 text-black">
-          {filteredPartners.map((emp) => (
+        <ul className="absolute z-10 mt-1 w-full max-h-70 border border-black dark:border-black rounded-md shadow-sm dark:bg-white bg-gray-200 dark:text-gray-800 text-black">
+          {filteredPartners.map((emp, idx) => (
             <li
+              tabIndex={0}
+              ref={(el) => (refs.partnerListRef.current[idx] = el)}
               key={emp.id}
-              className="px-3 cursor-pointer dark:hover:bg-blue-100 hover:bg-blue-100 border divide-y divide-black"
+              className="px-3 cursor-pointer dark:hover:bg-blue-100 hover:bg-blue-100 border divide-y divide-black focus:bg-indigo-200"
               onClick={() => {
                 setFieldValue("partner", emp);
                 setFilteredPartners([]);
+              }}
+              onKeyDown={(e) => {
+                if (e.key == "Enter") {
+                  e.preventDefault();
+                  setFieldValue("partner", emp);
+                  setFilteredPartners([]);
+                  refs.productRef.current?.focus();
+                } else if (e.key == "ArrowDown") {
+                  e.preventDefault();
+                  if (refs.partnerListRef.current.length > idx + 1) {
+                    refs.partnerListRef.current[idx + 1]?.focus();
+                  }
+                } else if (e.key == "ArrowUp") {
+                  e.preventDefault();
+                  if (idx === 0) {
+                    refs.partnerRef.current?.focus();
+                  } else {
+                    refs.partnerListRef.current[idx - 1]?.focus();
+                  }
+                }
               }}
             >
               {emp.name}
@@ -135,4 +207,3 @@ const FetchPartner = ({partnerInputRef}) => {
 };
 
 export default FetchPartner;
-

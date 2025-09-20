@@ -2,7 +2,7 @@ import { QRCode } from "react-qrcode-logo";
 
 const QRDisplay = ({code, myClass, mySize}) => {
   return (
-    <div className={myClass} >
+    <div>
       <QRCode value={code} size={mySize} />
     </div>
   );

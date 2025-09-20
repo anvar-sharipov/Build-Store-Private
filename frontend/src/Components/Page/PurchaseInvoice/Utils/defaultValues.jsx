@@ -5,28 +5,29 @@
 // просто функция без хуков
 const warehouse = {
   id: 1,
-  name: "Sklad 1"
-}
+  name: "Sklad 1",
+};
 
 const partner = {
   id: 1,
-  name: "partner 1"
-}
+  name: "partner 1",
+};
 
 const awto = {
   id: 1,
-  name: "awto 1"
-}
+  name: "awto 1",
+};
 
-const products = {
-  id: 1,
-  name: "Polisem"
-}
+const products = [
+  {
+    id: 1,
+    name: "Polisem",
+  },
+];
 
+const wozwrat_or_prihod = "wozwrat";
 
 const getDefaultValues = (id = null, dateProwodok = null) => {
-  console.log('dateProwodok', dateProwodok);
-  
   if (id) {
     return {
       id: id,
@@ -35,15 +36,38 @@ const getDefaultValues = (id = null, dateProwodok = null) => {
       partner: partner,
       awto: awto,
       products: products,
+      wozwrat_or_prihod: wozwrat_or_prihod,
+      type_price: "reatil_price",
+      total_selected_price: 0,
+      total_retail_price: 0,
+      total_wholesale_price: 0,
+      send: true,
     };
   } else {
+    let get_wozwrat_or_prihod;
+    if (localStorage.getItem("wozwrat_or_prihod_purchase")) {
+      get_wozwrat_or_prihod = localStorage.getItem("wozwrat_or_prihod_purchase");
+    } else {
+      get_wozwrat_or_prihod = "prihod";
+      localStorage.setItem("wozwrat_or_prihod_purchase", "prihod");
+    }
+
+    let type_price = localStorage.getItem("type_price") || "wholesale_price";
+    localStorage.setItem("type_price", type_price);
+
     return {
       id: null,
       invoice_date: dateProwodok || localStorage.getItem("dateProwodok"),
       warehouse: localStorage.getItem("purchaseWarehouse") ? JSON.parse(localStorage.getItem("purchaseWarehouse")) : null,
       partner: null,
       awto: null,
-      products: null,
+      products: [],
+      wozwrat_or_prihod: get_wozwrat_or_prihod,
+      type_price: type_price,
+      total_selected_price: 0,
+      total_retail_price: 0,
+      total_wholesale_price: 0,
+      send: true,
     };
   }
 };

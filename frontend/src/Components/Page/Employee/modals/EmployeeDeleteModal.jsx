@@ -1,5 +1,5 @@
 import MyButton from "../../../UI/MyButton";
-import MyModal from "../../../UI/MyModal";
+import MyModal2 from "../../../UI/MyModal2";
 import { CiNoWaitingSign } from "react-icons/ci";
 import { RiDeleteBin2Fill } from "react-icons/ri";
 import { useTranslation } from "react-i18next";
@@ -18,7 +18,7 @@ const EmployeeDeleteModal = ({
     const { t } = useTranslation();
 
   return (
-    <MyModal
+    <MyModal2
       onClose={() => {
         listItemRefs.current[openDeleteModal.index]?.focus();
         setOpenDeleteModal({
@@ -77,11 +77,11 @@ const EmployeeDeleteModal = ({
               }
             }}
           >
-            {t("save")}
+            {t("delete")}
           </MyButton>
         </div>
       </div>
-    </MyModal>
+    </MyModal2>
   );
 };
 

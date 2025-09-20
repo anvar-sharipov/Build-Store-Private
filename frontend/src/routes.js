@@ -9,7 +9,7 @@ export const ROUTES = {
   PURCHASEINVOICE: "/purchase_invoice",
   PURCHASE_INVOICE_CREATE: "/purchase-invoices/create",
   PURCHASE_INVOICE_UPDATE: "/purchase-invoices/update/:id",
-  // ENTRIES: "/entries",
+  ENTRIES: "/entries",
   // ACCOUNT: "/account",
   
 };

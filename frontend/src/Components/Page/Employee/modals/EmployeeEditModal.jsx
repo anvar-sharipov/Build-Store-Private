@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import MyModal from "../../../UI/MyModal";
+import MyModal2 from "../../../UI/MyModal2";
 import MyInput from "../../../UI/MyInput";
 import MyButton from "../../../UI/MyButton";
 import { CiNoWaitingSign } from "react-icons/ci";
@@ -20,7 +20,7 @@ const EmployeeEditModal = ({
 }) => {
   const { t } = useTranslation();
   return (
-    <MyModal
+    <MyModal2
       onClose={() => {
         setOpenModal(false);
         listItemRefs.current[selectedListItemRef]?.focus();
@@ -86,7 +86,7 @@ const EmployeeEditModal = ({
           </MyButton>
         </div>
       </div>
-    </MyModal>
+    </MyModal2>
   );
 };
 

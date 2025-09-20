@@ -1,5 +1,5 @@
 // ProductEditModal2.jsx
-import MyModal from "../../../../UI/MyModal";
+import MyModal2 from "../../../../UI/MyModal2";
 import { useState } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
@@ -191,7 +191,7 @@ const ProductEditModal2 = ({
   };
 
   return (
-    <MyModal
+    <MyModal2
       onClose={() => {
         setProductEditModal2({ open: false, data: null, index: null });
       }}
@@ -270,7 +270,7 @@ const ProductEditModal2 = ({
           </Form>
         )}
       </Formik>
-    </MyModal>
+    </MyModal2>
   );
 };
 

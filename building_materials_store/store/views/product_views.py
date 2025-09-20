@@ -109,7 +109,7 @@ def search_products(request):
         results = Product.objects.annotate(
             similarity=TrigramSimilarity("name", query)
         ).filter(similarity__gt=0.1)
-
+        
         
 
         if warehouse:
@@ -142,6 +142,7 @@ def search_products(request):
                 'unit_name_on_selected_warehouses': unit_name,
                 'base_quantity_in_stock': base_quantity_in_stock,
                 'selected_quantity': 1,
+                'selected_price': 1,
             })
             data.append(serialized)
             # print(product, unit_name, quantity)

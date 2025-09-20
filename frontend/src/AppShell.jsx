@@ -26,6 +26,8 @@ import PurchaseInvoice from "./Components/Page/PurchaseInvoice/PurchaseInvoice";
 import { DateProvider } from "./Components/UI/DateProvider";
 import ImportPartners from "./Components/Page/Admin/ImportPartners";
 import DeleteData from "./Components/Page/Admin/DeleteData";
+import Entries from "./Components/Page/Entries/Entries";
+
 
 function AppShell() {
   const location = useLocation();
@@ -59,7 +61,7 @@ function AppShell() {
                   <Route path={ROUTES.EMPLOYEERS} element={<Employee />} />
                   <Route path={ROUTES.PARTNERS_new} element={<Partner2 />} />
                   <Route path={ROUTES.AGENTS} element={<Agent />} />
-                  {/* <Route path={ROUTES.ENTRIES} element={<Entries />} /> */}
+                  <Route path={ROUTES.ENTRIES} element={<Entries />} />
                   {/* <Route path={ROUTES.ACCOUNT} element={<Account />} /> */}
 
                   <Route path={ROUTES_RAPORT.PRICE_CHANGE_REPORT} element={<PriceChangeReport />} />

@@ -553,3 +553,43 @@ class PurchaseInvoiceItemAdmin(admin.ModelAdmin):
 
 ######################################################################## Приход накладная (faktura) END
 ########################################################################################################################################################################################################################
+
+
+
+########################################################################################################################################################################################################################
+######################################################################## close day START
+@admin.register(DayClosing)
+class DayClosingAdmin(admin.ModelAdmin):
+    fields = ("date", "is_closed", "closed_at", "closed_by")
+    list_display = ("date", "is_closed", "closed_at", "closed_by")
+    ordering = ("-date",)
+    search_fields = ("date", "closed_by__username")
+
+
+@admin.register(DayClosingLog)
+class DayClosingLogAdmin(admin.ModelAdmin):
+    # Убираем 'performed_at', оно не редактируемое
+    fields = ("day_closing", "action", "performed_by", "reason")
+    list_display = ("day_closing", "action", "performed_by", "performed_at")
+    ordering = ("-performed_at",)
+    search_fields = ("day_closing__date", "performed_by__username")
+    list_filter = ("action",)
+
+
+@admin.register(PartnerBalanceSnapshot)
+class PartnerBalanceSnapshotAdmin(admin.ModelAdmin):
+    fields = ("closing", "partner", "balance")
+    list_display = ("closing", "partner", "balance")
+    ordering = ("-closing__date",)
+    search_fields = ("partner__name",)
+
+
+@admin.register(StockSnapshot)
+class StockSnapshotAdmin(admin.ModelAdmin):
+    fields = ("closing", "warehouse", "product", "quantity")
+    list_display = ("closing", "warehouse", "product", "quantity")
+    ordering = ("-closing__date",)
+    search_fields = ("product__name", "warehouse__name")
+
+######################################################################## close day END
+########################################################################################################################################################################################################################

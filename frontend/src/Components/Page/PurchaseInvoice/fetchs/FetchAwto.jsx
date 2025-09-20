@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import myAxios from "../../../axios";
 import Fuse from "fuse.js";
 
-const FetchAwto = ({ autoInputRef }) => {
+const FetchAwto = ({ refs }) => {
   const { t } = useTranslation();
   const { values, setFieldValue, handleBlur } = useFormikContext();
   const [allEmployeers, setAllEmployeers] = useState([]);
@@ -28,6 +28,11 @@ const FetchAwto = ({ autoInputRef }) => {
 
   useEffect(() => {
     fetchEmployeers();
+    setTimeout(() => {
+      if (refs.awtoRef.current) {
+        refs.awtoRef?.current.focus();
+      }
+    }, 0);
   }, []);
 
   useEffect(() => {
@@ -53,6 +58,14 @@ const FetchAwto = ({ autoInputRef }) => {
   // Обработчик поиска
   const handleSearch = (e) => {
     const value = e.target.value;
+    if (!value) {
+      setFilteredEmployeers([]);
+      setTimeout(() => {
+        refs.awtoListRef.current = [];
+      }, 0);
+
+      return;
+    }
     const results = value
       ? fuse
           .search(value)
@@ -65,22 +78,44 @@ const FetchAwto = ({ autoInputRef }) => {
 
   if (values.awto?.id) {
     return (
-      <div className="flex-1 flex items-center print:hidden my-5">
+      <div className="flex-1 flex items-center gap-3 print:hidden my-1">
         {values.awto?.name && (
           <button
             type="button"
+            ref={refs.awtoX_Ref}
             onClick={() => {
               setFieldValue("awto", null);
               setFilteredEmployeers([]);
+              refs.awtoListRef.current = [];
+              setTimeout(() => {
+                refs.awtoRef.current?.focus();
+              }, 0);
             }}
-            className="ml-3 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-700 text-red-500 dark:text-red-400 transition-colors duration-200 flex items-center justify-center"
+            onKeyDown={(e) => {
+              if (e.key == "Enter") {
+                setFieldValue("awto", null);
+                setFilteredEmployeers([]);
+                refs.awtoListRef.current = [];
+                setTimeout(() => {
+                  refs.awtoRef.current?.focus();
+                }, 0);
+              } else if (e.key == "ArrowDown") {
+                e.preventDefault();
+                if (refs.partnerX_Ref.current) {
+                  refs.partnerX_Ref.current?.focus();
+                } else {
+                  refs.partnerRef.current?.focus();
+                }
+              }
+            }}
+            className="ml-3 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-700 text-red-500 dark:text-red-400 transition-colors duration-200 flex items-center justify-center focus:bg-indigo-200"
           >
             <FaTimes className="text-sm" />
           </button>
         )}
-        <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
-          <span className="text-gray-600 dark:text-gray-400 font-medium">{t("awto")}:</span>
-          <span className="text-gray-800 dark:text-gray-100 font-semibold">{values.awto?.name}</span>
+        <div className="flex items-center gap-2 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-800 shadow-sm">
+          <span className="text-gray-600 dark:text-gray-400 text-sm">{t("awto")}:</span>
+          <span className="text-gray-800 dark:text-gray-100 font-medium">{values.awto?.name}</span>
         </div>
       </div>
     );
@@ -92,11 +127,27 @@ const FetchAwto = ({ autoInputRef }) => {
       <div className="relative">
         <input
           type="text"
-          ref={autoInputRef}
+          ref={refs.awtoRef}
           onChange={handleSearch}
           onBlur={handleBlur}
           autoComplete="off"
-          onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+            } else if (e.key == "ArrowDown") {
+              e.preventDefault();
+              if (refs.awtoListRef.current?.length > 0) {
+                console.log("dada1", refs.awtoListRef.current?.length);
+                refs.awtoListRef.current[0]?.focus();
+              } else if (refs.partnerX_Ref.current) {
+                console.log("dada2");
+                refs.partnerX_Ref.current?.focus();
+              } else {
+                console.log("dada3");
+                refs.partnerRef.current?.focus();
+              }
+            }
+          }}
           name="awto"
           className="
             w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300
@@ -104,6 +155,8 @@ const FetchAwto = ({ autoInputRef }) => {
             dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100
             dark:placeholder-gray-400
             transition-all duration-200
+            focus:bg-indigo-200
+            dark:focus:bg-indigo-600
           "
           placeholder={t("search awto")}
         />
@@ -112,11 +165,37 @@ const FetchAwto = ({ autoInputRef }) => {
 
       {/* Список результатов */}
       {filteredEmployeers.length > 0 && (
-        <ul className="absolute z-10 mt-1 w-full max-h-70 border border-black dark:border-black rounded-md shadow-sm dark:bg-white bg-gray-300 dark:text-gray-800 text-black">
-          {filteredEmployeers.map((emp) => (
+        <ul className="absolute z-10 mt-1 w-full max-h-70 border border-black dark:border-black rounded-md shadow-sm dark:bg-white bg-gray-200 dark:text-gray-800 text-black">
+          {filteredEmployeers.map((emp, idx) => (
             <li
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key == "Enter") {
+                  e.preventDefault();
+                  setFieldValue("awto", emp);
+                  setFilteredEmployeers([]);
+                  if (!refs.partnerX_Ref.current) {
+                    refs.partnerRef.current?.focus();
+                  } else {
+                    refs.productRef.current?.focus();
+                  }
+                } else if (e.key == "ArrowDown") {
+                  e.preventDefault();
+                  if (refs.awtoListRef.current.length > idx + 1) {
+                    refs.awtoListRef.current[idx + 1]?.focus();
+                  }
+                } else if (e.key == "ArrowUp") {
+                  e.preventDefault();
+                  if (idx === 0) {
+                    refs.awtoRef.current?.focus();
+                  } else {
+                    refs.awtoListRef.current[idx - 1]?.focus();
+                  }
+                }
+              }}
+              ref={(el) => (refs.awtoListRef.current[idx] = el)}
               key={emp.id}
-              className="px-3 cursor-pointer dark:hover:bg-blue-100 hover:bg-blue-100 border divide-y divide-black"
+              className="px-3 cursor-pointer dark:hover:bg-blue-100 hover:bg-blue-100 border divide-y divide-black focus:bg-indigo-200"
               onClick={() => {
                 setFieldValue("awto", emp);
                 setFilteredEmployeers([]);

@@ -1,4 +1,4 @@
-import MyModal from "../../../UI/MyModal";
+import MyModal2 from "../../../UI/MyModal2";
 import { CiNoWaitingSign } from "react-icons/ci";
 import { RiDeleteBin2Fill } from "react-icons/ri";
 import MyButton from "../../../UI/MyButton";
@@ -20,7 +20,7 @@ const AgentDeleteModal = ({
   }, []);
 
   return (
-    <MyModal
+    <MyModal2
       onClose={() =>
         setOpenDeleteModal({ open: false, data: null, index: null })
       }
@@ -72,7 +72,7 @@ const AgentDeleteModal = ({
           </MyButton>
         </div>
       </div>
-    </MyModal>
+    </MyModal2>
   );
 };
 

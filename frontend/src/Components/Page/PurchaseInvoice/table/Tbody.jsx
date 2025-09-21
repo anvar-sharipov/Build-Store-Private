@@ -4,6 +4,7 @@ import { formatNumber } from "../../../UI/formatNumber";
 import Quantity from "./Quantity";
 import { useState, useRef, useEffect } from "react";
 import TDPrice from "./TDPrice";
+import { HiX } from "react-icons/hi";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -12,35 +13,49 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
   const [focusedQuantityRow, setFocusedQuantityRow] = useState(null);
   const [focusedPriceRow, setFocusedPriceRow] = useState(null);
 
-  //   useEffect(() => {
-  //     if (values.products.length === 0) return;
-
-  //     const lastProduct = values.products[values.products.length - 1];
-  //     const inputEl = quantityRefs.current[lastProduct.id];
-  //     console.log('lastProduct',lastProduct);
-  //     console.log('inputEl',inputEl);
-
-  //     if (inputEl) {
-  //       inputEl.focus();
-  //       inputEl.select(); // если нужно сразу выделить текст
-  //     }
-  //   }, [values.products]);
+  const handleRemove = (id) => {
+    const updatedProducts = values.products.filter((p) => p.id !== id);
+    setFieldValue("products", updatedProducts);
+    refs.productRef.current?.focus();
+  };
 
   return (
     <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
       {values.products.map((product, idx) => {
+        const total_price = Number(product.selected_quantity) * Number(product.selected_price);
+        const total_purchase = Number(product.selected_quantity) * Number(product.purchase_price);
+        const income_1pc = Number(product.selected_price) - Number(product.purchase_price);
+        const income_total = income_1pc * Number(product.selected_quantity);
+        const discount_1pc = Number(product.selected_price) - Number(product.wholesale_price);
+        const total_discount = discount_1pc * Number(product.selected_quantity);
+        const total_volume = Number(product.volume) * Number(product.selected_quantity);
+
         return (
           <tr
             key={product.id}
             tabIndex={0}
-            className={`focus:bg-indigo-200 dark:focus:bg-indigo-500 transition-colors ${focusedQuantityRow  === product.id || focusedPriceRow === product.id ? "bg-indigo-200 dark:bg-indigo-500" : "bg-white dark:bg-gray-900"}`}
+            className={`focus:bg-indigo-200 dark:focus:bg-indigo-500 transition-colors ${
+              focusedQuantityRow === product.id || focusedPriceRow === product.id ? "bg-indigo-200 dark:bg-indigo-500" : "bg-white dark:bg-gray-900"
+            }`}
           >
-            <td className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 print:!text-black print:!border-black`}>{idx + 1}</td>
+            <td className={`pl-1 pr-2 text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 print:!text-black print:!border-black`}>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => handleRemove(product.id)} // здесь твоя логика удаления
+                  className="ml-2 text-red-500 hover:text-red-700 print:hidden"
+                >
+                  <HiX className="w-4 h-4" />
+                </button>
+                <span>{idx + 1}</span>
+              </div>
+            </td>
+
             <td className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 print:!text-black print:!border-black`}>{product.name}</td>
 
             <td
-              className={`text-center text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.image ? "hidden" : ""} ${
-                !printVisibleColumns.image ? "print:hidden" : ""
+              className={`text-center text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.image ? "hidden" : "table-cell"} ${
+                !printVisibleColumns.image ? "print:hidden" : "print:table-cell"
               } print:!text-black print:!border-black`}
             >
               {product.images.length > 0 &&
@@ -52,8 +67,8 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
             </td>
 
             <td
-              className={`text-center mx-auto text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.qr_code ? "hidden" : ""} ${
-                !printVisibleColumns.qr_code ? "print:hidden" : ""
+              className={`text-center mx-auto text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.qr_code ? "hidden" : "table-cell"} ${
+                !printVisibleColumns.qr_code ? "print:hidden" : "print:table-cell"
               } print:!text-black print:!border-black`}
             >
               <QRDisplay code={product.qr_code} mySize={44} myClass="flex items-center text-center justify-center w-20 h-20 inline-block" />
@@ -65,7 +80,7 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
               onFocusQuantityRow={() => setFocusedQuantityRow(product.id)}
               onBlurQuantityRow={() => setFocusedQuantityRow(null)}
               setFocusedQuantityRow={setFocusedQuantityRow}
-              setFocusedPriceRow={setFocusedPriceRow }
+              setFocusedPriceRow={setFocusedPriceRow}
               ref={(el) => (refs.quantityRefs.current[product.id] = el)}
               refs={refs}
             />
@@ -82,62 +97,84 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
               setFocusedPriceRow={setFocusedPriceRow}
               setFocusedQuantityRow={setFocusedQuantityRow}
             />
-            <td className="pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 print:!text-black print:!border-black"></td>
+            <td className="pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 print:!text-black print:!border-black">{formatNumber(total_price, 3)}</td>
             <td
-              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.purchase ? "hidden" : ""} ${
-                !printVisibleColumns.purchase ? "print:hidden" : ""
+              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.purchase ? "hidden" : "table-cell"} ${
+                !printVisibleColumns.purchase ? "print:hidden" : "print:table-cell"
               } print:!text-black print:!border-black`}
-            ></td>
+            >
+              {formatNumber(product.purchase_price, 3)}
+            </td>
             <td
-              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.purchase ? "hidden" : ""} ${
-                !printVisibleColumns.purchase ? "print:hidden" : ""
+              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.purchase ? "hidden" : "table-cell"} ${
+                !printVisibleColumns.purchase ? "print:hidden" : "print:table-cell"
               } print:!text-black print:!border-black`}
-            ></td>
+            >
+              {formatNumber(total_purchase, 3)}
+            </td>
             <td
-              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.income ? "hidden" : ""} ${
-                !printVisibleColumns.income ? "print:hidden" : ""
+              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.income ? "hidden" : "table-cell"} ${
+                !printVisibleColumns.income ? "print:hidden" : "print:table-cell"
               } print:!text-black print:!border-black`}
-            ></td>
+            >
+              {formatNumber(income_1pc, 3)}
+            </td>
             <td
-              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.income ? "hidden" : ""} ${
-                !printVisibleColumns.income ? "print:hidden" : ""
+              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.income ? "hidden" : "table-cell"} ${
+                !printVisibleColumns.income ? "print:hidden" : "print:table-cell"
               } print:!text-black print:!border-black`}
-            ></td>
+            >
+              {formatNumber(income_total, 3)}
+            </td>
             <td
-              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.discount ? "hidden" : ""} ${
-                !printVisibleColumns.discount ? "print:hidden" : ""
+              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.discount ? "hidden" : "table-cell"} ${
+                !printVisibleColumns.discount ? "print:hidden" : "print:table-cell"
               } print:!text-black print:!border-black`}
-            ></td>
+            >
+              {formatNumber(discount_1pc, 3)}
+            </td>
             <td
-              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.discount ? "hidden" : ""} ${
-                !printVisibleColumns.discount ? "print:hidden" : ""
+              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.discount ? "hidden" : "table-cell"} ${
+                !printVisibleColumns.discount ? "print:hidden" : "print:table-cell"
               } print:!text-black print:!border-black`}
-            ></td>
+            >
+              {formatNumber(total_discount, 3)}
+            </td>
             <td
-              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.volume ? "hidden" : ""} ${
-                !printVisibleColumns.volume ? "print:hidden" : ""
+              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.volume ? "hidden" : "table-cell"} ${
+                !printVisibleColumns.volume ? "print:hidden" : "print:table-cell"
               } print:!text-black print:!border-black`}
-            ></td>
+            >
+              {formatNumber(total_volume, 3)}
+            </td>
             <td
-              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.weight ? "hidden" : ""} ${
-                !printVisibleColumns.weight ? "print:hidden" : ""
+              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.weight ? "hidden" : "table-cell"} ${
+                !printVisibleColumns.weight ? "print:hidden" : "print:table-cell"
               } print:!text-black print:!border-black`}
-            ></td>
+            >
+              {formatNumber(product.weight, 3)}
+            </td>
             <td
-              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.dimensions ? "hidden" : ""} ${
-                !printVisibleColumns.dimensions ? "print:hidden" : ""
+              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.dimensions ? "hidden" : "table-cell"} ${
+                !printVisibleColumns.dimensions ? "print:hidden" : "print:table-cell"
               } print:!text-black print:!border-black`}
-            ></td>
+            >
+              {formatNumber(product.length, 3)}
+            </td>
             <td
-              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.dimensions ? "hidden" : ""} ${
-                !printVisibleColumns.dimensions ? "print:hidden" : ""
+              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.dimensions ? "hidden" : "table-cell"} ${
+                !printVisibleColumns.dimensions ? "print:hidden" : "print:table-cell"
               } print:!text-black print:!border-black`}
-            ></td>
+            >
+              {formatNumber(product.width, 3)}
+            </td>
             <td
-              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.dimensions ? "hidden" : ""} ${
-                !printVisibleColumns.dimensions ? "print:hidden" : ""
+              className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.dimensions ? "hidden" : "table-cell"} ${
+                !printVisibleColumns.dimensions ? "print:hidden" : "print:table-cell"
               } print:!text-black print:!border-black`}
-            ></td>
+            >
+              {formatNumber(product.height, 3)}
+            </td>
           </tr>
         );
       })}

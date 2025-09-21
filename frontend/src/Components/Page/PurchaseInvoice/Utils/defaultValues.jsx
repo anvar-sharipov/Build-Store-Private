@@ -38,9 +38,6 @@ const getDefaultValues = (id = null, dateProwodok = null) => {
       products: products,
       wozwrat_or_prihod: wozwrat_or_prihod,
       type_price: "reatil_price",
-      total_selected_price: 0,
-      total_retail_price: 0,
-      total_wholesale_price: 0,
       send: true,
     };
   } else {
@@ -64,9 +61,6 @@ const getDefaultValues = (id = null, dateProwodok = null) => {
       products: [],
       wozwrat_or_prihod: get_wozwrat_or_prihod,
       type_price: type_price,
-      total_selected_price: 0,
-      total_retail_price: 0,
-      total_wholesale_price: 0,
       send: true,
     };
   }

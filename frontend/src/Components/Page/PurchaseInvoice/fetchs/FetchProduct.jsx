@@ -113,9 +113,27 @@ const FetchProduct = ({ refs }) => {
                   onKeyDown={(e) => {
                     if (e.key == "Enter") {
                       e.preventDefault();
+                      // console.log("pppp", product);
+                      // const type_price = localStorage.getItem("type_price")
+                      // let selected_price = 0
+                      // if (type_price === "wholesale_price") {
+                      //   selected_price = Number(product.wholesale_price)
+                      // } else {
+                      //   selected_price = Number(product.retail_price)
+                      // }
+                      
+                      const p = {
+                        ...product, 
+                        is_custom_price:false, 
+                        // total_price:Number(product.selected_quantity) * selected_price,
+                        // total_purchase: Number(product.selected_quantity) * Number(product.purchase_price),
+                        // income_1pc: Number(selected_price) - Number(product.purchase_price),
+                        // income_total: (Number(selected_price) - Number(product.purchase_price)) * Number(product.selected_quantity)
+                      
+                      }
                       setProducts([]);
-                      setFieldValue("products", (values.products || []).concat(product));
-                      console.log(product);
+                      setFieldValue("products", (values.products || []).concat(p));
+                      console.log(p);
 
                       setTimeout(() => {
                         refs.quantityRefs.current[product.id]?.focus();

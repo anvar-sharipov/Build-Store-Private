@@ -16,12 +16,27 @@ const TypePrice = () => {
             value="wholesale_price"
             checked={values.type_price === "wholesale_price"}
             onChange={(e) => {
-              setFieldValue("type_price", e.target.value);
-              localStorage.setItem("type_price", e.target.value);
+              const newType = e.target.value;
+              if (values.products.length > 0) {
+                const updatedProducts = values.products.map((p) => {
+                  if (p.is_custom_price) {
+                    // пользователь ввёл вручную → оставляем
+                    return p;
+                  }
+                  // иначе обновляем под тип
+                  return {
+                    ...p,
+                    selected_price: newType === "retail_price" ? Number(p.retail_price) : Number(p.wholesale_price),
+                  };
+                });
+                setFieldValue("products", updatedProducts);
+              }
+              setFieldValue("type_price", newType);
+              localStorage.setItem("type_price", newType);
             }}
             className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
+              if (e.key === "Enter" || e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === "ArrowUp") {
                 e.preventDefault();
               }
             }}
@@ -36,12 +51,27 @@ const TypePrice = () => {
             value="retail_price"
             checked={values.type_price === "retail_price"}
             onChange={(e) => {
-              setFieldValue("type_price", e.target.value);
-              localStorage.setItem("type_price", e.target.value);
+              const newType = e.target.value;
+              if (values.products.length > 0) {
+                const updatedProducts = values.products.map((p) => {
+                  if (p.is_custom_price) {
+                    // пользователь ввёл вручную → оставляем
+                    return p;
+                  }
+                  // иначе обновляем под тип
+                  return {
+                    ...p,
+                    selected_price: newType === "retail_price" ? Number(p.retail_price) : Number(p.wholesale_price),
+                  };
+                });
+                setFieldValue("products", updatedProducts);
+              }
+              setFieldValue("type_price", newType);
+              localStorage.setItem("type_price", newType);
             }}
             className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
+              if (e.key === "Enter" || e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === "ArrowUp") {
                 e.preventDefault();
               }
             }}

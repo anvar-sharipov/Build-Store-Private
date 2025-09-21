@@ -1,10 +1,13 @@
-import { forwardRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { forwardRef, useEffect, useState } from "react";
 import { useFormikContext } from "formik";
 import { formatNumber } from "../../../UI/formatNumber";
 
 const TDPrice = forwardRef(({ product, onFocusPriceRow, onBlurPriceRow, setFocusedPriceRow, setFocusedQuantityRow, refs }, ref) => {
   const { values, setFieldValue } = useFormikContext();
   const productIndex = values.products.findIndex((p) => p.id === product.id);
+  const [localError, setLocalError] = useState("");
+  const { t } = useTranslation();
 
   // Авто-подстановка selected_price при смене type_price или продуктов
   useEffect(() => {
@@ -13,13 +16,10 @@ const TDPrice = forwardRef(({ product, onFocusPriceRow, onBlurPriceRow, setFocus
     const typePrice = values.type_price;
     const price = typePrice === "retail_price" ? product.retail_price : product.wholesale_price;
 
-    setFieldValue(`products[${productIndex}].selected_price`, price || 0);
-
-    // Пересчет total_selected_price
-    const totalSelected = values.products.reduce((sum, p) => {
-      return sum + Number(p.selected_price || 0) * Number(p.selected_quantity || 0);
-    }, 0);
-    setFieldValue("total_selected_price", totalSelected);
+    // если кастомная цена — оставляем как есть
+    if (!values.products[productIndex]?.is_custom_price) {
+      setFieldValue(`products[${productIndex}].selected_price`, price || 0);
+    }
   }, [values.type_price, values.products[productIndex]?.selected_quantity]);
 
   const handleKeyNavigation = (e) => {
@@ -54,20 +54,21 @@ const TDPrice = forwardRef(({ product, onFocusPriceRow, onBlurPriceRow, setFocus
         refs.priceRefs.current[nextProductId]?.select();
       }
       // Если это последний продукт, остаемся на месте (или можно добавить другую логику)
-    } else if (e.key === "ArrowLeft") {
-      e.preventDefault();
-      refs.quantityRefs.current[product.id]?.focus();
-      refs.quantityRefs.current[product.id]?.select();
+    } else if (e.key === "ArrowLeft" && e.target.selectionStart === 0) {
+        e.preventDefault();
+        refs.quantityRefs.current[product.id]?.focus();
+        refs.quantityRefs.current[product.id]?.select();
+      
     }
   };
 
-
   return (
-    <td className="p-0 m-0 text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400  print:!text-black print:!border-black text-center">
+    <td className={`p-0 m-0 text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400  print:!text-black print:!border-black text-center`}>
       <input
         ref={ref} // сюда приходит ref из родителя
         type="text"
-        className="my-1 dark:bg-gray-900 w-[90%]"
+        inputMode="decimal" // для мобильных клавиатур с цифрами
+        className={`my-1 dark:bg-gray-900 w-[90%] ${product.is_custom_price ? "bg-green-300 dark:bg-green-900" : "bg-white dark:bg-gray-900"} print:hidden`}
         value={values.products[productIndex]?.selected_price || ""}
         onFocus={() => {
           onFocusPriceRow(); // родительская функция
@@ -79,11 +80,23 @@ const TDPrice = forwardRef(({ product, onFocusPriceRow, onBlurPriceRow, setFocus
           setFocusedPriceRow(null);
         }}
         onChange={(e) => {
-          // Найти индекс продукта в массиве для правильного setFieldValue
+          const rawValue = e.target.value;
+          const normalizedValue = rawValue.replace(",", ".");
+          const isNumber = !isNaN(normalizedValue) && normalizedValue.trim() !== "";
+          if (!isNumber) {
+            setLocalError(`${t("amount must be a digit")}`);
+            setFieldValue("send", false);
+          } else {
+            setLocalError("");
+            setFieldValue("send", true);
+          }
           setFieldValue(`products[${productIndex}].selected_price`, e.target.value);
+          setFieldValue(`products[${productIndex}].is_custom_price`, true);
         }}
         onKeyDown={handleKeyNavigation}
       />
+      <div className="hidden print:block">{formatNumber(values.products[productIndex]?.selected_price, 3)}</div>
+      {localError && <div className="text-red-500 text-xs print:hidden">{localError}</div>}
     </td>
   );
 });

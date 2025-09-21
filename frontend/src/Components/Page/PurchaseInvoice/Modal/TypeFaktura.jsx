@@ -21,7 +21,7 @@ const TypeFaktura = () => {
             }}
             className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
+              if (e.key === "Enter" || e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === "ArrowUp") {
                 e.preventDefault();
               }
             }}
@@ -41,7 +41,7 @@ const TypeFaktura = () => {
             }}
             className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
+              if (e.key === "Enter" || e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === "ArrowUp") {
                 e.preventDefault();
               }
             }}
@@ -61,7 +61,7 @@ const TypeFaktura = () => {
             }}
             className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
+              if (e.key === "Enter" || e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === "ArrowUp") {
                 e.preventDefault();
               }
             }}

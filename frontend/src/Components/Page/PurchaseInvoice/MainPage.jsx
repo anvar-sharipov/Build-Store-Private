@@ -14,7 +14,7 @@ import FetchProduct from "./fetchs/FetchProduct";
 import { DateContext } from "../../UI/DateProvider";
 import PTable from "./table/PTable";
 import { motion, AnimatePresence } from "framer-motion";
-import TotalsCalculator from "./table/TotalsCalculator";
+import SubmitButton from "./Utils/SubmitButton";
 
 const userVisibleColumns = {
   qr_code: false,
@@ -63,7 +63,6 @@ const adminPrintVisibleColumns = {
 const MainPage = () => {
   const { t } = useTranslation();
   const { id } = useParams();
-  // const quantityRefs = useRef({});
 
   const [visibleColumns, setVisibleColumns] = useState(() => {
     const saved = localStorage.getItem("visibleColumnsPurchase");
@@ -100,21 +99,7 @@ const MainPage = () => {
   };
 
   const { dateFrom, setDateFrom, dateTo, setDateTo, dateProwodok, setDateProwodok } = useContext(DateContext);
-
-  // const [fakturaBg, setFakturaBg] = useState(() => {
-  //   const type = localStorage.getItem("wozwrat_or_prihod_purchase");
-  //   if (type === "wozwrat") return "bg-red-300";
-  //   if (type === "prihod") return "bg-green-300";
-  //   return "bg-white";
-  // });
-
-  // // Если значение типа фактуры может меняться внутри формы:
-  // useEffect(() => {
-  //   if (!values) return;
-  //   if (values.wozwrat_or_prihod === "wozwrat") setFakturaBg("bg-red-300");
-  //   else if (values.wozwrat_or_prihod === "prihod") setFakturaBg("bg-green-300");
-  //   else setFakturaBg("bg-white");
-  // }, [values?.wozwrat_or_prihod]);
+  console.log("dateProwodok", dateProwodok);
 
   const defaultValues = useMemo(() => {
     return getDefaultValues(id);
@@ -123,29 +108,23 @@ const MainPage = () => {
   // const defaultValues = getDefaultValues(id);
   const validationSchema = getInvoiceValidationSchema(t);
 
-
   return (
     <div>
       <Formik initialValues={defaultValues} enableReinitialize={true} onSubmit={(values) => console.log("OTPRAWLENO", values)} validationSchema={validationSchema}>
-        
         {({ values, handleChange, setFieldValue }) => {
-          // useEffect(() => {
-          //   if (!id) {
-          //     setFieldValue("invoice_date", dateProwodok);
-          //   }
-          // }, [dateProwodok]);
-          console.log("values", values);
           useEffect(() => {
             setFieldValue("invoice_date", dateProwodok);
           }, [dateProwodok]);
 
-          const fakturaBgDynamic = values.wozwrat_or_prihod === "wozwrat" ? "bg-red-200" : values.wozwrat_or_prihod === "prihod" ? "bg-green-200" : "bg-white";
+          const fakturaBgDynamic =
+            values.wozwrat_or_prihod === "wozwrat" ? "bg-red-200 dark:bg-red-900" : values.wozwrat_or_prihod === "prihod" ? "bg-green-200 dark:bg-green-900" : "bg-white dark:bg-gray-900";
 
           return (
-            <Form className={`p-2 m-2 ${fakturaBgDynamic} h-screen`}>
+            <Form>
               {/* Твой form fields здесь */}
               <InvoiceHead
                 refs={refs}
+                fakturaBgDynamic={fakturaBgDynamic}
                 printVisibleColumns={printVisibleColumns}
                 setPrintVisibleColumns={setPrintVisibleColumns}
                 userPrintVisibleColumns={userPrintVisibleColumns}
@@ -155,7 +134,7 @@ const MainPage = () => {
                 adminVisibleColumns={adminVisibleColumns}
                 userVisibleColumns={userVisibleColumns}
               />
-              <div className="grid grid-cols-1 md:grid-cols-10 gap-4 print:block">
+              <div className="grid grid-cols-1 md:grid-cols-10 gap-4 print:block p-5">
                 {/* Левая колонка */}
                 <div className="col-span-3 print:hidden">
                   <div
@@ -194,16 +173,12 @@ const MainPage = () => {
                       <FetchProduct refs={refs} />
                     </div>
 
-                    <TotalsCalculator />
-
                     <div>{values.products.length > 0 && <PTable printVisibleColumns={printVisibleColumns} visibleColumns={visibleColumns} id={id} refs={refs} />}</div>
                   </div>
                 </div>
               </div>
 
-              {/* <div className="mt-3 print:p-0 print:m-0 w-full sm:w-3/4 md:w-2/3 lg:w-1/2 max-w-2xl mx-auto border border-gray-300 dark:border-gray-600 p-2 print:border-none"></div> */}
-
-              <div className="hidden print:block mt-4">
+              <div className="hidden print:block mt-4 ml-5">
                 {values.awto?.id && (
                   <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
                     <span className="text-gray-600 dark:text-gray-400 font-medium">{t("awto")}:</span>
@@ -211,24 +186,7 @@ const MainPage = () => {
                   </div>
                 )}
               </div>
-
-              {/* Кнопка в конце формы */}
-              <div className="flex justify-end mt-6">
-                <button
-                  type="submit"
-                  disabled={!values.send || !values.products.length > 0}
-                  className={`
-                  px-4 py-2 rounded-xl font-semibold transition-colors duration-200
-                  ${
-                    values.send && values.products.length > 0
-                      ? "bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400"
-                  }
-                  print:hidden`}
-                >
-                  💾 {t("save")}
-                </button>
-              </div>
+              <div className="flex justify-end">{values.products.length > 0 && <SubmitButton dateProwodok={dateProwodok} />}</div>
             </Form>
           );
         }}

@@ -12,6 +12,7 @@ import TypePrice from "../Modal/TypePrice";
 
 const InvoiceHead = ({
   refs,
+  fakturaBgDynamic,
   printVisibleColumns,
   setPrintVisibleColumns,
   userPrintVisibleColumns,
@@ -52,7 +53,7 @@ const InvoiceHead = ({
   }, [openModal]);
 
   return (
-    <div className="flex justify-between items-center border-b-2 border-gray-700 dark:border-gray-500 print:!border-black pb-2">
+    <div className={`flex justify-between items-center border-b-2 border-gray-700 dark:border-gray-500 print:!border-black p-2 ${fakturaBgDynamic}`}>
       {openModal && (
         <SettingsModal
           setOpenModal={setOpenModal}

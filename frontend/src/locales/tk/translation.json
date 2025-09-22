@@ -401,7 +401,10 @@
   "image": "Surat",
   "q-ty": "Sany",
   "un": "Ölç. bir.",
-  "choose date prowodok": "Prodowkanyň senesini saylaň"
+  "choose date prowodok": "Prodowkanyň senesini saylaň",
+  "quantity must be a digit": "möçber san bolmaly",
+  "only positive numbers": "diňe oňyn sanlar",
+  "product already exists": "önüm eýýäm bar"
 
 
 

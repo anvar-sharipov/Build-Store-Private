@@ -13,9 +13,42 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
   const [focusedQuantityRow, setFocusedQuantityRow] = useState(null);
   const [focusedPriceRow, setFocusedPriceRow] = useState(null);
 
+  const recalcGiftQuantities = (products) => {
+    const giftQuantities = {};
+    // Проходим по всем main товарам
+    products.forEach((product) => {
+      if (!product.is_gift && product.free_items?.length > 0) {
+        const mainQty = Number(product.selected_quantity) || 0; // <-- используем quantity из values.products
+        product.free_items.forEach((free) => {
+          const giftId = free.gift_product;
+          const qtyPerUnit = Number(free.quantity_per_unit) || 0;
+          giftQuantities[giftId] = (giftQuantities[giftId] || 0) + mainQty * qtyPerUnit;
+        });
+      }
+    });
+    // Обновляем все gift товары
+    products.forEach((product, idx) => {
+      if (product.is_gift) {
+        const newQty = giftQuantities[product.id] || 0;
+        if (Number(product.selected_quantity) !== newQty) {
+          // console.log('tut');
+          // console.log('eeeee', values.products[idx]);
+          products[idx].selected_quantity = newQty;
+        }
+      }
+    });
+
+
+      const updatedProducts = (products || []).filter((product) => Number(product.selected_quantity) > 0);
+  
+
+    setFieldValue("products", updatedProducts);
+  };
+
   const handleRemove = (id) => {
     const updatedProducts = values.products.filter((p) => p.id !== id);
-    setFieldValue("products", updatedProducts);
+    // setFieldValue("products", updatedProducts);
+    recalcGiftQuantities(updatedProducts);
     refs.productRef.current?.focus();
   };
 
@@ -29,6 +62,10 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
         const discount_1pc = Number(product.selected_price) - Number(product.wholesale_price);
         const total_discount = discount_1pc * Number(product.selected_quantity);
         const total_volume = Number(product.volume) * Number(product.selected_quantity);
+        const total_weight = Number(product.weight) * Number(product.selected_quantity);
+        const total_length = Number(product.length) * Number(product.selected_quantity);
+        const total_width = Number(product.width) * Number(product.selected_quantity);
+        const total_height = Number(product.height) * Number(product.selected_quantity);
 
         return (
           <tr
@@ -152,28 +189,28 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
                 !printVisibleColumns.weight ? "print:hidden" : "print:table-cell"
               } print:!text-black print:!border-black`}
             >
-              {formatNumber(product.weight, 3)}
+              {formatNumber(total_weight, 3)}
             </td>
             <td
               className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.dimensions ? "hidden" : "table-cell"} ${
                 !printVisibleColumns.dimensions ? "print:hidden" : "print:table-cell"
               } print:!text-black print:!border-black`}
             >
-              {formatNumber(product.length, 3)}
+              {formatNumber(total_length, 3)}
             </td>
             <td
               className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.dimensions ? "hidden" : "table-cell"} ${
                 !printVisibleColumns.dimensions ? "print:hidden" : "print:table-cell"
               } print:!text-black print:!border-black`}
             >
-              {formatNumber(product.width, 3)}
+              {formatNumber(total_width, 3)}
             </td>
             <td
               className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.dimensions ? "hidden" : "table-cell"} ${
                 !printVisibleColumns.dimensions ? "print:hidden" : "print:table-cell"
               } print:!text-black print:!border-black`}
             >
-              {formatNumber(product.height, 3)}
+              {formatNumber(total_height, 3)}
             </td>
           </tr>
         );

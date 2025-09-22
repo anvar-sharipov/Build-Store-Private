@@ -6,8 +6,30 @@ import { formatNumber } from "../../../UI/formatNumber";
 const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, setFocusedQuantityRow, setFocusedPriceRow, refs }, ref) => {
   const { values, setFieldValue } = useFormikContext();
   const { t } = useTranslation();
-  const [localError, setLocalError] = useState("");
+  // const [localErrorQuantity, setLocalErrorQuantity] = useState(() => {
+  //   if (Number(product.selected_quantity) > (product.quantity_on_selected_warehouses || 0)) {
+  //     setFieldValue("send", false);
+  //     return `${t("OnStock")} ${product.quantity_on_selected_warehouses}`
+  //   } else {
+  //     return ""
+  //   }
+  // });
+  const [localErrorQuantity, setLocalErrorQuantity] = useState("");
+
+  useEffect(() => {
+    if (Number(product.selected_quantity) > (product.quantity_on_selected_warehouses || 0)) {
+      setLocalErrorQuantity(`${t("OnStock")} ${product.quantity_on_selected_warehouses}`);
+      setFieldValue("send", false);
+    }
+  }, [product.selected_quantity, setFieldValue, t]);
+
+  useEffect(() => {
+    setLocalValue(product.selected_quantity?.toString() || "");
+  }, [product.selected_quantity]);
+
   const [localValue, setLocalValue] = useState(product.selected_quantity?.toString() || "");
+
+  // console.log("fdfdfdfd", product);
 
   const productIndex = values.products.findIndex((p) => p.id === product.id);
 
@@ -65,6 +87,35 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
     }
   };
 
+  const recalcGiftQuantities = (products) => {
+    const giftQuantities = {};
+
+    // Проходим по всем main товарам
+    products.forEach((product) => {
+      if (!product.is_gift && product.free_items?.length > 0) {
+        const mainQty = Number(product.selected_quantity) || 0; // <-- используем quantity из values.products
+        product.free_items.forEach((free) => {
+          const giftId = free.gift_product;
+          const qtyPerUnit = Number(free.quantity_per_unit) || 0;
+          giftQuantities[giftId] = (giftQuantities[giftId] || 0) + mainQty * qtyPerUnit;
+        });
+      }
+    });
+
+    // Обновляем все gift товары
+    products.forEach((product, idx) => {
+      if (product.is_gift) {
+        const newQty = giftQuantities[product.id] || 0;
+        if (Number(product.selected_quantity) !== newQty) {
+          // console.log('tut');
+          // console.log('eeeee', values.products[idx]);
+
+          setFieldValue(`products[${idx}].selected_quantity`, newQty);
+        }
+      }
+    });
+  };
+
   return (
     <td className="p-0 m-0 text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400  print:!text-black print:!border-black text-center">
       <input
@@ -84,25 +135,39 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
         }}
         // onChange={(e) => handleChangeQuantity(e.target.value)}
         onChange={(e) => {
+          // console.log("product ===", product);
+
           const rawValue = e.target.value;
           setLocalValue(rawValue); // всегда пишем то, что набрал пользователь
 
           const normalizedValue = rawValue.replace(",", ".");
+
+          const qty = Number(normalizedValue);
           const isNumber = !isNaN(normalizedValue) && normalizedValue.trim() !== "";
 
           if (!isNumber) {
-            setLocalError(`${t("amount must be a digit")}`);
+            setLocalErrorQuantity(`${t("quantity must be a digit")}`);
+            setFieldValue("send", false);
+          } else if (qty > product.quantity_on_selected_warehouses) {
+            setLocalErrorQuantity(`${t("OnStock")} ${product.quantity_on_selected_warehouses}`);
+            setFieldValue("send", false);
+          } else if (qty < 0.001) {
+            setLocalErrorQuantity(`${t("only positive numbers")}`);
             setFieldValue("send", false);
           } else {
-            setLocalError("");
+            setLocalErrorQuantity("");
             setFieldValue("send", true);
-            setFieldValue(`products[${productIndex}].selected_quantity`, parseFloat(normalizedValue));
+            setFieldValue(`products[${productIndex}].selected_quantity`, qty);
+
+            const updatedProducts = values.products.map((p, idx) => (idx === productIndex ? { ...p, selected_quantity: qty } : p));
+
+            recalcGiftQuantities(updatedProducts);
           }
         }}
         onKeyDown={handleKeyNavigation}
       />
       <div className="hidden print:block">{formatNumber(localValue, 3)}</div>
-      {localError && <div className="text-red-500 text-xs print:hidden">{localError}</div>}
+      {localErrorQuantity && <div className="text-red-500 text-xs print:hidden">{localErrorQuantity}</div>}
     </td>
   );
 });

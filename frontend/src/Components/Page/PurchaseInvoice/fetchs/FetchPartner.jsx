@@ -5,12 +5,31 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import myAxios from "../../../axios";
 import Fuse from "fuse.js";
 
-const FetchPartner = ({ refs }) => {
+const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
   const { t } = useTranslation();
   const { values, setFieldValue, handleBlur } = useFormikContext();
   const [allPartners, setAllPartners] = useState([]);
   const [filteredPartners, setFilteredPartners] = useState([]);
 
+  const getSaldo = async (date, partnerId) => {
+    try {
+      const saldo = await myAxios.get("get_saldo_for_partner_for_selected_date", {
+        params: { date: date, partnerId: partnerId },
+      });
+      console.log("saldo", saldo.data.saldo);
+      setSaldo(saldo.data.saldo);
+    } catch (error) {
+      console.log("error get_saldo_for_partner_for_selected_date", error);
+    }
+  };
+
+  useEffect(() => {
+    if (values.partner?.id) {
+      getSaldo(dateProwodok, values.partner?.id)
+    }
+  }, [dateProwodok])
+
+  
   const wrapperRef = useRef(null);
 
   // Загружаем сотрудников
@@ -104,6 +123,7 @@ const FetchPartner = ({ refs }) => {
               setFieldValue("partner", null);
               setFilteredPartners([]);
               refs.partnerListRef.current = [];
+              setSaldo(null)
               setTimeout(() => {
                 refs.partnerRef.current?.focus();
               }, 0);
@@ -181,6 +201,7 @@ const FetchPartner = ({ refs }) => {
                   e.preventDefault();
                   setFieldValue("partner", emp);
                   setFilteredPartners([]);
+                  getSaldo(dateProwodok, emp.id)
                   refs.productRef.current?.focus();
                 } else if (e.key == "ArrowDown") {
                   e.preventDefault();

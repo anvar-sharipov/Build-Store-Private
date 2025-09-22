@@ -9,6 +9,7 @@ from . views.partner_views import *
 from . views.product_views import *
 from . views.register_views import *
 from . views.query_views import *
+from . views.query_views2 import *
 from . views.sale_invoice_views import *
 from . views.report_views import *
 from . views.utils import *
@@ -80,6 +81,9 @@ urlpatterns = [
     path('partner-transaction/', partner_transaction, name='partner-transaction'),
     path('get-osw/', get_osw, name='get-osw'),
     path('get_saldo_for_partner_for_selected_date/', get_saldo_for_partner_for_selected_date, name='get_saldo_for_partner_for_selected_date'),
+    
+    # поиск продукта по id и складу
+    path('get-product/', get_product_by_id_and_warehouse, name='get-product'),
     
     # admin
     path("admin-import-products/", import_products, name="admin-import-products"),

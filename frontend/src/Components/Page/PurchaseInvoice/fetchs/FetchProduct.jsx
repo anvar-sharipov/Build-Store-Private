@@ -5,12 +5,19 @@ import { useEffect, useRef, useState } from "react";
 import { FaWarehouse } from "react-icons/fa";
 import myAxios from "../../../axios";
 import { formatNumber } from "../../../UI/formatNumber";
+import Notification from "../../../Notification";
 
 const FetchProduct = ({ refs }) => {
   const { t } = useTranslation();
   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
   const [query, setQuery] = useState("");
   const [products, setProducts] = useState([]);
+
+  const [notification, setNotification] = useState({ message: "", type: "" });
+  const showNotification = (message, type) => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification({ message: "", type: "" }), 3000);
+  };
 
   const wrapperRef = useRef(null);
 
@@ -25,11 +32,30 @@ const FetchProduct = ({ refs }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const getProduct = async (productId, warehouseId, mainProductId) => {
+    try {
+      const res = await myAxios.get("/get-product/", { params: { product_id: productId, warehouse_id: warehouseId, main_product_id: mainProductId } });
+      console.log("res.data gift", res.data);
+
+      return res.data; // важно
+    } catch (error) {
+      console.log("cant find free products", error);
+      return null;
+    }
+  };
+
+  // const getProduct = async (productId, warehouseId) => {
+  //   const res = await myAxios.get("/get-product/", {
+  //     params: { product_id: productId, warehouse_id: warehouseId },
+  //   });
+  //   return res.data;
+  // };
+
   useEffect(() => {
     const fetchProduct = async () => {
       if (!query) return setProducts([]);
       try {
-        console.log("values.warehouse.id", values.warehouse.id);
+        // console.log("values.warehouse.id", values.warehouse.id);
         const res = await myAxios.get(`search-products/?search=${query}&warehouse=${values.warehouse.id}`);
         const activeProducts = res.data.filter((prod) => prod.is_active);
         setProducts(activeProducts);
@@ -64,10 +90,13 @@ const FetchProduct = ({ refs }) => {
                 e.preventDefault();
 
                 if (refs.productListRef.current.length > 0) {
-                  console.log("values.products", values.products);
-                  refs.productListRef.current[0]?.focus();
+                  // console.log("values.products", values.products);
+                  // console.log("refs.productListRef", refs.productListRef);
+                  setTimeout(() => {
+                    refs.productListRef.current[0]?.focus();
+                  }, 0);
                 } else if (values.products.length > 0) {
-                  console.log("aaafaffa");
+                  // console.log("aaafaffa");
 
                   refs.quantityRefs.current[values.products[0].id]?.focus();
                   refs.quantityRefs.current[values.products[0].id]?.select();
@@ -96,6 +125,10 @@ const FetchProduct = ({ refs }) => {
         </div>
         {products.length > 0 && (
           <ul className="absolute z-10 mt-1 w-full max-h-70 border border-black dark:border-black rounded-md shadow-sm dark:bg-white bg-gray-200 dark:text-gray-800 text-black">
+            {(() => {
+              refs.productListRef.current = [];
+              return null;
+            })()}
             {products.map((product, idx) => {
               let unit = product.base_unit_obj.name;
               if (product.units.length > 0) {
@@ -109,37 +142,91 @@ const FetchProduct = ({ refs }) => {
                   key={product.id}
                   className="px-3 cursor-pointer dark:hover:bg-blue-100 hover:bg-blue-100 border divide-y divide-black focus:bg-indigo-200 flex justify-between"
                   tabIndex={0}
-                  ref={(el) => (refs.productListRef.current[idx] = el)}
-                  onKeyDown={(e) => {
+                  ref={(el) => {
+                    if (el) {
+                      refs.productListRef.current[idx] = el;
+                    }
+                  }}
+                  onKeyDown={async (e) => {
                     if (e.key == "Enter") {
                       e.preventDefault();
-                      // console.log("pppp", product);
-                      // const type_price = localStorage.getItem("type_price")
-                      // let selected_price = 0
-                      // if (type_price === "wholesale_price") {
-                      //   selected_price = Number(product.wholesale_price)
-                      // } else {
-                      //   selected_price = Number(product.retail_price)
-                      // }
-                      
-                      const p = {
-                        ...product, 
-                        is_custom_price:false, 
-                        // total_price:Number(product.selected_quantity) * selected_price,
-                        // total_purchase: Number(product.selected_quantity) * Number(product.purchase_price),
-                        // income_1pc: Number(selected_price) - Number(product.purchase_price),
-                        // income_total: (Number(selected_price) - Number(product.purchase_price)) * Number(product.selected_quantity)
-                      
+                      console.log("main product", product);
+
+                      const exists = values.products.some((p) => p.id === product.id);
+                      if (exists) {
+                        showNotification("product already exists", "error");
+                        return;
                       }
+
+                      const mainProduct = {
+                        ...product,
+                        is_custom_price: false,
+                        is_gift: false,
+                      };
+
+                      // let newProducts = [mainProduct];
+
+                      // если у товара есть бесплатные позиции
+                      if (product.free_items && product.free_items.length > 0) {
+                        // const gifts = [];
+                        let updatedProducts = [...(values.products || [])];
+                        for (const free of product.free_items) {
+                          const res = await getProduct(free.gift_product, values.warehouse?.id, product.id);
+                          if (res) {
+                            const existingGiftIndex = (values.products || []).findIndex((p) => p.is_gift && p.id === res.id);
+                            console.log("res gift", res);
+                            // console.log("existingGiftIndex", existingGiftIndex);
+
+                            if (existingGiftIndex !== -1) {
+                              // console.log("da odin i tot je");
+                              // const existingQty = values.products[existingGiftIndex].selected_quantity || 0;
+                              updatedProducts[existingGiftIndex] = {
+                                ...updatedProducts[existingGiftIndex],
+                                selected_quantity: (Number(updatedProducts[existingGiftIndex].selected_quantity) || 0) + Number(free.quantity_per_unit),
+                              };
+                              // setFieldValue(`products[${existingGiftIndex}].selected_quantity`, Number(existingQty) + 1);
+                              // return;
+                              // console.log("existingQty", existingQty);
+                              // return;
+                            } else {
+                              console.log("nowyy");
+                              updatedProducts.push({
+                                ...res,
+                                is_custom_price: false,
+                                is_gift: true,
+                                parent_id: product.id,
+                                // selected_quantity: 1,
+                              });
+                              // gifts.push({
+                              //   ...res,
+                              //   // price: 0,
+                              //   is_custom_price: false,
+                              //   is_gift: true,
+                              //   parent_id: product.id,
+                              // });
+                            }
+                          }
+                        }
+                        // if (gifts.length > 0) {
+                        //   newProducts = newProducts.concat(gifts);
+                        // }
+                        updatedProducts.push(mainProduct);
+                        setFieldValue("products", updatedProducts);
+
+                        // console.log("newProducts", newProducts);
+                      } else {
+                        setFieldValue("products", (values.products || []).concat(mainProduct));
+                      }
+
                       setProducts([]);
-                      setFieldValue("products", (values.products || []).concat(p));
-                      console.log(p);
+
+                      // console.log("newProducts", newProducts);
 
                       setTimeout(() => {
                         refs.quantityRefs.current[product.id]?.focus();
                         refs.quantityRefs.current[product.id]?.select();
                       }, 0);
-                      console.log("fgobhfgiuh");
+                      // console.log("fgobhfgiuh");
 
                       setQuery("");
                       if (refs.productRef.current) {
@@ -151,6 +238,7 @@ const FetchProduct = ({ refs }) => {
                       }, 0);
                     } else if (e.key == "ArrowDown") {
                       e.preventDefault();
+
                       if (refs.productListRef.current.length > idx + 1) {
                         refs.productListRef.current[idx + 1]?.focus();
                       }
@@ -173,6 +261,7 @@ const FetchProduct = ({ refs }) => {
             })}
           </ul>
         )}
+        <Notification message={t(notification.message)} type={notification.type} onClose={() => setNotification({ message: "", type: "" })} />
       </div>
     );
   } else {

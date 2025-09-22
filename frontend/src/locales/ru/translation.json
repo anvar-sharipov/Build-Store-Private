@@ -425,7 +425,10 @@
   "image": "Фото",
   "q-ty": "Кол-во",
   "un": "Ед. изм.",
-  "choose date prowodok": "Выберите дату проводки"
+  "choose date prowodok": "Выберите дату проводки",
+  "quantity must be a digit": "только положительные числа",
+  "only positive numbers": "только положительные числа",
+  "product already exists": "продукт уже существует"
 
 
   

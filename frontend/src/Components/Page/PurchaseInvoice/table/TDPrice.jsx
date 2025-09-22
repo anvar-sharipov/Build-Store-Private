@@ -16,9 +16,17 @@ const TDPrice = forwardRef(({ product, onFocusPriceRow, onBlurPriceRow, setFocus
     const typePrice = values.type_price;
     const price = typePrice === "retail_price" ? product.retail_price : product.wholesale_price;
 
+    const currentProduct = values.products[productIndex];
+    if (!currentProduct) return;
+
     // если кастомная цена — оставляем как есть
-    if (!values.products[productIndex]?.is_custom_price) {
-      setFieldValue(`products[${productIndex}].selected_price`, price || 0);
+
+    if (!currentProduct?.is_custom_price) {
+      if (currentProduct.is_gift) {
+        setFieldValue(`products[${productIndex}].selected_price`, 0);
+      } else {
+        setFieldValue(`products[${productIndex}].selected_price`, price || 0);
+      }
     }
   }, [values.type_price, values.products[productIndex]?.selected_quantity]);
 
@@ -55,12 +63,12 @@ const TDPrice = forwardRef(({ product, onFocusPriceRow, onBlurPriceRow, setFocus
       }
       // Если это последний продукт, остаемся на месте (или можно добавить другую логику)
     } else if (e.key === "ArrowLeft" && e.target.selectionStart === 0) {
-        e.preventDefault();
-        refs.quantityRefs.current[product.id]?.focus();
-        refs.quantityRefs.current[product.id]?.select();
-      
+      e.preventDefault();
+      refs.quantityRefs.current[product.id]?.focus();
+      refs.quantityRefs.current[product.id]?.select();
     }
   };
+  // console.log("ssfsfsfsf", values.products[productIndex]);
 
   return (
     <td className={`p-0 m-0 text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400  print:!text-black print:!border-black text-center`}>
@@ -69,7 +77,7 @@ const TDPrice = forwardRef(({ product, onFocusPriceRow, onBlurPriceRow, setFocus
         type="text"
         inputMode="decimal" // для мобильных клавиатур с цифрами
         className={`my-1 dark:bg-gray-900 w-[90%] ${product.is_custom_price ? "bg-green-300 dark:bg-green-900" : "bg-white dark:bg-gray-900"} print:hidden`}
-        value={values.products[productIndex]?.selected_price || ""}
+        value={values.products[productIndex]?.selected_price ?? ""}
         onFocus={() => {
           onFocusPriceRow(); // родительская функция
           setFocusedPriceRow(product.id);

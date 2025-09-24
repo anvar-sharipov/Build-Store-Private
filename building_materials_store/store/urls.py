@@ -13,6 +13,7 @@ from . views.query_views2 import *
 from . views.sale_invoice_views import *
 from . views.report_views import *
 from . views.utils import *
+from . views.invoice_views import *
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 
@@ -89,5 +90,8 @@ urlpatterns = [
     path("admin-import-products/", import_products, name="admin-import-products"),
     path("admin-import-partners/", import_partners, name="admin-import-partners"),
     path("delete_data/", delete_data, name="delete_data"),
+    
+    # save universal invoice
+    path("save-invoice/", save_invoice, name="save_invoice"),
 ]
 

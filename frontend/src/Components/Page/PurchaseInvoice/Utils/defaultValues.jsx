@@ -62,6 +62,9 @@ const getDefaultValues = (id = null, dateProwodok = null) => {
       wozwrat_or_prihod: get_wozwrat_or_prihod,
       type_price: type_price,
       send: true,
+      awto_send: true,
+      partner_send: true,
+      is_entry: false,
     };
   }
 };

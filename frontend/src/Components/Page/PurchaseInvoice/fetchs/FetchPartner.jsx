@@ -8,6 +8,15 @@ import Fuse from "fuse.js";
 const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
   const { t } = useTranslation();
   const { values, setFieldValue, handleBlur } = useFormikContext();
+
+  useEffect(() => {
+    if (values.is_entry && !values.partner) {
+      setFieldValue("partner_send", false, false); // третий аргумент false = не запускать валидацию
+    } else {
+      setFieldValue("partner_send", true, false);
+    }
+  }, [values.is_entry, values.partner, setFieldValue]);
+
   const [allPartners, setAllPartners] = useState([]);
   const [filteredPartners, setFilteredPartners] = useState([]);
 
@@ -19,17 +28,18 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
       console.log("saldo", saldo.data.saldo);
       setSaldo(saldo.data.saldo);
     } catch (error) {
-      console.log("error get_saldo_for_partner_for_selected_date", error);
+      console.log("error get_saldo_for_partner_for_selected_date from fetchPartner", error);
     }
   };
 
   useEffect(() => {
-    if (values.partner?.id) {
-      getSaldo(dateProwodok, values.partner?.id)
+    if (values.partner?.id && dateProwodok) {
+      getSaldo(dateProwodok, values.partner?.id);
+    } else {
+      setSaldo(null)
     }
-  }, [dateProwodok])
+  }, [dateProwodok]);
 
-  
   const wrapperRef = useRef(null);
 
   // Загружаем сотрудников
@@ -111,6 +121,7 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
                 setFieldValue("partner", null);
                 setFilteredPartners([]);
                 refs.partnerListRef.current = [];
+                setSaldo(null);
                 setTimeout(() => {
                   refs.partnerRef.current?.focus();
                 }, 0);
@@ -123,7 +134,7 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
               setFieldValue("partner", null);
               setFilteredPartners([]);
               refs.partnerListRef.current = [];
-              setSaldo(null)
+              setSaldo(null);
               setTimeout(() => {
                 refs.partnerRef.current?.focus();
               }, 0);
@@ -143,7 +154,14 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
 
   return (
     <div className="w-full flex-1 print:hidden relative" ref={wrapperRef}>
-      <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">{t("partner")}</label>
+      {/* <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">{t("partner")}</label> */}
+      <label
+        className={`block mb-1 text-sm font-medium 
+        ${values.is_entry && !values.partner ? "text-red-600 dark:text-red-400" : "text-gray-700 dark:text-gray-300"}`}
+      >
+        {t("partner")}
+        {values.is_entry && !values.partner && <span className="ml-2 text-red-600 dark:text-red-400 font-normal">{t("choose partner")}</span>}
+      </label>
       <div className="relative">
         <input
           type="text"
@@ -169,15 +187,16 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
             }
           }}
           name="partner"
-          className="
-            w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300
-            focus:outline-none focus:ring-2 focus:ring-blue-400
-            dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100
-            dark:placeholder-gray-400
-            transition-all duration-200
-            focus:bg-indigo-200
-            dark:focus:bg-indigo-600
-          "
+          className={`
+    w-full pl-10 pr-4 py-2 rounded-xl border
+    focus:outline-none focus:ring-2
+    transition-all duration-200
+    ${
+      values.is_entry && !values.partner
+        ? "bg-red-200 border-red-400 focus:ring-red-500 dark:bg-red-700 dark:border-red-500 dark:focus:ring-red-400 dark:text-white"
+        : "border-gray-300 focus:ring-blue-400 focus:bg-indigo-200 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:bg-indigo-600"
+    }
+  `}
           placeholder={t("search partner")}
         />
         <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-300" />
@@ -201,7 +220,7 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
                   e.preventDefault();
                   setFieldValue("partner", emp);
                   setFilteredPartners([]);
-                  getSaldo(dateProwodok, emp.id)
+                  getSaldo(dateProwodok, emp.id);
                   refs.productRef.current?.focus();
                 } else if (e.key == "ArrowDown") {
                   e.preventDefault();

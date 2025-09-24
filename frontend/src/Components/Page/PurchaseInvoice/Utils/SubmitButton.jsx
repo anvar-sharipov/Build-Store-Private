@@ -3,10 +3,11 @@ import { Ban } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const SubmitButton = ({ dateProwodok }) => {
-  const { values } = useFormikContext();
+  const { values, setFieldValue } = useFormikContext();
   const { t } = useTranslation();
+
   return (
-    <div className="flex items-center sm:flex-row gap-4 mt-6 mr-3 sm:mr-6 ml-5">
+    <div className="flex items-center sm:flex-row gap-4 mt-6 mr-3 sm:mr-6 ml-5 print:hidden">
       {/* Checkbox с проводкой */}
       <div className="flex items-center gap-3 group">
         <div className="relative">
@@ -14,6 +15,8 @@ const SubmitButton = ({ dateProwodok }) => {
             type="checkbox"
             id="prowodka-checkbox"
             className="sr-only peer"
+            checked={values.is_entry}
+            onChange={(e) => setFieldValue("is_entry", e.target.checked)}
             // добавьте здесь ваш onChange handler
           />
           <label
@@ -61,20 +64,31 @@ const SubmitButton = ({ dateProwodok }) => {
       {/* Оригинальная кнопка */}
       <button
         type="submit"
-        disabled={!values.send || !values.products.length > 0 || dateProwodok === ""}
+        title="CTRL + ENTER"
+        disabled={!values.send || !values.awto_send || !values.partner_send || !values.products.length > 0 || dateProwodok === ""}
         className={`
-      relative overflow-hidden group
-      px-4 sm:px-6 py-2.5 sm:py-3 
-      rounded-xl sm:rounded-2xl 
-      font-semibold text-sm sm:text-base
-      transition-all duration-300 ease-in-out
-      transform hover:scale-105 active:scale-95
-      shadow-lg hover:shadow-xl
-      backdrop-blur-sm
-      border border-transparent
-      ${
-        values.send && values.products.length > 0 && dateProwodok !== ""
+    relative overflow-hidden group
+    px-4 sm:px-6 py-2.5 sm:py-3 
+    rounded-xl sm:rounded-2xl 
+    font-semibold text-sm sm:text-base
+    transition-all duration-300 ease-in-out
+    transform hover:scale-105 active:scale-95
+    shadow-lg hover:shadow-xl
+    backdrop-blur-sm
+    border border-transparent
+    ${
+      values.send && values.awto_send && values.partner_send && values.products.length > 0 && dateProwodok !== ""
+        ? values.is_entry
           ? `
+            bg-gradient-to-r from-red-600 via-red-700 to-red-600 
+            hover:from-red-700 hover:via-red-800 hover:to-red-700
+            text-white shadow-red-500/25 hover:shadow-red-500/40
+            dark:from-red-500 dark:via-red-600 dark:to-red-500
+            dark:hover:from-red-600 dark:hover:via-red-700 dark:hover:to-red-600
+            dark:shadow-red-400/20 dark:hover:shadow-red-400/30
+            border-red-500/20 dark:border-red-400/20
+            `
+          : `
             bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 
             hover:from-blue-700 hover:via-blue-800 hover:to-indigo-700
             text-white shadow-blue-500/25 hover:shadow-blue-500/40
@@ -82,26 +96,25 @@ const SubmitButton = ({ dateProwodok }) => {
             dark:hover:from-blue-600 dark:hover:via-blue-700 dark:hover:to-indigo-600
             dark:shadow-blue-400/20 dark:hover:shadow-blue-400/30
             border-blue-500/20 dark:border-blue-400/20
-            before:absolute before:inset-0 before:bg-white/10 before:opacity-0 
-            before:transition-opacity before:duration-300 hover:before:opacity-100
             `
-          : `
-            bg-gray-200/80 hover:bg-gray-300/80 
-            text-gray-500 cursor-not-allowed 
-            shadow-gray-300/20
-            dark:bg-gray-800/60 dark:hover:bg-gray-700/60 
-            dark:text-gray-400 dark:shadow-gray-900/20
-            border-gray-300/30 dark:border-gray-600/30
-            backdrop-blur-sm
-            `
-      }
-      print:hidden
-      focus:outline-none focus:ring-4 focus:ring-blue-500/30 dark:focus:ring-blue-400/30
-      disabled:transform-none disabled:shadow-lg
-    `}
+        : `
+          bg-gray-200/80 hover:bg-gray-300/80 
+          text-gray-500 cursor-not-allowed 
+          shadow-gray-300/20
+          dark:bg-gray-800/60 dark:hover:bg-gray-700/60 
+          dark:text-gray-400 dark:shadow-gray-900/20
+          border-gray-300/30 dark:border-gray-600/30
+          backdrop-blur-sm
+        `
+    }
+    print:hidden
+    focus:outline-none focus:ring-4 
+    ${values.is_entry ? "focus:ring-red-500/30 dark:focus:ring-red-400/30" : "focus:ring-blue-500/30 dark:focus:ring-blue-400/30"}
+    disabled:transform-none disabled:shadow-lg
+  `}
       >
         {/* Анимированный фон для активной кнопки */}
-        {values.send && values.products.length > 0 && dateProwodok !== "" && (
+        {values.send && values.awto_send && values.partner_send && values.products.length > 0 && dateProwodok !== "" && (
           <div
             className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent 
                       transform -skew-x-12 -translate-x-full group-hover:translate-x-full 
@@ -128,7 +141,7 @@ const SubmitButton = ({ dateProwodok }) => {
         </div>
 
         {/* Дополнительный эффект свечения для активной кнопки */}
-        {values.send && values.products.length > 0 && dateProwodok !== "" && (
+        {values.send && values.awto_send && values.partner_send && values.products.length > 0 && dateProwodok !== "" && (
           <div
             className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-r 
                       from-blue-600/20 to-indigo-600/20 blur-xl opacity-0 

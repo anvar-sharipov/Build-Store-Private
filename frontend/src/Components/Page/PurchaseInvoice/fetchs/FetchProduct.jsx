@@ -211,6 +211,12 @@ const FetchProduct = ({ refs }) => {
                         //   newProducts = newProducts.concat(gifts);
                         // }
                         updatedProducts.push(mainProduct);
+
+                        updatedProducts.sort((a, b) => {
+                          if (a.is_gift === b.is_gift) return 0;
+                          return a.is_gift ? 1 : -1;
+                        });
+                        
                         setFieldValue("products", updatedProducts);
 
                         // console.log("newProducts", newProducts);

@@ -428,7 +428,23 @@
   "choose date prowodok": "Выберите дату проводки",
   "quantity must be a digit": "только положительные числа",
   "only positive numbers": "только положительные числа",
-  "product already exists": "продукт уже существует"
+  "product already exists": "продукт уже существует",
+  "choose awto": "Выберите авто",
+  "choose partner": "Выберите партнера",
+  "cant find awto in database": "Не удаётся найти авто в базе данных",
+  "fill in all the fields": "Заполните все поля",
+  "cant find parnter in database": "Не удаётся найти партнера в базе данных",
+  "choose products": "Выберите товар",
+  "choose whosale price or retail price": "Выберите оптовую или розничную цену",
+  "cant find warehouse in database": "Не удаётся найти склад в базе данных",
+  "choose rashod, prihod or wozwrat": "Выберите расход, приход или возврат",
+  "partner is not active": "Выбранный партнер не активен",
+  "wozwrat invoice saved with entry":"Возврат фактура сохранена с проводкой",
+  "prihod invoice saved with entry":"Приход фактура сохранена с проводкой",
+  "rashod invoice saved with entry":"Расход фактура сохранена с проводкой",
+  "wozwrat invoice saved without entry":"Возврат фактура сохранена",
+  "prihod invoice saved without entry":"Приход фактура сохранена",
+  "rashod invoice saved without entry":"Расход фактура сохранена"
 
 
   

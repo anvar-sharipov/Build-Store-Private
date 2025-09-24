@@ -404,7 +404,23 @@
   "choose date prowodok": "Prodowkanyň senesini saylaň",
   "quantity must be a digit": "möçber san bolmaly",
   "only positive numbers": "diňe oňyn sanlar",
-  "product already exists": "önüm eýýäm bar"
+  "product already exists": "önüm eýýäm bar",
+  "choose awto": "Awtoulagy saýla",
+  "choose partner": "Partnýory saýla",
+  "cant find awto in database": "Maglumatlar bazasyndan awto tapylmady",
+  "fill in all the fields": "Ähli meýdançalary dolduryň",
+  "cant find parnter in database": "Maglumatlar bazasyndan partner tapylmady",
+  "choose products": "Haryt saýla",
+  "choose whosale price or retail price": "Toptan ýa-da bölek bahasyny saýlaň",
+  "cant find warehouse in database": "Maglumatlar bazasyndan ammar tapylmady",
+  "choose rashod, prihod or wozwrat": "Çykdajy, gelip düşme ýa-da yzyna gaýtaryşy saýlaň",
+  "partner is not active": "Saýlanan partner aktiw däl",
+  "wozwrat invoice saved with entry": "Yzyna gaýtaryş faktura geçirilen ýazgy bilen saklandy",
+  "prihod invoice saved with entry": "Giriş faktura geçirilen ýazgy bilen saklandy",
+  "rashod invoice saved with entry": "Çykdajy faktura geçirilen ýazgy bilen saklandy",
+  "wozwrat invoice saved without entry": "Yzyna gaýtaryş faktura saklandy",
+  "prihod invoice saved without entry": "Giriş faktura saklandy",
+  "rashod invoice saved without entry": "Çykdajy faktura saklandy"
 
 
 

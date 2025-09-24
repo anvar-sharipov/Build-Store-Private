@@ -501,55 +501,55 @@ class WarehouseAccountAdmin(admin.ModelAdmin):
 ########################################################################################################################################################################################################################
 ######################################################################## Приход накладная (faktura) START
 
-# Inline для элементов накладной
-class PurchaseInvoiceItemInline(admin.TabularInline):
-    model = PurchaseInvoiceItem
-    extra = 1
-    fields = ('product', 'quantity', 'purchase_price', 'get_line_total')
-    readonly_fields = ('get_line_total',)
-    autocomplete_fields = ('product',)
+# # Inline для элементов накладной
+# class PurchaseInvoiceItemInline(admin.TabularInline):
+#     model = PurchaseInvoiceItem
+#     extra = 1
+#     fields = ('product', 'quantity', 'purchase_price', 'get_line_total')
+#     readonly_fields = ('get_line_total',)
+#     autocomplete_fields = ('product',)
 
-    def get_line_total(self, obj):
-        return obj.get_line_total()
-    get_line_total.short_description = "Сумма по позиции"
-
-
-# Основная накладная
-@admin.register(PurchaseInvoice)
-class PurchaseInvoiceAdmin(admin.ModelAdmin):
-    list_display = ('id', 'invoice_date', 'supplier', 'transaction_type', 'total_amount', 'total_pay_summ', 'isEntry', 'created_by', 'created_at')
-    list_filter = ('transaction_type', 'supplier', 'warehouse', 'isEntry', 'created_at')
-    search_fields = ('supplier__name', 'note', 'created_by__username')
-    readonly_fields = ('created_at',)
-    inlines = [PurchaseInvoiceItemInline]
-    autocomplete_fields = ('supplier', 'warehouse', 'received_by', 'created_by')
-    fieldsets = (
-        (None, {
-            'fields': ('supplier', 'transaction_type', 'invoice_date', 'warehouse', 'received_by', 'created_by', 'note')
-        }),
-        ('Финансовые данные', {
-            'fields': ('total_amount', 'total_pay_summ', 'isEntry')
-        }),
-    )
-
-    # Автоподсчёт total_amount при сохранении
-    def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)
-        obj.total_amount = obj.calculate_total()
-        obj.save()
+#     def get_line_total(self, obj):
+#         return obj.get_line_total()
+#     get_line_total.short_description = "Сумма по позиции"
 
 
-# Если хочешь, можно отдельно зарегистрировать Product, Partner и т.д.
-@admin.register(PurchaseInvoiceItem)
-class PurchaseInvoiceItemAdmin(admin.ModelAdmin):
-    list_display = ('invoice', 'product', 'quantity', 'purchase_price', 'get_line_total')
-    list_filter = ('product',)
-    search_fields = ('product__name', 'invoice__supplier__name')
-    readonly_fields = ('get_line_total',)
+# # Основная накладная
+# @admin.register(PurchaseInvoice)
+# class PurchaseInvoiceAdmin(admin.ModelAdmin):
+#     list_display = ('id', 'invoice_date', 'supplier', 'transaction_type', 'total_amount', 'total_pay_summ', 'isEntry', 'created_by', 'created_at')
+#     list_filter = ('transaction_type', 'supplier', 'warehouse', 'isEntry', 'created_at')
+#     search_fields = ('supplier__name', 'note', 'created_by__username')
+#     readonly_fields = ('created_at',)
+#     inlines = [PurchaseInvoiceItemInline]
+#     autocomplete_fields = ('supplier', 'warehouse', 'received_by', 'created_by')
+#     fieldsets = (
+#         (None, {
+#             'fields': ('supplier', 'transaction_type', 'invoice_date', 'warehouse', 'received_by', 'created_by', 'note')
+#         }),
+#         ('Финансовые данные', {
+#             'fields': ('total_amount', 'total_pay_summ', 'isEntry')
+#         }),
+#     )
 
-    def get_line_total(self, obj):
-        return obj.get_line_total()
-    get_line_total.short_description = "Сумма по позиции"
+#     # Автоподсчёт total_amount при сохранении
+#     def save_model(self, request, obj, form, change):
+#         super().save_model(request, obj, form, change)
+#         obj.total_amount = obj.calculate_total()
+#         obj.save()
+
+
+# # Если хочешь, можно отдельно зарегистрировать Product, Partner и т.д.
+# @admin.register(PurchaseInvoiceItem)
+# class PurchaseInvoiceItemAdmin(admin.ModelAdmin):
+#     list_display = ('invoice', 'product', 'quantity', 'purchase_price', 'get_line_total')
+#     list_filter = ('product',)
+#     search_fields = ('product__name', 'invoice__supplier__name')
+#     readonly_fields = ('get_line_total',)
+
+#     def get_line_total(self, obj):
+#         return obj.get_line_total()
+#     get_line_total.short_description = "Сумма по позиции"
 
 ######################################################################## Приход накладная (faktura) END
 ########################################################################################################################################################################################################################

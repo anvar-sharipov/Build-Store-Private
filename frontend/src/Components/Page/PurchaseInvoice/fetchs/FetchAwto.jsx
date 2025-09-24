@@ -8,6 +8,15 @@ import Fuse from "fuse.js";
 const FetchAwto = ({ refs }) => {
   const { t } = useTranslation();
   const { values, setFieldValue, handleBlur } = useFormikContext();
+
+  useEffect(() => {
+    if (values.is_entry && !values.awto) {
+      setFieldValue("awto_send", false, false); // третий аргумент false = не запускать валидацию
+    } else {
+      setFieldValue("awto_send", true, false);
+    }
+  }, [values.is_entry, values.awto, setFieldValue]);
+
   const [allEmployeers, setAllEmployeers] = useState([]);
   const [filteredEmployeers, setFilteredEmployeers] = useState([]);
 
@@ -123,7 +132,13 @@ const FetchAwto = ({ refs }) => {
 
   return (
     <div className="w-full flex-1 print:hidden relative" ref={wrapperRef}>
-      <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">{t("awto")}</label>
+      <label
+        className={`block mb-1 text-sm font-medium 
+        ${values.is_entry && !values.awto ? "text-red-600 dark:text-red-400" : "text-gray-700 dark:text-gray-300"}`}
+      >
+        {t("awto")}
+        {values.is_entry && !values.awto && <span className="ml-2 text-red-600 dark:text-red-400 font-normal">{t("choose awto")}</span>}
+      </label>
       <div className="relative">
         <input
           type="text"
@@ -137,29 +152,28 @@ const FetchAwto = ({ refs }) => {
             } else if (e.key == "ArrowDown") {
               e.preventDefault();
               if (refs.awtoListRef.current?.length > 0) {
-                console.log("dada1", refs.awtoListRef.current?.length);
                 refs.awtoListRef.current[0]?.focus();
               } else if (refs.partnerX_Ref.current) {
-                console.log("dada2");
                 refs.partnerX_Ref.current?.focus();
               } else {
-                console.log("dada3");
                 refs.partnerRef.current?.focus();
               }
             }
           }}
           name="awto"
-          className="
-            w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300
-            focus:outline-none focus:ring-2 focus:ring-blue-400
-            dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100
-            dark:placeholder-gray-400
-            transition-all duration-200
-            focus:bg-indigo-200
-            dark:focus:bg-indigo-600
-          "
+          className={`
+    w-full pl-10 pr-4 py-2 rounded-xl border
+    focus:outline-none focus:ring-2
+    transition-all duration-200
+    ${
+      values.is_entry && !values.awto
+        ? "bg-red-200 border-red-400 focus:ring-red-500 dark:bg-red-700 dark:border-red-500 dark:focus:ring-red-400 dark:text-white"
+        : "border-gray-300 focus:ring-blue-400 focus:bg-indigo-200 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:bg-indigo-600"
+    }
+  `}
           placeholder={t("search awto")}
         />
+
         <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-300" />
       </div>
 

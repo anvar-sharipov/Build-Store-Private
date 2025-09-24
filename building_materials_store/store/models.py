@@ -428,6 +428,7 @@ class SalesInvoiceItem(models.Model):
     purchase_price = models.DecimalField(verbose_name='Цена закупки', max_digits=10, decimal_places=2, default=0)
     retail_price = models.DecimalField(verbose_name='Розничная цена', max_digits=10, decimal_places=2, default=0)
     wholesale_price = models.DecimalField(verbose_name='Оптовая цена', max_digits=10, decimal_places=2, default=0)
+    
 
     def get_line_total(self):
         quantity = self.quantity or 0
@@ -491,6 +492,112 @@ class PurchaseInvoiceItem(models.Model):
 
 ######################################################################## Приход накладная (faktura) END
 ########################################################################################################################################################################################################################
+
+
+
+########################################################################################################################################################################################################################
+########################################################################################################################################################################################################################
+########################################################################################################################################################################################################################
+########################################################################################################################################################################################################################
+######################################################################## Faktura START
+
+# class Invoice(models.Model):
+#     INVOICE_TYPE_CHOICES = [
+#         ("sale", "Расход (Продажа)"),
+#         ("purchase", "Приход (Закупка)"),
+#         ("return", "Возврат"),
+#     ]
+
+#     type = models.CharField(max_length=10, choices=INVOICE_TYPE_CHOICES, verbose_name="Тип накладной")
+#     partner = models.ForeignKey("Partner", on_delete=models.PROTECT, verbose_name="Контрагент", null=True, blank=True)
+#     created_by = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создал")
+#     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания (автоматически)")
+#     invoice_date = models.DateTimeField(verbose_name="Дата накладной (фактура)")
+#     warehouse = models.ForeignKey("Warehouse", on_delete=models.PROTECT, verbose_name="Склад", null=True, blank=True)
+
+#     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"), verbose_name="Общая сумма")
+#     total_pay_summ = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"), verbose_name="Сумма оплаты", null=True, blank=True)
+
+#     delivered_by = models.ForeignKey(
+#         "Employee",
+#         on_delete=models.PROTECT,
+#         verbose_name="Доставил / Принял",
+#         null=True,
+#         blank=True
+#     )
+
+#     note = models.TextField(null=True, blank=True, verbose_name="Примечание")
+#     isEntry = models.BooleanField(default=False, verbose_name="Проводка создана")
+
+#     # для продаж
+#     TYPE_PRICE_CHOICES = [("wholesale", "Опт"), ("retail", "Розница")]
+#     type_price = models.CharField(
+#         max_length=10,
+#         choices=TYPE_PRICE_CHOICES,
+#         default="wholesale",
+#         verbose_name="Тип продажи",
+#         null=True,
+#         blank=True
+#     )
+
+#     class Meta:
+#         verbose_name = "Накладная"
+#         verbose_name_plural = "Накладные"
+#         indexes = [
+#             models.Index(fields=["created_at"]),
+#             models.Index(fields=["partner", "created_at"]),
+#         ]
+
+#     def __str__(self):
+#         return f"{self.get_type_display()} №{self.id} от {self.created_at.strftime('%Y-%m-%d')}"
+
+#     def calculate_total(self):
+#         return sum(item.get_line_total() for item in self.items.all())
+
+
+# class InvoiceItem(models.Model):
+#     invoice = models.ForeignKey("Invoice", on_delete=models.CASCADE, related_name="items")
+#     product = models.ForeignKey("Product", on_delete=models.PROTECT)
+    
+#     discount_price = models.DecimalField(verbose_name='Цена со скидкой', max_digits=10, decimal_places=3, blank=True, null=True)
+#     firma_price = models.DecimalField(verbose_name='Цена Firma', max_digits=10, decimal_places=3, blank=True, null=True)
+    
+#     purchase_price = models.DecimalField(verbose_name='Цена закупки', max_digits=10, decimal_places=3, default=0)
+#     retail_price = models.DecimalField(verbose_name='Розничная цена', max_digits=10, decimal_places=3, default=0)
+#     wholesale_price = models.DecimalField(verbose_name='Оптовая цена', max_digits=10, decimal_places=3, default=0)
+    
+#     selected_price = models.DecimalField(verbose_name='Выбранная цена', max_digits=10, decimal_places=3, default=0)
+#     selected_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+#     # esli est besplatnye towary k etomu produktu to nado sohranit dannye o nih
+    
+ 
+
+#     is_gift = models.BooleanField(default=False, verbose_name="Бесплатный товар")
+
+    
+    
+#     conversion_factor = 
+    
+#     gift_quantity_per_unit =  
+     
+#     unit_name_on_selected_warehouses = models.CharField(max_length=50, verbose_name="Единица измерения", blank=True, null=True)
+
+
+#     def get_line_total(self):
+#         return (self.quantity or 0) * (self.price or 0)
+    
+    
+
+    
+    
+######################################################################## Faktura END
+########################################################################################################################################################################################################################
+########################################################################################################################################################################################################################
+########################################################################################################################################################################################################################
+########################################################################################################################################################################################################################
+    
+    
 
 # Типы счетов
 ACCOUNT_TYPES = [

@@ -18,8 +18,9 @@ import SubmitButton from "./Utils/SubmitButton";
 import { MdPrint } from "react-icons/md";
 import { MdPrintDisabled } from "react-icons/md";
 import myAxios from "../../axios";
-import Saldo from "./Utils/saldo";
+import Saldo from "./Utils/Saldo";
 import Notification from "../../Notification";
+import Comment from "./Utils/Comment";
 
 const userVisibleColumns = {
   qr_code: false,
@@ -69,6 +70,12 @@ const MainPage = () => {
   const { t } = useTranslation();
   const { id } = useParams();
 
+  const [fakturaType, setFakturaType] = useState(() => {
+    return localStorage.getItem("wozwrat_or_prihod_purchase") || ""
+    
+  })
+
+  
   const [notification, setNotification] = useState({ message: "", type: "" });
   const showNotification = (message, type) => {
     setNotification({ message, type });
@@ -143,6 +150,11 @@ const MainPage = () => {
     return cookieValue;
   }
 
+  useEffect(() => {
+    document.title = `${t("faktura")} ${t(fakturaType)}`; // название вкладки
+  }, [fakturaType]);
+
+
   return (
     <div>
       <Formik
@@ -150,6 +162,7 @@ const MainPage = () => {
         enableReinitialize={true}
         validationSchema={validationSchema}
         onSubmit={async (values, { resetForm }) => {
+          console.log("Успешно отправлено values", values);
           try {
             const response = await myAxios.post("/save-invoice/", values, {
               headers: {
@@ -194,6 +207,7 @@ const MainPage = () => {
                 setVisibleColumns={setVisibleColumns}
                 adminVisibleColumns={adminVisibleColumns}
                 userVisibleColumns={userVisibleColumns}
+                setFakturaType={setFakturaType}
               />
               <div className="grid grid-cols-1 md:grid-cols-10 gap-4 print:block p-5">
                 {/* Левая колонка */}
@@ -205,8 +219,11 @@ const MainPage = () => {
                     <FetchWarehouse />
                     <FetchAwto refs={refs} />
                     <FetchPartner refs={refs} setSaldo={setSaldo} dateProwodok={dateProwodok} saldo={saldo} />
+                    <Comment />
+                    <div className="flex justify-end">{values.products.length > 0 && <SubmitButton dateProwodok={dateProwodok} fakturaType={fakturaType} fakturaBgDynamic={fakturaBgDynamic} />}</div>
                   </div>
                   <Saldo saldo={saldo} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} />
+                  
                 </div>
 
                 {/* for print */}
@@ -253,7 +270,7 @@ const MainPage = () => {
                 <Saldo saldo={saldo} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} />
               </div>
 
-              <div className="flex justify-end">{values.products.length > 0 && <SubmitButton dateProwodok={dateProwodok} />}</div>
+              {/* <div className="flex justify-end">{values.products.length > 0 && <SubmitButton dateProwodok={dateProwodok} />}</div> */}
             </Form>
           );
         }}

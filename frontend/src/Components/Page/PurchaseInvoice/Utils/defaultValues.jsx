@@ -65,6 +65,7 @@ const getDefaultValues = (id = null, dateProwodok = null) => {
       awto_send: true,
       partner_send: true,
       is_entry: false,
+      comment: ""
     };
   }
 };

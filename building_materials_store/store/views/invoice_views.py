@@ -24,7 +24,9 @@ def save_invoice(request):
             type_price = data['type_price']
             warehouse = data['warehouse']
             wozwrat_or_prihod = data['wozwrat_or_prihod']
+            comment=data["comment"]
             invoice_id = data['id']
+            ic(comment)
             
             if not send:
                 return JsonResponse({"status": "error", "message": "fill in all the fields"}, status=400)
@@ -99,7 +101,7 @@ def save_invoice(request):
                         return JsonResponse({"status": "error", "message": "partner is not active"}, status=400)
                         
                     
-                    
+                
                     
                 if wozwrat_or_prihod == "wozwrat":
                     return JsonResponse({"status": "ok", "message": f"wozwrat invoice saved without entry"})
@@ -143,7 +145,7 @@ def save_invoice(request):
             # ic(products)
             # ic(send)
             # ic(type_price)
-            ic(warehouse)
+            # ic(warehouse)
             # ic(wozwrat_or_prihod)
             
             # здесь ты сам напишешь сохранение

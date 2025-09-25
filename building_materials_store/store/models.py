@@ -507,6 +507,11 @@ class PurchaseInvoiceItem(models.Model):
 #         ("purchase", "Приход (Закупка)"),
 #         ("return", "Возврат"),
 #     ]
+    
+#     # validasii dlya inputow
+#     awto_send = models.BooleanField(default=False)
+#     partner_send = models.BooleanField(default=False)
+#     send = models.BooleanField(default=False)
 
 #     type = models.CharField(max_length=10, choices=INVOICE_TYPE_CHOICES, verbose_name="Тип накладной")
 #     partner = models.ForeignKey("Partner", on_delete=models.PROTECT, verbose_name="Контрагент", null=True, blank=True)
@@ -518,27 +523,14 @@ class PurchaseInvoiceItem(models.Model):
 #     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"), verbose_name="Общая сумма")
 #     total_pay_summ = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"), verbose_name="Сумма оплаты", null=True, blank=True)
 
-#     delivered_by = models.ForeignKey(
-#         "Employee",
-#         on_delete=models.PROTECT,
-#         verbose_name="Доставил / Принял",
-#         null=True,
-#         blank=True
-#     )
+#     awto = models.ForeignKey("Employee", on_delete=models.PROTECT, verbose_name="Доставил / Принял", null=True, blank=True)
 
 #     note = models.TextField(null=True, blank=True, verbose_name="Примечание")
-#     isEntry = models.BooleanField(default=False, verbose_name="Проводка создана")
+#     is_entry = models.BooleanField(default=False, verbose_name="Проводка создана")
 
 #     # для продаж
 #     TYPE_PRICE_CHOICES = [("wholesale", "Опт"), ("retail", "Розница")]
-#     type_price = models.CharField(
-#         max_length=10,
-#         choices=TYPE_PRICE_CHOICES,
-#         default="wholesale",
-#         verbose_name="Тип продажи",
-#         null=True,
-#         blank=True
-#     )
+#     type_price = models.CharField(max_length=10, choices=TYPE_PRICE_CHOICES, default="wholesale", verbose_name="Тип продажи", null=True, blank=True)
 
 #     class Meta:
 #         verbose_name = "Накладная"

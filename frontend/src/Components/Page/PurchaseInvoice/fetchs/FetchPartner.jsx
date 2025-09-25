@@ -36,7 +36,7 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
     if (values.partner?.id && dateProwodok) {
       getSaldo(dateProwodok, values.partner?.id);
     } else {
-      setSaldo(null)
+      setSaldo(null);
     }
   }, [dateProwodok]);
 
@@ -103,7 +103,11 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
 
   if (values.partner?.id) {
     return (
-      <div className="flex-1 flex items-center print:hidden my-1 gap-3">
+      <div className="w-full flex items-center justify-between print:hidden my-1 gap-3 mt-5">
+        <div className="flex items-center gap-2 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-800 shadow-sm flex-1">
+          <span className="text-gray-600 dark:text-gray-400 text-sm">{t("partner")}:</span>
+          <span className="text-gray-800 dark:text-gray-100 font-medium">{values.partner?.name}</span>
+        </div>
         {values.partner?.name && (
           <button
             type="button"
@@ -139,15 +143,13 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
                 refs.partnerRef.current?.focus();
               }, 0);
             }}
-            className="ml-3 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-700 text-red-500 dark:text-red-400 transition-colors duration-200 flex items-center justify-center focus:bg-indigo-200"
+            className="ml-3 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-700 
+                 text-red-500 dark:text-red-400 transition-colors duration-200 
+                 flex items-center justify-center focus:bg-indigo-200"
           >
             <FaTimes className="text-sm" />
           </button>
         )}
-        <div className="flex items-center gap-2 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-800 shadow-sm">
-          <span className="text-gray-600 dark:text-gray-400 text-sm">{t("partner")}:</span>
-          <span className="text-gray-800 dark:text-gray-100 font-medium">{values.partner?.name}</span>
-        </div>
       </div>
     );
   }

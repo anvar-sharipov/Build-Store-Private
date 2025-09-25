@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { IoCloseSharp } from "react-icons/io5";
 import { motion, AnimatePresence } from "framer-motion";
 
-const MyModal2 = ({ onClose, children, loading }) => {
+const MyModal2 = ({ onClose, children, loading, myClass = "" }) => {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Escape" && !loading) {
@@ -16,7 +16,7 @@ const MyModal2 = ({ onClose, children, loading }) => {
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+        className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -28,11 +28,11 @@ const MyModal2 = ({ onClose, children, loading }) => {
         }}
       >
         <motion.div
-          className="relative bg-white dark:bg-gray-900 
+          className={`relative 
              rounded-xl sm:rounded-2xl shadow-2xl 
              border border-gray-200/20 dark:border-gray-700/30 backdrop-blur-xl
              w-full max-w-2xl md:max-w-3xl lg:max-w-4xl 
-             max-h-[90vh] p-4 sm:p-6 md:p-8"
+             max-h-[90vh] p-4 sm:p-6 md:p-8 ${myClass === "" ? "bg-white dark:bg-gray-900" : myClass }`}
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}

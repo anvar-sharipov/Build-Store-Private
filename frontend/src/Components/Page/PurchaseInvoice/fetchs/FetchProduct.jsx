@@ -216,21 +216,36 @@ const FetchProduct = ({ refs }) => {
                           if (a.is_gift === b.is_gift) return 0;
                           return a.is_gift ? 1 : -1;
                         });
-                        
-                        setFieldValue("products", updatedProducts);
+
+                        setFieldValue("products", updatedProducts, false);
 
                         // console.log("newProducts", newProducts);
                       } else {
-                        setFieldValue("products", (values.products || []).concat(mainProduct));
+                        const updatedProducts = (values.products || []).concat(mainProduct);
+                        updatedProducts.sort((a, b) => {
+                          if (a.is_gift === b.is_gift) return 0;
+                          return a.is_gift ? 1 : -1;
+                        });
+
+                        setFieldValue("products", updatedProducts, false);
                       }
 
                       setProducts([]);
 
                       // console.log("newProducts", newProducts);
 
+                      // setTimeout(() => {
+                      //   refs.quantityRefs.current[product.id]?.focus();
+                      //   refs.quantityRefs.current[product.id]?.select();
+                      // }, 0);
                       setTimeout(() => {
-                        refs.quantityRefs.current[product.id]?.focus();
-                        refs.quantityRefs.current[product.id]?.select();
+                        requestAnimationFrame(() => {
+                          const input = refs.quantityRefs.current[product.id];
+                          if (input) {
+                            input.focus();
+                            input.select();
+                          }
+                        });
                       }, 0);
                       // console.log("fgobhfgiuh");
 

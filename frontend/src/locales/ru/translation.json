@@ -333,6 +333,7 @@
   "chooseClient": "Выберите покупателя",
   "chooseAwto": "Выберите авто", 
   "comment": "Комментарий (необязательно)", 
+  "comment2": "Комментарий", 
   "withPosting": "с проводкой",
   "transactionChange": "Откат записи",
   "successSave": "Успешно сохранён",
@@ -444,7 +445,9 @@
   "rashod invoice saved with entry":"Расход фактура сохранена с проводкой",
   "wozwrat invoice saved without entry":"Возврат фактура сохранена",
   "prihod invoice saved without entry":"Приход фактура сохранена",
-  "rashod invoice saved without entry":"Расход фактура сохранена"
+  "rashod invoice saved without entry":"Расход фактура сохранена",
+  "yes": "Да",
+  "confirm_save_document":"Подтвердите сохранение фактуры"
 
 
   

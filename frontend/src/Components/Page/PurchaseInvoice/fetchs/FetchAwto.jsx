@@ -87,7 +87,11 @@ const FetchAwto = ({ refs }) => {
 
   if (values.awto?.id) {
     return (
-      <div className="flex-1 flex items-center gap-3 print:hidden my-1">
+      <div className="w-full flex items-center justify-between gap-3 print:hidden my-1 mt-5">
+        <div className="flex items-center gap-2 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-800 shadow-sm flex-1">
+          <span className="text-gray-600 dark:text-gray-400 text-sm">{t("awto")}:</span>
+          <span className="text-gray-800 dark:text-gray-100 font-medium">{values.awto?.name}</span>
+        </div>
         {values.awto?.name && (
           <button
             type="button"
@@ -122,10 +126,6 @@ const FetchAwto = ({ refs }) => {
             <FaTimes className="text-sm" />
           </button>
         )}
-        <div className="flex items-center gap-2 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-800 shadow-sm">
-          <span className="text-gray-600 dark:text-gray-400 text-sm">{t("awto")}:</span>
-          <span className="text-gray-800 dark:text-gray-100 font-medium">{values.awto?.name}</span>
-        </div>
       </div>
     );
   }

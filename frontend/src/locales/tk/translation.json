@@ -309,6 +309,7 @@
   "chooseClient": "Alyjyny saýlaň",
   "chooseAwto": "Awto saýlaň",
   "comment": "Kommentariya (hökmany däl)",
+  "comment2": "Kommentariya",
   "withPosting": "Prowodka bilen",
   "transactionChange": "Otkat zapisi",
   "successSave": "Üstünlikli ýatda saklandy",
@@ -420,7 +421,9 @@
   "rashod invoice saved with entry": "Çykdajy faktura geçirilen ýazgy bilen saklandy",
   "wozwrat invoice saved without entry": "Yzyna gaýtaryş faktura saklandy",
   "prihod invoice saved without entry": "Giriş faktura saklandy",
-  "rashod invoice saved without entry": "Çykdajy faktura saklandy"
+  "rashod invoice saved without entry": "Çykdajy faktura saklandy",
+  "yes": "Howa",
+  "confirm_save_document": "Fakturany saklamaklygy tassyklaň"
 
 
 

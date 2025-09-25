@@ -21,6 +21,7 @@ const InvoiceHead = ({
   setVisibleColumns,
   adminVisibleColumns,
   userVisibleColumns,
+  setFakturaType,
 }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -78,7 +79,7 @@ const InvoiceHead = ({
           <Settings className="w-6 h-6 text-gray-700 dark:text-gray-200" />
         </button>
         <div className="px-1">
-          <TypeFaktura />
+          <TypeFaktura setFakturaType={setFakturaType} />
         </div>
 
         |

@@ -1,9 +1,14 @@
 import { useFormikContext } from "formik";
 import { useTranslation } from "react-i18next";
+import { useEffect } from "react";
 
-const TypeFaktura = () => {
+const TypeFaktura = ({setFakturaType}) => {
   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
   const { t } = useTranslation();
+
+
+
+
 
   return (
     <div>
@@ -18,6 +23,7 @@ const TypeFaktura = () => {
             onChange={(e) => {
               setFieldValue("wozwrat_or_prihod", e.target.value);
               localStorage.setItem("wozwrat_or_prihod_purchase", e.target.value);
+              setFakturaType(e.target.value)
             }}
             className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
             onKeyDown={(e) => {
@@ -38,6 +44,7 @@ const TypeFaktura = () => {
             onChange={(e) => {
               setFieldValue("wozwrat_or_prihod", e.target.value);
               localStorage.setItem("wozwrat_or_prihod_purchase", e.target.value);
+              setFakturaType(e.target.value)
             }}
             className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
             onKeyDown={(e) => {
@@ -58,6 +65,7 @@ const TypeFaktura = () => {
             onChange={(e) => {
               setFieldValue("wozwrat_or_prihod", e.target.value);
               localStorage.setItem("wozwrat_or_prihod_purchase", e.target.value);
+              setFakturaType(e.target.value)
             }}
             className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
             onKeyDown={(e) => {

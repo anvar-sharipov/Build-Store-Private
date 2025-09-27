@@ -93,19 +93,27 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
     // Проходим по всем main товарам
     products.forEach((product) => {
       if (!product.is_gift && product.free_items?.length > 0) {
+        // console.log("GGGGGGGGGGGGGGGGGG", product.selected_quantity);
+        
         const mainQty = Number(product.selected_quantity) || 0; // <-- используем quantity из values.products
         product.free_items.forEach((free) => {
           const giftId = free.gift_product;
           const qtyPerUnit = Number(free.quantity_per_unit) || 0;
+          // console.log("GGGGGGGGGGGGGGGGGG", free.quantity_per_unit);
+
           giftQuantities[giftId] = (giftQuantities[giftId] || 0) + mainQty * qtyPerUnit;
         });
       }
     });
+    console.log("GGGGGGGGGGGGGGGGGG", giftQuantities);
+    
+
 
     // Обновляем все gift товары
     products.forEach((product, idx) => {
       if (product.is_gift) {
         const newQty = giftQuantities[product.id] || 0;
+        
         if (Number(product.selected_quantity) !== newQty) {
           // console.log('tut');
           // console.log('eeeee', values.products[idx]);

@@ -25,7 +25,7 @@ const LanguageSwitcher = ({ i18n }) => {
     <div className="relative inline-block text-left cursor-pointer">
       <div className=" flex gap-1 items-center" onClick={toggleOpen}>
         <div className="flex items-center gap-1">
-          <GrLanguage size={20} className="text-blue-500" />
+          {/* <GrLanguage size={20} className="text-blue-500" /> */}
           <span className="font-semibold select-none hover:underline text-blue-500 hover:text-blue-700">{t("language")}</span>
           <motion.span
             animate={{ rotate: open ? 180 : 0 }}

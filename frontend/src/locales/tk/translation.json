@@ -423,7 +423,9 @@
   "prihod invoice saved without entry": "Giriş faktura saklandy",
   "rashod invoice saved without entry": "Çykdajy faktura saklandy",
   "yes": "Howa",
-  "confirm_save_document": "Fakturany saklamaklygy tassyklaň"
+  "confirm_save_document": "Fakturany saklamaklygy tassyklaň",
+  "product is not fined": "Haryt tapylmady",
+  "unit is not fined": "Ölçeg birligi tapylmady"
 
 
 

@@ -259,19 +259,24 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
         </div>
         <div className="flex flex-col gap-5 border-r border-gray-600 pr-2">
           <LanguageSwitcher i18n={i18n} />
-          <div
-            onClick={() => {
-              setDarkMode(!darkMode);
-              setTimeout(() => {
-                window.dispatchEvent(new Event("theme-toggled"));
-              }, 0);
-            }}
-            aria-label="Toggle theme"
-            className="hover:underline text-blue-500 hover:text-blue-700 flex gap-1 items-center cursor-pointer"
-          >
-            {/* {darkMode ? `🌙 ${t("theme")}: ${t("dark")}` : `☀️ ${t("theme")}: ${t("light")}`} */}
-            {darkMode ? `🌙 ${t("dark")}` : `☀️ ${t("light")}`}
-          </div>
+ 
+            <div
+              onClick={() => {
+                setDarkMode(!darkMode);
+                setTimeout(() => {
+                  window.dispatchEvent(new Event("theme-toggled"));
+                }, 0);
+              }}
+              aria-label="Toggle theme"
+              // className="hover:underline text-blue-500 hover:text-blue-700 flex gap-1 items-center cursor-pointer"
+              className={`w-9 p-1 rounded-full transition-all duration-300 transform hover:scale-110 text-center cursor-pointer ${
+                darkMode ? "bg-yellow-400 text-gray-900 shadow-yellow-400/25" : "bg-gray-800 text-yellow-400 shadow-gray-800/25"
+              } shadow-lg hover:shadow-xl`}
+            >
+              {/* {darkMode ? `🌙 ${t("theme")}: ${t("dark")}` : `☀️ ${t("theme")}: ${t("light")}`} */}
+              {darkMode ? `☀️` : `🌙`}
+            </div>
+ 
         </div>
 
         {user && (

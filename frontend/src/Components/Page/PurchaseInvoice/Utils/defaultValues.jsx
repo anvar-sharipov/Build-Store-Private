@@ -1,45 +1,129 @@
 // import { DateContext } from "../../../UI/DateProvider"
 // import { useContext, useEffect, useState } from "react"
 // import { useFormikContext } from "formik";
+import myAxios from "../../../axios";
+import MyFormatDate from "../../../UI/MyFormatDate";
 
-// просто функция без хуков
-const warehouse = {
-  id: 1,
-  name: "Sklad 1",
+// // просто функция без хуков
+// const warehouse = {
+//   id: 1,
+//   name: "Sklad 1",
+// };
+
+// const partner = {
+//   id: 1,
+//   name: "partner 1",
+// };
+
+// const awto = {
+//   id: 1,
+//   name: "awto 1",
+// };
+
+// const products = [
+//   {
+//     id: 1,
+//     name: "Polisem",
+//   },
+// ];
+
+// const wozwrat_or_prihod = "wozwrat";
+
+const convertToISODate = (dateString) => {
+  if (!dateString) return "";
+  const [day, month, year] = dateString.split(".");
+  return `${year}-${month}-${day}`; // "2025-01-02"
 };
 
-const partner = {
-  id: 1,
-  name: "partner 1",
-};
+const getDefaultValues = async (id = null, dateProwodok = null, setDateProwodok) => {
+  // const getData = async (id) => {
+  //   try {
+  //     const res = await myAxios.get(`get-invoice-data/${id}/`);
+  //     // console.log('res.data invoice'. res);
 
-const awto = {
-  id: 1,
-  name: "awto 1",
-};
+  //     return res.data;
+  //   } catch (error) {
+  //     console.log("cant get invoice", error);
+  //   }
+  // };
 
-const products = [
-  {
-    id: 1,
-    name: "Polisem",
-  },
-];
-
-const wozwrat_or_prihod = "wozwrat";
-
-const getDefaultValues = (id = null, dateProwodok = null) => {
   if (id) {
-    return {
-      id: id,
-      invoice_date: "2025-09-07", // тестовое значение, можно заменить на API данные
-      warehouse: warehouse,
-      partner: partner,
-      awto: awto,
-      products: products,
-      wozwrat_or_prihod: wozwrat_or_prihod,
-      type_price: "reatil_price",
-      send: true,
-    };
+    try {
+      const res = await myAxios.get(`get-invoice-data/${id}/`);
+      const data = res.data;
+      // console.log("data", data);
+
+      const invoice_date = MyFormatDate(data.date); // 02.01.2025
+      const isoDate = convertToISODate(invoice_date); // 2025-01-02
+
+      const created_at = MyFormatDate(data.created_at_handle);
+      const updated_at = MyFormatDate(data.updated_at_handle);
+
+      let entry_created_at = null
+      if (data.entry_created_at) {
+        entry_created_at = MyFormatDate(data.entry_created_at_handle);
+      }
+
+      console.log("data.products", data.products);
+      localStorage.setItem("dateProwodok", convertToISODate(invoice_date));
+
+      if (setDateProwodok) {
+        setDateProwodok(isoDate);
+      }
+
+      const type_price = data.type_price;
+      localStorage.setItem("type_price", type_price);
+
+      const warehouse = data.warehouse;
+      localStorage.setItem("purchaseWarehouse", JSON.stringify(warehouse));
+      localStorage.setItem("wozwrat_or_prihod_purchase", data.wozwrat_or_prihod);
+
+     
+
+      return {
+        awto: data.awto,
+        awto_send: data.awto_send,
+        comment: data.comment,
+        invoice_date: invoice_date,
+        is_entry: data.is_entry,
+        partner: data.partner,
+        partner_send: data.partner_send,
+        send: data.send,
+        type_price: type_price,
+        warehouse: data.warehouse,
+        wozwrat_or_prihod: data.wozwrat_or_prihod,
+        created_by: data.created_by,
+        entry_created_by: data.entry_created_by,
+        created_at: created_at,
+        updated_at: updated_at,
+        entry_created_at: entry_created_at,
+        products: data.products || [],
+
+
+        id: data.id,
+
+
+        
+      };
+    } catch (error) {
+      console.log("cant get invoice", error);
+      return {};
+    }
+    // console.log("tititit s id", id);
+    // const data = await getData(id);
+    // console.log("data", data);
+
+    // return {
+    //   id: data.id,
+    //   invoice_date: MyFormatDate(data.date), // тестовое значение, можно заменить на API данные
+    //   warehouse: warehouse,
+    //   partner: partner,
+    //   awto: awto,
+    //   products: [],
+    //   wozwrat_or_prihod: wozwrat_or_prihod,
+    //   type_price: "reatil_price",
+    //   send: true,
+    // };
   } else {
     let get_wozwrat_or_prihod;
     if (localStorage.getItem("wozwrat_or_prihod_purchase")) {
@@ -65,7 +149,7 @@ const getDefaultValues = (id = null, dateProwodok = null) => {
       awto_send: true,
       partner_send: true,
       is_entry: false,
-      comment: ""
+      comment: "",
     };
   }
 };

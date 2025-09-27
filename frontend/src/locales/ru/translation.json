@@ -443,11 +443,19 @@
   "wozwrat invoice saved with entry":"Возврат фактура сохранена с проводкой",
   "prihod invoice saved with entry":"Приход фактура сохранена с проводкой",
   "rashod invoice saved with entry":"Расход фактура сохранена с проводкой",
-  "wozwrat invoice saved without entry":"Возврат фактура сохранена",
-  "prihod invoice saved without entry":"Приход фактура сохранена",
-  "rashod invoice saved without entry":"Расход фактура сохранена",
+  "wozwrat invoice saved without entry":"Возврат фактура без проводки",
+  "prihod invoice saved without entry":"Приход фактура без проводки",
+  "rashod invoice saved without entry":"Расход фактура без проводки",
   "yes": "Да",
-  "confirm_save_document":"Подтвердите сохранение фактуры"
+  "confirm_save_document":"Подтвердите сохранение фактуры",
+  "product is not fined": "Товар не найден",
+  "unit is not fined": "Единица измерения не найдена",
+  "wozwrat invoice updated with entry":"фактура обновлена с проводкой",
+  "prihod invoice updated with entry":"фактура обновлена с проводкой",
+  "rashod invoice updated with entry":"фактура обновлена с проводкой",
+  "wozwrat invoice updated without entry":"фактура обновлена без проводки",
+  "prihod invoice updated without entry":"фактура обновлена без проводки",
+  "rashod invoice updated without entry":"фактура обновлена без проводки"
 
 
   

@@ -593,3 +593,136 @@ class StockSnapshotAdmin(admin.ModelAdmin):
 
 ######################################################################## close day END
 ########################################################################################################################################################################################################################
+
+
+
+
+########################################################################################################################################################################################################################
+########################################################################################################################################################################################################################
+########################################################################################################################################################################################################################
+########################################################################################################################################################################################################################
+######################################################################## Faktura START
+
+
+
+from django.contrib import admin
+from .models import Invoice, InvoiceItem, FreeItemForInvoiceItem, UnitForInvoiceItem
+
+
+class FreeItemForInvoiceItemInline(admin.TabularInline):
+    model = FreeItemForInvoiceItem
+    extra = 1
+    fields = ["gift_product_obj", "gift_product_name", "gift_product_unit_name", "quantity_per_unit"]
+    autocomplete_fields = ["gift_product_obj"]
+
+
+class UnitForInvoiceItemInline(admin.TabularInline):
+    model = UnitForInvoiceItem
+    extra = 1
+    fields = ["unit_id", "unit_name", "base_unit_name", "conversion_factor", "is_default_for_sale"]
+
+
+class InvoiceItemInline(admin.TabularInline):
+    model = InvoiceItem
+    extra = 1
+    fields = [
+        "product",
+        "selected_quantity",
+        "selected_price",
+        "retail_price",
+        "wholesale_price",
+        "purchase_price",
+        "is_gift",
+        "is_custom_price",
+    ]
+    autocomplete_fields = ["product"]
+    show_change_link = True
+
+
+@admin.register(Invoice)
+class InvoiceAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "wozwrat_or_prihod",
+        "invoice_date",
+        "partner",
+        "warehouse",
+        "type_price",
+        "created_by",
+        "send",
+        "is_entry",
+        "created_at",
+    )
+    list_filter = ("wozwrat_or_prihod", "type_price", "warehouse", "partner", "send", "is_entry", "created_at")
+    search_fields = ("id", "partner__name", "warehouse__name", "created_by__username")
+    date_hierarchy = "created_at"
+    autocomplete_fields = ("partner", "warehouse", "awto", "created_by", "entry_created_by")
+    inlines = [InvoiceItemInline]
+    readonly_fields = ("created_at", "updated_at", "entry_created_at")
+
+    fieldsets = (
+        ("Основная информация", {
+            "fields": (
+                "wozwrat_or_prihod",
+                "invoice_date",
+                "warehouse",
+                "partner",
+                "awto",
+                "comment",
+            )
+        }),
+        ("Техническая информация", {
+            "fields": (
+                "type_price",
+                "send",
+                "partner_send",
+                "awto_send",
+                "is_entry",
+            )
+        }),
+        ("Служебные поля", {
+            "fields": (
+                "created_by",
+                "entry_created_by",
+                "created_at",
+                "updated_at",
+                "entry_created_at",
+            )
+        }),
+    )
+
+
+@admin.register(InvoiceItem)
+class InvoiceItemAdmin(admin.ModelAdmin):
+    list_display = ("id", "invoice", "product", "selected_quantity", "selected_price", "is_gift", "is_custom_price")
+    list_filter = ("is_gift", "is_custom_price")
+    search_fields = ("product__name", "invoice__id")
+    autocomplete_fields = ["product", "invoice"]
+    inlines = [FreeItemForInvoiceItemInline, UnitForInvoiceItemInline]
+
+
+@admin.register(FreeItemForInvoiceItem)
+class FreeItemForInvoiceItemAdmin(admin.ModelAdmin):
+    list_display = ("id", "main_product", "gift_product_name", "gift_product_unit_name", "quantity_per_unit")
+    search_fields = ("gift_product_name",)
+    autocomplete_fields = ["main_product", "gift_product_obj"]
+
+
+@admin.register(UnitForInvoiceItem)
+class UnitForInvoiceItemAdmin(admin.ModelAdmin):
+    list_display = ("id", "main_product", "unit_name", "conversion_factor", "is_default_for_sale")
+    search_fields = ("unit_name", "base_unit_name")
+    autocomplete_fields = ["main_product"]
+
+
+
+
+
+
+
+
+######################################################################## Faktura END
+########################################################################################################################################################################################################################
+########################################################################################################################################################################################################################
+########################################################################################################################################################################################################################
+########################################################################################################################################################################################################################

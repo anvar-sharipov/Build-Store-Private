@@ -38,9 +38,7 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
       }
     });
 
-
-      const updatedProducts = (products || []).filter((product) => Number(product.selected_quantity) > 0);
-  
+    const updatedProducts = (products || []).filter((product) => Number(product.selected_quantity) > 0);
 
     setFieldValue("products", updatedProducts);
   };
@@ -55,6 +53,8 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
   return (
     <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
       {values.products.map((product, idx) => {
+       
+
         const total_price = Number(product.selected_quantity) * Number(product.selected_price);
         const total_purchase = Number(product.selected_quantity) * Number(product.purchase_price);
         const income_1pc = Number(product.selected_price) - Number(product.purchase_price);
@@ -95,12 +95,9 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
                 !printVisibleColumns.image ? "print:hidden" : "print:table-cell"
               } print:!text-black print:!border-black`}
             >
-              {product.images.length > 0 &&
-                (id ? (
-                  <img src={`${product.images[0].image}`} alt={product.images[0].alt_text || "Product image"} className="w-20 h-20 object-cover rounded inline-block" />
-                ) : (
-                  <img src={`${BASE_URL}${product.images[0].image}`} alt={product.images[0].alt_text || "Product image"} className="w-20 h-20 object-cover rounded inline-block" />
-                ))}
+              {product.images && product.images.length > 0 && (
+                <img src={`${BASE_URL}${product.images[0].image}`} alt={product.images[0].alt_text || "Product image"} className="w-20 h-20 object-cover rounded inline-block" />
+              )}
             </td>
 
             <td

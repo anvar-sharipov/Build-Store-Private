@@ -48,7 +48,7 @@ function AppShell() {
             <main className={`flex flex-grow gap-4 mt-4 ${isFullScreenPage ? "" : "lg:ml-52 lg:mr-72"} print:w-full print:block print:p-0 print:m-0`}>
               {!isFullScreenPage && <SidebarLeft />}
 
-              <section className={`flex-grow flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-sm ${isFullScreenPage ? "p-0" : "p-4"}`}>
+              <section className={`flex-grow flex flex-col bg-zinc-50 dark:bg-gray-800 rounded-lg shadow-sm ${isFullScreenPage ? "p-0" : "p-4"}`}>
                 <Routes>
                   <Route path={ROUTES.MAIN} element={<ProductList />} />
                   <Route path="/sale-invoices/new" element={<AddSaleInvoicePage />} />

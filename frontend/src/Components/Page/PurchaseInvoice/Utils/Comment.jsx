@@ -2,7 +2,7 @@ import { useFormikContext } from "formik";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-const Comment = ({ id = "comment", rows = 4, maxLength = 1000 }) => {
+const Comment = ({ id = "comment", rows = 1, maxLength = 500 }) => {
   const { values, setFieldValue } = useFormikContext();
   const { t } = useTranslation();
 
@@ -46,7 +46,7 @@ const Comment = ({ id = "comment", rows = 4, maxLength = 1000 }) => {
 
         {/* counter */}
         <div className="absolute right-2 bottom-2 text-xs text-gray-500 dark:text-gray-400 select-none">
-          {values.comment.length}/{maxLength}
+          {values.comment && values.comment.length}/{maxLength}
         </div>
       </div>
     </div>

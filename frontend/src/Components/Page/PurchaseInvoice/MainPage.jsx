@@ -21,6 +21,8 @@ import myAxios from "../../axios";
 import Saldo from "./Utils/Saldo";
 import Notification from "../../Notification";
 import Comment from "./Utils/Comment";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../../routes";
 
 const userVisibleColumns = {
   qr_code: false,
@@ -69,13 +71,13 @@ const adminPrintVisibleColumns = {
 const MainPage = () => {
   const { t } = useTranslation();
   const { id } = useParams();
+  const navigate = useNavigate();
+  const [initialValues, setInitialValues] = useState(null);
 
   const [fakturaType, setFakturaType] = useState(() => {
-    return localStorage.getItem("wozwrat_or_prihod_purchase") || ""
-    
-  })
+    return localStorage.getItem("wozwrat_or_prihod_purchase") || "";
+  });
 
-  
   const [notification, setNotification] = useState({ message: "", type: "" });
   const showNotification = (message, type) => {
     setNotification({ message, type });
@@ -128,9 +130,30 @@ const MainPage = () => {
   const { dateFrom, setDateFrom, dateTo, setDateTo, dateProwodok, setDateProwodok } = useContext(DateContext);
   console.log("dateProwodok", dateProwodok);
 
-  const defaultValues = useMemo(() => {
-    return getDefaultValues(id);
-  }, [id]);
+  // const defaultValues = useMemo(() => {
+  //   return getDefaultValues(id);
+  // }, [id]);
+
+  useEffect(() => {
+    document.title = `${t("faktura")} ${t(fakturaType)}`; // название вкладки
+  }, [fakturaType]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadValues = async () => {
+      const values = await getDefaultValues(id, dateProwodok, setDateProwodok);
+      if (mounted) {
+        setInitialValues(values);
+      }
+    };
+
+    loadValues();
+
+    return () => {
+      mounted = false;
+    };
+  }, [id]); // dateProwodok
 
   // const defaultValues = getDefaultValues(id);
   const validationSchema = getInvoiceValidationSchema(t);
@@ -150,19 +173,28 @@ const MainPage = () => {
     return cookieValue;
   }
 
-  useEffect(() => {
-    document.title = `${t("faktura")} ${t(fakturaType)}`; // название вкладки
-  }, [fakturaType]);
+  if (!initialValues) {
+    return <div>{t("loading")}...</div>; // пока грузится
+  }
 
+  const handleOpenInvoice = (id) => {
+    if (id) {
+      navigate(`/purchase-invoices/update/${id}`);
+    } else {
+      navigate(ROUTES.PURCHASE_INVOICE_CREATE);
+    }
+  };
 
   return (
     <div>
       <Formik
-        initialValues={defaultValues}
+        initialValues={initialValues}
         enableReinitialize={true}
         validationSchema={validationSchema}
         onSubmit={async (values, { resetForm }) => {
           console.log("Успешно отправлено values", values);
+          console.log('FFFFFFFFF values');
+          
           try {
             const response = await myAxios.post("/save-invoice/", values, {
               headers: {
@@ -171,16 +203,28 @@ const MainPage = () => {
             });
 
             console.log("Успешно отправлено", response.data);
-            showNotification(t(response.data.message), "success")
+            showNotification(t(response.data.message), "success");
+            console.log("response.data.id", response.data);
+
+            handleOpenInvoice(response.data.id);
             // setSaldo(null)
             // resetForm();
           } catch (error) {
             if (error.response) {
               console.error("Ошибка при отправке", error.response.status, error.response.data);
-              showNotification(t(error.response.data.message), "error")
+              // console.log();
+
+              if (error.response.data.not_fined_product_name) {
+                showNotification(`${t(error.response.data.message)} "${error.response.data.not_fined_product_name}"`, "error");
+              } else if (error.response.data.not_fined_unit_name) {
+                showNotification(`${t(error.response.data.message)} "${error.response.data.not_fined_unit_name}"`, "error");
+              } else if (error.response.data.reason_for_the_error) {
+                showNotification(`${t(error.response.data.message)} "${error.response.data.reason_for_the_error}"`, "error");
+              } else {
+                showNotification(`${t(error.response.data.message)}`, "error");
+              }
             } else {
               console.error("Ошибка сети", error.message);
-              
             }
           }
         }}
@@ -189,6 +233,8 @@ const MainPage = () => {
           useEffect(() => {
             setFieldValue("invoice_date", dateProwodok);
           }, [dateProwodok]);
+
+          console.log("values", values);
 
           const fakturaBgDynamic =
             values.wozwrat_or_prihod === "wozwrat" ? "bg-red-200 dark:bg-red-900" : values.wozwrat_or_prihod === "prihod" ? "bg-green-200 dark:bg-green-900" : "bg-white dark:bg-gray-900";
@@ -220,10 +266,11 @@ const MainPage = () => {
                     <FetchAwto refs={refs} />
                     <FetchPartner refs={refs} setSaldo={setSaldo} dateProwodok={dateProwodok} saldo={saldo} />
                     <Comment />
-                    <div className="flex justify-end">{values.products.length > 0 && <SubmitButton dateProwodok={dateProwodok} fakturaType={fakturaType} fakturaBgDynamic={fakturaBgDynamic} />}</div>
                   </div>
                   <Saldo saldo={saldo} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} />
-                  
+                  <div className="flex justify-end">
+                    {values.products && values.products.length > 0 && <SubmitButton dateProwodok={dateProwodok} fakturaType={fakturaType} fakturaBgDynamic={fakturaBgDynamic} />}
+                  </div>
                 </div>
 
                 {/* for print */}
@@ -252,7 +299,26 @@ const MainPage = () => {
                       <FetchProduct refs={refs} />
                     </div>
 
-                    <div>{values.products.length > 0 && <PTable printVisibleColumns={printVisibleColumns} visibleColumns={visibleColumns} id={id} refs={refs} />}</div>
+                    <div>{values.products && values.products.length > 0 && <PTable printVisibleColumns={printVisibleColumns} visibleColumns={visibleColumns} id={id} refs={refs} />}</div>
+                    {id && (
+                      <div className="print:hidden mt-5">
+                        <div className="text-gray-700 dark:text-gray-200">
+                          Создано: <span className="font-medium">{values.created_at || "—"}</span>
+                        </div>
+                        <div className="text-gray-700 dark:text-gray-200">
+                          Обновлено: <span className="font-medium">{values.updated_at || "—"}</span>
+                        </div>
+                        <div className="text-gray-700 dark:text-gray-200">
+                          Создал как черновик: <span className="font-medium">{values.created_by || "—"}</span>
+                        </div>
+                        <div className="text-gray-700 dark:text-gray-200">
+                          Проводку сделал: <span className={values.entry_created_by ? "font-medium" : "text-red-500"}>{values.entry_created_by || "Пока не проводили"}</span>
+                        </div>
+                        <div className="text-gray-700 dark:text-gray-200">
+                          Проводка сделана: <span className={values.entry_created_at ? "font-medium" : "text-red-500"}>{values.entry_created_at || "Пока не проводили"}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -269,6 +335,25 @@ const MainPage = () => {
               <div className="hidden print:block">
                 <Saldo saldo={saldo} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} />
               </div>
+              {id && (
+                <div className="hidden print:block mt-5">
+                  <div className="text-gray-700 dark:text-gray-200">
+                    Создано: <span className="font-medium">{values.created_at || "—"}</span>
+                  </div>
+                  <div className="text-gray-700 dark:text-gray-200">
+                    Обновлено: <span className="font-medium">{values.updated_at || "—"}</span>
+                  </div>
+                  <div className="text-gray-700 dark:text-gray-200">
+                    Создал как черновик: <span className="font-medium">{values.created_by || "—"}</span>
+                  </div>
+                  <div className="text-gray-700 dark:text-gray-200">
+                    Проводку сделал: <span className={values.entry_created_by ? "font-medium" : "text-red-500"}>{values.entry_created_by || "Пока не проводили"}</span>
+                  </div>
+                  <div className="text-gray-700 dark:text-gray-200">
+                    Проводка сделана: <span className={values.entry_created_at ? "font-medium" : "text-red-500"}>{values.entry_created_at || "Пока не проводили"}</span>
+                  </div>
+                </div>
+              )}
 
               {/* <div className="flex justify-end">{values.products.length > 0 && <SubmitButton dateProwodok={dateProwodok} />}</div> */}
             </Form>

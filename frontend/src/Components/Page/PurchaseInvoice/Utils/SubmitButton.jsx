@@ -11,7 +11,7 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
   const [openModal, setOpenModal] = useState(false);
 
   return (
-    <div className="flex items-center sm:flex-row gap-4 mt-6 mr-3 sm:mr-6 ml-5 print:hidden">
+    <div className="flex items-center sm:flex-row gap-4 mt-6 sm:mr-6 ml-5 print:hidden">
       {/* Checkbox с проводкой */}
       <div className="flex items-center gap-3 group">
         <div className="relative">

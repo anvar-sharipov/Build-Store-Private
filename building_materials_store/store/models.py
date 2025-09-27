@@ -454,41 +454,41 @@ class SalesInvoiceItem(models.Model):
 ########################################################################################################################################################################################################################
 ######################################################################## Приход накладная (faktura) START
 
-class PurchaseInvoice(models.Model):
-    TRANSACTION_TYPE_CHOICES = [('purchase', 'Покупка'), ('return', 'Возврат'),]
+# class PurchaseInvoice(models.Model):
+#     TRANSACTION_TYPE_CHOICES = [('purchase', 'Покупка'), ('return', 'Возврат'),]
     
-    supplier = models.ForeignKey('Partner', on_delete=models.PROTECT, verbose_name='Поставщик', null=True, blank=True)
-    transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPE_CHOICES, default='purchase', verbose_name='Тип операции')
-    created_by = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name='Создал')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания (автоматически)')
-    invoice_date = models.DateTimeField(verbose_name='Дата накладной (фактура)')
-    warehouse = models.ForeignKey('Warehouse', on_delete=models.PROTECT, verbose_name='Склад', null=True, blank=True)
-    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"), verbose_name='Общая сумма')
-    received_by = models.ForeignKey('Employee', on_delete=models.PROTECT, verbose_name='Принял', null=True, blank=True)
-    note = models.TextField(null=True, blank=True, verbose_name='Примечание')
-    total_pay_summ = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"), verbose_name="Сумма оплаты", null=True, blank=True)
-    isEntry = models.BooleanField(default=False, verbose_name="Проводка создана")
+#     supplier = models.ForeignKey('Partner', on_delete=models.PROTECT, verbose_name='Поставщик', null=True, blank=True)
+#     transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPE_CHOICES, default='purchase', verbose_name='Тип операции')
+#     created_by = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name='Создал')
+#     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания (автоматически)')
+#     invoice_date = models.DateTimeField(verbose_name='Дата накладной (фактура)')
+#     warehouse = models.ForeignKey('Warehouse', on_delete=models.PROTECT, verbose_name='Склад', null=True, blank=True)
+#     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"), verbose_name='Общая сумма')
+#     received_by = models.ForeignKey('Employee', on_delete=models.PROTECT, verbose_name='Принял', null=True, blank=True)
+#     note = models.TextField(null=True, blank=True, verbose_name='Примечание')
+#     total_pay_summ = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"), verbose_name="Сумма оплаты", null=True, blank=True)
+#     isEntry = models.BooleanField(default=False, verbose_name="Проводка создана")
 
-    class Meta:
-        verbose_name = 'Приходная накладная'
-        verbose_name_plural = 'Приходные накладные'
-        indexes = [models.Index(fields=['created_at']), models.Index(fields=['supplier', 'created_at'])]
+#     class Meta:
+#         verbose_name = 'Приходная накладная'
+#         verbose_name_plural = 'Приходные накладные'
+#         indexes = [models.Index(fields=['created_at']), models.Index(fields=['supplier', 'created_at'])]
 
-    def __str__(self):
-        return f"Закупка №{self.id} от {self.created_at.strftime('%Y-%m-%d')}"
+#     def __str__(self):
+#         return f"Закупка №{self.id} от {self.created_at.strftime('%Y-%m-%d')}"
 
-    def calculate_total(self):
-        return sum(item.get_line_total() for item in self.items.all())
+#     def calculate_total(self):
+#         return sum(item.get_line_total() for item in self.items.all())
 
 
-class PurchaseInvoiceItem(models.Model):
-    invoice = models.ForeignKey('PurchaseInvoice', on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey('Product', on_delete=models.PROTECT)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2)
-    purchase_price = models.DecimalField(max_digits=10, decimal_places=2)
+# class PurchaseInvoiceItem(models.Model):
+#     invoice = models.ForeignKey('PurchaseInvoice', on_delete=models.CASCADE, related_name='items')
+#     product = models.ForeignKey('Product', on_delete=models.PROTECT)
+#     quantity = models.DecimalField(max_digits=10, decimal_places=2)
+#     purchase_price = models.DecimalField(max_digits=10, decimal_places=2)
 
-    def get_line_total(self):
-        return (self.quantity or 0) * (self.purchase_price or 0)
+#     def get_line_total(self):
+#         return (self.quantity or 0) * (self.purchase_price or 0)
 
 ######################################################################## Приход накладная (faktura) END
 ########################################################################################################################################################################################################################
@@ -501,83 +501,104 @@ class PurchaseInvoiceItem(models.Model):
 ########################################################################################################################################################################################################################
 ######################################################################## Faktura START
 
-# class Invoice(models.Model):
-#     INVOICE_TYPE_CHOICES = [
-#         ("sale", "Расход (Продажа)"),
-#         ("purchase", "Приход (Закупка)"),
-#         ("return", "Возврат"),
-#     ]
+class Invoice(models.Model):
+    INVOICE_TYPE_CHOICES = [
+        ("rashod", "Расход (Продажа)"),
+        ("prihod", "Приход (Закупка)"),
+        ("wozwrat", "Возврат"),
+    ]
     
-#     # validasii dlya inputow
-#     awto_send = models.BooleanField(default=False)
-#     partner_send = models.BooleanField(default=False)
-#     send = models.BooleanField(default=False)
-
-#     type = models.CharField(max_length=10, choices=INVOICE_TYPE_CHOICES, verbose_name="Тип накладной")
-#     partner = models.ForeignKey("Partner", on_delete=models.PROTECT, verbose_name="Контрагент", null=True, blank=True)
-#     created_by = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Создал")
-#     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания (автоматически)")
-#     invoice_date = models.DateTimeField(verbose_name="Дата накладной (фактура)")
-#     warehouse = models.ForeignKey("Warehouse", on_delete=models.PROTECT, verbose_name="Склад", null=True, blank=True)
-
-#     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"), verbose_name="Общая сумма")
-#     total_pay_summ = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"), verbose_name="Сумма оплаты", null=True, blank=True)
-
-#     awto = models.ForeignKey("Employee", on_delete=models.PROTECT, verbose_name="Доставил / Принял", null=True, blank=True)
-
-#     note = models.TextField(null=True, blank=True, verbose_name="Примечание")
-#     is_entry = models.BooleanField(default=False, verbose_name="Проводка создана")
-
-#     # для продаж
-#     TYPE_PRICE_CHOICES = [("wholesale", "Опт"), ("retail", "Розница")]
-#     type_price = models.CharField(max_length=10, choices=TYPE_PRICE_CHOICES, default="wholesale", verbose_name="Тип продажи", null=True, blank=True)
-
-#     class Meta:
-#         verbose_name = "Накладная"
-#         verbose_name_plural = "Накладные"
-#         indexes = [
-#             models.Index(fields=["created_at"]),
-#             models.Index(fields=["partner", "created_at"]),
-#         ]
-
-#     def __str__(self):
-#         return f"{self.get_type_display()} №{self.id} от {self.created_at.strftime('%Y-%m-%d')}"
-
-#     def calculate_total(self):
-#         return sum(item.get_line_total() for item in self.items.all())
-
-
-# class InvoiceItem(models.Model):
-#     invoice = models.ForeignKey("Invoice", on_delete=models.CASCADE, related_name="items")
-#     product = models.ForeignKey("Product", on_delete=models.PROTECT)
+    TYPE_PRICE_CHOICES = [("wholesale_price", "Опт"), ("retail_price", "Розница")]
     
-#     discount_price = models.DecimalField(verbose_name='Цена со скидкой', max_digits=10, decimal_places=3, blank=True, null=True)
-#     firma_price = models.DecimalField(verbose_name='Цена Firma', max_digits=10, decimal_places=3, blank=True, null=True)
-    
-#     purchase_price = models.DecimalField(verbose_name='Цена закупки', max_digits=10, decimal_places=3, default=0)
-#     retail_price = models.DecimalField(verbose_name='Розничная цена', max_digits=10, decimal_places=3, default=0)
-#     wholesale_price = models.DecimalField(verbose_name='Оптовая цена', max_digits=10, decimal_places=3, default=0)
-    
-#     selected_price = models.DecimalField(verbose_name='Выбранная цена', max_digits=10, decimal_places=3, default=0)
-#     selected_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    
-#     # esli est besplatnye towary k etomu produktu to nado sohranit dannye o nih
-    
- 
+    awto = models.ForeignKey(Employee, on_delete=models.PROTECT, verbose_name="Доставил / Принял", null=True, blank=True)
+    awto_send = models.BooleanField(default=False)
+    comment = models.TextField(null=True, blank=True, verbose_name="Примечание")
+    invoice_date = models.DateTimeField(verbose_name="Дата накладной (фактура)", null=True, blank=True)
+    is_entry = models.BooleanField(default=False, verbose_name="Проводка создана")
+    partner = models.ForeignKey(Partner, on_delete=models.PROTECT, verbose_name="Партнёр", null=True, blank=True) 
+    partner_send = models.BooleanField(default=False)
+    send = models.BooleanField(default=False)
+    type_price = models.CharField(max_length=50, choices=TYPE_PRICE_CHOICES, default="wholesale_price", verbose_name="Тип цены", null=True, blank=True)
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.PROTECT, verbose_name="Склад", null=True, blank=True)
+    wozwrat_or_prihod = models.CharField(max_length=50, choices=INVOICE_TYPE_CHOICES, verbose_name="Тип накладной", null=True, blank=True)
 
-#     is_gift = models.BooleanField(default=False, verbose_name="Бесплатный товар")
+    # Кто создал накладную (черновик)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="invoices_created", verbose_name="Создал (черновик)")
+    
+    # Кто сделал проводку
+    entry_created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="invoices_posted", null=True, blank=True, verbose_name="Сохранил с проводкой")
+    
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания (черновик awto)")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления (awto)")
+    entry_created_at = models.DateTimeField(null=True, blank=True,verbose_name="Дата сохранения с проводкой (awto)")
+    
+    # data wybrannaya userom
+    created_at_handle = models.DateTimeField(verbose_name="Дата создания (черновик)", null=True, blank=True)
+    updated_at_handle = models.DateTimeField(verbose_name="Дата обновления", null=True, blank=True)
+    entry_created_at_handle = models.DateTimeField(null=True, blank=True,verbose_name="Дата сохранения с проводкой")
 
+
+    class Meta:
+        verbose_name = "Накладная"
+        verbose_name_plural = "Накладные"
+        indexes = [
+            models.Index(fields=["created_at"]),
+            models.Index(fields=["partner", "created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.get_wozwrat_or_prihod_display()} Фактура №{self.id} от {self.created_at.strftime('%Y-%m-%d')}"
+
+
+
+
+
+class InvoiceItem(models.Model):
+    # item_id = models.IntegerField(blank=True, null=True) # 7216
+    base_quantity_in_stock = models.DecimalField(max_digits=12, decimal_places=2, default=0) # 134
+    base_unit_obj = models.ForeignKey(UnitOfMeasurement, on_delete=models.PROTECT) # {id: 6593, name: 'sany'}
+    discount_price = models.DecimalField(max_digits=12, decimal_places=3, blank=True, null=True) # null
+    firma_price = models.DecimalField(max_digits=12, decimal_places=3, blank=True, null=True) # 0.000
+    is_custom_price = models.BooleanField(default=False)
+    is_gift = models.BooleanField(default=False)
+    parent_id = models.IntegerField(blank=True, null=True) # esli eto gift nujen id ego osnownogo produkta
+    purchase_price = models.DecimalField(max_digits=12, decimal_places=3, default=0) #  "5.000"
+    quantity_on_selected_warehouses = models.DecimalField(max_digits=12, decimal_places=2, default=0) # 67
+    retail_price = models.DecimalField(max_digits=12, decimal_places=3, default=0) # "7.000"
+    selected_price = models.DecimalField(max_digits=12, decimal_places=3, default=0) # "6.000"
+    selected_quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0) # 1
+    total_quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0) # 134
+    unit_name_on_selected_warehouses = models.CharField(max_length=50, blank=True, null=True) # "metr"
+    wholesale_price = models.DecimalField(max_digits=12, decimal_places=3, default=0)
+    
+
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="items")
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
     
     
-#     conversion_factor = 
+
+
+class FreeItemForInvoiceItem(models.Model):
+    main_product = models.ForeignKey(InvoiceItem, on_delete=models.CASCADE, related_name="free_items")
+    gift_product_obj = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="free_product") # для того чтобы брать images, volume и тп
+    # gift_product = models.IntegerField() # id 7216 ne nado , est w gift_product_obj.id
+    gift_product_name = models.CharField(max_length=500) # "AB-20, AKRENK 1KG POL (12)"
+    gift_product_unit_name = models.CharField(max_length=50) # sany
+    quantity_per_unit = models.DecimalField(max_digits=12, decimal_places=2, default=0) # "2.00"
     
-#     gift_quantity_per_unit =  
-     
-#     unit_name_on_selected_warehouses = models.CharField(max_length=50, verbose_name="Единица измерения", blank=True, null=True)
-
-
-#     def get_line_total(self):
-#         return (self.quantity or 0) * (self.price or 0)
+class UnitForInvoiceItem(models.Model):
+    main_product = models.ForeignKey(InvoiceItem, on_delete=models.CASCADE, related_name="units")
+    base_unit_name = models.CharField(max_length=50) # "sany"
+    conversion_factor = models.CharField(max_length=50) # "2.000"
+    unit_id = models.IntegerField() # id: 103
+    is_default_for_sale = models.BooleanField(default=True)
+    unit_name = models.CharField(max_length=50) # "metr"
+    
+# class WarehouseForInvoiceItem(models.Model):
+#     main_product = models.ForeignKey(InvoiceItem, on_delete=models.CASCADE, related_name="warehouses")
+#     quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+#     warehouse_id = models.IntegerField() # id 1
+#     warehouse_name = models.CharField(max_length=500) # "Sklad polisem 1"
     
     
 

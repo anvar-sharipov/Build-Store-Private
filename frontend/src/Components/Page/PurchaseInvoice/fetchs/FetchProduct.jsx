@@ -88,8 +88,10 @@ const FetchProduct = ({ refs }) => {
               }
               if (e.key == "ArrowDown") {
                 e.preventDefault();
-
+                // console.log('tttttttt ===');
                 if (refs.productListRef.current.length > 0) {
+                  
+                  
                   // console.log("values.products", values.products);
                   // console.log("refs.productListRef", refs.productListRef);
                   setTimeout(() => {

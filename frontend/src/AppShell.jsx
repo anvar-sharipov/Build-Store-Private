@@ -27,6 +27,7 @@ import { DateProvider } from "./Components/UI/DateProvider";
 import ImportPartners from "./Components/Page/Admin/ImportPartners";
 import DeleteData from "./Components/Page/Admin/DeleteData";
 import Entries from "./Components/Page/Entries/Entries";
+import { NotificationProvider } from "./Components/context/NotificationContext";
 
 
 function AppShell() {
@@ -40,52 +41,54 @@ function AppShell() {
 
   return (
     <>
-      <DateProvider>
-        <Header />
+      <NotificationProvider>
+        <DateProvider>
+          <Header />
 
-        <AuthProvider>
-          <SearchProvider>
-            <main className={`flex flex-grow gap-4 mt-4 ${isFullScreenPage ? "" : "lg:ml-52 lg:mr-72"} print:w-full print:block print:p-0 print:m-0`}>
-              {!isFullScreenPage && <SidebarLeft />}
+          <AuthProvider>
+            <SearchProvider>
+              <main className={`flex flex-grow gap-4 mt-4 ${isFullScreenPage ? "" : "lg:ml-52 lg:mr-72"} print:w-full print:block print:p-0 print:m-0`}>
+                {!isFullScreenPage && <SidebarLeft />}
 
-              <section className={`flex-grow flex flex-col bg-zinc-50 dark:bg-gray-800 rounded-lg shadow-sm ${isFullScreenPage ? "p-0" : "p-4"}`}>
-                <Routes>
-                  <Route path={ROUTES.MAIN} element={<ProductList />} />
-                  <Route path="/sale-invoices/new" element={<AddSaleInvoicePage />} />
-                  <Route path="/sale-invoices/create" element={<MainPage />} />
-                  <Route path="/sale-invoices/update/:id" element={<MainPage />} />
-                  {/* <Route path="/sale-invoices/update/:id" element={<UpdateSaleInvoice />} /> */}
-                  <Route path={ROUTES.REGISTER} element={<Register />} />
-                  <Route path={ROUTES.LOGIN} element={<Login />} />
-                  <Route path={ROUTES.HARYTLAR} element={<Harytlar />} />
-                  <Route path={ROUTES.EMPLOYEERS} element={<Employee />} />
-                  <Route path={ROUTES.PARTNERS_new} element={<Partner2 />} />
-                  <Route path={ROUTES.AGENTS} element={<Agent />} />
-                  <Route path={ROUTES.ENTRIES} element={<Entries />} />
-                  {/* <Route path={ROUTES.ACCOUNT} element={<Account />} /> */}
+                <section className={`flex-grow flex flex-col bg-zinc-50 dark:bg-gray-800 rounded-lg shadow-sm ${isFullScreenPage ? "p-0" : "p-4"}`}>
+                  <Routes>
+                    <Route path={ROUTES.MAIN} element={<ProductList />} />
+                    <Route path="/sale-invoices/new" element={<AddSaleInvoicePage />} />
+                    <Route path="/sale-invoices/create" element={<MainPage />} />
+                    <Route path="/sale-invoices/update/:id" element={<MainPage />} />
+                    {/* <Route path="/sale-invoices/update/:id" element={<UpdateSaleInvoice />} /> */}
+                    <Route path={ROUTES.REGISTER} element={<Register />} />
+                    <Route path={ROUTES.LOGIN} element={<Login />} />
+                    <Route path={ROUTES.HARYTLAR} element={<Harytlar />} />
+                    <Route path={ROUTES.EMPLOYEERS} element={<Employee />} />
+                    <Route path={ROUTES.PARTNERS_new} element={<Partner2 />} />
+                    <Route path={ROUTES.AGENTS} element={<Agent />} />
+                    <Route path={ROUTES.ENTRIES} element={<Entries />} />
+                    {/* <Route path={ROUTES.ACCOUNT} element={<Account />} /> */}
 
-                  <Route path={ROUTES_RAPORT.PRICE_CHANGE_REPORT} element={<PriceChangeReport />} />
+                    <Route path={ROUTES_RAPORT.PRICE_CHANGE_REPORT} element={<PriceChangeReport />} />
 
-                  <Route path={PROCHEE.PARTNER_TRANSACTION_ENTRY} element={<PartnerTransactionEntry />} />
-                  <Route path={PROCHEE.OSW} element={<OSW />} />
+                    <Route path={PROCHEE.PARTNER_TRANSACTION_ENTRY} element={<PartnerTransactionEntry />} />
+                    <Route path={PROCHEE.OSW} element={<OSW />} />
 
-                  {/* PurchaseInvoice */}
-                  <Route path={ROUTES.PURCHASEINVOICE} element={<PurchaseInvoice />} />
-                  <Route path={ROUTES.PURCHASE_INVOICE_CREATE} element={<MainPagePurchase />} />
-                  <Route path={ROUTES.PURCHASE_INVOICE_UPDATE} element={<MainPagePurchase />} />
+                    {/* PurchaseInvoice */}
+                    <Route path={ROUTES.PURCHASEINVOICE} element={<PurchaseInvoice />} />
+                    <Route path={ROUTES.PURCHASE_INVOICE_CREATE} element={<MainPagePurchase />} />
+                    <Route path={ROUTES.PURCHASE_INVOICE_UPDATE} element={<MainPagePurchase />} />
 
-                  {/* adminPanel */}
-                  <Route path={ADMIN_PANEL.IMPORT_PRODUCTS} element={<ImportProducts />} />
-                  <Route path={ADMIN_PANEL.IMPORT_PARTNERS} element={<ImportPartners />} />
-                  <Route path={ADMIN_PANEL.DELETE_MODELS} element={<DeleteData />} />
-                </Routes>
-              </section>
+                    {/* adminPanel */}
+                    <Route path={ADMIN_PANEL.IMPORT_PRODUCTS} element={<ImportProducts />} />
+                    <Route path={ADMIN_PANEL.IMPORT_PARTNERS} element={<ImportPartners />} />
+                    <Route path={ADMIN_PANEL.DELETE_MODELS} element={<DeleteData />} />
+                  </Routes>
+                </section>
 
-              {!isFullScreenPage && <SidebarRight />}
-            </main>
-          </SearchProvider>
-        </AuthProvider>
-      </DateProvider>
+                {!isFullScreenPage && <SidebarRight />}
+              </main>
+            </SearchProvider>
+          </AuthProvider>
+        </DateProvider>
+      </NotificationProvider>
     </>
   );
 }

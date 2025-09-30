@@ -455,7 +455,19 @@
   "rashod invoice updated with entry":"фактура обновлена с проводкой",
   "wozwrat invoice updated without entry":"фактура обновлена без проводки",
   "prihod invoice updated without entry":"фактура обновлена без проводки",
-  "rashod invoice updated without entry":"фактура обновлена без проводки"
+  "rashod invoice updated without entry":"фактура обновлена без проводки",
+  "u dont have a rule for rashod": "Нет правила проводки для расход фактура",
+  "u have more rule than 1 for rashod faktura": "Больше 1 правила для расход фактура",
+  "partner dont have a type": "У Выбранного партнера нет типа",
+  "invoice saved": "Фактура сохранена",
+  "rule must have revenue or profit": "В правиле проводок должны быть продажа или прибыль",
+  "are_you_sure_delete_invoice": "Вы уверены, что хотите удалить фактуру",
+  "deleted": "Удалён",
+  "success": "Успешно",
+  "succesifuly deleted": "Успешно удалён",
+  "cant delete is entried invoice": "Невозможно удалить проводённую фактуру",
+  "cant find invoice": "Фактура не найдена"
+  
 
 
   

@@ -8,6 +8,33 @@ from .. models import *
 from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import status
+from django.core.paginator import Paginator
+from django.db.models import Q
+from datetime import datetime
+from django.views.decorators.http import require_http_methods
+from django.shortcuts import get_object_or_404
+
+
+
+def normalize_date(date_str: str) -> str:
+    """
+    Принимает дату строкой (например '05.09.2025' или '2025-09-05')
+    и возвращает её в формате 'YYYY-MM-DD'.
+    """
+    # Возможные форматы
+    formats = ["%d.%m.%Y", "%Y-%m-%d"]
+
+    for fmt in formats:
+        try:
+            dt = datetime.strptime(date_str, fmt)
+            return dt.strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+    
+    raise ValueError(f"Неизвестный формат даты: {date_str}")
+
+
+
 
 
 #####################################################################################################################################################################
@@ -21,8 +48,25 @@ from rest_framework import status
 def save_invoice(request):
     if request.method == "POST":
         ic('save_invoice', request.user)
-        try:
+        
+        def create_entries(transaction_obj, rule, product_obj, warehouse_obj, amount):
+            Entry.objects.create(
+                transaction=transaction_obj,
+                account=rule.debit_account,
+                product=product_obj,
+                warehouse=warehouse_obj,
+                debit=amount,
+            )
             
+            Entry.objects.create(
+                transaction=transaction_obj,
+                account=rule.credit_account,
+                product=product_obj,
+                warehouse=warehouse_obj,
+                credit=amount
+            )
+    
+        try:
             data = json.loads(request.body)
             ic(data['id'])
             is_entry = data['is_entry']  
@@ -46,7 +90,7 @@ def save_invoice(request):
             if not send:
                 return JsonResponse({"status": "error", "message": "fill in all the fields"}, status=400)
             
-            if not wozwrat_or_prihod or wozwrat_or_prihod not in ["wozwrat", "prihod", "rashod"]:
+            if wozwrat_or_prihod not in ["wozwrat", "prihod", "rashod"]:
                 return JsonResponse({"status": "error", "message": "choose rashod, prihod or wozwrat"}, status=400)
             
             if not invoice_date:
@@ -89,6 +133,9 @@ def save_invoice(request):
                     return JsonResponse({"status": "error", "message": "choose partner"}, status=400)
                 
                 try:
+                    print("PARTNER:", partner, type(partner))
+                    # partner_obj = Partner.objects.select_for_update(id=partner["id"])
+                    # partner_obj = Partner.objects.select_for_update().get(id=partner["id"])
                     partner_obj = Partner.objects.get(id=partner["id"])
                 except:
                     return JsonResponse({"status": "error", "message": "cant find parnter in database"}, status=400)
@@ -120,125 +167,282 @@ def save_invoice(request):
             #####################################################################################################################################################################
             # create
             if not invoice_id:
-                # create s prowodkoy
-                if is_entry:
-                    
-                    if wozwrat_or_prihod == "wozwrat":
-                        return JsonResponse({"status": "ok", "message": f"wozwrat invoice saved with entry"})
-                    elif wozwrat_or_prihod == "prihod":
-                        return JsonResponse({"status": "ok", "message": f"prihod invoice saved with entry"})
-                    elif wozwrat_or_prihod == "rashod":
-                        # operation = Operation.objects.filter(code="sale")
-                        
-                        # if not operation.exists():
-                        #     return JsonResponse({"status": "error", "message": "net prawilo prowodok dlya faktura rashod"}, status=400)
-                        
-                        # if len(operation) != 1:
-                        #     return JsonResponse({"status": "error", "message": "u was bolshe 1 prawilo prowodok dlya faktura rashod"}, status=400)
-                        
-                        # rules = CustomePostingRule.objects.filter(operation=operation, directory_type=partner.type)
-                    
-                        return JsonResponse({"status": "ok", "message": f"rashod invoice saved with entry"})
-                # create bez prowodki 
-                else:
-                    
-                    # # Invoice.objects.all().delete()
-                    # test = Invoice.objects.all()
-                    # ic(test)
-                    # test2 = InvoiceItem.objects.all()
-                    # ic(test2)
-                    
-                    # ic(type_price)
-                    
-                    try:
-                        with transaction.atomic():
-                        
-                        
-                            invoice = Invoice.objects.create(
-                                awto=awto_obj,
-                                awto_send=awto_send,
-                                comment=comment,
-                                invoice_date=invoice_date,
-                                is_entry=is_entry,
-                                partner=partner_obj,
-                                partner_send=partner_send,
-                                send=send,
-                                type_price=type_price,
-                                warehouse=warehouse_obj,
-                                wozwrat_or_prihod=wozwrat_or_prihod,
-                                created_by=request.user,
-                                created_at_handle=invoice_date,
-                                updated_at_handle=invoice_date,
-                                
+                try:
+                    with transaction.atomic():
+                        invoice = Invoice.objects.create(
+                            awto=awto_obj,
+                            awto_send=awto_send,
+                            comment=comment,
+                            invoice_date=invoice_date,
+                            is_entry=is_entry,
+                            partner=partner_obj,
+                            partner_send=partner_send,
+                            send=send,
+                            type_price=type_price,
+                            warehouse=warehouse_obj,
+                            wozwrat_or_prihod=wozwrat_or_prihod,
+                            created_by=request.user,
+                            created_at_handle=invoice_date,
+                            updated_at_handle=invoice_date,
+                            )
+                         
+                         
+                        product_map = {} # {product_id: product_obj}   
+                        for product in products:
+                            try:
+                                product_obj = Product.objects.get(id=product['id'])
+                                product_map[product['id']] = product_obj
+                            except Product.DoesNotExist:
+                                return JsonResponse({"status": "error", "message": "product is not fined", "not_fined_product_name": product['name']}, status=400)
+                            
+                            base_unit_obj = product["base_unit_obj"]
+                            # ic(base_unit_obj)
+                            try:
+                                base_unit_obj_obj = UnitOfMeasurement.objects.get(id=base_unit_obj["id"])
+                            except UnitOfMeasurement.DoesNotExist:
+                                return JsonResponse({"status": "error", "message": "unit is not fined", "not_fined_unit_name": base_unit_obj['name']}, status=400)
+                            
+            
+                            invoiceItem = InvoiceItem.objects.create(
+                                # item_id=product["id"],
+                                base_quantity_in_stock=product["base_quantity_in_stock"],
+                                base_unit_obj=base_unit_obj_obj,
+                                discount_price=product["discount_price"],
+                                firma_price=product["firma_price"],
+                                is_custom_price=product["is_custom_price"],
+                                is_gift=product["is_gift"],
+                                parent_id=product.get("parent_id"),
+                                purchase_price=product["purchase_price"],
+                                quantity_on_selected_warehouses=product["quantity_on_selected_warehouses"],
+                                retail_price=product["retail_price"],
+                                selected_price=product["selected_price"],
+                                selected_quantity=product["selected_quantity"],
+                                total_quantity=product["base_quantity_in_stock"],
+                                unit_name_on_selected_warehouses=product["unit_name_on_selected_warehouses"],
+                                wholesale_price=product["wholesale_price"],   
+                                invoice=invoice,
+                                product=product_obj                         
                                 )
                             
-                            for product in products:
-                                try:
-                                    product_obj = Product.objects.get(id=product['id'])
-                                except Product.DoesNotExist:
-                                    return JsonResponse({"status": "error", "message": "product is not fined", "not_fined_product_name": product['name']}, status=400)
+                            
+                            if product.get('free_items') and len(product.get('free_items')) > 0:
+                                for free_items in product['free_items']: 
+                                    try:
+                                        gift_product_obj = Product.objects.get(id=free_items['gift_product'])
+                                    except Product.DoesNotExist:
+                                        return JsonResponse({"status": "error", "message": "product is not fined", "not_fined_product_name": free_items['gift_product_name']}, status=400)
+                                    
+                                    FreeItemForInvoiceItem.objects.create(
+                                        main_product = invoiceItem,
+                                        gift_product_obj = gift_product_obj,
+                                        gift_product_name=free_items['gift_product_name'],
+                                        gift_product_unit_name=free_items['gift_product_unit_name'],
+                                        quantity_per_unit=free_items['quantity_per_unit']
+                                    )
+                            
+                            if product.get('units') and len(product.get('units')) > 0:
+                                for unit in product.get('units'):
+                                    if unit['is_default_for_sale']:
+                                        UnitForInvoiceItem.objects.create(
+                                            main_product=invoiceItem,
+                                            base_unit_name=unit['base_unit_name'],
+                                            conversion_factor=unit['conversion_factor'],
+                                            unit_id=unit['id'],
+                                            is_default_for_sale=unit['is_default_for_sale'],
+                                            unit_name=unit['unit_name'],
+                                        )
+                        
+                        if is_entry:
+                            partner_obj = Partner.objects.select_for_update().get(id=partner["id"])            
+                            if wozwrat_or_prihod == "wozwrat":
+                                return JsonResponse({"status": "ok", "message": f"wozwrat invoice saved with entry"})
+                            elif wozwrat_or_prihod == "prihod":
+                                return JsonResponse({"status": "ok", "message": f"prihod invoice saved with entry"})
+                            elif wozwrat_or_prihod == "rashod":
+                                ic("rashod s prowodkoy")
+                                operation = Operation.objects.filter(code="sale")
                                 
-                                base_unit_obj = product["base_unit_obj"]
-                                # ic(base_unit_obj)
-                                try:
-                                    base_unit_obj_obj = UnitOfMeasurement.objects.get(id=base_unit_obj["id"])
-                                except UnitOfMeasurement.DoesNotExist:
-                                    return JsonResponse({"status": "error", "message": "unit is not fined", "not_fined_unit_name": base_unit_obj['name']}, status=400)
+                                if not operation.exists():
+                                    transaction.set_rollback(True)
+                                    return JsonResponse({"status": "error", "message": "u dont have a rule for rashod"}, status=400)
                                 
-                
-                                invoiceItem = InvoiceItem.objects.create(
-                                    # item_id=product["id"],
-                                    base_quantity_in_stock=product["base_quantity_in_stock"],
-                                    base_unit_obj=base_unit_obj_obj,
-                                    discount_price=product["discount_price"],
-                                    firma_price=product["firma_price"],
-                                    is_custom_price=product["is_custom_price"],
-                                    is_gift=product["is_gift"],
-                                    parent_id=product.get("parent_id"),
-                                    purchase_price=product["purchase_price"],
-                                    quantity_on_selected_warehouses=product["quantity_on_selected_warehouses"],
-                                    retail_price=product["retail_price"],
-                                    selected_price=product["selected_price"],
-                                    selected_quantity=product["selected_quantity"],
-                                    total_quantity=product["base_quantity_in_stock"],
-                                    unit_name_on_selected_warehouses=product["unit_name_on_selected_warehouses"],
-                                    wholesale_price=product["wholesale_price"],   
-                                    invoice=invoice,
-                                    product=product_obj                         
+                                if len(operation) != 1:
+                                    transaction.set_rollback(True)
+                                    return JsonResponse({"status": "error", "message": "u have more rule than 1 for rashod faktura"}, status=400)
+                                
+                                if not partner_obj.type:
+                                    transaction.set_rollback(True)
+                                    return JsonResponse({"status": "error", "message": "partner dont have a type"}, status=400)
+                                    
+                                
+                                rules = CustomePostingRule.objects.filter(operation=operation[0], directory_type=partner_obj.type)
+                                
+                                if not rules.exists():
+                                    transaction.set_rollback(True)
+                                    return JsonResponse({"status": "error", "message": "u dont have a rule for rashod"}, status=400)
+                                
+                                transaction_obj = Transaction.objects.create(
+                                    description=f"Faktura № {str(invoice.pk)}\n{comment}", 
+                                    date=invoice_date, invoice=invoice, 
+                                    partner=partner_obj
                                     )
                                 
-                                
-                                if product.get('free_items') and len(product.get('free_items')) > 0:
-                                    for free_items in product['free_items']: 
-                                        try:
-                                            gift_product_obj = Product.objects.get(id=free_items['gift_product'])
-                                        except Product.DoesNotExist:
-                                            return JsonResponse({"status": "error", "message": "product is not fined", "not_fined_product_name": free_items['gift_product_name']}, status=400)
+                                for product in products:
+                                    product_obj = product_map[product['id']]
+                                    
+                                    quantity = Decimal(product['selected_quantity'])
+                                    sale_price = Decimal(product['selected_price'])
+                                    purchase_price = Decimal(product['purchase_price'])
+                                    # retail_price = Decimal(product['retail_price'])
+                                    # wholesale_price = Decimal(product['wholesale_price'])
+                                    
+                                    conversion_factor = 1
+                                    units = product['units']
+                                    for u in units:
+                                        if u['is_default_for_sale']:
+                                            conversion_factor = Decimal(u['conversion_factor'])
+                                    minus_to_stock = conversion_factor * Decimal(quantity)
+                                    wp = WarehouseProduct.objects.select_for_update().get(warehouse=warehouse_obj, product=product_obj)
+                                    wp.quantity -= Decimal(minus_to_stock)
+                                    wp.save()
+                                    
+                                    
+                                    if sale_price != 0:
+                                        partner_obj.balance -= Decimal(sale_price * quantity)
+                                        for rule in rules:
+                                            if not rule.amount_type in ['revenue', 'profit']:
+                                                transaction.set_rollback(True)
+                                                return JsonResponse({"status": "error", "message": "rule must have revenue or profit"}, status=400)
+                                            if rule.amount_type == 'revenue': # продажа
+                                                revenue_price = Decimal(sale_price * quantity)
+                                                create_entries(transaction_obj, rule, product_obj, warehouse_obj, revenue_price)
+                                                
+                                            elif rule.amount_type == 'profit':
+                                                profit_price = Decimal((sale_price - purchase_price) * quantity)
+                                                create_entries(transaction_obj, rule, product_obj, warehouse_obj, profit_price)
+                                            
+                                invoice.entry_created_at = invoice_date
+                                invoice.entry_created_at_handle = invoice_date
+                                invoice.entry_created_by = request.user
+                                partner_obj.save()
+                                invoice.save()
                                         
-                                        FreeItemForInvoiceItem.objects.create(
-                                            main_product = invoiceItem,
-                                            gift_product_obj = gift_product_obj,
-                                            gift_product_name=free_items['gift_product_name'],
-                                            gift_product_unit_name=free_items['gift_product_unit_name'],
-                                            quantity_per_unit=free_items['quantity_per_unit']
-                                        )
+                        1/0 
+                        # create success 
+                        return JsonResponse({"status": "ok", "message": f"invoice saved", "id": invoice.id})
+                                    
+                                        
+                except Exception as e:
+                    ic(e)
+                    # create error
+                    return JsonResponse({"status": "error", "message": "transactionChange", "reason_for_the_error": str(e)}, status=400)
+                
+                
+                
                                 
-                                if product.get('units') and len(product.get('units')) > 0:
-                                    for unit in product.get('units'):
-                                        if unit['is_default_for_sale']:
-                                            UnitForInvoiceItem.objects.create(
-                                                main_product=invoiceItem,
-                                                base_unit_name=unit['base_unit_name'],
-                                                conversion_factor=unit['conversion_factor'],
-                                                unit_id=unit['id'],
-                                                is_default_for_sale=unit['is_default_for_sale'],
-                                                unit_name=unit['unit_name'],
-                                            )
+                  
+                   
+                        
+                        
+                    
+                        
+                # # create bez prowodki 
+                # else:
+                    
+                #     # # Invoice.objects.all().delete()
+                #     # test = Invoice.objects.all()
+                #     # ic(test)
+                #     # test2 = InvoiceItem.objects.all()
+                #     # ic(test2)
+                    
+                #     # ic(type_price)
+                    
+                #     try:
+                #         with transaction.atomic():
+                #             invoice = Invoice.objects.create(
+                #                 awto=awto_obj,
+                #                 awto_send=awto_send,
+                #                 comment=comment,
+                #                 invoice_date=invoice_date,
+                #                 is_entry=is_entry,
+                #                 partner=partner_obj,
+                #                 partner_send=partner_send,
+                #                 send=send,
+                #                 type_price=type_price,
+                #                 warehouse=warehouse_obj,
+                #                 wozwrat_or_prihod=wozwrat_or_prihod,
+                #                 created_by=request.user,
+                #                 created_at_handle=invoice_date,
+                #                 updated_at_handle=invoice_date,
+                #                 )
                             
-                            return JsonResponse({"status": "ok", "message": f"{wozwrat_or_prihod} invoice saved without entry", "id": invoice.id})
-                    except Exception as e:
-                        ic(e)
-                        return JsonResponse({"status": "error", "message": "transactionChange", "reason_for_the_error": e}, status=400)
+                #             for product in products:
+                #                 try:
+                #                     product_obj = Product.objects.get(id=product['id'])
+                #                 except Product.DoesNotExist:
+                #                     return JsonResponse({"status": "error", "message": "product is not fined", "not_fined_product_name": product['name']}, status=400)
+                                
+                #                 base_unit_obj = product["base_unit_obj"]
+                #                 # ic(base_unit_obj)
+                #                 try:
+                #                     base_unit_obj_obj = UnitOfMeasurement.objects.get(id=base_unit_obj["id"])
+                #                 except UnitOfMeasurement.DoesNotExist:
+                #                     return JsonResponse({"status": "error", "message": "unit is not fined", "not_fined_unit_name": base_unit_obj['name']}, status=400)
+                                
+                
+                #                 invoiceItem = InvoiceItem.objects.create(
+                #                     # item_id=product["id"],
+                #                     base_quantity_in_stock=product["base_quantity_in_stock"],
+                #                     base_unit_obj=base_unit_obj_obj,
+                #                     discount_price=product["discount_price"],
+                #                     firma_price=product["firma_price"],
+                #                     is_custom_price=product["is_custom_price"],
+                #                     is_gift=product["is_gift"],
+                #                     parent_id=product.get("parent_id"),
+                #                     purchase_price=product["purchase_price"],
+                #                     quantity_on_selected_warehouses=product["quantity_on_selected_warehouses"],
+                #                     retail_price=product["retail_price"],
+                #                     selected_price=product["selected_price"],
+                #                     selected_quantity=product["selected_quantity"],
+                #                     total_quantity=product["base_quantity_in_stock"],
+                #                     unit_name_on_selected_warehouses=product["unit_name_on_selected_warehouses"],
+                #                     wholesale_price=product["wholesale_price"],   
+                #                     invoice=invoice,
+                #                     product=product_obj                         
+                #                     )
+                                
+                                
+                #                 if product.get('free_items') and len(product.get('free_items')) > 0:
+                #                     for free_items in product['free_items']: 
+                #                         try:
+                #                             gift_product_obj = Product.objects.get(id=free_items['gift_product'])
+                #                         except Product.DoesNotExist:
+                #                             return JsonResponse({"status": "error", "message": "product is not fined", "not_fined_product_name": free_items['gift_product_name']}, status=400)
+                                        
+                #                         FreeItemForInvoiceItem.objects.create(
+                #                             main_product = invoiceItem,
+                #                             gift_product_obj = gift_product_obj,
+                #                             gift_product_name=free_items['gift_product_name'],
+                #                             gift_product_unit_name=free_items['gift_product_unit_name'],
+                #                             quantity_per_unit=free_items['quantity_per_unit']
+                #                         )
+                                
+                #                 if product.get('units') and len(product.get('units')) > 0:
+                #                     for unit in product.get('units'):
+                #                         if unit['is_default_for_sale']:
+                #                             UnitForInvoiceItem.objects.create(
+                #                                 main_product=invoiceItem,
+                #                                 base_unit_name=unit['base_unit_name'],
+                #                                 conversion_factor=unit['conversion_factor'],
+                #                                 unit_id=unit['id'],
+                #                                 is_default_for_sale=unit['is_default_for_sale'],
+                #                                 unit_name=unit['unit_name'],
+                #                             )
+                            
+                #             return JsonResponse({"status": "ok", "message": f"{wozwrat_or_prihod} invoice saved without entry", "id": invoice.id})
+                #     except Exception as e:
+                #         ic(e)
+                #         return JsonResponse({"status": "error", "message": "transactionChange", "reason_for_the_error": e}, status=400)
                         
                         
                     # if wozwrat_or_prihod == "wozwrat":
@@ -265,6 +469,9 @@ def save_invoice(request):
                         with transaction.atomic():
                             # 1. Получаем накладную
                             invoice = Invoice.objects.get(id=invoice_id)
+                            
+                            invoice_date = normalize_date(invoice_date)
+                            
 
                             # 2. Обновляем основные поля (без движения по складу)
                             invoice.awto = awto_obj
@@ -366,18 +573,53 @@ def save_invoice(request):
 @permission_classes([IsAuthenticated])
 def get_invoices(request):
     # query params будут в request.GET, например ?partner=1&wozwrat_or_prihod=prihod
-    invoices = Invoice.objects.all()
+    invoices = Invoice.objects.all().order_by("-pk")
+    ic("tut get_invoices +++++", request)
+    
 
-    partner_id = request.GET.get('partner')
+    partner_id = request.GET.get('partner_id')
     wozwrat_or_prihod = request.GET.get('wozwrat_or_prihod')
+    query = request.GET.get('query')
+    selectedEntry = request.GET.get('selectedEntry')
+    
+    
+    ic(partner_id)
 
     if partner_id:
-        invoices = invoices.filter(partner_id=partner_id)
+        invoices = invoices.filter(partner__id=partner_id)
     if wozwrat_or_prihod:
         invoices = invoices.filter(wozwrat_or_prihod=wozwrat_or_prihod)
+    if query:
+        if query.isdigit():  # если ввели цифры
+            invoices = invoices.filter(
+                Q(comment__icontains=query) | Q(pk=int(query))
+            )
+        else:
+            invoices = invoices.filter(comment__icontains=query)
+     
+    ic(selectedEntry)
+    if selectedEntry:
+        if selectedEntry == "entried":
+            invoices = invoices.filter(is_entry=True)
+        elif selectedEntry == "notEntried":
+            invoices = invoices.filter(is_entry=False)
+            
+
+    
+    # total_invoices = invoices.count()
+        
+        
+    page = int(request.GET.get("page", 1))
+    page_size = int(request.GET.get("page_size", 10))
+    
+    
+    
+    paginator = Paginator(invoices, page_size)
+    page_obj = paginator.get_page(page)
+    ic(page_obj)
 
     data = []
-    for invoice in invoices:
+    for invoice in page_obj:
         data.append({
             "id": invoice.id,
             "invoice_date": invoice.invoice_date,
@@ -385,10 +627,19 @@ def get_invoices(request):
             "type_price": invoice.type_price,
             "wozwrat_or_prihod": invoice.wozwrat_or_prihod,
             "send": invoice.send,
+            "is_entry": invoice.is_entry,
             # можно добавить больше полей по необходимости
         })
 
-    return JsonResponse({"status": "ok", "invoices": data})
+    return JsonResponse({
+        "status": "ok",
+        "total": paginator.count,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": paginator.num_pages,
+        "invoices": data,
+        # "total_invoices": total_invoices,
+    })
 
 
 
@@ -435,6 +686,12 @@ def get_invoice_data(request, id):
         created_by_json_name = invoice.created_by.username
     else:
         created_by_json_name = None
+        
+    if invoice.entry_created_by:
+        entry_created_by_json_name = invoice.entry_created_by.username
+    else:
+        entry_created_by_json_name = None
+        
         
         
         
@@ -537,6 +794,7 @@ def get_invoice_data(request, id):
         "comment": invoice.comment,
         "invoice_date":invoice.invoice_date,
         "is_entry": invoice.is_entry,
+        "already_entry":invoice.is_entry,
         "partner": partner_json,
         "partner_send":invoice.partner_send,
         "send": invoice.send,
@@ -544,7 +802,7 @@ def get_invoice_data(request, id):
         "warehouse": warehouse_json,
         "wozwrat_or_prihod": invoice.wozwrat_or_prihod,
         "created_by": created_by_json_name,
-        "entry_created_by": invoice.entry_created_by,
+        "entry_created_by": entry_created_by_json_name,
         "created_at": invoice.created_at,
         "updated_at": invoice.updated_at,
         "entry_created_at": invoice.entry_created_at,
@@ -561,3 +819,18 @@ def get_invoice_data(request, id):
     }
     # ic(data)
     return Response(data, status=status.HTTP_200_OK)
+
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_invoice(request, id):
+    try:
+        invoice = Invoice.objects.get(id=id)
+        ic(invoice)
+        if invoice.is_entry:
+            return JsonResponse({"status": "error", "message": "cant delete is entried invoice"}, status=404)
+        # invoice.delete()
+        return Response({"status": "ok", "message": f"Invoice deleted", "invoice_id": id}, status=status.HTTP_200_OK)
+    except Invoice.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "cant find invoice"}, status=404)

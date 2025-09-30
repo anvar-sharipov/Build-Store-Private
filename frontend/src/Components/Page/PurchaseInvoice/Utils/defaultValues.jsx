@@ -86,6 +86,7 @@ const getDefaultValues = async (id = null, dateProwodok = null, setDateProwodok)
         comment: data.comment,
         invoice_date: invoice_date,
         is_entry: data.is_entry,
+        already_entry:data.already_entry,
         partner: data.partner,
         partner_send: data.partner_send,
         send: data.send,
@@ -149,6 +150,7 @@ const getDefaultValues = async (id = null, dateProwodok = null, setDateProwodok)
       awto_send: true,
       partner_send: true,
       is_entry: false,
+      already_entry:false,
       comment: "",
     };
   }

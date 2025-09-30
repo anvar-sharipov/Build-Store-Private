@@ -95,5 +95,6 @@ urlpatterns = [
     path("save-invoice/", save_invoice, name="save_invoice"),
     path('get-invoices/', get_invoices, name='get-invoices'),
     path("get-invoice-data/<int:id>/", get_invoice_data, name="get_invoice_data"),
+    path("delete_invoice/<int:id>/", delete_invoice, name="delete_invoice"),
 ]
 

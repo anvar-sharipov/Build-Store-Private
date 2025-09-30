@@ -8,6 +8,7 @@ import Fuse from "fuse.js";
 const FetchAwto = ({ refs }) => {
   const { t } = useTranslation();
   const { values, setFieldValue, handleBlur } = useFormikContext();
+  const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
     if (values.is_entry && !values.awto) {
@@ -88,13 +89,17 @@ const FetchAwto = ({ refs }) => {
   if (values.awto?.id) {
     return (
       <div className="w-full flex items-center justify-between gap-3 print:hidden my-1 mt-5">
-        <div className="flex items-center gap-2 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-800 shadow-sm flex-1">
+        <div
+          className={`flex items-center gap-2 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 dark:bg-gray-800 shadow-sm flex-1 ${isFocused ? "bg-indigo-200 dark:bg-indigo-600" : "bg-white"}`}
+        >
           <span className="text-gray-600 dark:text-gray-400 text-sm">{t("awto")}:</span>
           <span className="text-gray-800 dark:text-gray-100 font-medium">{values.awto?.name}</span>
         </div>
         {values.awto?.name && (
           <button
             type="button"
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
             ref={refs.awtoX_Ref}
             onClick={() => {
               setFieldValue("awto", null);
@@ -121,7 +126,7 @@ const FetchAwto = ({ refs }) => {
                 }
               }
             }}
-            className="ml-3 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-700 text-red-500 dark:text-red-400 transition-colors duration-200 flex items-center justify-center focus:bg-indigo-200"
+            className="ml-3 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-700 text-red-500 dark:text-red-400 transition-colors duration-200 flex items-center justify-center focus:bg-red-300 dark:focus:bg-red-700"
           >
             <FaTimes className="text-sm" />
           </button>

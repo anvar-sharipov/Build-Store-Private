@@ -8,7 +8,7 @@ const PTable = ({ printVisibleColumns, visibleColumns, id, refs }) => {
   const { values, setFieldValue } = useFormikContext();
 
   return (
-    <div className="relative mt-6 ml-6 print:m-0 print:p-0">
+    <div className="relative mt-1 ml-1 print:m-0 print:p-0">
       {/* Красивый крестик отмены */}
       <button
         type="button"

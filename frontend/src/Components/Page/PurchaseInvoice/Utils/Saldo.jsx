@@ -4,11 +4,13 @@ import { MdPrintDisabled } from "react-icons/md";
 
 const Saldo = ({saldo, letPrintSaldo, setLetPrintSaldo}) => {
   const { values } = useFormikContext();
+  // console.log("saldo.today_entries", saldo?.today_entries);
+  
 
   return (
     <div>
       {saldo && (
-        <div className={`p-4 bg-white dark:bg-gray-900 rounded-xl shadow text-gray-700 dark:text-gray-200 mt-5 mx-auto max-w-2xl ${letPrintSaldo ? "print:block" : "print:hidden"}`}>
+        <div className={`bg-white dark:bg-gray-900 rounded-xl shadow text-gray-700 dark:text-gray-200 mt-5 ${letPrintSaldo ? "print:block" : "print:hidden"}`}>
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 text-center flex justify-center items-center gap-2 print:!text-black">
             Карточка: {values.partner.name}
             {letPrintSaldo ? (
@@ -47,9 +49,11 @@ const Saldo = ({saldo, letPrintSaldo, setLetPrintSaldo}) => {
               </tr>
               {saldo.today_entries.length > 0 ? (
                 saldo.today_entries.map((e, idx) => {
+                  console.log("entry", e[0], typeof(e[0]));
+                  
                   return (
                     <tr key={idx} className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
-                      <td className="px-2 py-1 border border-black">{e[0]}</td>
+                      <td className="px-2 py-1 border border-black">{e[0].split(" ")[0].replace(/-/g, ".")}</td>
                       <td className="px-2 py-1 border border-black">{e[1]}</td>
                       <td className="px-2 py-1 border whitespace-pre-line border-black">{parseFloat(e[2]) !== 0 ? e[2] : "-"}</td>
                       <td className="px-2 py-1 border border-black">{parseFloat(e[3]) !== 0 ? e[3] : "-"}</td>

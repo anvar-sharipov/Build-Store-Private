@@ -7,6 +7,7 @@ import ProductsFilter from "./filters/productsFilter";
 import { SearchContext } from "../../context/SearchContext";
 import SalesInvoiceFilter from "./filters/SalesInvoiceFilter";
 import CompactAgentFilter from "./filters/CompactAgentFilter";
+import InvoiceFilter from "./filters/InvoiceFilter/InvoiceFilter";
 
 // настройки для разных страниц
 const FILTER_CONFIG = {
@@ -49,6 +50,8 @@ export default function SidebarRight() {
 
   const [offset, setOffset] = useState(0);
   const currentPath = location.pathname;
+
+
   const config = FILTER_CONFIG[currentPath] ?? {};
 
   // Загружаем агентов для фильтра партнеров
@@ -125,7 +128,8 @@ export default function SidebarRight() {
   // ########################################################################################################################################################################## END filter po /product
 
   //   Если текущая страница не найдена в FILTER_CONFIG — не показываем сайдбар
-  if (!(currentPath in FILTER_CONFIG) && currentPath !== "/products" && currentPath !== "/main") return null;
+  if (!(currentPath in FILTER_CONFIG) && currentPath !== "/products" && currentPath !== "/main" && currentPath !== "/purchase_invoice") return null;
+  
 
   const typeOptions = config.type || [];
   const sortOptions = config.sort || [];
@@ -188,7 +192,7 @@ export default function SidebarRight() {
       )}
 
       {/* Фильтр по агенту для партнеров */}
-      <CompactAgentFilter agents={agents} selectedAgent={selectedAgent} handleChange={handleChange} t={t} />
+      {currentPath === "/agents" && <CompactAgentFilter agents={agents} selectedAgent={selectedAgent} handleChange={handleChange} t={t} />}
       {/* {(currentPath === "/partners" || currentPath === "/partners_new") && agents.length > 0 && (
         <>
           <h3 className="font-semibold mb-2 mt-4 text-gray-400">{t("agent")}</h3>
@@ -261,6 +265,8 @@ export default function SidebarRight() {
       )}
 
       {currentPath === "/main" && <SalesInvoiceFilter searchParams={searchParams} setSearchParams={setSearchParams} t={t} />}
+
+      {currentPath === "/purchase_invoice" && <InvoiceFilter />}
     </aside>
   );
 }

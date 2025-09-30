@@ -653,7 +653,8 @@ class Account(models.Model):
 class Transaction(models.Model):
     description = models.TextField(verbose_name='Описание операции')
     date = models.DateTimeField(verbose_name='Дата операции')
-    invoice = models.ForeignKey(SalesInvoice, null=True, blank=True, on_delete=models.SET_NULL)
+    # invoice = models.ForeignKey(SalesInvoice, null=True, blank=True, on_delete=models.SET_NULL)
+    invoice = models.ForeignKey(Invoice, null=True, blank=True, on_delete=models.SET_NULL)
     partner = models.ForeignKey(Partner, null=True, blank=True, on_delete=models.SET_NULL, verbose_name='Партнер')
 
     def __str__(self):

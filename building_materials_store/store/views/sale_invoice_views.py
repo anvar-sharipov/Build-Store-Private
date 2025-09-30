@@ -229,7 +229,7 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     if withPosting:
                         partner.balance -= Decimal(sale_price * quantity) 
                         for rule in rules:
-                            if rule.amount_type == 'revenue': # Выручка (12)
+                            if rule.amount_type == 'revenue': # Выручка (12) продажа
                                 revenue_price = Decimal(sale_price * quantity)
                                 Entry.objects.create(
                                     transaction=transaction_obj,

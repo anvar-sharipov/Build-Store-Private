@@ -20,9 +20,12 @@ import { MdPrintDisabled } from "react-icons/md";
 import myAxios from "../../axios";
 import Saldo from "./Utils/Saldo";
 import Notification from "../../Notification";
+import Notification2 from "../../Notification2";
 import Comment from "./Utils/Comment";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../routes";
+import InfoAboutInvoice from "./Utils/InfoAboutInvoice";
+import { useNotification } from "../../context/NotificationContext";
 
 const userVisibleColumns = {
   qr_code: false,
@@ -73,16 +76,51 @@ const MainPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [initialValues, setInitialValues] = useState(null);
+  const { showNotification } = useNotification();
 
   const [fakturaType, setFakturaType] = useState(() => {
     return localStorage.getItem("wozwrat_or_prihod_purchase") || "";
   });
 
-  const [notification, setNotification] = useState({ message: "", type: "" });
-  const showNotification = (message, type) => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification({ message: "", type: "" }), 3000);
-  };
+  // const [notification, setNotification] = useState({ message: "", type: "" });
+  // const timeoutRef = useRef(null);
+  // const showNotification = (message, type) => {
+  //   // setNotification({ message, type });
+  //   if (timeoutRef.current) {
+  //     clearTimeout(timeoutRef.current);
+  //   }
+  //   setNotification({ message, type });
+  //   // создаём новый
+  //   timeoutRef.current = setTimeout(() => {
+  //     setNotification({ message: "", type: "" });
+  //     timeoutRef.current = null; // очищаем ref после срабатывания
+  //   }, 3000);
+  //   // setTimeout(() => setNotification({ message: "", type: "" }), 30000);
+  // };
+  // useEffect(() => {
+  //   return () => {
+  //     if (timeoutRef.current) {
+  //       clearTimeout(timeoutRef.current);
+  //     }
+  //   };
+  // }, []);
+
+  // В самом начале компонента MainPage:
+  // const [notification, setNotification] = useState(null);
+  // const timeoutRef = useRef(null);
+  // // Простая функция showNotification (без сложной логики):
+  // const showNotification = (message, type) => {
+  //   // Очищаем предыдущий таймаут если есть
+  //   if (timeoutRef.current) {
+  //     clearTimeout(timeoutRef.current);
+  //   }
+  //   // Просто устанавливаем новое уведомление - AnimatePresence сам обработает плавную смену
+  //   setNotification({
+  //     message,
+  //     type,
+  //     id: Date.now(), // Уникальный ID для каждого уведомления
+  //   });
+  // };
 
   const [saldo, setSaldo] = useState(null);
   const [letPrintSaldo, setLetPrintSaldo] = useState(() => {
@@ -193,8 +231,8 @@ const MainPage = () => {
         validationSchema={validationSchema}
         onSubmit={async (values, { resetForm }) => {
           console.log("Успешно отправлено values", values);
-          console.log('FFFFFFFFF values');
-          
+          // console.log("FFFFFFFFF values");
+
           try {
             const response = await myAxios.post("/save-invoice/", values, {
               headers: {
@@ -204,7 +242,7 @@ const MainPage = () => {
 
             console.log("Успешно отправлено", response.data);
             showNotification(t(response.data.message), "success");
-            console.log("response.data.id", response.data);
+            // console.log("response.data.id", response.data);
 
             handleOpenInvoice(response.data.id);
             // setSaldo(null)
@@ -254,6 +292,8 @@ const MainPage = () => {
                 adminVisibleColumns={adminVisibleColumns}
                 userVisibleColumns={userVisibleColumns}
                 setFakturaType={setFakturaType}
+                id={id}
+                showNotification={showNotification}
               />
               <div className="grid grid-cols-1 md:grid-cols-10 gap-4 print:block p-5">
                 {/* Левая колонка */}
@@ -301,22 +341,8 @@ const MainPage = () => {
 
                     <div>{values.products && values.products.length > 0 && <PTable printVisibleColumns={printVisibleColumns} visibleColumns={visibleColumns} id={id} refs={refs} />}</div>
                     {id && (
-                      <div className="print:hidden mt-5">
-                        <div className="text-gray-700 dark:text-gray-200">
-                          Создано: <span className="font-medium">{values.created_at || "—"}</span>
-                        </div>
-                        <div className="text-gray-700 dark:text-gray-200">
-                          Обновлено: <span className="font-medium">{values.updated_at || "—"}</span>
-                        </div>
-                        <div className="text-gray-700 dark:text-gray-200">
-                          Создал как черновик: <span className="font-medium">{values.created_by || "—"}</span>
-                        </div>
-                        <div className="text-gray-700 dark:text-gray-200">
-                          Проводку сделал: <span className={values.entry_created_by ? "font-medium" : "text-red-500"}>{values.entry_created_by || "Пока не проводили"}</span>
-                        </div>
-                        <div className="text-gray-700 dark:text-gray-200">
-                          Проводка сделана: <span className={values.entry_created_at ? "font-medium" : "text-red-500"}>{values.entry_created_at || "Пока не проводили"}</span>
-                        </div>
+                      <div className="print:hidden mt-5 ml-5">
+                        <InfoAboutInvoice values={values} />
                       </div>
                     )}
                   </div>
@@ -335,23 +361,11 @@ const MainPage = () => {
               <div className="hidden print:block">
                 <Saldo saldo={saldo} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} />
               </div>
+
+              {/* for print */}
               {id && (
-                <div className="hidden print:block mt-5">
-                  <div className="text-gray-700 dark:text-gray-200">
-                    Создано: <span className="font-medium">{values.created_at || "—"}</span>
-                  </div>
-                  <div className="text-gray-700 dark:text-gray-200">
-                    Обновлено: <span className="font-medium">{values.updated_at || "—"}</span>
-                  </div>
-                  <div className="text-gray-700 dark:text-gray-200">
-                    Создал как черновик: <span className="font-medium">{values.created_by || "—"}</span>
-                  </div>
-                  <div className="text-gray-700 dark:text-gray-200">
-                    Проводку сделал: <span className={values.entry_created_by ? "font-medium" : "text-red-500"}>{values.entry_created_by || "Пока не проводили"}</span>
-                  </div>
-                  <div className="text-gray-700 dark:text-gray-200">
-                    Проводка сделана: <span className={values.entry_created_at ? "font-medium" : "text-red-500"}>{values.entry_created_at || "Пока не проводили"}</span>
-                  </div>
+                <div className="hidden print:block mt-5 ml-5">
+                  <InfoAboutInvoice values={values} />
                 </div>
               )}
 
@@ -360,7 +374,20 @@ const MainPage = () => {
           );
         }}
       </Formik>
-      <Notification message={t(notification.message)} type={notification.type} onClose={() => setNotification({ message: "", type: "" })} />
+      {/* <Notification2 message={t(notification.message)} type={notification.type} onClose={() => setNotification({ message: "", type: "" })} /> */}
+      {/* {notification && (
+        <Notification2
+          message={t(notification.message)}
+          type={notification.type}
+          onClose={() => {
+            setNotification(null);
+            if (timeoutRef.current) {
+              clearTimeout(timeoutRef.current);
+              timeoutRef.current = null;
+            }
+          }}
+        />
+      )} */}
     </div>
   );
 };

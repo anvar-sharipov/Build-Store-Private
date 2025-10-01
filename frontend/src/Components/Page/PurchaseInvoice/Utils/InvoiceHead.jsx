@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useFormikContext } from "formik";
 import invoiceClasses from "./classes";
 import { Settings } from "lucide-react";
@@ -41,19 +41,47 @@ const InvoiceHead = ({
   };
   const { showNotification } = useNotification();
 
+  const modalYesBtn = useRef(null);
+  const modalNoBtn = useRef(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.key === "Delete") {
+        e.preventDefault();
+        const btn = document.getElementById("invoice-delete-btn");
+        if (btn) {
+          btn.click();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (modalDeleteInvoice) {
+      setTimeout(() => {
+        modalNoBtn.current?.focus();
+      }, 0);
+    }
+  }, [modalDeleteInvoice]);
+
   useEffect(() => {
     if (!openModal) {
       const handleKeyDown = (e) => {
-        if (e.key === "Escape") {
+        if (e.shiftKey && e.key === "Escape") {
           e.preventDefault();
           handleClick();
         }
       };
 
+      // if (openModal) {
       window.addEventListener("keydown", handleKeyDown);
       return () => {
         window.removeEventListener("keydown", handleKeyDown);
       };
+      // }
     }
   }, [openModal, handleClick]);
 
@@ -111,20 +139,13 @@ const InvoiceHead = ({
         <div className="px-1">
           <TypePrice />
         </div>
-        {id &&
-          (values.already_entry ? (
-            <div>
-              <MyButton variant="red" type="button">
-                {t("change prowodka")}
-              </MyButton>
-            </div>
-          ) : (
-            <div>
-              <MyButton variant="red" type="button" onClick={() => setModalDeleteInvoice(true)}>
-                {t("delete")}
-              </MyButton>
-            </div>
-          ))}
+        {id && !values.already_entry && (
+          <div>
+            <MyButton variant="red" type="button" onClick={() => setModalDeleteInvoice(true)} id="invoice-delete-btn" title="ctrl + delete">
+              {t("delete")}
+            </MyButton>
+          </div>
+        )}
         {modalDeleteInvoice && (
           <MyModal2 onClose={() => setModalDeleteInvoice(false)}>
             <div className="p-8">
@@ -151,6 +172,13 @@ const InvoiceHead = ({
               {/* Кнопки */}
               <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} className="flex gap-3">
                 <motion.button
+                  ref={modalNoBtn}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowRight") {
+                      e.preventDefault();
+                      modalYesBtn.current?.focus();
+                    }
+                  }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setModalDeleteInvoice(false)}
@@ -161,6 +189,13 @@ const InvoiceHead = ({
                 </motion.button>
 
                 <motion.button
+                  ref={modalYesBtn}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowLeft") {
+                      e.preventDefault();
+                      modalNoBtn.current?.focus();
+                    }
+                  }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleDelete(values.id)}
@@ -214,7 +249,7 @@ const InvoiceHead = ({
       </div>
 
       {/* Кнопка назад */}
-      <button onClick={handleClick} type="button" className={invoiceClasses.backBtn}>
+      <button onClick={handleClick} type="button" className={invoiceClasses.backBtn} title="shift + esc">
         <FaArrowLeft className="text-lg" />
         {/* <span>{t("back")}</span> */}
       </button>

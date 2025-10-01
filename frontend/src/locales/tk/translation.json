@@ -436,7 +436,13 @@
   "success": "Üstünlikli",
   "succesifuly deleted": "Üstünlikli pozyldy",
   "cant delete is entried invoice": "Prowodka bolan fakturany pozup bolmayar",
-  "cant find invoice": "Faktura tapylmady"
+  "cant find invoice": "Faktura tapylmady",
+  "saved": "saklandy",
+  "Not enough product in stock": "Skladda harydyň mukdary ýeterlik däl",
+  "Invoice already posted": "Faktura prowodka edilen",
+  "The warehouse is not tied to an account": "Ammar hasaba birikdirilmedi",
+  "To many linked account on this warehouse": "Skladda gaty köp hasap bar",
+  "The warehouse account dont have a parent account": "Skladda hasabyň ene hasaby ýok"
 
 
 

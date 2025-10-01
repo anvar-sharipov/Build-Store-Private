@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import myAxios from "../../../../axios";
 import SelectPartner from "./SelectPartner";
 import SelectEnryBoolen from "./SelectEnryBoolen";
+import InvoiceSort from "./InvoiceSort";
 
 const InvoiceFilter = () => {
   const { t } = useTranslation();
@@ -16,6 +17,7 @@ const InvoiceFilter = () => {
   const [filteredPartners, setFilteredPartners] = useState([]);
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [selectedEntry, setSelectedEntry] = useState("");
+  const [sortInvoice, setSortInvoice] = useState("");
 
   // Загружаем сотрудников
   const fetchPartners = async () => {
@@ -51,8 +53,13 @@ const InvoiceFilter = () => {
     } else {
       params.delete("selectedEntry");
     }
+    if (sortInvoice) {
+      params.set("sortInvoice", sortInvoice);
+    } else {
+      params.delete("sortInvoice");
+    }
     setSearchParams(params);
-  }, [wozwratOrPrihod, selectedPartner, selectedEntry]);
+  }, [wozwratOrPrihod, selectedPartner, selectedEntry, sortInvoice]);
 
   // // Настраиваем Fuse
   // const fuse = useMemo(
@@ -83,7 +90,17 @@ const InvoiceFilter = () => {
         </div>
       </div>
       <div>
-        <SelectPartner
+       
+
+        <div>
+          <SelectEnryBoolen setSelectedEntry={setSelectedEntry} selectedEntry={selectedEntry} />
+        </div>
+
+        <div className="mt-5">
+          <InvoiceSort setSortInvoice={setSortInvoice} sortInvoice={sortInvoice} />
+        </div>
+
+         <SelectPartner
           selectedPartner={selectedPartner}
           partnerX_Ref={partnerX_Ref}
           setSelectedPartner={setSelectedPartner}
@@ -93,10 +110,6 @@ const InvoiceFilter = () => {
           partnerInputRef={partnerInputRef}
           filteredPartners={filteredPartners}
         />
-
-        <div className="mt-5">
-          <SelectEnryBoolen setSelectedEntry={setSelectedEntry} selectedEntry={selectedEntry} />
-        </div>
       </div>
     </div>
   );

@@ -15,6 +15,10 @@ const PurchaseInvoice = () => {
   // const [query, setQuery] = useState("");
   const [query, setQuery] = useState(() => searchParams.get("query") || "");
 
+  useEffect(() => {
+    document.title = `${t("faktura")}`; // название вкладки
+  }, []);
+
   // useEffect(() => {
   //   if (!searchParams.get("page")) {
   //     setSearchParams({ page: 1 }); // 👉 добавит page=1 в URL
@@ -56,7 +60,7 @@ const PurchaseInvoice = () => {
         setInvoices([]);
         setTimeout(() => {
           setInvoices(res.data.invoices);
-        }, 50); // задержку можно подкорректировать
+        }, 30); // задержку можно подкорректировать
       }
 
       setPagination({

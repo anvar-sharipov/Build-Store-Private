@@ -304,6 +304,72 @@ def get_osw(request):
 
 def get_saldo(partner_obj, getDate):
     rule = CustomePostingRule.objects.filter(operation__code="sale", directory_type=partner_obj.type, amount_type="revenue").first()
+    
+    # rule_pays = CustomePostingRule.objects.filter(operation__code="pays", directory_type=partner_obj.type, pays_type="expense").first()
+    
+    
+    
+    # # less, debit
+    # transactions = Transaction.objects.filter(partner=partner_obj, date__lt=getDate)
+    # transactions_less_debit_dict = {}
+    # for t in transactions:
+    #     entries = Entry.objects.filter(transaction=t)
+    #     transactions_less_debit_dict[t.id] = {"invoice": t}
+    #     total_debit = 0
+    #     for e in entries:
+    #         # ic(e)
+    #         if e.account.number == rule.debit_account.number:
+    #             total_debit += e.debit
+    #         elif e.account.number == rule_pays.debit_account.number:
+    #             total_debit += e.debit     
+    #     transactions_less_debit_dict[t.id]["total_debit"] = total_debit
+    # # ic(transactions_less_dict)
+    # # less, kredit
+    # transactions = Transaction.objects.filter(partner=partner_obj, date__lt=getDate)
+    # transactions_less_credit_dict = {}
+    # for t in transactions:
+    #     entries = Entry.objects.filter(transaction=t)
+    #     transactions_less_credit_dict[t.id] = {"invoice": t}
+    #     total_debit = 0
+    #     for e in entries:
+            
+    #         if e.account.number == rule.credit_account.number:
+    #             ic(e)
+    #             total_debit += e.credit
+    #         elif e.account.number == rule_pays.credit_account.number:
+    #             ic(e)
+    #             total_debit += e.credit     
+    #     transactions_less_credit_dict[t.id]["total_debit"] = total_debit
+
+
+
+    # # current, sale
+    # transactions = Transaction.objects.filter(partner=partner_obj, date=getDate)
+    # transactions_current_dict = {}
+    # for t in transactions:
+    #     entries = Entry.objects.filter(transaction=t)
+    #     transactions_current_dict[t.id] = {"invoice": t}
+    #     total_debit = 0
+    #     for e in entries:
+    #         if e.account.number == rule.debit_account.number:
+    #             total_debit += e.debit
+    #             # ic(e)
+    #         else:
+    #             total_debit += e.debit
+    #     transactions_current_dict[t.id]["total_debit"] = total_debit
+    # # ic(transactions_current_dict)
+            
+    
+    # # less pays debit
+    # # transactions = Transaction.objects.filter(partner=partner_obj, date__lt=getDate)
+    
+    
+    
+    
+    
+    
+    
+    
     if not rule:
         value = [Decimal('0.00'), Decimal('0.00')]
         return {"start": value, "oborot": value, "final": value, "saldo": value}
@@ -315,21 +381,27 @@ def get_saldo(partner_obj, getDate):
     entries_oborot = Entry.objects.filter(transaction__partner=partner_obj, transaction__date__date=getDate).filter(account=account)
     today_entries = []
     desc = ''
+    already_have_pks = []
     if entries_oborot:
         count = 0
         for e in entries_oborot:
             str_date = e.transaction.date.strftime("%d-%m-%Y %H:%M")
-            ic(e.transaction.date)
-            today_entries.append([str_date, e.transaction.description, e.debit, e.credit])
+            if e.transaction.pk in already_have_pks:
+                for c in today_entries:
+                    if c[4] == e.transaction.pk:
+                        c[2] += e.debit
+                        c[3] += e.credit
+            else:
+                today_entries.append([str_date, e.transaction.description, e.debit, e.credit, e.transaction.pk])
+                already_have_pks.append(e.transaction.pk)
             count += 1
             desc += f"{count}) {e.transaction.description}"
             desc += "\n"
-            
-    # ic(desc)
-            
-            
+    
+
     debit_oborot = entries_oborot.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
     credit_oborot = entries_oborot.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
+    ic(today_entries)
   
     
     debit_end = debit_start + debit_oborot

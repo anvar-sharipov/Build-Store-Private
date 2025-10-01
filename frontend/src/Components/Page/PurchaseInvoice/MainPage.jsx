@@ -131,6 +131,14 @@ const MainPage = () => {
     localStorage.setItem("letPrintSaldo", letPrintSaldo);
   }, [letPrintSaldo]);
 
+  const [letPrintInfo, setLetPrintInfo] = useState(() => {
+    const show = localStorage.getItem("letPrintInfo");
+    return show === "true"; // вернёт true только если строка "true"
+  });
+  useEffect(() => {
+    localStorage.setItem("letPrintInfo", letPrintInfo);
+  }, [letPrintInfo]);
+
   const [visibleColumns, setVisibleColumns] = useState(() => {
     const saved = localStorage.getItem("visibleColumnsPurchase");
     return saved ? JSON.parse(saved) : adminVisibleColumns;
@@ -168,12 +176,22 @@ const MainPage = () => {
   const { dateFrom, setDateFrom, dateTo, setDateTo, dateProwodok, setDateProwodok } = useContext(DateContext);
   console.log("dateProwodok", dateProwodok);
 
+  //   useEffect(() => {
+  // const handleKeyDown = (e) => {
+  //   if (e.ctrlKey && e.key === "Enter") {
+  //     e.preventDefault();
+  //     refs.
+  //   }
+
+  // }
+  //   }, [])
+
   // const defaultValues = useMemo(() => {
   //   return getDefaultValues(id);
   // }, [id]);
 
   useEffect(() => {
-    document.title = `${t("faktura")} ${t(fakturaType)}`; // название вкладки
+    document.title = `${t("faktura")} ${t(fakturaType)} ${id ? `№${id}` : ""}`; // название вкладки
   }, [fakturaType]);
 
   useEffect(() => {
@@ -241,9 +259,17 @@ const MainPage = () => {
             });
 
             console.log("Успешно отправлено", response.data);
-            showNotification(t(response.data.message), "success");
-            // console.log("response.data.id", response.data);
+            if (response.data?.is_updated) {
+              showNotification(`${t("faktura")} № ${response.data.id} ${t("saved")}`, "success");
+              // setTimeout(() => {
+              //   window.location.reload();
+              // }, 1000);
+            } else {
+              showNotification(t(response.data.message), "success");
+              // handleOpenInvoice(response.data.id);
+            }
 
+            // console.log("response.data.id", response.data);
             handleOpenInvoice(response.data.id);
             // setSaldo(null)
             // resetForm();
@@ -295,81 +321,92 @@ const MainPage = () => {
                 id={id}
                 showNotification={showNotification}
               />
-              <div className="grid grid-cols-1 md:grid-cols-10 gap-4 print:block p-5">
-                {/* Левая колонка */}
-                <div className="col-span-3 print:hidden">
-                  <div
-                    className="rounded-2xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 shadow-md p-3 flex flex-col gap-4
+              <fieldset disabled={values.already_entry}>
+                <div className="grid grid-cols-1 md:grid-cols-10 gap-4 print:block">
+                  {/* Левая колонка */}
+                  <div className="col-span-3 print:hidden">
+                    <div
+                      className="rounded-2xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 shadow-md p-3 flex flex-col gap-4
                     print:border-none print:shadow-none print:bg-transparent bg-gray-400"
-                  >
-                    <FetchWarehouse />
-                    <FetchAwto refs={refs} />
-                    <FetchPartner refs={refs} setSaldo={setSaldo} dateProwodok={dateProwodok} saldo={saldo} />
-                    <Comment />
+                    >
+                      <FetchWarehouse />
+                      <FetchAwto refs={refs} />
+                      <FetchPartner refs={refs} setSaldo={setSaldo} dateProwodok={dateProwodok} saldo={saldo} />
+                      <Comment />
+                    </div>
+                    <Saldo saldo={saldo} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} />
+                    <div className="flex justify-between">
+                      {id && (
+                        <div className="print:hidden mt-5 ml-5">
+                          <InfoAboutInvoice values={values} letPrintInfo={letPrintInfo} setLetPrintInfo={setLetPrintInfo} />
+                        </div>
+                      )}
+                      <div className="flex justify-end">
+                        {values.products && values.products.length > 0 && <SubmitButton dateProwodok={dateProwodok} fakturaType={fakturaType} fakturaBgDynamic={fakturaBgDynamic} />}
+                      </div>
+                    </div>
                   </div>
-                  <Saldo saldo={saldo} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} />
-                  <div className="flex justify-end">
-                    {values.products && values.products.length > 0 && <SubmitButton dateProwodok={dateProwodok} fakturaType={fakturaType} fakturaBgDynamic={fakturaBgDynamic} />}
-                  </div>
-                </div>
 
-                {/* for print */}
-                <div className="hidden print:block">
-                  {values.warehouse?.id && (
-                    <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
-                      <span className="text-gray-600 dark:text-gray-400 font-medium">{t("warehouse")}:</span>
-                      <span className="text-gray-800 dark:text-gray-100 font-semibold print:!text-black">{values.warehouse?.name}</span>
-                    </div>
-                  )}
-                  {values.partner?.id && (
-                    <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
-                      <span className="text-gray-600 dark:text-gray-400 font-medium">{t("partner")}:</span>
-                      <span className="text-gray-800 dark:text-gray-100 font-semibold print:!text-black">{values.partner?.name}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Правая колонка */}
-                <div className="col-span-7">
-                  <div
-                    className="h-full rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-400 dark:bg-gray-900 shadow-md p-3 flex flex-col gap-4
-                    print:border-none print:shadow-none print:bg-transparent print:m-0 print:p-0"
-                  >
-                    <div className="mt-2 print:hidden">
-                      <FetchProduct refs={refs} />
-                    </div>
-
-                    <div>{values.products && values.products.length > 0 && <PTable printVisibleColumns={printVisibleColumns} visibleColumns={visibleColumns} id={id} refs={refs} />}</div>
-                    {id && (
-                      <div className="print:hidden mt-5 ml-5">
-                        <InfoAboutInvoice values={values} />
+                  {/* for print */}
+                  <div className="hidden print:block">
+                    {values.warehouse?.id && (
+                      <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
+                        <span className="text-gray-600 dark:text-gray-400 font-medium">{t("warehouse")}:</span>
+                        <span className="text-gray-800 dark:text-gray-100 font-semibold print:!text-black">{values.warehouse?.name}</span>
+                      </div>
+                    )}
+                    {values.partner?.id && (
+                      <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
+                        <span className="text-gray-600 dark:text-gray-400 font-medium">{t("partner")}:</span>
+                        <span className="text-gray-800 dark:text-gray-100 font-semibold print:!text-black">{values.partner?.name}</span>
                       </div>
                     )}
                   </div>
-                </div>
-              </div>
 
-              <div className="hidden print:block mt-4 ml-5">
-                {values.awto?.id && (
-                  <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
-                    <span className="text-gray-600 dark:text-gray-400 font-medium">{t("awto")}:</span>
-                    <span className="text-gray-800 dark:text-gray-100 font-semibold print:!text-black">{values.awto?.name}</span>
+                  {/* Правая колонка */}
+                  <div className="col-span-7">
+                    <div
+                      className="h-full rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-400 dark:bg-gray-900 shadow-md p-3 flex flex-col gap-4
+                    print:border-none print:shadow-none print:bg-transparent print:m-0 print:p-0"
+                    >
+                      <div className="mt-2 print:hidden">
+                        <FetchProduct refs={refs} />
+                      </div>
+
+                      <div>{values.products && values.products.length > 0 && <PTable printVisibleColumns={printVisibleColumns} visibleColumns={visibleColumns} id={id} refs={refs} />}</div>
+                      {/* {id && (
+                        <div className="print:hidden mt-5 ml-5">
+                          <InfoAboutInvoice values={values} letPrintInfo={letPrintInfo} setLetPrintInfo={setLetPrintInfo} />
+                        </div>
+                      )} */}
+                    </div>
                   </div>
-                )}
-              </div>
-
-              <div className="hidden print:block">
-                <Saldo saldo={saldo} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} />
-              </div>
-
-              {/* for print */}
-              {id && (
-                <div className="hidden print:block mt-5 ml-5">
-                  <InfoAboutInvoice values={values} />
                 </div>
-              )}
 
-              {/* <div className="flex justify-end">{values.products.length > 0 && <SubmitButton dateProwodok={dateProwodok} />}</div> */}
+                <div className="hidden print:block">
+                  {values.awto?.id && (
+                    <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
+                      <span className="text-gray-600 dark:text-gray-400 font-medium">{t("awto")}:</span>
+                      <span className="text-gray-800 dark:text-gray-100 font-semibold print:!text-black">{values.awto?.name}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-5 items-end print:mt-3">
+                  <div className="hidden print:block">
+                    <Saldo saldo={saldo} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} />
+                  </div>
+
+                  {/* for print */}
+                  {id && (
+                    <div className="hidden print:block mt-5 ml-5">
+                      <InfoAboutInvoice values={values} letPrintInfo={letPrintInfo} setLetPrintInfo={setLetPrintInfo} />
+                    </div>
+                  )}
+                </div>
+
+                {/* <div className="flex justify-end">{values.products.length > 0 && <SubmitButton dateProwodok={dateProwodok} />}</div> */}
+              </fieldset>
             </Form>
           );
         }}

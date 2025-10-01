@@ -1,91 +1,127 @@
 import { useFormikContext } from "formik";
-import { MdPrint } from "react-icons/md";
-import { MdPrintDisabled } from "react-icons/md";
+import { MdPrint, MdPrintDisabled } from "react-icons/md";
+import myAxios from "../../../axios";
+import { ROUTES } from "../../../../routes";
 
-const Saldo = ({saldo, letPrintSaldo, setLetPrintSaldo}) => {
+const Saldo = ({ saldo, letPrintSaldo, setLetPrintSaldo }) => {
   const { values } = useFormikContext();
-  // console.log("saldo.today_entries", saldo?.today_entries);
-  
+
+  const handleOpenInvoice = (id) => {
+    const url = id ? `/purchase-invoices/update/${id}` : ROUTES.PURCHASE_INVOICE_CREATE;
+    window.open(url, "invoiceWindow", "width=1000,height=700,scrollbars=yes,resizable=yes");
+  };
+
+  const handleRowClick = async (transactionId) => {
+    try {
+      const res = await myAxios.get(`transaction_detail/${transactionId}/`);
+      if (res.data.invoice_id) {
+        handleOpenInvoice(res.data.invoice_id);
+      }
+    } catch (error) {
+      console.log("error при transaction-detail", error);
+    }
+  };
+
+  if (!saldo) return null;
 
   return (
-    <div>
-      {saldo && (
-        <div className={`bg-white dark:bg-gray-900 rounded-xl shadow text-gray-700 dark:text-gray-200 mt-5 ${letPrintSaldo ? "print:block" : "print:hidden"}`}>
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 text-center flex justify-center items-center gap-2 print:!text-black">
-            Карточка: {values.partner.name}
-            {letPrintSaldo ? (
-              <MdPrint
-                className="print:hidden"
-                onClick={() => {
-                  setLetPrintSaldo((v) => !v);
-                }}
-              />
-            ) : (
-              <MdPrintDisabled
-                onClick={() => {
-                  setLetPrintSaldo((v) => !v);
-                }}
-              />
-            )}{" "}
-          </h2>
-
-          <table className="min-w-full table-auto border-collapse print:table-fixed print:border print:border-black mt-4">
-            <thead>
-              <tr className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 print:bg-white print:!text-black">
-                <th colSpan={2} className="px-2 py-1 border border-black">
-                  Показатель
-                </th>
-                <th className="px-2 py-1 border border-black">Дебет</th>
-                <th className="px-2 py-1 border border-black">Кредит</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
-                <td colSpan={2} className="px-2 py-1 border font-semibold border-black">
-                  Остаток на начало
-                </td>
-                <td className="px-2 py-1 border border-black font-semibold">{saldo.start[0]}</td>
-                <td className="px-2 py-1 border border-black font-semibold">{saldo.start[1]}</td>
-              </tr>
-              {saldo.today_entries.length > 0 ? (
-                saldo.today_entries.map((e, idx) => {
-                  console.log("entry", e[0], typeof(e[0]));
-                  
-                  return (
-                    <tr key={idx} className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
-                      <td className="px-2 py-1 border border-black">{e[0].split(" ")[0].replace(/-/g, ".")}</td>
-                      <td className="px-2 py-1 border border-black">{e[1]}</td>
-                      <td className="px-2 py-1 border whitespace-pre-line border-black">{parseFloat(e[2]) !== 0 ? e[2] : "-"}</td>
-                      <td className="px-2 py-1 border border-black">{parseFloat(e[3]) !== 0 ? e[3] : "-"}</td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
-                  <td className="px-2 py-1 border border-black">-</td>
-                  <td className="px-2 py-1 border border-black">-</td>
-                  <td className="px-2 py-1 border whitespace-pre-line border-black">-</td>
-                  <td className="px-2 py-1 border border-black">-</td>
-                </tr>
-              )}
-              <tr className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
-                <td colSpan={2} className="px-2 py-1 border font-semibold border-black">
-                  Итого оборот
-                </td>
-                <td className="px-2 py-1 border border-black font-semibold">{saldo.final[0]}</td>
-                <td className="px-2 py-1 border border-black font-semibold">{saldo.final[1]}</td>
-              </tr>
-              <tr className="text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
-                <td colSpan={2} className="px-2 py-1 border font-semibold border-black">
-                  Остаток на конец
-                </td>
-                <td className="px-2 py-1 border font-semibold border-black">{parseFloat(saldo.saldo[0]) !== 0 ? saldo.saldo[0] : "-"}</td>
-                <td className="px-2 py-1 border font-semibold border-black">{parseFloat(saldo.saldo[1]) !== 0 ? saldo.saldo[1] : "-"}</td>
-              </tr>
-            </tbody>
-          </table>
+    <div className={`bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mt-3 p-3 ${letPrintSaldo ? "print:block" : "print:hidden"} print:bg-transparent print:border-0 print:p-0 print:mt-2`}>
+      
+      {/* Header with Print Icon */}
+      <div className="flex items-center justify-center gap-2 mb-3 print:mb-1">
+        <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100 print:!text-black print:text-xs">
+          Карточка: {values.partner.name}
+        </h2>
+        <div className="print:hidden">
+          {letPrintSaldo ? (
+            <MdPrint
+              onClick={() => setLetPrintSaldo((v) => !v)}
+              className="w-4 h-4 text-blue-600 dark:text-blue-400 cursor-pointer hover:scale-110 active:scale-95 transition-transform"
+              title="Скрыть при печати"
+            />
+          ) : (
+            <MdPrintDisabled
+              onClick={() => setLetPrintSaldo((v) => !v)}
+              className="w-4 h-4 text-gray-400 dark:text-gray-500 cursor-pointer hover:scale-110 active:scale-95 transition-transform"
+              title="Показать при печати"
+            />
+          )}
         </div>
-      )}
+      </div>
+
+      {/* Compact Table */}
+      <table className="w-full table-auto border-collapse print:text-[10px]">
+        <thead>
+          <tr className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 print:bg-white print:!text-black">
+            <th colSpan={2} className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">
+              Показатель
+            </th>
+            <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">Дебет</th>
+            <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">Кредит</th>
+          </tr>
+        </thead>
+        <tbody>
+          {/* Начало */}
+          <tr className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
+            <td colSpan={2} className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium">
+              Остаток на начало
+            </td>
+            <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right">{saldo.start[0]}</td>
+            <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right">{saldo.start[1]}</td>
+          </tr>
+
+          {/* Entries */}
+          {saldo.today_entries.length > 0 ? (
+            saldo.today_entries.map((e, idx) => (
+              <tr
+                key={idx}
+                className="cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white print:cursor-default transition-colors"
+                onClick={() => handleRowClick(e[4])}
+              >
+                <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black">
+                  {e[0].split(" ")[0].replace(/-/g, ".")}
+                </td>
+                <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black">{e[1]}</td>
+                <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-right whitespace-pre-line">
+                  {parseFloat(e[2]) !== 0 ? e[2] : "-"}
+                </td>
+                <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-right">
+                  {parseFloat(e[3]) !== 0 ? e[3] : "-"}
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-center">-</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-center">-</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-center">-</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-center">-</td>
+            </tr>
+          )}
+
+          {/* Итого */}
+          <tr className="bg-gray-100 dark:bg-gray-750 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white dark:bg-gray-800">
+            <td colSpan={2} className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold">
+              Итого оборот
+            </td>
+            <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">{saldo.final[0]}</td>
+            <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">{saldo.final[1]}</td>
+          </tr>
+
+          {/* Конец */}
+          <tr className="bg-gray-100 dark:bg-gray-750 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white dark:bg-gray-800">
+            <td colSpan={2} className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold">
+              Остаток на конец
+            </td>
+            <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">
+              {parseFloat(saldo.saldo[0]) !== 0 ? saldo.saldo[0] : "-"}
+            </td>
+            <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">
+              {parseFloat(saldo.saldo[1]) !== 0 ? saldo.saldo[1] : "-"}
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   );
 };

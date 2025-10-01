@@ -6,6 +6,7 @@ import { FaPlus } from "react-icons/fa";
 import invoiceClasses from "./classes";
 // import { useFormikContext } from "formik";
 import MySearchInput from "../../../UI/MySearchInput";
+import { motion } from "framer-motion";
 
 const Head = ({ mainRefs, handleOpenInvoice, setQuery, query, invoices }) => {
   const { t } = useTranslation();
@@ -33,11 +34,33 @@ const Head = ({ mainRefs, handleOpenInvoice, setQuery, query, invoices }) => {
 
   return (
     <div className="bg-gray-200 dark:bg-gray-800 rounded-lg shadow-md p-1 mb-2 flex items-center justify-between px-2 print:hidden">
-      <button onClick={() => handleOpenInvoice(null)} ref={buttonRef} className={invoiceClasses.addInvoiceBtn}>
-        <FaPlus className="text-lg" />
-        <span>{t("add")}</span>
-      </button>
-
+      <motion.button
+        onClick={() => handleOpenInvoice(null)}
+        ref={buttonRef}
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
+        className="
+    relative group
+    px-4 py-2.5 
+    bg-gradient-to-r from-emerald-500 to-teal-600
+    hover:from-emerald-600 hover:to-teal-700
+    dark:from-emerald-600 dark:to-teal-700
+    dark:hover:from-emerald-700 dark:hover:to-teal-800
+    text-white font-semibold rounded-lg
+    shadow-md hover:shadow-lg
+    transition-all duration-200
+    focus:outline-none focus:ring-4 focus:ring-emerald-300/50 
+    dark:focus:ring-emerald-500/50 focus:ring-offset-2 
+    dark:focus:ring-offset-gray-800
+  "
+      >
+        <div className="flex items-center justify-center gap-2">
+          <motion.div whileHover={{ rotate: 90 }} transition={{ duration: 0.3 }}>
+            <FaPlus className="text-base" />
+          </motion.div>
+          <span>{t("add")}</span>
+        </div>
+      </motion.button>
       <div>
         <MySearchInput
           ref={mainRefs.searchInputRef}

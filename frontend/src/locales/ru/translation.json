@@ -466,7 +466,13 @@
   "success": "Успешно",
   "succesifuly deleted": "Успешно удалён",
   "cant delete is entried invoice": "Невозможно удалить проводённую фактуру",
-  "cant find invoice": "Фактура не найдена"
+  "cant find invoice": "Фактура не найдена",
+  "saved": "Сохранена",
+  "Not enough product in stock": "Не достаточно продукта на складе",
+  "Invoice already posted": "Фактура уже проведена",
+  "The warehouse is not tied to an account": "Склад не привязан к счёту",
+  "To many linked account on this warehouse": "Слишком много связанных аккаунтов на этом складе",
+  "The warehouse account dont have a parent account": "У аккаунта склада нет родительского аккаунта"
   
 
 

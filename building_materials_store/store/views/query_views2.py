@@ -1,6 +1,11 @@
 from ..models import *
 from django.http import JsonResponse
 from icecream import ic
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
 
 
 
@@ -126,3 +131,24 @@ def get_product_by_id_and_warehouse(request):
         return JsonResponse(data)
     except WarehouseProduct.DoesNotExist:
         return JsonResponse({'error': 'Product not found in this warehouse'}, status=404)
+    
+    
+    
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def transaction_detail(request, id):
+    transaction_obj = Transaction.objects.get(pk=id)
+
+    data = {
+        "transaction_id": transaction_obj.id,
+    }
+
+    if transaction_obj.invoice:
+        invoice = transaction_obj.invoice
+        data["invoice_id"] = invoice.id,
+        
+        
+    ic(transaction_obj)
+
+    return Response(data, status=status.HTTP_200_OK)

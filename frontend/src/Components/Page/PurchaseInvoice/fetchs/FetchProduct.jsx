@@ -12,6 +12,7 @@ const FetchProduct = ({ refs }) => {
   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
   const [query, setQuery] = useState("");
   const [products, setProducts] = useState([]);
+  const sound = new Audio("/sounds/up_down.mp3");
 
   const [notification, setNotification] = useState({ message: "", type: "" });
   const showNotification = (message, type) => {
@@ -88,10 +89,10 @@ const FetchProduct = ({ refs }) => {
               }
               if (e.key == "ArrowDown") {
                 e.preventDefault();
+                sound.currentTime = 0;
+                sound.play();
                 // console.log('tttttttt ===');
                 if (refs.productListRef.current.length > 0) {
-                  
-                  
                   // console.log("values.products", values.products);
                   // console.log("refs.productListRef", refs.productListRef);
                   setTimeout(() => {
@@ -105,6 +106,8 @@ const FetchProduct = ({ refs }) => {
                 }
               } else if (e.key == "ArrowUp") {
                 e.preventDefault();
+                sound.currentTime = 0;
+                sound.play();
                 if (refs.partnerX_Ref.current) {
                   refs.partnerX_Ref.current?.focus();
                 } else {
@@ -261,12 +264,16 @@ const FetchProduct = ({ refs }) => {
                       }, 0);
                     } else if (e.key == "ArrowDown") {
                       e.preventDefault();
+                      sound.currentTime = 0;
+                      sound.play();
 
                       if (refs.productListRef.current.length > idx + 1) {
                         refs.productListRef.current[idx + 1]?.focus();
                       }
                     } else if (e.key == "ArrowUp") {
                       e.preventDefault();
+                      sound.currentTime = 0;
+                      sound.play();
                       if (idx === 0) {
                         refs.productRef.current?.focus();
                       } else {

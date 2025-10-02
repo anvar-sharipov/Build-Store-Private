@@ -12,6 +12,7 @@ const Head = ({ mainRefs, handleOpenInvoice, setQuery, query, invoices }) => {
   const { t } = useTranslation();
   const buttonRef = useRef(null);
   const sound = new Audio("/sounds/up_down.mp3");
+  // const sound_open_faktura = new Audio("/sounds/open_faktura.mp3");
 
   //   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
 
@@ -20,6 +21,8 @@ const Head = ({ mainRefs, handleOpenInvoice, setQuery, query, invoices }) => {
     const handleKeyDown = (e) => {
       if (e.key === "Insert") {
         e.preventDefault();
+        // sound_open_faktura.currentTime = 0;
+        // sound_open_faktura.play();
         if (buttonRef.current) {
           buttonRef.current.click();
         }

@@ -2,9 +2,11 @@ import { FaTimes } from "react-icons/fa";
 import Fuse from "fuse.js";
 import { useMemo } from "react";
 import { CiSearch } from "react-icons/ci";
+import { useTranslation } from "react-i18next";
 
 const SelectPartner = ({ selectedPartner, partnerX_Ref, setSelectedPartner, setFilteredPartners, partnerListRef, allPartners, partnerInputRef, filteredPartners }) => {
   // Настраиваем Fuse
+  const { t } = useTranslation();
   const fuse = useMemo(
     () =>
       new Fuse(allPartners, {
@@ -59,7 +61,7 @@ const SelectPartner = ({ selectedPartner, partnerX_Ref, setSelectedPartner, setF
         </div>
       ) : (
         <div>
-          <label className="text-xs font-medium text-gray-400 mb-1">По партнёрам</label>
+          <label className="text-xs font-medium text-gray-400 mb-1">{t("By partners")}</label>
           <div className={`relative w-full print:hidden`}>
             <CiSearch className="absolute left-1 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 dark:text-gray-300 z-10 pointer-events-none" />
             <input

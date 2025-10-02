@@ -2,22 +2,46 @@ import { useTranslation } from "react-i18next";
 import Head from "./Utils/Head";
 import invoiceClasses from "./Utils/classes";
 import myAxios from "../../axios";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useContext } from "react";
 import InvoiceList from "./InvoiceList";
 import InvoiceFilter from "../../Sidebar/right/filters/InvoiceFilter/InvoiceFilter";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ROUTES } from "../../../routes";
+import { DateContext } from "../../UI/DateProvider";
+import { useNotification } from "../../context/NotificationContext";
 
 const PurchaseInvoice = () => {
   const { t } = useTranslation();
+  const { showNotification } = useNotification();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [dayIsClosed, setDayIsClosed] = useState(false);
   const navigate = useNavigate();
   // const [query, setQuery] = useState("");
   const [query, setQuery] = useState(() => searchParams.get("query") || "");
 
+  const { dateProwodok } = useContext(DateContext);
+
   useEffect(() => {
     document.title = `${t("faktura")}`; // название вкладки
   }, []);
+
+  useEffect(() => {
+    const checkDate = async () => {
+      try {
+        const res = await myAxios.get("check_day_closed", {
+          params: { date: dateProwodok }, // <-- так правильно
+        });
+        console.log(res.data);
+        setDayIsClosed(res.data.is_closed);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    if (dateProwodok) {
+      checkDate();
+    }
+  }, [dateProwodok]);
 
   // useEffect(() => {
   //   if (!searchParams.get("page")) {
@@ -111,11 +135,18 @@ const PurchaseInvoice = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [pagination, loading, searchParams]);
 
+  const sound_open_faktura = new Audio("/sounds/open_faktura.mp3");
   const handleOpenInvoice = (id) => {
+    sound_open_faktura.currentTime = 0;
+    sound_open_faktura.play();
     if (id) {
       navigate(`/purchase-invoices/update/${id}`);
     } else {
-      navigate(ROUTES.PURCHASE_INVOICE_CREATE);
+      if (!dayIsClosed) {
+        navigate(ROUTES.PURCHASE_INVOICE_CREATE);
+      } else {
+        showNotification(t("day is closed"), "error")
+      }
     }
   };
 

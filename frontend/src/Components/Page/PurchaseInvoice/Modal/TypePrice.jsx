@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 const TypePrice = () => {
   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
   const { t } = useTranslation();
+  const change_type = new Audio("/sounds/change_type.mp3");
 
   return (
     <div>
@@ -16,6 +17,8 @@ const TypePrice = () => {
             value="wholesale_price"
             checked={values.type_price === "wholesale_price"}
             onChange={(e) => {
+              change_type.currentTime = 0;
+              change_type.play();
               const newType = e.target.value;
               if (values.products.length > 0) {
                 const updatedProducts = values.products.map((p) => {
@@ -51,6 +54,8 @@ const TypePrice = () => {
             value="retail_price"
             checked={values.type_price === "retail_price"}
             onChange={(e) => {
+              change_type.currentTime = 0;
+              change_type.play();
               const newType = e.target.value;
               if (values.products.length > 0) {
                 const updatedProducts = values.products.map((p) => {

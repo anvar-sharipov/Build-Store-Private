@@ -9,6 +9,7 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
   const { t } = useTranslation();
   const { values, setFieldValue, handleBlur } = useFormikContext();
   const [isFocused, setIsFocused] = useState(false);
+  const sound = new Audio("/sounds/up_down.mp3");
 
   useEffect(() => {
     if (values.is_entry && !values.partner) {
@@ -106,7 +107,9 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
     return (
       <div className="w-full flex items-center justify-between print:hidden my-1 gap-3 mt-5">
         <div
-          className={`flex items-center gap-2 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 dark:bg-gray-800 shadow-sm flex-1 ${isFocused ? "bg-indigo-200 dark:bg-indigo-600" : "bg-white"}`}
+          className={`flex items-center gap-2 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 dark:bg-gray-800 shadow-sm flex-1 ${
+            isFocused ? "bg-indigo-200 dark:bg-indigo-600" : "bg-white"
+          }`}
         >
           <span className="text-gray-600 dark:text-gray-400 text-sm">{t("partner")}:</span>
           <span className="text-gray-800 dark:text-gray-100 font-medium">{values.partner?.name}</span>
@@ -120,6 +123,8 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
             onKeyDown={(e) => {
               if (e.key == "ArrowUp") {
                 e.preventDefault();
+                sound.currentTime = 0;
+                sound.play();
                 if (refs.awtoX_Ref.current) {
                   refs.awtoX_Ref.current?.focus();
                 } else {
@@ -136,6 +141,8 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
                 }, 0);
               } else if (e.key == "ArrowDown") {
                 e.preventDefault();
+                sound.currentTime = 0;
+                sound.play();
                 refs.productRef.current?.focus();
               }
             }}
@@ -181,6 +188,8 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
               e.preventDefault();
             } else if (e.key == "ArrowUp") {
               e.preventDefault();
+              sound.currentTime = 0;
+              sound.play();
               if (refs.awtoX_Ref.current) {
                 refs.awtoX_Ref.current?.focus();
               } else {
@@ -188,6 +197,8 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
               }
             } else if (e.key == "ArrowDown") {
               e.preventDefault();
+              sound.currentTime = 0;
+              sound.play();
               if (refs.partnerListRef.current?.length > 0) {
                 refs.partnerListRef.current[0]?.focus();
               } else refs.productRef.current?.focus();
@@ -231,11 +242,15 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
                   refs.productRef.current?.focus();
                 } else if (e.key == "ArrowDown") {
                   e.preventDefault();
+                  sound.currentTime = 0;
+                  sound.play();
                   if (refs.partnerListRef.current.length > idx + 1) {
                     refs.partnerListRef.current[idx + 1]?.focus();
                   }
                 } else if (e.key == "ArrowUp") {
                   e.preventDefault();
+                  sound.currentTime = 0;
+                  sound.play();
                   if (idx === 0) {
                     refs.partnerRef.current?.focus();
                   } else {

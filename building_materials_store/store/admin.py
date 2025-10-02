@@ -560,36 +560,69 @@ class WarehouseAccountAdmin(admin.ModelAdmin):
 ######################################################################## close day START
 @admin.register(DayClosing)
 class DayClosingAdmin(admin.ModelAdmin):
-    fields = ("date", "is_closed", "closed_at", "closed_by")
-    list_display = ("date", "is_closed", "closed_at", "closed_by")
-    ordering = ("-date",)
+    list_display = ("date", "closed_at", "closed_by", "note")
+    list_filter = ("closed_by",)
     search_fields = ("date", "closed_by__username")
+    ordering = ("-date",)
+
+    def has_delete_permission(self, request, obj=None):
+        return False  # запрет на удаление
+
+    def has_change_permission(self, request, obj=None):
+        return False  # запрет на редактирование (только просмотр)
+
+    def has_add_permission(self, request):
+        # закрытие дня лучше делать через бизнес-логику, а не руками в админке
+        return False
 
 
 @admin.register(DayClosingLog)
 class DayClosingLogAdmin(admin.ModelAdmin):
-    # Убираем 'performed_at', оно не редактируемое
-    fields = ("day_closing", "action", "performed_by", "reason")
-    list_display = ("day_closing", "action", "performed_by", "performed_at")
-    ordering = ("-performed_at",)
+    list_display = ("day_closing", "action", "performed_by", "performed_at", "reason")
+    list_filter = ("action", "performed_by")
     search_fields = ("day_closing__date", "performed_by__username")
-    list_filter = ("action",)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(PartnerBalanceSnapshot)
 class PartnerBalanceSnapshotAdmin(admin.ModelAdmin):
-    fields = ("closing", "partner", "balance")
     list_display = ("closing", "partner", "balance")
-    ordering = ("-closing__date",)
     search_fields = ("partner__name",)
+    list_filter = ("closing",)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(StockSnapshot)
 class StockSnapshotAdmin(admin.ModelAdmin):
-    fields = ("closing", "warehouse", "product", "quantity")
-    list_display = ("closing", "warehouse", "product", "quantity")
-    ordering = ("-closing__date",)
+    list_display = ("closing", "warehouse", "product", "quantity",
+                    "purchase_price", "retail_price", "wholesale_price", "discount_price", "firma_price")
+    list_filter = ("closing", "warehouse")
     search_fields = ("product__name", "warehouse__name")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
 ######################################################################## close day END
 ########################################################################################################################################################################################################################

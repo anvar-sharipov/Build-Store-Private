@@ -9,10 +9,11 @@ from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import status
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Sum, F
 from datetime import datetime
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404
+from decimal import Decimal
 
 
 
@@ -88,13 +89,14 @@ def save_invoice(request):
     
         try:
             data = json.loads(request.body)
-            ic(data['id'])
+            # ic(data['id'])
             is_entry = data['is_entry']  
             awto = data['awto']
             awto_send = data['awto_send']
             partner_send = data['partner_send']
             send = data['send']
             invoice_date = data['invoice_date']
+            invoice_date2 = data.get('invoice_date2')
             partner = data['partner']
             products = data['products']
             type_price = data['type_price']
@@ -379,14 +381,16 @@ def save_invoice(request):
             #####################################################################################################################################################################        
             # update invoice    
             else:
+                if not invoice_date2:
+                    return JsonResponse({"status": "error", "message": "choose date prowodok"}, status=400)
                 try:
                     with transaction.atomic():
                         invoice = Invoice.objects.get(id=invoice_id)
-                        invoice_date = normalize_date(invoice_date)
+                        invoice_date = normalize_date(invoice_date2)
                         invoice.awto = awto_obj
                         invoice.awto_send = awto_send
                         invoice.comment = comment
-                        invoice.invoice_date = invoice_date
+                        invoice.invoice_date = invoice_date2
                         invoice.is_entry = is_entry
                         invoice.partner = partner_obj
                         invoice.partner_send = partner_send
@@ -395,7 +399,7 @@ def save_invoice(request):
                         invoice.warehouse = warehouse_obj
                         invoice.wozwrat_or_prihod = wozwrat_or_prihod
                         invoice.updated_at = timezone.now()
-                        invoice.updated_at_handle = invoice_date
+                        invoice.updated_at_handle = invoice_date2
                         # invoice.save()
                         
                         InvoiceItem.objects.filter(invoice=invoice).delete()
@@ -486,7 +490,7 @@ def save_invoice(request):
                                 
                                 transaction_obj = Transaction.objects.create(
                                     description=f"Faktura № {str(invoice.pk)}\n{comment}", 
-                                    date=invoice_date, invoice=invoice, 
+                                    date=invoice_date2, invoice=invoice, 
                                     partner=partner_obj
                                     )
                                 
@@ -543,8 +547,8 @@ def save_invoice(request):
                                             profit_price = Decimal((sale_price - purchase_price) * quantity)
                                             create_entries(transaction_obj, rule, product_obj, warehouse_obj, profit_price, warehouse_parent_account, warehouse_account_obj)
                                         
-                                invoice.entry_created_at = invoice_date
-                                invoice.entry_created_at_handle = invoice_date
+                                invoice.entry_created_at = invoice_date2
+                                invoice.entry_created_at_handle = invoice_date2
                                 invoice.entry_created_by = request.user
                                 partner_obj.save()
                         invoice.save()
@@ -583,6 +587,10 @@ def get_invoices(request):
     invoices = Invoice.objects.all().order_by("-pk")
     ic("tut get_invoices +++++", request)
     
+    # DayClosing.objects.all().delete()
+    # DayClosingLog.objects.all().delete()
+    # PartnerBalanceSnapshot.objects.all().delete()
+    # StockSnapshot.objects.all().delete()
 
     partner_id = request.GET.get('partner_id')
     wozwrat_or_prihod = request.GET.get('wozwrat_or_prihod')
@@ -637,6 +645,37 @@ def get_invoices(request):
 
     data = []
     for invoice in page_obj:
+        
+        # total_selected_price = InvoiceItem.objects.filter(invoice=invoice).aggregate(total=Sum("selected_price"))["total"] or 0
+        
+        # total_selected_quantity = (InvoiceItem.objects.filter(invoice=invoice).aggregate(total=Sum("selected_quantity")))["total"] or 0
+        
+        # total_selected_price = 0
+        # items = InvoiceItem.objects.filter(invoice=invoice)
+        # for item in items:
+        #     total_selected_price += item.selected_price * item.selected_quantity
+            
+        total_selected_price = (InvoiceItem.objects.filter(invoice=invoice).aggregate(total=Sum(F("selected_price") * F("selected_quantity"))))["total"] or 0
+        total_purchase_price = (InvoiceItem.objects.filter(invoice=invoice).aggregate(total=Sum(F("purchase_price") * F("selected_quantity"))))["total"] or 0
+        
+        total_wholesale_price = (InvoiceItem.objects.filter(invoice=invoice).aggregate(total=Sum(F("wholesale_price") * F("selected_quantity"))))["total"] or 0
+        
+        total_income_price = total_selected_price - total_purchase_price
+        total_dicount_price = total_selected_price - total_wholesale_price
+        
+        
+        
+        # total_selected_price = selected_price * selected_quantity
+        
+        # purchase_price = InvoiceItem.objects.filter(invoice=invoice).aggregate(
+        #     total=Sum("purchase_price")
+        # )["total"] or 0
+        
+        # total_purchase_price = purchase_price * selected_quantity
+        
+        # total_income_price = total_selected_price - total_purchase_price
+        
+        ic(total_selected_price)
         data.append({
             "id": invoice.id,
             "invoice_date": invoice.invoice_date,
@@ -645,6 +684,9 @@ def get_invoices(request):
             "wozwrat_or_prihod": invoice.wozwrat_or_prihod,
             "send": invoice.send,
             "is_entry": invoice.is_entry,
+            "total_selected_price": str(total_selected_price),
+            "total_income_price": str(total_income_price),
+            "total_dicount_price": str(total_dicount_price),
             # можно добавить больше полей по необходимости
         })
 

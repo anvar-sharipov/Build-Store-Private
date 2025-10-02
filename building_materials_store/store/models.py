@@ -316,7 +316,7 @@ class Partner(models.Model):
     )
     type = models.CharField(max_length=20, choices=PARTNER_TYPE_CHOICES, default=SUPPLIER, verbose_name='Partneriň görnüşi')
     # account = models.ForeignKey('Account', on_delete=models.PROTECT, null=True, blank=True, verbose_name='Account')
-    balance = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), verbose_name='Balans (deb/kred)')
+    balance = models.DecimalField(max_digits=12, decimal_places=3, default=Decimal('0.000'), verbose_name='Balans (deb/kred)')
     is_active = models.BooleanField(default=True, verbose_name='Активен')
 
     def __str__(self):
@@ -773,10 +773,13 @@ class WarehouseAccount(models.Model):
 ########################################################################################################################################################################################################################
 ######################################################################## close day START
 class DayClosing(models.Model):
-    date = models.DateField(verbose_name="Дата", unique=True)
-    is_closed = models.BooleanField(verbose_name="Закрыт", default=False)
-    closed_at = models.DateTimeField(verbose_name="Время закрытия", null=True, blank=True)
-    closed_by = models.ForeignKey(User, verbose_name="Закрыл", on_delete=models.SET_NULL, null=True, blank=True, related_name="closed_days")
+    date = models.DateField(verbose_name="Дата", unique=True, null=True, blank=True)
+    closed_at = models.DateTimeField(verbose_name="Время закрытия", auto_now_add=True, null=True, blank=True)
+    closed_by = models.ForeignKey(
+        User, verbose_name="Закрыл", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="closed_days"
+    )
+    note = models.TextField(verbose_name="Комментарий", blank=True, null=True)
 
     class Meta:
         verbose_name = "Закрытие дня"
@@ -784,20 +787,19 @@ class DayClosing(models.Model):
         ordering = ["-date"]
 
     def __str__(self):
-        return f"Закрытие {self.date} - {'Закрыт' if self.is_closed else 'Открыт'}"
+        return f"Закрытие {self.date} ({self.closed_by})"
 
 
 class DayClosingLog(models.Model):
     ACTION_CHOICES = [
         ("close", "Закрытие дня"),
-        ("reopen", "Отмена закрытия"),
     ]
 
-    day_closing = models.ForeignKey(DayClosing, verbose_name="Закрытый день", on_delete=models.CASCADE, related_name="logs")
-    action = models.CharField(verbose_name="Действие", max_length=20, choices=ACTION_CHOICES)
+    day_closing = models.ForeignKey(DayClosing, on_delete=models.CASCADE, related_name="logs", null=True, blank=True)
+    action = models.CharField(verbose_name="Действие", max_length=20, choices=ACTION_CHOICES, null=True, blank=True)
     performed_by = models.ForeignKey(User, verbose_name="Пользователь", on_delete=models.SET_NULL, null=True, blank=True)
-    performed_at = models.DateTimeField(verbose_name="Время действия", auto_now_add=True)
-    reason = models.TextField(verbose_name="Причина", blank=True, null=True)
+    performed_at = models.DateTimeField(verbose_name="Время действия", auto_now_add=True, null=True, blank=True)
+    reason = models.TextField(verbose_name="Комментарий", blank=True, null=True)
 
     class Meta:
         verbose_name = "Журнал закрытия дня"
@@ -805,7 +807,7 @@ class DayClosingLog(models.Model):
         ordering = ["-performed_at"]
 
     def __str__(self):
-        return f"{self.get_action_display()} {self.day_closing.date} пользователем {self.performed_by}"
+        return f"{self.get_action_display()} {self.day_closing.date} ({self.performed_by})"
     
     
     
@@ -813,9 +815,9 @@ class PartnerBalanceSnapshot(models.Model):
     """
     Баланс каждого партнёра на момент закрытия дня.
     """
-    closing = models.ForeignKey(DayClosing, on_delete=models.CASCADE, related_name="partner_balances")
-    partner = models.ForeignKey("Partner", on_delete=models.CASCADE)
-    balance = models.DecimalField(max_digits=12, decimal_places=2)
+    closing = models.ForeignKey(DayClosing, on_delete=models.CASCADE, related_name="partner_balances", null=True, blank=True)
+    partner = models.ForeignKey("Partner", on_delete=models.CASCADE, null=True, blank=True)
+    balance = models.DecimalField(max_digits=12, decimal_places=3, null=True, blank=True)
 
     class Meta:
         unique_together = ("closing", "partner")
@@ -832,6 +834,11 @@ class StockSnapshot(models.Model):
     closing = models.ForeignKey(DayClosing, on_delete=models.CASCADE, related_name="stock_snapshots")
     warehouse = models.ForeignKey("Warehouse", on_delete=models.CASCADE)
     product = models.ForeignKey("Product", on_delete=models.CASCADE)
+    purchase_price = models.DecimalField(verbose_name='Цена закупки', max_digits=10, decimal_places=3, default=0)
+    retail_price = models.DecimalField(verbose_name='Розничная цена', max_digits=10, decimal_places=3, default=0)
+    wholesale_price = models.DecimalField(verbose_name='Оптовая цена', max_digits=10, decimal_places=3, default=0)
+    discount_price = models.DecimalField(verbose_name='Цена со скидкой', max_digits=10, decimal_places=3, blank=True, null=True)
+    firma_price = models.DecimalField(verbose_name='Цена Firma', max_digits=10, decimal_places=3, blank=True, null=True)
     quantity = models.DecimalField(max_digits=12, decimal_places=2)
 
     class Meta:

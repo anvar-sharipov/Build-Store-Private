@@ -395,7 +395,7 @@
   "select_warehouse": "Ammary sayla",
   "prihod": "Geliş",
   "wozwrat": "Gaýtaryş",
-  "rashod": "Rashod",
+  "rashod": "Çykdajy",
   "type faktura": "Faktura görnüşi",
   "CannotBeZero": "0 bolup bilmez",
   "name2": "Harydyň ady",
@@ -442,8 +442,29 @@
   "Invoice already posted": "Faktura prowodka edilen",
   "The warehouse is not tied to an account": "Ammar hasaba birikdirilmedi",
   "To many linked account on this warehouse": "Skladda gaty köp hasap bar",
-  "The warehouse account dont have a parent account": "Skladda hasabyň ene hasaby ýok"
-
+  "The warehouse account dont have a parent account": "Skladda hasabyň ene hasaby ýok",
+  "Invoice not found": "Fakturalar tapylmady",
+  "Try changing the search parameters or create a new invoice": "Gözleg parametrlerini üýtgediň ýa-da täze faktura dörediň",
+  "Invoice list": "Fakturalaryň sanawy",
+  "Price": "Baha",
+  "Revenue": "Girdeji",
+  "Discount": "Arzanlaşyk",
+  "Posted": "Geçirilen",
+  "Not posted": "Geçirilmedik",
+  "Posted2": "Geçirilen",
+  "Not posted2": "Geçirilmedik",
+  "💡 Use ↑↓ to navigate, Enter to open invoice": "💡 ↑↓ bilen gezmek üçin ulanyň, Enter bilen fakturany açyň",
+  "Document status": "Resmin ýagdaýy",
+  "By partners": "Hyzmatdaşlar boýunça",
+  "card":"Kartoçka",
+  "Indicator": "Görkeziji",
+  "Debet": "Debet",
+  "Credit": "Kredit",
+  "Opening balance": "Başlangyç galanşyk",
+  "Total turnover": "Jemi aýlaw",
+  "Closing balance": "Ahyrky galanşyk",
+  "choose close date": "Günüň senesini saylaň",
+  "day success is closed": "Gün üstünlikli ýapylldy"
 
 
 

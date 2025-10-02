@@ -13,89 +13,75 @@ import MyButton from "../UI/MyButton";
 import myAxios from "../axios";
 import MyModal from "../UI/MyModal";
 import MyModal2 from "../UI/MyModal2";
-import { useTranslation } from "react-i18next";
+// import { useTranslation } from "react-i18next";
 import Notification from "../Notification";
+import { useNotification } from "../context/NotificationContext";
+import CloseDayModal from "./modals/CloseDayModal";
 
 const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDarkMode, darkMode, i18n, user, setShowAvatarModal }) => {
-  // const location = useLocation();
-  // const isFullScreenPage =
-  //   location.pathname === "/sale-invoices/new" ||
-  //   location.pathname.includes("/sale-invoices/update") ||
-  //   location.pathname.includes("/sale-invoices/create") ||
-  //   location.pathname.includes("/purchase-invoices/update") ||
-  //   location.pathname.includes("/purchase-invoices/create");
   const { dateFrom, setDateFrom, dateTo, setDateTo, dateProwodok, setDateProwodok } = useContext(DateContext);
+  const { showNotification } = useNotification();
 
   // ############################################################################## modal close day START
   const [dateIsClosed, setDateIsClosed] = useState(false);
   const [dontShowCloseDayBtn, setDontShowCloseDayBtn] = useState(true);
   const [openModalCloseDay, setOpenModalCloseDay] = useState(false);
 
-  const [action, setAction] = useState("close"); // close или reopen
   const [reason, setReason] = useState("");
-
-  const [notification, setNotification] = useState({ message: "", type: "" });
-  const showNotification = (message, type) => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification({ message: "", type: "" }), 3000);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (action === "reopen" && !reason) {
-      showNotification(t("If you are reopening the day, please provide a reason"), "error");
-      return;
-    }
-
     try {
       const response = await myAxios.post("/close_day/", {
         date: dateProwodok,
-        action,
-        reason,
+        action: "close", // всегда закрытие дня
+        reason, // комментарий можно оставить для информации
         user_id: 1, // замените на реальный id текущего пользователя
       });
 
       if (response.data.success) {
-        alert(`День успешно ${action === "close" ? "закрыт" : "открыт"}!`);
+        showNotification(t(response.data.message), "success");
+        setDateIsClosed(true)
+        setDontShowCloseDayBtn(true)
       } else {
-        alert(`Ошибка: ${response.data.error}`);
+        showNotification(t(response.data.error), "error");
       }
     } catch (error) {
       console.error(error);
       alert("Ошибка при отправке запроса на сервер");
+    } finally {
+      setOpenModalCloseDay(false)
     }
   };
+
   // ############################################################################## modal close day END
 
   // ############################################################################## date START
-
   useEffect(() => {
     const checkDate = async () => {
       try {
         const res = await myAxios.get("check_day_closed", {
-          params: {
-            date: dateProwodok,
-          },
+          params: { date: dateProwodok },
         });
-        console.log("Response:", res.data);
-        if (res.data.is_closed) {
-          setDateIsClosed(true);
-          setDontShowCloseDayBtn(false);
+
+        if (res.data.success) {
+          setDateIsClosed(res.data.is_closed);
+          // Кнопка закрытия дня показывается только если день не закрыт
+          setDontShowCloseDayBtn(res.data.is_closed);
         } else {
-          setDateIsClosed(false);
-          setDontShowCloseDayBtn(false);
-        }
-        if (res.data.error) {
+          // Если ошибка, кнопку скрываем
           setDontShowCloseDayBtn(true);
-        } else {
-          setDontShowCloseDayBtn(false);
         }
       } catch (error) {
-        console.error("Error det date:", error);
+        console.error("Error getting date:", error);
+        setDontShowCloseDayBtn(true);
       }
     };
-    checkDate();
+
+    if (dateProwodok) {
+      checkDate();
+    }
   }, [dateProwodok]);
 
   const today = new Date().toISOString().split("T")[0]; // формат YYYY-MM-DD
@@ -128,53 +114,7 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
     <nav className="flex items-center justify-between">
       {/* modalka for close day */}
       {openModalCloseDay && (
-        <MyModal2 onClose={() => setOpenModalCloseDay(false)}>
-          <div className="flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
-            <form onSubmit={handleSubmit} className="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 space-y-4">
-              <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 text-center">Закрытие / Отмена дня</h2>
-
-              {/* Дата */}
-              <div className="text-center font-semibold text-gray-700 dark:text-gray-300">{dateProwodok ? new Date(dateProwodok).toLocaleDateString("ru-RU") : "Не выбрана"}</div>
-              <div className=" hidden">
-                <label className="mb-1 text-gray-700 dark:text-gray-300">Дата</label>
-                <div>{dateProwodok}</div>
-                <input type="date" value={dateProwodok} onChange={(e) => setDateProwodok(e.target.value)} className="hidden" required />
-              </div>
-
-              {/* Действие */}
-              <div className="flex flex-col">
-                <label className="mb-1 text-gray-700 dark:text-gray-300">Действие</label>
-                <select
-                  value={action}
-                  onChange={(e) => setAction(e.target.value)}
-                  className="px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="close">Закрыть день</option>
-                  <option value="reopen">Отменить закрытие</option>
-                </select>
-              </div>
-
-              {/* Причина */}
-              <div className="flex flex-col">
-                <label className="mb-1 text-gray-700 dark:text-gray-300">Причина {action === "reopen" && <span className="text-red-500">*</span>}</label>
-                <textarea
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  className="px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Введите комментарий (обязательно при отмене закрытия)"
-                  rows={3}
-                  required={action === "reopen"}
-                />
-              </div>
-
-              {/* Кнопка */}
-              <button type="submit" className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-md shadow focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                Подтвердить
-              </button>
-            </form>
-            <Notification message={t(notification.message)} type={notification.type} onClose={() => setNotification({ message: "", type: "" })} />
-          </div>
-        </MyModal2>
+        <CloseDayModal setOpenModalCloseDay={setOpenModalCloseDay} handleSubmit={handleSubmit} dateProwodok={dateProwodok} setDateProwodok={setDateProwodok} setReason={setReason} reason={reason} />
       )}
 
       {/* Logo */}
@@ -226,8 +166,9 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
                   variant="green"
                   onClick={() => setOpenModalCloseDay(true)}
                   type="button"
+                  disabled={true}
                 >
-                  {t("choose day")}
+                  {t("day is closed")}
                 </button>
                 <FaLock size={15} />
               </div>
@@ -259,24 +200,23 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
         </div>
         <div className="flex flex-col gap-5 border-r border-gray-600 pr-2">
           <LanguageSwitcher i18n={i18n} />
- 
-            <div
-              onClick={() => {
-                setDarkMode(!darkMode);
-                setTimeout(() => {
-                  window.dispatchEvent(new Event("theme-toggled"));
-                }, 0);
-              }}
-              aria-label="Toggle theme"
-              // className="hover:underline text-blue-500 hover:text-blue-700 flex gap-1 items-center cursor-pointer"
-              className={`w-9 p-1 rounded-full transition-all duration-300 transform hover:scale-110 text-center cursor-pointer ${
-                darkMode ? "bg-yellow-400 text-gray-900 shadow-yellow-400/25" : "bg-gray-800 text-yellow-400 shadow-gray-800/25"
-              } shadow-lg hover:shadow-xl`}
-            >
-              {/* {darkMode ? `🌙 ${t("theme")}: ${t("dark")}` : `☀️ ${t("theme")}: ${t("light")}`} */}
-              {darkMode ? `☀️` : `🌙`}
-            </div>
- 
+
+          <div
+            onClick={() => {
+              setDarkMode(!darkMode);
+              setTimeout(() => {
+                window.dispatchEvent(new Event("theme-toggled"));
+              }, 0);
+            }}
+            aria-label="Toggle theme"
+            // className="hover:underline text-blue-500 hover:text-blue-700 flex gap-1 items-center cursor-pointer"
+            className={`w-9 p-1 rounded-full transition-all duration-300 transform hover:scale-110 text-center cursor-pointer ${
+              darkMode ? "bg-yellow-400 text-gray-900 shadow-yellow-400/25" : "bg-gray-800 text-yellow-400 shadow-gray-800/25"
+            } shadow-lg hover:shadow-xl`}
+          >
+            {/* {darkMode ? `🌙 ${t("theme")}: ${t("dark")}` : `☀️ ${t("theme")}: ${t("light")}`} */}
+            {darkMode ? `☀️` : `🌙`}
+          </div>
         </div>
 
         {user && (

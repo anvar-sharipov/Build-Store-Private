@@ -17,11 +17,11 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
   const [localErrorQuantity, setLocalErrorQuantity] = useState("");
 
   useEffect(() => {
-    if (Number(product.selected_quantity) > (product.quantity_on_selected_warehouses || 0)) {
+    if (Number(product.selected_quantity) > (product.quantity_on_selected_warehouses || 0) && values.wozwrat_or_prihod === "rashod") {
       setLocalErrorQuantity(`${t("OnStock")} ${product.quantity_on_selected_warehouses}`);
       setFieldValue("send", false);
     }
-  }, [product.selected_quantity, setFieldValue, t]);
+  }, [product.selected_quantity, setFieldValue, t, values.wozwrat_or_prihod]);
 
   useEffect(() => {
     setLocalValue(product.selected_quantity?.toString() || "");
@@ -153,10 +153,14 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
           const qty = Number(normalizedValue);
           const isNumber = !isNaN(normalizedValue) && normalizedValue.trim() !== "";
 
+          console.log("values.wozwrat_or_prihodEEEEEEEEEEEE", values.wozwrat_or_prihod);
+          
+
+
           if (!isNumber) {
             setLocalErrorQuantity(`${t("quantity must be a digit")}`);
             setFieldValue("send", false);
-          } else if (qty > product.quantity_on_selected_warehouses) {
+          } else if (qty > product.quantity_on_selected_warehouses && values.wozwrat_or_prihod === "rashod") {
             setLocalErrorQuantity(`${t("OnStock")} ${product.quantity_on_selected_warehouses}`);
             setFieldValue("send", false);
           } else if (qty < 0.001) {

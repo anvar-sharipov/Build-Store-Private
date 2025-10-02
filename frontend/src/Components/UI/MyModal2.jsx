@@ -7,11 +7,17 @@ const MyModal2 = ({ onClose, children, loading, myClass = "" }) => {
     const handleKeyDown = (event) => {
       if (event.key === "Escape" && !loading) {
         onClose();
+      } else {
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose, loading]);
+
+  useEffect(() => {
+    const open_modal2 = new Audio("/sounds/open_modal2.mp3");
+    open_modal2.play();
+  }, [loading]);
 
   return (
     <AnimatePresence>
@@ -32,11 +38,11 @@ const MyModal2 = ({ onClose, children, loading, myClass = "" }) => {
              rounded-xl sm:rounded-2xl shadow-2xl 
              border border-gray-200/20 dark:border-gray-700/30 backdrop-blur-xl
              w-full max-w-2xl md:max-w-3xl lg:max-w-4xl 
-             max-h-[90vh] p-4 sm:p-6 md:p-8 ${myClass === "" ? "bg-white dark:bg-gray-900" : myClass }`}
+             max-h-[90vh] p-4 sm:p-6 md:p-8 ${myClass === "" ? "bg-white dark:bg-gray-900" : myClass}`}
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Кнопка закрытия */}

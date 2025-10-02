@@ -260,12 +260,12 @@ const MainPage = () => {
 
             console.log("Успешно отправлено", response.data);
             if (response.data?.is_updated) {
-              showNotification(`${t("faktura")} № ${response.data.id} ${t("saved")}`, "success");
+              showNotification(`${t("faktura")} № ${response.data.id} ${t("saved")}`, "faktura_success");
               // setTimeout(() => {
               //   window.location.reload();
               // }, 1000);
             } else {
-              showNotification(t(response.data.message), "success");
+              showNotification(t(response.data.message), "faktura_success");
               // handleOpenInvoice(response.data.id);
             }
 
@@ -335,15 +335,9 @@ const MainPage = () => {
                       <Comment />
                     </div>
                     <Saldo saldo={saldo} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} />
-                    <div className="flex justify-between">
-                      {id && (
-                        <div className="print:hidden mt-5 ml-5">
-                          <InfoAboutInvoice values={values} letPrintInfo={letPrintInfo} setLetPrintInfo={setLetPrintInfo} />
-                        </div>
-                      )}
-                      <div className="flex justify-end">
-                        {values.products && values.products.length > 0 && <SubmitButton dateProwodok={dateProwodok} fakturaType={fakturaType} fakturaBgDynamic={fakturaBgDynamic} />}
-                      </div>
+
+                    <div className="flex justify-end">
+                      {values.products && values.products.length > 0 && <SubmitButton dateProwodok={dateProwodok} fakturaType={fakturaType} fakturaBgDynamic={fakturaBgDynamic} />}
                     </div>
                   </div>
 
@@ -374,11 +368,13 @@ const MainPage = () => {
                       </div>
 
                       <div>{values.products && values.products.length > 0 && <PTable printVisibleColumns={printVisibleColumns} visibleColumns={visibleColumns} id={id} refs={refs} />}</div>
-                      {/* {id && (
-                        <div className="print:hidden mt-5 ml-5">
-                          <InfoAboutInvoice values={values} letPrintInfo={letPrintInfo} setLetPrintInfo={setLetPrintInfo} />
-                        </div>
-                      )} */}
+                      <div className="w-full sm:w-[60%] md:w-[50%] lg:w-[40%] xl:w-[30%] 2xl:w-[25%]">
+                        {id && (
+                          <div className="print:hidden mt-5 ml-0 sm:ml-2 md:ml-3 lg:ml-4 xl:ml-5 2xl:ml-6">
+                            <InfoAboutInvoice values={values} letPrintInfo={letPrintInfo} setLetPrintInfo={setLetPrintInfo} />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

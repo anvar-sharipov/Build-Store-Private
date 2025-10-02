@@ -36,10 +36,15 @@ const InvoiceHead = ({
   const [openModal, setOpenModal] = useState(false);
   const [modalDeleteInvoice, setModalDeleteInvoice] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const sound_open_faktura = new Audio("/sounds/open_faktura.mp3");
   const handleClick = () => {
+    sound_open_faktura.currentTime = 0;
+    sound_open_faktura.play();
     navigate(-1); // возвращаемся на предыдущую страницу
   };
   const { showNotification } = useNotification();
+
+  console.log("values.invoice_date2   GGGGG", values.invoice_date2);
 
   const modalYesBtn = useRef(null);
   const modalNoBtn = useRef(null);
@@ -221,22 +226,40 @@ const InvoiceHead = ({
       </div>
 
       {/* Дата */}
-      <div>
-        <input
-          type="date"
-          name="invoice_date"
-          onBlur={handleBlur}
-          onChange={(e) => setFieldValue("invoice_date", e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key == "Enter") {
-              e.preventDefault();
-            }
-          }}
-          value={values.invoice_date}
-          className={invoiceClasses.dateInput}
-        />
-        {touched.invoice_date && errors.invoice_date && <div className="text-red-500 text-sm mt-1">{errors.invoice_date}</div>}
-      </div>
+      {values.id ? (
+        <div>
+          <input
+            type="date"
+            name="invoice_date"
+            onBlur={handleBlur}
+            onChange={(e) => setFieldValue("invoice_date2", e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key == "Enter") {
+                e.preventDefault();
+              }
+            }}
+            value={values.invoice_date2}
+          />
+          {touched.invoice_date && errors.invoice_date && <div className="text-red-500 text-sm mt-1">{errors.invoice_date}</div>}
+        </div>
+      ) : (
+        <div>
+          <input
+            type="date"
+            name="invoice_date"
+            onBlur={handleBlur}
+            onChange={(e) => setFieldValue("invoice_date", e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key == "Enter") {
+                e.preventDefault();
+              }
+            }}
+            value={values.invoice_date}
+            className={invoiceClasses.dateInput}
+          />
+          {touched.invoice_date && errors.invoice_date && <div className="text-red-500 text-sm mt-1">{errors.invoice_date}</div>}
+        </div>
+      )}
 
       {/* Заголовок */}
       <div className={invoiceClasses.zagolowok}>

@@ -452,10 +452,10 @@ def delete_data(request):
 # close day
 
 
-# checkDate
+
 @require_GET
 def check_day_closed(request):
-    date_str = request.GET.get('date')  # ожидаем формат 'YYYY-MM-DD'
+    date_str = request.GET.get("date")  # формат YYYY-MM-DD
     if not date_str:
         return JsonResponse({"success": False, "error": "Дата не указана"})
 
@@ -465,96 +465,108 @@ def check_day_closed(request):
         return JsonResponse({"success": False, "error": "Неверный формат даты. Используйте YYYY-MM-DD"})
 
     day = DayClosing.objects.filter(date=chosen_date).first()
-    if day:
-        return JsonResponse({"success": True, "is_closed": day.is_closed})
-    else:
-        # Если день ещё не создавался, считаем его открытым
-        return JsonResponse({"success": True, "is_closed": False})
+    return JsonResponse({
+        "success": True,
+        "is_closed": bool(day and getattr(day, "is_closed", True))
+    })
+
     
     
     
     
 
-@csrf_exempt  # если фронт и бэк на разных портах, можно убрать с DRF Token
+@csrf_exempt
 def close_day(request):
     if request.method != "POST":
         return JsonResponse({"success": False, "error": "Только POST запросы разрешены"})
 
-    try:
-        data = json.loads(request.body)
-        date = data.get("date")  # формат YYYY-MM-DD
-        action = data.get("action")  # "close" или "reopen"
-        reason = data.get("reason", "")
-        user_id = data.get("user_id")  # id текущего пользователя
+    # try:
+    #     # data = json.loads(request.body)
+    #     # close_date = data.get("date")  # формат YYYY-MM-DD
+    #     # reason = data.get("reason", "")
+    #     # user_id = data.get("user_id")
 
-        user = User.objects.get(id=user_id)
-    except Exception as e:
-        return JsonResponse({"success": False, "error": f"Неверные данные: {str(e)}"})
+    #     # user = User.objects.get(id=user_id)
+        
+    # except Exception as e:
+    #     return JsonResponse({"success": False, "error": f"Неверные данные: {str(e)}"})
+    
+    
+    data = json.loads(request.body)
+    close_date = data.get("date")
+    reason = data.get("reason", "")
+    user_id = data.get("user_id")
+
+
+    
+    if not close_date:
+        return JsonResponse({"success": False, "error": "choose close date"})
+    
+    if not user_id:
+        return JsonResponse({"success": False, "error": "youDidntAuthenticated"})
+    
+    if not User.objects.filter(id=user_id).exists():
+        return JsonResponse({"success": False, "error": "youDidntAuthenticated"})
+    
+    user = User.objects.get(id=user_id)
+    
+        
 
     try:
         with transaction.atomic():
-            day_closing, created = DayClosing.objects.get_or_create(date=date)
+   
 
-            if action == "close":
-                # Если уже закрыт
-                if day_closing.is_closed:
-                    return JsonResponse({"success": False, "error": "День уже закрыт"})
-                day_closing.is_closed = True
-                day_closing.closed_at = timezone.now()
-                day_closing.closed_by = user
-                day_closing.save()
+            # если уже закрыт
+            if DayClosing.objects.filter(date=close_date).exists():
+                transaction.set_rollback(True)
+                return JsonResponse({"success": False, "error": "День уже закрыт"})
+            
+            day_closing = DayClosing.objects.create(date=close_date)
 
-                # Лог
-                DayClosingLog.objects.create(
-                    day_closing=day_closing,
-                    action="close",
-                    performed_by=user,
-                    reason=reason
+            # обновляем статус
+            
+            day_closing.closed_at = timezone.now()
+            day_closing.closed_by = user
+            day_closing.note = reason
+            day_closing.save()
+
+            # логируем
+            DayClosingLog.objects.create(
+                day_closing=day_closing,
+                action="close",
+                performed_by=user,
+                reason=reason
+            )
+
+            # снимки балансов партнёров
+            for partner in Partner.objects.all():
+                PartnerBalanceSnapshot.objects.create(
+                    closing=day_closing,
+                    partner=partner,
+                    balance=partner.balance
                 )
 
-                # Снимки баланса партнеров
-                for partner in Partner.objects.all():
-                    PartnerBalanceSnapshot.objects.create(
-                        closing=day_closing,
-                        partner=partner,
-                        balance=partner.balance
-                    )
-
-                # Снимки остатков по складам
-                for wp in WarehouseProduct.objects.all():
-                    StockSnapshot.objects.create(
-                        closing=day_closing,
-                        warehouse=wp.warehouse,
-                        product=wp.product,
-                        quantity=wp.quantity
-                    )
-
-            elif action == "reopen":
-                # Если день уже открыт
-                if not day_closing.is_closed:
-                    return JsonResponse({"success": False, "error": "День ещё не закрыт"})
-                day_closing.is_closed = False
-                day_closing.closed_at = None
-                day_closing.closed_by = None
-                day_closing.save()
-
-                DayClosingLog.objects.create(
-                    day_closing=day_closing,
-                    action="reopen",
-                    performed_by=user,
-                    reason=reason
+            # снимки складов
+            for wp in WarehouseProduct.objects.all():
+                StockSnapshot.objects.create(
+                    closing=day_closing,
+                    warehouse=wp.warehouse,
+                    product=wp.product,
+                    purchase_price=wp.product.purchase_price,
+                    retail_price=wp.product.retail_price,
+                    wholesale_price=wp.product.wholesale_price,
+                    discount_price=wp.product.discount_price,
+                    firma_price=wp.product.firma_price,
+                    quantity=wp.quantity
                 )
-
-                # Можно при необходимости удалить снимки балансов/складов для этого дня:
-                PartnerBalanceSnapshot.objects.filter(closing=day_closing).delete()
-                StockSnapshot.objects.filter(closing=day_closing).delete()
-            else:
-                return JsonResponse({"success": False, "error": "Неверное действие"})
+                
+            
 
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)})
+    
+    return JsonResponse({"success": True, "message": "day success is closed", "date": close_date})
 
-    return JsonResponse({"success": True, "action": action, "date": date})
 
 # close day
 ########################################################################################################################################################################## END

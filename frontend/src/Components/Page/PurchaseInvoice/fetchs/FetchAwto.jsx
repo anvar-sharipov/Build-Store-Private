@@ -9,6 +9,7 @@ const FetchAwto = ({ refs }) => {
   const { t } = useTranslation();
   const { values, setFieldValue, handleBlur } = useFormikContext();
   const [isFocused, setIsFocused] = useState(false);
+  const sound = new Audio("/sounds/up_down.mp3");
 
   useEffect(() => {
     if (values.is_entry && !values.awto) {
@@ -90,7 +91,9 @@ const FetchAwto = ({ refs }) => {
     return (
       <div className="w-full flex items-center justify-between gap-3 print:hidden my-1 mt-5">
         <div
-          className={`flex items-center gap-2 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 dark:bg-gray-800 shadow-sm flex-1 ${isFocused ? "bg-indigo-200 dark:bg-indigo-600" : "bg-white"}`}
+          className={`flex items-center gap-2 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 dark:bg-gray-800 shadow-sm flex-1 ${
+            isFocused ? "bg-indigo-200 dark:bg-indigo-600" : "bg-white"
+          }`}
         >
           <span className="text-gray-600 dark:text-gray-400 text-sm">{t("awto")}:</span>
           <span className="text-gray-800 dark:text-gray-100 font-medium">{values.awto?.name}</span>
@@ -119,6 +122,8 @@ const FetchAwto = ({ refs }) => {
                 }, 0);
               } else if (e.key == "ArrowDown") {
                 e.preventDefault();
+                sound.currentTime = 0;
+                sound.play();
                 if (refs.partnerX_Ref.current) {
                   refs.partnerX_Ref.current?.focus();
                 } else {
@@ -156,6 +161,8 @@ const FetchAwto = ({ refs }) => {
               e.preventDefault();
             } else if (e.key == "ArrowDown") {
               e.preventDefault();
+              sound.currentTime = 0;
+              sound.play();
               if (refs.awtoListRef.current?.length > 0) {
                 refs.awtoListRef.current[0]?.focus();
               } else if (refs.partnerX_Ref.current) {
@@ -200,11 +207,15 @@ const FetchAwto = ({ refs }) => {
                   }
                 } else if (e.key == "ArrowDown") {
                   e.preventDefault();
+                  sound.currentTime = 0;
+                  sound.play();
                   if (refs.awtoListRef.current.length > idx + 1) {
                     refs.awtoListRef.current[idx + 1]?.focus();
                   }
                 } else if (e.key == "ArrowUp") {
                   e.preventDefault();
+                  sound.currentTime = 0;
+                  sound.play();
                   if (idx === 0) {
                     refs.awtoRef.current?.focus();
                   } else {

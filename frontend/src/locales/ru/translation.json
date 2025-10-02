@@ -472,8 +472,33 @@
   "Invoice already posted": "Фактура уже проведена",
   "The warehouse is not tied to an account": "Склад не привязан к счёту",
   "To many linked account on this warehouse": "Слишком много связанных аккаунтов на этом складе",
-  "The warehouse account dont have a parent account": "У аккаунта склада нет родительского аккаунта"
-  
+  "The warehouse account dont have a parent account": "У аккаунта склада нет родительского аккаунта",
+   
+  "Invoice not found": "Фактуры не найдены",
+  "Try changing the search parameters or create a new invoice": "Попробуйте изменить параметры поиска или создать новый счет",
+  "Invoice list": "Список фактур",
+  "Price": "Цена",
+  "Revenue": "Доход",
+  "Discount": "Скидка",
+  "Posted": "Проведена",
+  "Posted2": "Проведённые",
+  "Not posted": "Не проведена",
+  "Not posted2": "Не проведённые",
+  "💡 Use ↑↓ to navigate, Enter to open invoice": "💡 Используйте ↑↓ для навигации, Enter для открытия фактуры",
+  "Document status": "Статус документа",
+  "By partners" : "По партнёрам",
+  "card":"Карточка",
+  "Indicator": "Показатель",
+  "Debet": "Дебет",
+  "Credit": "Кредит",
+  "Opening balance": "Остаток на начало",
+  "Total turnover": "Итого оборот",
+  "Closing balance": "Остаток на конец",
+  "choose close date": "Выберите дату закрытия",
+  "day success is closed" : "День успешно закрыт"
+ 
+ 
+
 
 
   

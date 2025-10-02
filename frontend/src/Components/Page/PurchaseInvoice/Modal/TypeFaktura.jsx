@@ -2,13 +2,10 @@ import { useFormikContext } from "formik";
 import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 
-const TypeFaktura = ({setFakturaType}) => {
+const TypeFaktura = ({ setFakturaType }) => {
   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
   const { t } = useTranslation();
-
-
-
-
+  const change_type = new Audio("/sounds/change_type.mp3");
 
   return (
     <div>
@@ -21,9 +18,11 @@ const TypeFaktura = ({setFakturaType}) => {
             value="rashod"
             checked={values.wozwrat_or_prihod === "rashod"}
             onChange={(e) => {
+              change_type.currentTime = 0;
+              change_type.play();
               setFieldValue("wozwrat_or_prihod", e.target.value);
               localStorage.setItem("wozwrat_or_prihod_purchase", e.target.value);
-              setFakturaType(e.target.value)
+              setFakturaType(e.target.value);
             }}
             className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
             onKeyDown={(e) => {
@@ -42,9 +41,11 @@ const TypeFaktura = ({setFakturaType}) => {
             value="prihod"
             checked={values.wozwrat_or_prihod === "prihod"}
             onChange={(e) => {
+              change_type.currentTime = 0;
+              change_type.play();
               setFieldValue("wozwrat_or_prihod", e.target.value);
               localStorage.setItem("wozwrat_or_prihod_purchase", e.target.value);
-              setFakturaType(e.target.value)
+              setFakturaType(e.target.value);
             }}
             className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
             onKeyDown={(e) => {
@@ -63,9 +64,11 @@ const TypeFaktura = ({setFakturaType}) => {
             value="wozwrat"
             checked={values.wozwrat_or_prihod === "wozwrat"}
             onChange={(e) => {
+              change_type.currentTime = 0;
+              change_type.play();
               setFieldValue("wozwrat_or_prihod", e.target.value);
               localStorage.setItem("wozwrat_or_prihod_purchase", e.target.value);
-              setFakturaType(e.target.value)
+              setFakturaType(e.target.value);
             }}
             className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
             onKeyDown={(e) => {

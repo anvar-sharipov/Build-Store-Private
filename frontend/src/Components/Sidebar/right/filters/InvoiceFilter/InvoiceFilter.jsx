@@ -18,6 +18,7 @@ const InvoiceFilter = () => {
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [selectedEntry, setSelectedEntry] = useState("");
   const [sortInvoice, setSortInvoice] = useState("");
+  const change_type = new Audio("/sounds/change_type.mp3");
 
   // Загружаем сотрудников
   const fetchPartners = async () => {
@@ -74,24 +75,33 @@ const InvoiceFilter = () => {
   return (
     <div className="p-4 space-y-3 bg-gray-800 rounded-lg shadow">
       <div className="flex flex-col">
-        <label className="text-xs font-medium text-gray-400 mb-1">Тип фактуры</label>
+        <label className="text-xs font-medium text-gray-400 mb-1">{t("type faktura")}</label>
         <div className="flex flex-col gap-1 bg-gray-900 border border-gray-700 rounded-lg p-2">
           {[
-            { value: "", label: "Все" },
-            { value: "wozwrat", label: "Возврат" },
-            { value: "prihod", label: "Приход" },
-            { value: "rashod", label: "Расход" },
+            { value: "", label: `${t("all")}` },
+            { value: "wozwrat", label: `${t("wozwrat")}` },
+            { value: "prihod", label: `${t("prihod")}` },
+            { value: "rashod", label: `${t("rashod")}` },
           ].map((opt) => (
             <label key={opt.value} className="flex items-center gap-2 cursor-pointer text-gray-200">
-              <input type="radio" name="wozwratOrPrihod" value={opt.value} checked={wozwratOrPrihod === opt.value} onChange={(e) => setWozwratOrPrihod(e.target.value)} className="accent-blue-500" />
+              <input
+                type="radio"
+                name="wozwratOrPrihod"
+                value={opt.value}
+                checked={wozwratOrPrihod === opt.value}
+                onChange={(e) => {
+                  change_type.currentTime = 0;
+                  change_type.play();
+                  return setWozwratOrPrihod(e.target.value);
+                }}
+                className="accent-blue-500"
+              />
               <span>{opt.label}</span>
             </label>
           ))}
         </div>
       </div>
       <div>
-       
-
         <div>
           <SelectEnryBoolen setSelectedEntry={setSelectedEntry} selectedEntry={selectedEntry} />
         </div>
@@ -100,7 +110,7 @@ const InvoiceFilter = () => {
           <InvoiceSort setSortInvoice={setSortInvoice} sortInvoice={sortInvoice} />
         </div>
 
-         <SelectPartner
+        <SelectPartner
           selectedPartner={selectedPartner}
           partnerX_Ref={partnerX_Ref}
           setSelectedPartner={setSelectedPartner}

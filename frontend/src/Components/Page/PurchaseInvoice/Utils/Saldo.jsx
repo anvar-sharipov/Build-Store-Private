@@ -2,9 +2,11 @@ import { useFormikContext } from "formik";
 import { MdPrint, MdPrintDisabled } from "react-icons/md";
 import myAxios from "../../../axios";
 import { ROUTES } from "../../../../routes";
+import { useTranslation } from "react-i18next";
 
 const Saldo = ({ saldo, letPrintSaldo, setLetPrintSaldo }) => {
   const { values } = useFormikContext();
+  const { t } = useTranslation();
 
   const handleOpenInvoice = (id) => {
     const url = id ? `/purchase-invoices/update/${id}` : ROUTES.PURCHASE_INVOICE_CREATE;
@@ -30,7 +32,7 @@ const Saldo = ({ saldo, letPrintSaldo, setLetPrintSaldo }) => {
       {/* Header with Print Icon */}
       <div className="flex items-center justify-center gap-2 mb-3 print:mb-1">
         <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100 print:!text-black print:text-xs">
-          Карточка: {values.partner.name}
+          {t("card")}: {values.partner.name}
         </h2>
         <div className="print:hidden">
           {letPrintSaldo ? (
@@ -54,17 +56,17 @@ const Saldo = ({ saldo, letPrintSaldo, setLetPrintSaldo }) => {
         <thead>
           <tr className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 print:bg-white print:!text-black">
             <th colSpan={2} className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">
-              Показатель
+              {t("Indicator")}
             </th>
-            <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">Дебет</th>
-            <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">Кредит</th>
+            <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">{t("Debit")}</th>
+            <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">{t("Credit")}</th>
           </tr>
         </thead>
         <tbody>
           {/* Начало */}
           <tr className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
             <td colSpan={2} className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium">
-              Остаток на начало
+              {t("Opening balance")}
             </td>
             <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right">{saldo.start[0]}</td>
             <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right">{saldo.start[1]}</td>
@@ -102,7 +104,7 @@ const Saldo = ({ saldo, letPrintSaldo, setLetPrintSaldo }) => {
           {/* Итого */}
           <tr className="bg-gray-100 dark:bg-gray-750 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white dark:bg-gray-800">
             <td colSpan={2} className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold">
-              Итого оборот
+              {t("Total turnover")}
             </td>
             <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">{saldo.final[0]}</td>
             <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">{saldo.final[1]}</td>
@@ -111,7 +113,7 @@ const Saldo = ({ saldo, letPrintSaldo, setLetPrintSaldo }) => {
           {/* Конец */}
           <tr className="bg-gray-100 dark:bg-gray-750 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white dark:bg-gray-800">
             <td colSpan={2} className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold">
-              Остаток на конец
+              {t("Closing balance")}
             </td>
             <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">
               {parseFloat(saldo.saldo[0]) !== 0 ? saldo.saldo[0] : "-"}

@@ -55,6 +55,8 @@ const getDefaultValues = async (id = null, dateProwodok = null, setDateProwodok)
 
       const invoice_date = MyFormatDate(data.date); // 02.01.2025
       const isoDate = convertToISODate(invoice_date); // 2025-01-02
+      // console.log("invoice_dateGGGGG", invoice_date);
+      
 
       const created_at = MyFormatDate(data.created_at_handle);
       const updated_at = MyFormatDate(data.updated_at_handle);
@@ -65,11 +67,11 @@ const getDefaultValues = async (id = null, dateProwodok = null, setDateProwodok)
       }
 
       console.log("data.products", data.products);
-      localStorage.setItem("dateProwodok", convertToISODate(invoice_date));
+      // localStorage.setItem("dateProwodok", convertToISODate(invoice_date));
 
-      if (setDateProwodok) {
-        setDateProwodok(isoDate);
-      }
+      // if (setDateProwodok) {
+      //   setDateProwodok(isoDate);
+      // }
 
       const type_price = data.type_price;
       localStorage.setItem("type_price", type_price);
@@ -85,6 +87,7 @@ const getDefaultValues = async (id = null, dateProwodok = null, setDateProwodok)
         awto_send: data.awto_send,
         comment: data.comment,
         invoice_date: invoice_date,
+        invoice_date2: isoDate,
         is_entry: data.is_entry,
         already_entry:data.already_entry,
         partner: data.partner,

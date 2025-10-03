@@ -229,6 +229,11 @@ const FetchAwto = ({ refs }) => {
               onClick={() => {
                 setFieldValue("awto", emp);
                 setFilteredEmployeers([]);
+                if (!refs.partnerX_Ref.current) {
+                  refs.partnerRef.current?.focus();
+                } else {
+                  refs.productRef.current?.focus();
+                }
               }}
             >
               {emp.name}

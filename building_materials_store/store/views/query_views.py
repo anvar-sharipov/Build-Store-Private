@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from decimal import Decimal
 from django.db.models import Q, Sum
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.utils.dateparse import parse_date
 
 from django.db.models import F
@@ -18,7 +18,7 @@ import json
 @require_GET
 def search_agents_view(request):
     query = request.GET.get('q', '')
-    ic(query)
+    # ic(query)
     agents = (
         Agent.objects.annotate(similarity=TrigramSimilarity('name', query))
         .filter(similarity__gt=0.1)
@@ -67,7 +67,7 @@ def get_partner_by_name_view(request):
 @require_GET
 def search_partners_view(request):
     query = request.GET.get('q', '')
-    ic(query)
+    # ic(query)
     partners = (
         Partner.objects.annotate(similarity=TrigramSimilarity('name', query))
         .filter(similarity__gt=0.1, is_active=True)
@@ -288,7 +288,7 @@ def get_trial_balance(date_from, date_to):
 def get_osw(request):
     date_from = request.GET.get("date_from")
     date_to = request.GET.get("date_to")
-    ic(date_from, date_to)
+    # ic(date_from, date_to)
 
     reports = get_trial_balance(date_from, date_to)  # твоя функция
     report = reports['report']
@@ -401,7 +401,7 @@ def get_saldo(partner_obj, getDate):
 
     debit_oborot = entries_oborot.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
     credit_oborot = entries_oborot.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
-    ic(today_entries)
+    # ic(today_entries)
   
     
     debit_end = debit_start + debit_oborot
@@ -453,22 +453,61 @@ def delete_data(request):
 
 
 
+# @require_GET
+# def check_day_closed(request):
+#     date_str = request.GET.get("date")  # формат YYYY-MM-DD
+#     if not date_str:
+#         return JsonResponse({"success": False, "error": "Дата не указана"})
+    
+#     ic(date_str)
+
+
+#     try:
+#         chosen_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+#     except ValueError:
+#         return JsonResponse({"success": False, "error": "Неверный формат даты. Используйте YYYY-MM-DD"})
+
+#     day = DayClosing.objects.filter(date=chosen_date).first()
+#     return JsonResponse({
+#         "success": True,
+#         "is_closed": bool(day and getattr(day, "is_closed", True))
+#     })
+    
+    
 @require_GET
 def check_day_closed(request):
     date_str = request.GET.get("date")  # формат YYYY-MM-DD
     if not date_str:
         return JsonResponse({"success": False, "error": "Дата не указана"})
-
+    
     try:
         chosen_date = datetime.strptime(date_str, "%Y-%m-%d").date()
     except ValueError:
         return JsonResponse({"success": False, "error": "Неверный формат даты. Используйте YYYY-MM-DD"})
 
+    # выбранный день
     day = DayClosing.objects.filter(date=chosen_date).first()
-    return JsonResponse({
-        "success": True,
-        "is_closed": bool(day and getattr(day, "is_closed", True))
-    })
+    is_closed = bool(day and getattr(day, "is_closed", True))
+
+    # предыдущий день
+    prev_date = chosen_date - timedelta(days=1)
+    prev_day = DayClosing.objects.filter(date=prev_date).first()
+    prev_closed = bool(prev_day and getattr(prev_day, "is_closed", True))
+    # ic(prev_closed)
+    
+    # если предыдущий день не закрыт → сразу вернуть False
+    
+    if DayClosing.objects.all().exists():
+        ic("tutEEEEEEEE")
+        return JsonResponse({"success": True, "is_closed": is_closed, "last_day_not_closed": not prev_closed})
+    else:
+        ic("tutGGGGGGGGG")
+        return JsonResponse({"success": True, "is_closed": False, "last_day_not_closed": False})
+
+    
+
+   
+    
 
     
     
@@ -510,10 +549,19 @@ def close_day(request):
     
     user = User.objects.get(id=user_id)
     
+    # invoices = Invoice.objects.filter(invoice_date=close_date)
+    # ic(invoices)
+    
+    # # if invoices.exists():
+    # #     for invoice in invoices:
+    # #         if not invoice.is_entry:
+    # #             invoice.
+    
         
 
     try:
         with transaction.atomic():
+            # 1/0
    
 
             # если уже закрыт

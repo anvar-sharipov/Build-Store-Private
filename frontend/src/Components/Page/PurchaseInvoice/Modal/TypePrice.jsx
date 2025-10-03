@@ -15,6 +15,7 @@ const TypePrice = () => {
             type="radio"
             name="type_price"
             value="wholesale_price"
+            disabled={values.already_entry}
             checked={values.type_price === "wholesale_price"}
             onChange={(e) => {
               change_type.currentTime = 0;
@@ -52,6 +53,7 @@ const TypePrice = () => {
             type="radio"
             name="type_price"
             value="retail_price"
+            disabled={values.already_entry}
             checked={values.type_price === "retail_price"}
             onChange={(e) => {
               change_type.currentTime = 0;

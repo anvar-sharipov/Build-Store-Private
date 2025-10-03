@@ -26,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../routes";
 import InfoAboutInvoice from "./Utils/InfoAboutInvoice";
 import { useNotification } from "../../context/NotificationContext";
+import { AuthContext } from "../../../AuthContext";
 
 const userVisibleColumns = {
   qr_code: false,
@@ -77,6 +78,8 @@ const MainPage = () => {
   const navigate = useNavigate();
   const [initialValues, setInitialValues] = useState(null);
   const { showNotification } = useNotification();
+
+  const { authUser, authGroup } = useContext(AuthContext);
 
   const [fakturaType, setFakturaType] = useState(() => {
     return localStorage.getItem("wozwrat_or_prihod_purchase") || "";

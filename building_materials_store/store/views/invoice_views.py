@@ -675,7 +675,7 @@ def get_invoices(request):
         
         # total_income_price = total_selected_price - total_purchase_price
         
-        ic(total_selected_price)
+        # ic(total_selected_price)
         data.append({
             "id": invoice.id,
             "invoice_date": invoice.invoice_date,

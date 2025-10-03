@@ -29,18 +29,29 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
       });
       console.log("saldo", saldo.data.saldo);
       setSaldo(saldo.data.saldo);
+      // console.log('DADADADAD');
     } catch (error) {
       console.log("error get_saldo_for_partner_for_selected_date from fetchPartner", error);
     }
   };
 
-  useEffect(() => {
-    if (values.partner?.id && dateProwodok) {
-      getSaldo(dateProwodok, values.partner?.id);
-    } else {
-      setSaldo(null);
-    }
-  }, [dateProwodok]);
+  if (values.id) {
+    useEffect(() => {
+      if (values.partner?.id && values.invoice_date2) {
+        getSaldo(values.invoice_date2, values.partner?.id);
+      } else {
+        setSaldo(null);
+      }
+    }, [values.invoice_date2]);
+  } else {
+    useEffect(() => {
+      if (values.partner?.id && dateProwodok) {
+        getSaldo(dateProwodok, values.partner?.id);
+      } else {
+        setSaldo(null);
+      }
+    }, [dateProwodok]);
+  }
 
   const wrapperRef = useRef(null);
 
@@ -232,6 +243,8 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
               onClick={() => {
                 setFieldValue("partner", emp);
                 setFilteredPartners([]);
+                getSaldo(dateProwodok, emp.id);
+                refs.productRef.current?.focus();
               }}
               onKeyDown={(e) => {
                 if (e.key == "Enter") {

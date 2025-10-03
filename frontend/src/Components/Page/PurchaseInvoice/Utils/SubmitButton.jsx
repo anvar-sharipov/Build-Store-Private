@@ -4,14 +4,49 @@ import { useTranslation } from "react-i18next";
 import MyModal2 from "../../../UI/MyModal2";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import myAxios from "../../../axios";
 
 const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
   const { values, setFieldValue } = useFormikContext();
   const { t } = useTranslation();
   const [openModal, setOpenModal] = useState(false);
+  const [dayIsClosed, setDayIsClosed] = useState(false);
+  const [lastDayIsNotClosed, setLastDayIsNotClosed] = useState(false);
 
-  
-  
+  const formatDateToDDMMYYYY = (dateStr) => {
+    if (!dateStr) return "";
+    const [year, month, day] = dateStr.split("-");
+    return `${day}.${month}.${year}`;
+  };
+
+  useEffect(() => {
+    const checkDate = async () => {
+      try {
+        const res = await myAxios.get("check_day_closed", {
+          params: { date: values.invoice_date2 },
+        });
+        setDayIsClosed(res.data.is_closed);
+        setLastDayIsNotClosed(res.data.last_day_not_closed);
+        // console.log("res.data.is_closed", res.data.is_closed);
+        // console.log("res.data.last_day_not_closed", res.data.last_day_not_closed);
+        const is_closed = res.data.is_closed;
+        const last_day_not_closed = res.data.last_day_not_closed;
+        console.log("is_closed", is_closed);
+
+        // if (!last_day_not_closed) {
+        //   console.log("pred den zakryt mojno delat");
+        // } else {
+        //   console.log("pred den ne zakryt NONONO");
+        // }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    if (values.invoice_date2) {
+      checkDate();
+    }
+  }, [values.invoice_date2]);
 
   const modalYesBtn = useRef(null);
   const modalNoBtn = useRef(null);
@@ -41,13 +76,7 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
       {/* Checkbox с проводкой */}
       <div className="flex items-center gap-3 group">
         <div className="relative">
-          <input
-            type="checkbox"
-            id="prowodka-checkbox"
-            className="sr-only peer"
-            checked={values.is_entry}
-            onChange={(e) => setFieldValue("is_entry", e.target.checked)}
-          />
+          <input type="checkbox" id="prowodka-checkbox" className="sr-only peer" checked={values.is_entry} onChange={(e) => setFieldValue("is_entry", e.target.checked)} />
           <label
             htmlFor="prowodka-checkbox"
             className="
@@ -95,9 +124,14 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
         id="save-invoice-btn"
         onClick={() => setOpenModal(true)}
         title="CTRL + ENTER"
-     
         disabled={
-          !values.send || !values.awto_send || !values.partner_send || !(values.products.length > 0) || dateProwodok === "" || (values.is_entry && values.comment.trim().length === 0) || values.already_entry
+          !values.send ||
+          !values.awto_send ||
+          !values.partner_send ||
+          !(values.products.length > 0) ||
+          (values.id ? values.invoice_date2 === "" || dayIsClosed || lastDayIsNotClosed : dateProwodok === "") ||
+          (values.is_entry && values.comment.trim().length === 0) ||
+          values.already_entry
         }
         className={`
     relative overflow-hidden group
@@ -110,7 +144,13 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
     backdrop-blur-sm
     border border-transparent
     ${
-      values.send && values.awto_send && values.partner_send && values.products.length > 0 && dateProwodok !== "" && (!values.is_entry || values.comment.trim().length > 0) && !values.already_entry
+      values.send &&
+      values.awto_send &&
+      values.partner_send &&
+      values.products.length > 0 &&
+      (values.id ? values.invoice_date2 !== "" && !dayIsClosed && !lastDayIsNotClosed : dateProwodok !== "") &&
+      (!values.is_entry || values.comment.trim().length > 0) &&
+      !values.already_entry
         ? values.is_entry
           ? `
             bg-gradient-to-r from-red-600 via-red-700 to-red-600 
@@ -146,16 +186,37 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
     disabled:transform-none disabled:shadow-lg
   `}
       >
-        {values.send && values.awto_send && values.partner_send && values.products.length > 0 && dateProwodok !== "" && (!values.is_entry || values.comment.trim().length > 0) && !values.already_entry && (
-          <div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent 
+        {values.send &&
+          values.awto_send &&
+          values.partner_send &&
+          values.products.length > 0 &&
+          (values.id ? values.invoice_date2 !== "" && !dayIsClosed && !lastDayIsNotClosed : dateProwodok !== "") &&
+          (!values.is_entry || values.comment.trim().length > 0) &&
+          !values.already_entry && (
+            <div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent 
                    transform -skew-x-12 -translate-x-full group-hover:translate-x-full 
                    transition-transform duration-1000 ease-in-out"
-          />
-        )}
+            />
+          )}
 
         <div className="relative z-10 flex items-center justify-center gap-2 sm:gap-3">
-          {dateProwodok === "" ? (
+          {!values.id ? (
+            dateProwodok === "" ? (
+              <>
+                <Ban
+                  className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 dark:text-red-400 
+                         transition-transform duration-200 group-hover:scale-110"
+                />
+                <span className="truncate max-w-32 sm:max-w-none">{t("choose date prowodok")}</span>
+              </>
+            ) : (
+              <>
+                <span className="text-base sm:text-lg filter drop-shadow-sm">💾</span>
+                <span className="font-bold tracking-wide">{t("save")}</span>
+              </>
+            )
+          ) : !values?.invoice_date2 ? (
             <>
               <Ban
                 className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 dark:text-red-400 
@@ -166,18 +227,31 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
           ) : (
             <>
               <span className="text-base sm:text-lg filter drop-shadow-sm">💾</span>
-              <span className="font-bold tracking-wide">{t("save")}</span>
+              {dayIsClosed ? (
+                <span className="font-bold tracking-wide">{t("day is closed")}</span>
+              ) : lastDayIsNotClosed ? (
+                <span className="font-bold tracking-wide">{t("last day is not is closed")}</span>
+              ) : (
+                <span className="font-bold tracking-wide">{t("save")}</span>
+              )}
+              {/* <span className="font-bold tracking-wide">{t("save")}</span> */}
             </>
           )}
         </div>
 
-        {values.send && values.awto_send && values.partner_send && values.products.length > 0 && dateProwodok !== "" && (!values.is_entry || values.comment.trim().length > 0) && !values.already_entry && (
-          <div
-            className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-r 
+        {values.send &&
+          values.awto_send &&
+          values.partner_send &&
+          values.products.length > 0 &&
+          dateProwodok !== "" &&
+          (!values.is_entry || values.comment.trim().length > 0) &&
+          !values.already_entry && (
+            <div
+              className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-r 
               from-blue-600/20 to-indigo-600/20 blur-xl opacity-0 
               group-hover:opacity-100 transition-opacity duration-300 -z-10"
-          />
-        )}
+            />
+          )}
       </button>
 
       {openModal && (
@@ -189,12 +263,7 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
             className="flex flex-col items-center gap-6 p-8"
           >
             {/* Header with icon */}
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-              className="flex flex-col items-center gap-4"
-            >
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1, type: "spring", stiffness: 200 }} className="flex flex-col items-center gap-4">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 rounded-full flex items-center justify-center shadow-lg">
                 <motion.svg
                   initial={{ y: -5, opacity: 0 }}
@@ -210,32 +279,20 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
               </div>
 
               <div className="text-center">
-                <motion.h3
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15 }}
-                  className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2"
-                >
-                  {t("save")} {t(fakturaType)} {t("faktura")}
+                <motion.h3 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                  {t("save")} {t(fakturaType)} {t("faktura")} {values?.id}{" "}
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 font-semibold rounded-md shadow-sm dark:bg-blue-900 dark:text-blue-200">
+                    {values.id ? formatDateToDDMMYYYY(values.invoice_date2) : formatDateToDDMMYYYY(dateProwodok)}
+                  </span>
                 </motion.h3>
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="text-sm text-gray-600 dark:text-gray-400"
-                >
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-sm text-gray-600 dark:text-gray-400">
                   {t("confirm_save_document")}
                 </motion.p>
               </div>
             </motion.div>
 
             {/* Action buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-              className="flex gap-4 w-full max-w-xs"
-            >
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="flex gap-4 w-full max-w-xs">
               {/* Cancel button */}
               <motion.button
                 type="button"
@@ -249,18 +306,11 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
                 onClick={() => setOpenModal(false)}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-colors duration-200 shadow-sm hover:shadow-md
-                focus:outline-none focus:ring-4 focus:ring-gray-300/50 dark:focus:ring-gray-500/50 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium rounded-xl transition-all duration-200 shadow-sm hover:shadow-md
+                  focus:outline-none focus:ring-4 focus:ring-gray-400 dark:focus:ring-gray-400 focus:ring-offset-4 dark:focus:ring-offset-gray-900 focus:scale-105 focus:shadow-xl"
               >
                 <div className="flex items-center justify-center gap-2">
-                  <motion.svg
-                    whileHover={{ rotate: 90 }}
-                    transition={{ duration: 0.3 }}
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                  <motion.svg whileHover={{ rotate: 90 }} transition={{ duration: 0.3 }} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </motion.svg>
                   {t("cancel")}
@@ -288,7 +338,7 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="flex-1 relative group px-4 py-3 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:via-blue-700 hover:to-blue-800 dark:from-blue-600 dark:via-blue-700 dark:to-blue-800 dark:hover:from-blue-700 dark:hover:via-blue-800 dark:hover:to-blue-900 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl
-                focus:outline-none focus:ring-4 focus:ring-blue-300/60 dark:focus:ring-blue-500/60 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                  focus:outline-none focus:ring-4 focus:ring-blue-400 dark:focus:ring-blue-400 focus:ring-offset-4 dark:focus:ring-offset-gray-900 focus:scale-105 focus:shadow-2xl focus:brightness-110"
               >
                 {/* Shimmer effect */}
                 <motion.div
@@ -300,14 +350,7 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
 
                 {/* Button content */}
                 <div className="relative flex items-center justify-center gap-2">
-                  <motion.svg
-                    whileHover={{ scale: 1.2, rotate: -10 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                  <motion.svg whileHover={{ scale: 1.2, rotate: -10 }} transition={{ type: "spring", stiffness: 300 }} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </motion.svg>
                   {t("yes")}

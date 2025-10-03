@@ -69,6 +69,86 @@ const FetchProduct = ({ refs }) => {
     fetchProduct();
   }, [query]);
 
+  // ################################################################################################################################################################
+  // ################################################################################################################################################################
+  // ###### onKeydown li START
+  // вынесенная функция
+  const handleAddProduct = async (product, values, setFieldValue, refs, showNotification, getProduct) => {
+    console.log("main product", product);
+
+    const exists = values.products.some((p) => p.id === product.id);
+    if (exists) {
+      showNotification("product already exists", "error");
+      return;
+    }
+
+    const mainProduct = {
+      ...product,
+      is_custom_price: false,
+      is_gift: false,
+    };
+
+    let updatedProducts = [...(values.products || [])];
+
+    // если у товара есть бесплатные позиции
+    if (product.free_items && product.free_items.length > 0) {
+      for (const free of product.free_items) {
+        const res = await getProduct(free.gift_product, values.warehouse?.id, product.id);
+        if (res) {
+          const existingGiftIndex = updatedProducts.findIndex((p) => p.is_gift && p.id === res.id);
+          if (existingGiftIndex !== -1) {
+            updatedProducts[existingGiftIndex] = {
+              ...updatedProducts[existingGiftIndex],
+              selected_quantity: (Number(updatedProducts[existingGiftIndex].selected_quantity) || 0) + Number(free.quantity_per_unit),
+            };
+          } else {
+            updatedProducts.push({
+              ...res,
+              is_custom_price: false,
+              is_gift: true,
+              parent_id: product.id,
+            });
+          }
+        }
+      }
+    }
+
+    // добавляем сам основной продукт
+    updatedProducts.push(mainProduct);
+
+    // сортировка: основные → подарки
+    updatedProducts.sort((a, b) => {
+      if (a.is_gift === b.is_gift) return 0;
+      return a.is_gift ? 1 : -1;
+    });
+
+    setFieldValue("products", updatedProducts, false);
+
+    // очистка списка продуктов
+    setTimeout(() => {
+      requestAnimationFrame(() => {
+        const input = refs.quantityRefs.current[product.id];
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      });
+    }, 0);
+
+    if (refs.productRef.current) {
+      refs.productRef.current.value = "";
+      refs.productRef.current.focus();
+    }
+
+    setTimeout(() => {
+      refs.productListRef.current = [];
+    }, 0);
+  };
+
+  // ###### onKeydown li END
+  // ################################################################################################################################################################
+  // ################################################################################################################################################################
+
   if (values.warehouse?.id) {
     return (
       <div className="w-full flex-1 print:hidden relative" ref={wrapperRef}>
@@ -152,125 +232,25 @@ const FetchProduct = ({ refs }) => {
                       refs.productListRef.current[idx] = el;
                     }
                   }}
+                  onClick={async () => {
+                    await handleAddProduct(product, values, setFieldValue, refs, showNotification, getProduct);
+                    setProducts([]);
+                    setQuery("");
+                  }}
                   onKeyDown={async (e) => {
-                    if (e.key == "Enter") {
+                    if (e.key === "Enter") {
                       e.preventDefault();
-                      console.log("main product", product);
-
-                      const exists = values.products.some((p) => p.id === product.id);
-                      if (exists) {
-                        showNotification("product already exists", "error");
-                        return;
-                      }
-
-                      const mainProduct = {
-                        ...product,
-                        is_custom_price: false,
-                        is_gift: false,
-                      };
-
-                      // let newProducts = [mainProduct];
-
-                      // если у товара есть бесплатные позиции
-                      if (product.free_items && product.free_items.length > 0) {
-                        // const gifts = [];
-                        let updatedProducts = [...(values.products || [])];
-                        for (const free of product.free_items) {
-                          const res = await getProduct(free.gift_product, values.warehouse?.id, product.id);
-                          if (res) {
-                            const existingGiftIndex = (values.products || []).findIndex((p) => p.is_gift && p.id === res.id);
-                            console.log("res gift", res);
-                            // console.log("existingGiftIndex", existingGiftIndex);
-
-                            if (existingGiftIndex !== -1) {
-                              // console.log("da odin i tot je");
-                              // const existingQty = values.products[existingGiftIndex].selected_quantity || 0;
-                              updatedProducts[existingGiftIndex] = {
-                                ...updatedProducts[existingGiftIndex],
-                                selected_quantity: (Number(updatedProducts[existingGiftIndex].selected_quantity) || 0) + Number(free.quantity_per_unit),
-                              };
-                              // setFieldValue(`products[${existingGiftIndex}].selected_quantity`, Number(existingQty) + 1);
-                              // return;
-                              // console.log("existingQty", existingQty);
-                              // return;
-                            } else {
-                              console.log("nowyy");
-                              updatedProducts.push({
-                                ...res,
-                                is_custom_price: false,
-                                is_gift: true,
-                                parent_id: product.id,
-                                // selected_quantity: 1,
-                              });
-                              // gifts.push({
-                              //   ...res,
-                              //   // price: 0,
-                              //   is_custom_price: false,
-                              //   is_gift: true,
-                              //   parent_id: product.id,
-                              // });
-                            }
-                          }
-                        }
-                        // if (gifts.length > 0) {
-                        //   newProducts = newProducts.concat(gifts);
-                        // }
-                        updatedProducts.push(mainProduct);
-
-                        updatedProducts.sort((a, b) => {
-                          if (a.is_gift === b.is_gift) return 0;
-                          return a.is_gift ? 1 : -1;
-                        });
-
-                        setFieldValue("products", updatedProducts, false);
-
-                        // console.log("newProducts", newProducts);
-                      } else {
-                        const updatedProducts = (values.products || []).concat(mainProduct);
-                        updatedProducts.sort((a, b) => {
-                          if (a.is_gift === b.is_gift) return 0;
-                          return a.is_gift ? 1 : -1;
-                        });
-
-                        setFieldValue("products", updatedProducts, false);
-                      }
-
+                      await handleAddProduct(product, values, setFieldValue, refs, showNotification, getProduct);
                       setProducts([]);
-
-                      // console.log("newProducts", newProducts);
-
-                      // setTimeout(() => {
-                      //   refs.quantityRefs.current[product.id]?.focus();
-                      //   refs.quantityRefs.current[product.id]?.select();
-                      // }, 0);
-                      setTimeout(() => {
-                        requestAnimationFrame(() => {
-                          const input = refs.quantityRefs.current[product.id];
-                          if (input) {
-                            input.focus();
-                            input.select();
-                          }
-                        });
-                      }, 0);
-                      // console.log("fgobhfgiuh");
-
                       setQuery("");
-                      if (refs.productRef.current) {
-                        refs.productRef.current.value = "";
-                        refs.productRef.current.focus();
-                      }
-                      setTimeout(() => {
-                        refs.productListRef.current = [];
-                      }, 0);
-                    } else if (e.key == "ArrowDown") {
+                    } else if (e.key === "ArrowDown") {
                       e.preventDefault();
                       sound.currentTime = 0;
                       sound.play();
-
                       if (refs.productListRef.current.length > idx + 1) {
                         refs.productListRef.current[idx + 1]?.focus();
                       }
-                    } else if (e.key == "ArrowUp") {
+                    } else if (e.key === "ArrowUp") {
                       e.preventDefault();
                       sound.currentTime = 0;
                       sound.play();

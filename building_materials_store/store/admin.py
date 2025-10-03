@@ -110,7 +110,7 @@ class ProductAdmin(admin.ModelAdmin):
             'fields': ('name', 'description', 'sku', 'qr_code', 'category', 'is_active')
         }),
         ('Цены', {
-            'fields': ('purchase_price', 'retail_price', 'wholesale_price', 'discount_price', 'firma_price')
+            'fields': ('purchase_price', 'retail_price', 'wholesale_price', 'discount_price')
         }),
         ('Производитель', {
             'fields': ('brand', 'model')
@@ -611,7 +611,7 @@ class PartnerBalanceSnapshotAdmin(admin.ModelAdmin):
 @admin.register(StockSnapshot)
 class StockSnapshotAdmin(admin.ModelAdmin):
     list_display = ("closing", "warehouse", "product", "quantity",
-                    "purchase_price", "retail_price", "wholesale_price", "discount_price", "firma_price")
+                    "purchase_price", "retail_price", "wholesale_price", "discount_price")
     list_filter = ("closing", "warehouse")
     search_fields = ("product__name", "warehouse__name")
 
@@ -732,6 +732,7 @@ class InvoiceItemAdmin(admin.ModelAdmin):
     search_fields = ("product__name", "invoice__id")
     autocomplete_fields = ["product", "invoice"]
     inlines = [FreeItemForInvoiceItemInline, UnitForInvoiceItemInline]
+    exclude = ("firma_price",) 
 
 
 @admin.register(FreeItemForInvoiceItem)

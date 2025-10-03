@@ -16,6 +16,7 @@ const TypeFaktura = ({ setFakturaType }) => {
             type="radio"
             name="wozwrat_or_prihod"
             value="rashod"
+            disabled={values.already_entry}
             checked={values.wozwrat_or_prihod === "rashod"}
             onChange={(e) => {
               change_type.currentTime = 0;
@@ -39,6 +40,7 @@ const TypeFaktura = ({ setFakturaType }) => {
             type="radio"
             name="wozwrat_or_prihod"
             value="prihod"
+            disabled={values.already_entry}
             checked={values.wozwrat_or_prihod === "prihod"}
             onChange={(e) => {
               change_type.currentTime = 0;
@@ -62,6 +64,7 @@ const TypeFaktura = ({ setFakturaType }) => {
             type="radio"
             name="wozwrat_or_prihod"
             value="wozwrat"
+            disabled={values.already_entry}
             checked={values.wozwrat_or_prihod === "wozwrat"}
             onChange={(e) => {
               change_type.currentTime = 0;

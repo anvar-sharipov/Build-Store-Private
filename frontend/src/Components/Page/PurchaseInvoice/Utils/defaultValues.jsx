@@ -3,6 +3,8 @@
 // import { useFormikContext } from "formik";
 import myAxios from "../../../axios";
 import MyFormatDate from "../../../UI/MyFormatDate";
+import { AuthContext } from "../../../../AuthContext";
+import { useContext } from "react";
 
 // // просто функция без хуков
 // const warehouse = {
@@ -36,22 +38,15 @@ const convertToISODate = (dateString) => {
 };
 
 const getDefaultValues = async (id = null, dateProwodok = null, setDateProwodok) => {
-  // const getData = async (id) => {
-  //   try {
-  //     const res = await myAxios.get(`get-invoice-data/${id}/`);
-  //     // console.log('res.data invoice'. res);
+  // const { authUser, authGroup } = useContext(AuthContext);
 
-  //     return res.data;
-  //   } catch (error) {
-  //     console.log("cant get invoice", error);
-  //   }
-  // };
 
   if (id) {
     try {
       const res = await myAxios.get(`get-invoice-data/${id}/`);
       const data = res.data;
       // console.log("data", data);
+
 
       const invoice_date = MyFormatDate(data.date); // 02.01.2025
       const isoDate = convertToISODate(invoice_date); // 2025-01-02

@@ -17,15 +17,16 @@ import MyModal2 from "../UI/MyModal2";
 import Notification from "../Notification";
 import { useNotification } from "../context/NotificationContext";
 import CloseDayModal from "./modals/CloseDayModal";
+import { FaLockOpen } from "react-icons/fa6";
 
 const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDarkMode, darkMode, i18n, user, setShowAvatarModal }) => {
   const { dateFrom, setDateFrom, dateTo, setDateTo, dateProwodok, setDateProwodok } = useContext(DateContext);
   const { showNotification } = useNotification();
 
   // ############################################################################## modal close day START
-  const [dateIsClosed, setDateIsClosed] = useState(false);
-  const [dontShowCloseDayBtn, setDontShowCloseDayBtn] = useState(true);
   const [openModalCloseDay, setOpenModalCloseDay] = useState(false);
+  const [dayIsClosed, setDayIsClosed] = useState(false);
+  const [lastDayIsNotClosed, setLastDayIsNotClosed] = useState(false);
 
   const [reason, setReason] = useState("");
 
@@ -42,8 +43,8 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
 
       if (response.data.success) {
         showNotification(t(response.data.message), "success");
-        setDateIsClosed(true)
-        setDontShowCloseDayBtn(true)
+
+        setDayIsClosed(true)
       } else {
         showNotification(t(response.data.error), "error");
       }
@@ -65,17 +66,10 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
           params: { date: dateProwodok },
         });
 
-        if (res.data.success) {
-          setDateIsClosed(res.data.is_closed);
-          // Кнопка закрытия дня показывается только если день не закрыт
-          setDontShowCloseDayBtn(res.data.is_closed);
-        } else {
-          // Если ошибка, кнопку скрываем
-          setDontShowCloseDayBtn(true);
-        }
+        setDayIsClosed(res.data.is_closed);
+        setLastDayIsNotClosed(res.data.last_day_not_closed);
       } catch (error) {
         console.error("Error getting date:", error);
-        setDontShowCloseDayBtn(true);
       }
     };
 
@@ -132,47 +126,19 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
             <span className="text-sm">Дата проводок</span>
             <input type="date" value={dateProwodok} onChange={(e) => setDateProwodok(e.target.value)} className="bg-gray-700 text-gray-100 border border-gray-600 rounded-md px-2 py-1 text-sm" />
 
-            {!dontShowCloseDayBtn ? (
-              dateIsClosed ? (
-                <div className="flex gap-2 items-center mt-1">
+
+            <div className="flex gap-2 items-center mt-1">
                   <button
-                    className="gap-1 border-2 border-red-500 rounded-md px-3 py-1 hover:bg-red-500 hover:text-white transition focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-sm"
-                    variant="green"
+                    className={`gap-1 border-2 hover:text-white transition focus:outline-none focus:ring-2  focus:ring-offset-2 text-sm ${dayIsClosed || lastDayIsNotClosed ? "focus:ring-red-500 border-red-500 rounded-md px-3 py-1 hover:bg-red-500" : "focus:ring-green-500 border-green-500 rounded-md px-3 py-1 hover:bg-green-500"}`}
                     onClick={() => setOpenModalCloseDay(true)}
                     type="button"
+                    disabled={dayIsClosed || lastDayIsNotClosed}
                   >
-                    {t("day is closed")}
+                    {dayIsClosed ? t("day is closed") : lastDayIsNotClosed ? t("last day is not is closed") : t("close day") } 
                   </button>
 
-                  <FaLock size={15} />
+                  {dayIsClosed ? <FaLock size={15} /> : <FaLockOpen size={15} /> } 
                 </div>
-              ) : (
-                <div className="flex gap-2 items-center mt-1">
-                  <button
-                    className="gap-1 border-2 border-green-500 rounded-md px-2 py-1 hover:bg-green-500 hover:text-white transition focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm"
-                    variant="green"
-                    onClick={() => setOpenModalCloseDay(true)}
-                    type="button"
-                  >
-                    {t("close day")}
-                  </button>
-                  <FaLock size={15} />
-                </div>
-              )
-            ) : (
-              <div className="flex gap-2 items-center mt-1">
-                <button
-                  className="gap-1 border-2 border-gray-500 rounded-md px-2 py-1 hover:bg-gray-500 hover:text-white transition focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-sm"
-                  variant="green"
-                  onClick={() => setOpenModalCloseDay(true)}
-                  type="button"
-                  disabled={true}
-                >
-                  {t("day is closed")}
-                </button>
-                <FaLock size={15} />
-              </div>
-            )}
           </div>
 
           <div className="flex flex-col text-gray-200 border-r border-gray-600 pr-2">

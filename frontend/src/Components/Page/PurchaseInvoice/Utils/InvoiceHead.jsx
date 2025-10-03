@@ -15,6 +15,7 @@ import { Trash2, AlertTriangle, X } from "lucide-react";
 import myAxios from "../../../axios";
 import { ROUTES } from "./../../../../routes";
 import { useNotification } from "../../../context/NotificationContext";
+// import { DateContext } from "../../../UI/DateProvider";
 
 const InvoiceHead = ({
   refs,
@@ -239,8 +240,9 @@ const InvoiceHead = ({
               }
             }}
             value={values.invoice_date2}
+            disabled={values.already_entry}
           />
-          {touched.invoice_date && errors.invoice_date && <div className="text-red-500 text-sm mt-1">{errors.invoice_date}</div>}
+          {/* {touched.invoice_date && errors.invoice_date && <div className="text-red-500 text-sm mt-1">{errors.invoice_date}</div>} */}
         </div>
       ) : (
         <div>
@@ -257,7 +259,7 @@ const InvoiceHead = ({
             value={values.invoice_date}
             className={invoiceClasses.dateInput}
           />
-          {touched.invoice_date && errors.invoice_date && <div className="text-red-500 text-sm mt-1">{errors.invoice_date}</div>}
+          {/* {touched.invoice_date && errors.invoice_date && <div className="text-red-500 text-sm mt-1">{errors.invoice_date}</div>} */}
         </div>
       )}
 

@@ -495,7 +495,9 @@
   "Total turnover": "Итого оборот",
   "Closing balance": "Остаток на конец",
   "choose close date": "Выберите дату закрытия",
-  "day success is closed" : "День успешно закрыт"
+  "day success is closed" : "День успешно закрыт",
+  "last day is not is closed": "Предыдущий день не закрыт",
+  "permission denied": "У вас не достаточно прав"
  
  
 

@@ -38,7 +38,7 @@ const Header = () => {
           },
         });
         setUser(res.data);
-        console.log('user', user); 
+        // console.log('user', res.data); 
       } catch (error) {
         console.error("Ошибка загрузки пользователя", error);
       }

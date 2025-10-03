@@ -9,17 +9,23 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { ROUTES } from "../../../routes";
 import { DateContext } from "../../UI/DateProvider";
 import { useNotification } from "../../context/NotificationContext";
+import { AuthContext } from "../../../AuthContext";
 
 const PurchaseInvoice = () => {
   const { t } = useTranslation();
   const { showNotification } = useNotification();
   const [searchParams, setSearchParams] = useSearchParams();
   const [dayIsClosed, setDayIsClosed] = useState(false);
+  const [lastDayIsNotClosed, setLastDayIsNotClosed] = useState(false);
   const navigate = useNavigate();
   // const [query, setQuery] = useState("");
   const [query, setQuery] = useState(() => searchParams.get("query") || "");
 
   const { dateProwodok } = useContext(DateContext);
+
+  const { authUser, authGroup } = useContext(AuthContext);
+  console.log("authUser", authUser);
+  console.log("authGroup", authGroup);
 
   useEffect(() => {
     document.title = `${t("faktura")}`; // название вкладки
@@ -29,10 +35,10 @@ const PurchaseInvoice = () => {
     const checkDate = async () => {
       try {
         const res = await myAxios.get("check_day_closed", {
-          params: { date: dateProwodok }, // <-- так правильно
+          params: { date: dateProwodok },
         });
-        console.log(res.data);
         setDayIsClosed(res.data.is_closed);
+        setLastDayIsNotClosed(res.data.last_day_not_closed);
       } catch (error) {
         console.error(error);
       }
@@ -142,10 +148,14 @@ const PurchaseInvoice = () => {
     if (id) {
       navigate(`/purchase-invoices/update/${id}`);
     } else {
-      if (!dayIsClosed) {
-        navigate(ROUTES.PURCHASE_INVOICE_CREATE);
+      if (dayIsClosed) {
+        showNotification(t("day is closed"), "error");
+      } else if (lastDayIsNotClosed) {
+        showNotification(t("last day is not is closed"), "error");
+      } else if (authGroup !== "admin") {
+        showNotification(t("permission denied"), "error");
       } else {
-        showNotification(t("day is closed"), "error")
+        navigate(ROUTES.PURCHASE_INVOICE_CREATE);
       }
     }
   };

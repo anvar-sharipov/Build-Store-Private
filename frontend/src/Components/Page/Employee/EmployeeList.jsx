@@ -25,6 +25,8 @@ const EmployeeList = ({
 }) => {
   const [selectedEmployee, setSelectedEmployee] = selectedEmployeeState;
 
+  
+
   if (!loading && employees.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">

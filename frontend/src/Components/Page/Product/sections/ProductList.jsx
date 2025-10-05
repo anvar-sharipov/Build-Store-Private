@@ -1,10 +1,7 @@
-import { FaClipboardList } from "react-icons/fa";
-import { GrEdit } from "react-icons/gr";
-import { RiDeleteBin2Fill } from "react-icons/ri";
 import { useEffect, useRef, useState, useContext } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Edit3, Trash2, Package, DollarSign, ChevronDown } from "lucide-react";
 import { myFormatNumber } from "../../../UI/myFormatNumber";
-import { MdInventory } from "react-icons/md"; // иконка для количества
-import { FaDollarSign } from "react-icons/fa"; // иконка для цены
 import { AuthContext } from "../../../../AuthContext";
 
 const ProductList = ({
@@ -24,117 +21,221 @@ const ProductList = ({
   setOpenDeleteModal,
 }) => {
   const loadMoreButtonRef = useRef(null);
-
   const { authUser, authGroup } = useContext(AuthContext);
 
-  const openEditWindow = (productId) => {
-    window.open(
-      `/products/${productId}/edit`,
-      "_blank", // открывает в новой вкладке/окне
-      "width=900,height=700,scrollbars=yes,resizable=yes"
-    );
-  };
+  const sound_up_down = new Audio("/sounds/up_down.mp3");
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-      <div className="border border-gray-300 dark:border-gray-600 rounded-sm overflow-hidden">
-        <ul className="divide-y divide-gray-900 dark:divide-gray-600 mt-2 space-y-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 border border-black dark:border-gray-700/50 backdrop-blur-sm p-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent transition-all duration-300">
-          {products.map((p, index) => {
-            console.log("p", p);
-            let unit_name = p.base_unit_obj.name;
-            // let quantity = parseFloat(p.total_quantity);
-            let quantity = parseFloat(p.quantity_on_selected_warehouses || p.total_quantity || 0);
-            if (p.units.length > 0) {
-              p.units.map((u) => {
-                if (u.is_default_for_sale) {
-                  unit_name = u.unit_name;
-                  quantity = quantity / parseFloat(u.conversion_factor);
-                }
-              });
-            }
-            console.log("unit_name", unit_name);
-            console.log("quantity", quantity);
+    <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800">
+      <div className="p-2 sm:p-3 lg:p-4">
+        <ul className="space-y-1.5 sm:space-y-2">
+          <AnimatePresence>
+            {products.map((p, index) => {
+              let unit_name = p.base_unit_obj.name;
+              let quantity = parseFloat(p.quantity_on_selected_warehouses || p.total_quantity || 0);
 
-            return (
-              <li
-                key={p.id}
-                className="flex justify-between px-2 py-0 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-yellow-400 focus:bg-yellow-100 dark:focus:bg-yellow-500/20 transition-colors cursor-pointer gap-2"
-                ref={(el) => (listItemRefs.current[index] = el)}
-                tabIndex={0}
-                onClick={() => listItemRefs.current[index]?.focus()}
-                onDoubleClick={() => {
-                  setProductEditModal2({ open: true, data: p, index });
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Delete" && authUser === "anvar") {
-                    e.preventDefault();
-                    setOpenDeleteModal({ open: true, data: p, index });
-                  } else if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setProductEditModal2({ open: true, data: p, index });
-                  } else if (e.key === "ArrowDown" && index + 1 < products.length) {
-                    e.preventDefault();
-                    listItemRefs.current[index + 1]?.focus();
-                  } else if (e.key === "ArrowUp" && index !== 0) {
-                    e.preventDefault();
-                    listItemRefs.current[index - 1]?.focus();
-                  } else if (e.key === "ArrowUp" && index === 0) {
-                    e.preventDefault();
-                    searchInputRef.current?.focus();
-                  } else if (e.key === "ArrowDown" && index + 1 === products.length) {
-                    e.preventDefault();
-                    loadMoreButtonRef.current?.focus();
+              if (p.units.length > 0) {
+                p.units.forEach((u) => {
+                  if (u.is_default_for_sale) {
+                    unit_name = u.unit_name;
+                    quantity = quantity / parseFloat(u.conversion_factor);
                   }
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">{index + 1}.</div>
-                  <div className="font-medium text-gray-800 dark:text-gray-200 truncate">{p.name}</div>
-                </div>
+                });
+              }
 
-                <div className="flex gap-1 justify-end items-center">
-                  <div className="flex items-end text-sm text-gray-700 dark:text-gray-200 gap-5">
-                    <div className="flex items-center gap-1">
-                      {/* <MdInventory className="text-yellow-500" /> */}
-                      <span>
-                        {myFormatNumber(quantity)} {unit_name}
-                      </span>
+              return (
+                <motion.li
+                  key={p.id}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: -100 }}
+                  transition={{ duration: 0.2, delay: index * 0.02 }}
+                  className="group relative bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl p-2 sm:p-3 
+                    hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 
+                    dark:hover:from-blue-950/20 dark:hover:to-indigo-950/20
+                    focus-within:ring-2 focus-within:ring-blue-500 focus-within:bg-blue-50 dark:focus-within:bg-blue-950/30
+                    transition-all duration-300 cursor-pointer border border-transparent 
+                    hover:border-blue-200 dark:hover:border-blue-800
+                    shadow-sm hover:shadow-md sm:hover:shadow-lg"
+                  ref={(el) => (listItemRefs.current[index] = el)}
+                  tabIndex={0}
+                  onClick={() => listItemRefs.current[index]?.focus()}
+                  onDoubleClick={() => {
+                    setProductEditModal2({ open: true, data: p, index });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Delete" && authUser === "anvar") {
+                      e.preventDefault();
+                      setOpenDeleteModal({ open: true, data: p, index });
+                    } else if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setProductEditModal2({ open: true, data: p, index });
+                    } else if (e.key === "ArrowDown" && index + 1 < products.length) {
+                      e.preventDefault();
+                      sound_up_down.currentTime = 0;
+                      sound_up_down.play();
+                      listItemRefs.current[index + 1]?.focus();
+                    } else if (e.key === "ArrowUp" && index !== 0) {
+                      e.preventDefault();
+                      sound_up_down.currentTime = 0;
+                      sound_up_down.play();
+                      listItemRefs.current[index - 1]?.focus();
+                    } else if (e.key === "ArrowUp" && index === 0) {
+                      e.preventDefault();
+                      sound_up_down.currentTime = 0;
+                      sound_up_down.play();
+                      searchInputRef.current?.focus();
+                    } else if (e.key === "ArrowDown" && index + 1 === products.length) {
+                      e.preventDefault();
+                      sound_up_down.currentTime = 0;
+                      sound_up_down.play();
+                      loadMoreButtonRef.current?.focus();
+                    }
+                  }}
+                >
+                  {/* Gradient overlay on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg sm:rounded-xl pointer-events-none" />
+
+                  {/* Mobile layout (< 640px) */}
+                  <div className="relative sm:hidden">
+                    {/* Top row: Number + Name */}
+                    <div className="flex items-start gap-2 mb-2">
+                      <div className="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 rounded-lg flex items-center justify-center shadow-sm">
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{index + 1}</span>
+                      </div>
+                      <h3 className="flex-1 text-sm font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">{p.name}</h3>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <FaDollarSign className="text-green-500" />
-                      <span>{myFormatNumber(p.retail_price)}</span>
+
+                    {/* Bottom row: Info + Actions */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        {/* Quantity */}
+                        <div className="flex items-center gap-1 px-2 py-1 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md">
+                          <Package className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                          <span className="text-xs font-bold text-amber-700 dark:text-amber-300">{myFormatNumber(quantity, 0)}</span>
+                        </div>
+
+                        {/* Price */}
+                        <div className="flex items-center gap-1 px-2 py-1 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-md">
+                          {/* <DollarSign className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> */}
+                          <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">{myFormatNumber(p.retail_price)}</span>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-1">
+                        <motion.button
+                          whileTap={{ scale: 0.9 }}
+                          className="p-1.5 text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-950/50 rounded-md transition-all"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setProductEditModal2({ open: true, data: p, index });
+                          }}
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </motion.button>
+
+                        {authUser === "anvar" && (
+                          <motion.button
+                            whileTap={{ scale: 0.9 }}
+                            className="p-1.5 text-red-600 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-950/50 rounded-md transition-all"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenDeleteModal({ open: true, data: p, index });
+                            }}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </motion.button>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="border-r-4"></div>
-                  <button
-                    className="p-1 text-gray-800 hover:text-green-700 hover:bg-green-200 dark:hover:bg-green-700 rounded transition-colors dark:text-green-500 print:hidden"
-                    onClick={() => setProductEditModal2({ open: true, data: p, index })}
-                  >
-                    <GrEdit size={14} />
-                  </button>
-                  {authUser === "anvar" ? (
-                    <button
-                      className="p-1 text-red-500 hover:text-red-700 hover:bg-red-200 dark:hover:bg-red-400 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors print:hidden"
-                      onClick={() => setOpenDeleteModal({ open: true, data: p, index })}
-                    >
-                      <RiDeleteBin2Fill size={14} />
-                    </button>
-                  ) : (
-                    ""
-                  )}
-                </div>
-              </li>
-            );
-          })}
+                  {/* Tablet/Desktop layout (>= 640px) */}
+                  <div className="relative hidden sm:flex items-center justify-between gap-3 lg:gap-4">
+                    {/* Left side */}
+                    <div className="flex items-center gap-2 lg:gap-3 flex-1 min-w-0">
+                      <div className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 rounded-lg flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{index + 1}</span>
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 line-clamp-2 sm:line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          {p.name}
+                        </h3>
+                      </div>
+                    </div>
+
+                    {/* Right side */}
+                    <div className="flex lg:flex-col xl:flex-row items-center gap-2 lg:gap-3">
+                      {/* Quantity */}
+                      <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+                        <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600 dark:text-amber-400" />
+                        <span className="text-xs sm:text-sm font-bold text-amber-700 dark:text-amber-300 whitespace-nowrap">
+                          {myFormatNumber(quantity)} {unit_name}
+                        </span>
+                      </div>
+
+                      {/* Price */}
+                      <div className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+                        {/* <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 dark:text-emerald-400" /> */}
+                        <span className="text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300">{myFormatNumber(p.retail_price)}</span>
+                      </div>
+
+                      {/* Divider */}
+                      {/* <div className="hidden lg:block h-8 w-px bg-gray-300 dark:bg-gray-600" /> */}
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-0.5 sm:gap-1">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          className="p-1.5 sm:p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-all print:hidden"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setProductEditModal2({ open: true, data: p, index });
+                          }}
+                        >
+                          <Edit3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </motion.button>
+
+                        {authUser === "anvar" && (
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="p-1.5 sm:p-2 text-red-600 hover:text-red-700 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-950/50 rounded-lg transition-all print:hidden"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenDeleteModal({ open: true, data: p, index });
+                            }}
+                          >
+                            <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          </motion.button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Focus indicator */}
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 sm:h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 rounded-b-lg sm:rounded-b-xl" />
+                </motion.li>
+              );
+            })}
+          </AnimatePresence>
         </ul>
       </div>
 
+      {/* Load More Button */}
       {nextPageUrl && (
-        <div className="px-4 py-1 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 text-center">
-          <button
+        <div className="p-2 sm:p-3 lg:p-4 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 border-t border-gray-300 dark:border-gray-700">
+          <motion.button
             ref={loadMoreButtonRef}
-            className={myClass.showMore}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full py-2.5 sm:py-3 px-3 sm:px-4 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 
+              disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed
+              text-white text-sm sm:text-base font-bold rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl 
+              transition-all duration-300 flex items-center justify-center gap-2"
             disabled={!nextPageUrl || loading}
             onClick={() => {
               setClickedNextPageBtn(true);
@@ -147,14 +248,25 @@ const ProductList = ({
                 e.preventDefault();
                 setClickedNextPageBtn(true);
                 fetchProducts(nextPageUrl);
-                // fetchProducts(nextPageUrl).then(() => {
-                //   setNextClicked(true);
-                // });
               }
             }}
           >
-            {t("loadMore")}
-          </button>
+            {loading ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full"
+                />
+                <span>Загрузка...</span>
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>{t("loadMore")}</span>
+              </>
+            )}
+          </motion.button>
         </div>
       )}
     </div>

@@ -12,6 +12,8 @@ const Head = ({ setOpenModal, openModal, searchInputRef, setQuery, query, create
   const { t } = useTranslation();
   const [isAnimating, setIsAnimating] = useState(false);
 
+  const sound_up_down = new Audio("/sounds/up_down.mp3");
+
   const handleDownload = () => {
     setIsAnimating(true);
     const getAllPatners = async () => {
@@ -79,6 +81,9 @@ const Head = ({ setOpenModal, openModal, searchInputRef, setQuery, query, create
           }}
           onKeyDown={(e) => {
             if (e.key === "ArrowDown") {
+              e.preventDefault()
+              sound_up_down.currentTime = 0;
+              sound_up_down.play();
               searchInputRef.current?.focus();
             }
           }}
@@ -109,9 +114,13 @@ const Head = ({ setOpenModal, openModal, searchInputRef, setQuery, query, create
           onKeyDown={(e) => {
             if (e.key === "ArrowUp") {
               e.preventDefault();
+              sound_up_down.currentTime = 0;
+              sound_up_down.play();
               createButtonRef.current?.focus();
             } else if (e.key === "ArrowDown") {
               e.preventDefault();
+              sound_up_down.currentTime = 0;
+              sound_up_down.play();
               if (partners.length > 0) {
                 partnersListRefs.current[0]?.focus();
               }

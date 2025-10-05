@@ -1,33 +1,22 @@
-import { IoClose } from "react-icons/io5";
-import { GiHamburgerMenu } from "react-icons/gi";
-import { LiaRegistered } from "react-icons/lia";
 import { Link } from "react-router-dom";
-import { IoLogInOutline } from "react-icons/io5";
-import { TbLogout2 } from "react-icons/tb";
+import { motion, AnimatePresence } from "framer-motion";
+import { AuthContext } from "../../AuthContext";
+import { Menu, X, UserPlus, LogIn, LogOut, Sun, Moon, Lock, LockOpen, Calendar, CalendarRange, User, ChevronDown } from "lucide-react";
 import LanguageSwitcher from "../../LanguageSwitcher";
-// import { useLocation } from "react-router-dom";
 import { DateContext } from "../UI/DateProvider";
 import { useContext, useEffect, useState } from "react";
-import { FaLock } from "react-icons/fa";
-import MyButton from "../UI/MyButton";
 import myAxios from "../axios";
-import MyModal from "../UI/MyModal";
-import MyModal2 from "../UI/MyModal2";
-// import { useTranslation } from "react-i18next";
-import Notification from "../Notification";
 import { useNotification } from "../context/NotificationContext";
 import CloseDayModal from "./modals/CloseDayModal";
-import { FaLockOpen } from "react-icons/fa6";
 
 const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDarkMode, darkMode, i18n, user, setShowAvatarModal }) => {
   const { dateFrom, setDateFrom, dateTo, setDateTo, dateProwodok, setDateProwodok } = useContext(DateContext);
   const { showNotification } = useNotification();
+  const { authUser, authGroup } = useContext(AuthContext);
 
-  // ############################################################################## modal close day START
   const [openModalCloseDay, setOpenModalCloseDay] = useState(false);
   const [dayIsClosed, setDayIsClosed] = useState(false);
   const [lastDayIsNotClosed, setLastDayIsNotClosed] = useState(false);
-
   const [reason, setReason] = useState("");
 
   const handleSubmit = async (e) => {
@@ -36,15 +25,14 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
     try {
       const response = await myAxios.post("/close_day/", {
         date: dateProwodok,
-        action: "close", // всегда закрытие дня
-        reason, // комментарий можно оставить для информации
-        user_id: 1, // замените на реальный id текущего пользователя
+        action: "close",
+        reason,
+        user_id: 1,
       });
 
       if (response.data.success) {
         showNotification(t(response.data.message), "success");
-
-        setDayIsClosed(true)
+        setDayIsClosed(true);
       } else {
         showNotification(t(response.data.error), "error");
       }
@@ -52,13 +40,10 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
       console.error(error);
       alert("Ошибка при отправке запроса на сервер");
     } finally {
-      setOpenModalCloseDay(false)
+      setOpenModalCloseDay(false);
     }
   };
 
-  // ############################################################################## modal close day END
-
-  // ############################################################################## date START
   useEffect(() => {
     const checkDate = async () => {
       try {
@@ -78,8 +63,6 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
     }
   }, [dateProwodok]);
 
-  const today = new Date().toISOString().split("T")[0]; // формат YYYY-MM-DD
-  // Загружаем из localStorage при старте
   useEffect(() => {
     const savedDateProwodok = localStorage.getItem("dateProwodok");
     const savedDateFrom = localStorage.getItem("dateFrom");
@@ -90,7 +73,6 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
     if (savedDateTo) setDateTo(savedDateTo);
   }, []);
 
-  // Сохраняем в localStorage при изменении
   useEffect(() => {
     localStorage.setItem("dateProwodok", dateProwodok);
   }, [dateProwodok]);
@@ -102,95 +84,187 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
   useEffect(() => {
     localStorage.setItem("dateTo", dateTo);
   }, [dateTo]);
-  // ############################################################################## date END
 
   return (
-    <nav className="flex items-center justify-between">
-      {/* modalka for close day */}
-      {openModalCloseDay && (
-        <CloseDayModal setOpenModalCloseDay={setOpenModalCloseDay} handleSubmit={handleSubmit} dateProwodok={dateProwodok} setDateProwodok={setDateProwodok} setReason={setReason} reason={reason} />
-      )}
-
-      {/* Logo */}
-      <img src="/polisem.png" alt="polisem-icon" width={200} />
-
-      {/* Burger button */}
-      <div className="lg:hidden text-gray-300">
-        <button onClick={() => setIsMenuOpen(!isMenuOpen)}>{isMenuOpen ? <IoClose size={28} /> : <GiHamburgerMenu size={28} />}</button>
-      </div>
-
-      {/* Menu (desktop) */}
-      <div className="hidden lg:flex gap-6 items-center">
-        <div className="mt-3 flex gap-2">
-          <div className="flex flex-col gap-1 text-gray-200 border-r border-gray-600 pr-2">
-            <span className="text-sm">Дата проводок</span>
-            <input type="date" value={dateProwodok} onChange={(e) => setDateProwodok(e.target.value)} className="bg-gray-700 text-gray-100 border border-gray-600 rounded-md px-2 py-1 text-sm" />
-
-
-            <div className="flex gap-2 items-center mt-1">
-                  <button
-                    className={`gap-1 border-2 hover:text-white transition focus:outline-none focus:ring-2  focus:ring-offset-2 text-sm ${dayIsClosed || lastDayIsNotClosed ? "focus:ring-red-500 border-red-500 rounded-md px-3 py-1 hover:bg-red-500" : "focus:ring-green-500 border-green-500 rounded-md px-3 py-1 hover:bg-green-500"}`}
-                    onClick={() => setOpenModalCloseDay(true)}
-                    type="button"
-                    disabled={dayIsClosed || lastDayIsNotClosed}
-                  >
-                    {dayIsClosed ? t("day is closed") : lastDayIsNotClosed ? t("last day is not is closed") : t("close day") } 
-                  </button>
-
-                  {dayIsClosed ? <FaLock size={15} /> : <FaLockOpen size={15} /> } 
-                </div>
-          </div>
-
-          <div className="flex flex-col text-gray-200 border-r border-gray-600 pr-2">
-            <span className="mb-1 text-sm">Диапазон дат для отчётов</span>
-            <div className="flex flex-col gap-2">
-              <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="bg-gray-700 text-gray-100 border border-gray-600 rounded-md px-2 py-1 text-sm" />
-              <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="bg-gray-700 text-gray-100 border border-gray-600 rounded-md px-2 py-1 text-sm" />
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-1 border-r border-gray-600 pr-2">
-          <Link to={ROUTES.REGISTER} className="hover:underline text-blue-500 hover:text-blue-700 flex gap-1 items-center">
-            <LiaRegistered />
-            {t("register")}
-          </Link>
-          <Link to={ROUTES.LOGIN} className="hover:underline text-blue-500 hover:text-blue-700 flex gap-1 items-center">
-            <IoLogInOutline />
-            {t("login")}
-          </Link>
-          <div onClick={logout} className="hover:underline text-blue-500 hover:text-blue-700 flex gap-1 items-center cursor-pointer">
-            <TbLogout2 />
-            {t("logout")}
-          </div>
-        </div>
-        <div className="flex flex-col gap-5 border-r border-gray-600 pr-2">
-          <LanguageSwitcher i18n={i18n} />
-
-          <div
-            onClick={() => {
-              setDarkMode(!darkMode);
-              setTimeout(() => {
-                window.dispatchEvent(new Event("theme-toggled"));
-              }, 0);
-            }}
-            aria-label="Toggle theme"
-            // className="hover:underline text-blue-500 hover:text-blue-700 flex gap-1 items-center cursor-pointer"
-            className={`w-9 p-1 rounded-full transition-all duration-300 transform hover:scale-110 text-center cursor-pointer ${
-              darkMode ? "bg-yellow-400 text-gray-900 shadow-yellow-400/25" : "bg-gray-800 text-yellow-400 shadow-gray-800/25"
-            } shadow-lg hover:shadow-xl`}
-          >
-            {/* {darkMode ? `🌙 ${t("theme")}: ${t("dark")}` : `☀️ ${t("theme")}: ${t("light")}`} */}
-            {darkMode ? `☀️` : `🌙`}
-          </div>
-        </div>
-
-        {user && (
-          <div className="flex items-center gap-2">
-            <img src={user.photo} alt="user" className="w-8 h-8 rounded-full object-cover border border-gray-400 cursor-pointer" onClick={() => setShowAvatarModal(true)} />
-            <span className="text-gray-400">{user.username}</span>
-          </div>
+    <nav className="bg-gray-900 border-b-2 border-gray-800 shadow-2xl">
+      <AnimatePresence>
+        {openModalCloseDay && (
+          <CloseDayModal setOpenModalCloseDay={setOpenModalCloseDay} handleSubmit={handleSubmit} dateProwodok={dateProwodok} setDateProwodok={setDateProwodok} setReason={setReason} reason={reason} />
         )}
+      </AnimatePresence>
+
+      <div className="flex items-center justify-between px-4 py-3 lg:px-6">
+        {/* Logo */}
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex-shrink-0">
+          <img src="/polisem.png" alt="polisem-icon" className="h-12 lg:h-14 w-auto" />
+        </motion.div>
+
+        {/* Burger button */}
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          className="lg:hidden p-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors"
+        >
+          {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </motion.button>
+
+        {/* Desktop Menu */}
+        <div className="hidden lg:flex items-center gap-4 xl:gap-6">
+          {/* Date Sections */}
+          <div className="flex flex-col items-center gap-3 xl:gap-4">
+            {/* Дата проводок */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="flex gap-2 p-1 bg-gray-800 border-2 border-blue-700 rounded-xl shadow-lg"
+            >
+              {/* <div className="flex items-center gap-2 mb-1">
+                <Calendar className="w-4 h-4 text-blue-400" />
+                <span className="text-xs font-bold text-gray-200">Дата проводок</span>
+              </div> */}
+
+              <input
+                type="date"
+                value={dateProwodok}
+                onChange={(e) => setDateProwodok(e.target.value)}
+                className="px-3 py-2 bg-gray-700 border-2 border-gray-600 rounded-lg text-gray-100 text-sm font-medium
+                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              />
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setOpenModalCloseDay(true)}
+                disabled={dayIsClosed || lastDayIsNotClosed}
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-semibold text-sm transition-all
+                  ${
+                    dayIsClosed || lastDayIsNotClosed
+                      ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                      : "bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white shadow-lg hover:shadow-emerald-500/50"
+                  }`}
+              >
+                {dayIsClosed ? (
+                  <>
+                    <Lock className="w-4 h-4" />
+                    <span>{t("day is closed")}</span>
+                  </>
+                ) : lastDayIsNotClosed ? (
+                  <>
+                    <Lock className="w-4 h-4" />
+                    <span className="text-xs">{t("last day is not is closed")}</span>
+                  </>
+                ) : (
+                  <>
+                    <LockOpen className="w-4 h-4" />
+                    <span>{t("close day")}</span>
+                  </>
+                )}
+              </motion.button>
+            </motion.div>
+
+            {/* Диапазон дат */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="flex gap-2 p-1 bg-gray-800 border-2 border-purple-700 rounded-xl shadow-lg"
+            >
+              {/* <div className="flex items-center gap-2 mb-1">
+                <CalendarRange className="w-4 h-4 text-purple-400" />
+                <span className="text-xs font-bold text-gray-200">Диапазон для отчётов</span>
+              </div> */}
+
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="px-3 py-2 bg-gray-700 border-2 border-gray-600 rounded-lg text-gray-100 text-sm font-medium
+                    focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                />
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="px-3 py-2 bg-gray-700 border-2 border-gray-600 rounded-lg text-gray-100 text-sm font-medium
+                    focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                />
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Divider */}
+          <div className="h-20 w-px bg-gradient-to-b from-transparent via-gray-700 to-transparent" />
+
+          {/* Auth Links */}
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="flex flex-col gap-1.5">
+            {authGroup === "admin" && (
+              <Link to={ROUTES.REGISTER} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-400 hover:text-blue-300 hover:bg-gray-800 rounded-lg transition-all group">
+                <UserPlus className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                <span>{t("register")}</span>
+              </Link>
+            )}
+
+            <Link to={ROUTES.LOGIN} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-400 hover:text-blue-300 hover:bg-gray-800 rounded-lg transition-all group">
+              <LogIn className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              <span>{t("login")}</span>
+            </Link>
+            <button onClick={logout} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-gray-800 rounded-lg transition-all group">
+              <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              <span>{t("logout")}</span>
+            </button>
+          </motion.div>
+
+          {/* Divider */}
+          <div className="h-20 w-px bg-gradient-to-b from-transparent via-gray-700 to-transparent" />
+
+          {/* Language & Theme */}
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="flex flex-col items-center gap-3">
+            <LanguageSwitcher i18n={i18n} />
+
+            <motion.button
+              whileHover={{ scale: 1.1, rotate: 180 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => {
+                setDarkMode(!darkMode);
+                setTimeout(() => {
+                  window.dispatchEvent(new Event("theme-toggled"));
+                }, 0);
+              }}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl
+                ${darkMode ? "bg-gradient-to-br from-amber-400 to-orange-500 text-white" : "bg-gradient-to-br from-indigo-600 to-purple-700 text-amber-300"}`}
+            >
+              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </motion.button>
+          </motion.div>
+
+          {/* User Avatar */}
+          {user && (
+            <>
+              <div className="h-20 w-px bg-gradient-to-b from-transparent via-gray-700 to-transparent" />
+
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+                className="flex items-center gap-3 p-2 pr-4 bg-gray-800 border-2 border-gray-700 rounded-xl shadow-lg hover:shadow-xl hover:border-gray-600 transition-all cursor-pointer group"
+                onClick={() => setShowAvatarModal(true)}
+              >
+                <div className="relative">
+                  <img src={user.photo} alt="user" className="w-10 h-10 rounded-lg object-cover border-2 border-blue-500 group-hover:border-blue-400 transition-colors" />
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-gray-900 rounded-full" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold text-gray-100">{user.username}</span>
+                  <span className="text-xs text-gray-400">Онлайн</span>
+                </div>
+                <ChevronDown className="w-4 h-4 text-gray-500 group-hover:text-gray-400 transition-colors" />
+              </motion.div>
+            </>
+          )}
+        </div>
       </div>
     </nav>
   );

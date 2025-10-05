@@ -14,6 +14,8 @@ const Header = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  const change_wkladka = new Audio("/sounds/change_wkladka.mp3");
+
   const [showAvatarModal, setShowAvatarModal] = useState(false);
 
   const [user, setUser] = useState(null);
@@ -22,8 +24,6 @@ const Header = () => {
     const userData = localStorage.getItem("user");
     if (userData) {
       setUser(JSON.parse(userData));
-      
-      
     }
   }, []);
 
@@ -38,7 +38,7 @@ const Header = () => {
           },
         });
         setUser(res.data);
-        // console.log('user', res.data); 
+        // console.log('user', res.data);
       } catch (error) {
         console.error("Ошибка загрузки пользователя", error);
       }
@@ -48,9 +48,7 @@ const Header = () => {
   }, []);
 
   // Добавляем состояние для темы
-  const [darkMode, setDarkMode] = useState(
-    () => localStorage.getItem("theme") === "dark"
-  );
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("theme") === "dark");
 
   // Синхронизируем класс и localStorage при изменении темы
   useEffect(() => {
@@ -70,31 +68,58 @@ const Header = () => {
 
   useEffect(() => {
     const handleKeyDown = (event) => {
+      // if (event.key === "F1") {
+      //   event.preventDefault();
+      //   navigate(ROUTES.MAIN);
       if (event.key === "F1") {
         event.preventDefault();
-        navigate(ROUTES.MAIN);
+        change_wkladka.currentTime = 0;
+        change_wkladka.play();
+        navigate(ROUTES.PURCHASEINVOICE);
       } else if (event.key === "F2") {
         event.preventDefault();
-        navigate(ROUTES.PURCHASEINVOICE);
+        change_wkladka.currentTime = 0;
+        change_wkladka.play();
+        navigate(ROUTES.HARYTLAR);
       } else if (event.key === "F3") {
         event.preventDefault();
+        change_wkladka.currentTime = 0;
+        change_wkladka.play();
         navigate(ROUTES.EMPLOYEERS);
       } else if (event.key === "F4") {
         event.preventDefault();
+        change_wkladka.currentTime = 0;
+        change_wkladka.play();
         navigate(ROUTES.PARTNERS_new);
       } else if (event.key === "F5") {
         event.preventDefault();
+        change_wkladka.currentTime = 0;
+        change_wkladka.play();
         navigate(ROUTES.AGENTS);
       } else if (event.key === "F6") {
         event.preventDefault();
-        navigate(ROUTES.HARYTLAR);
+        change_wkladka.currentTime = 0;
+        change_wkladka.play();
+        navigate(ROUTES.REPORTS);
       } else if (event.key === "F7") {
         event.preventDefault();
-        navigate(ROUTES.ENTRIES);
-      // } else if (event.key === "F7") {
+        change_wkladka.currentTime = 0;
+        change_wkladka.play();
+        navigate(ROUTES.PROCHEE);
+      }
+      // else if (event.key === "F6") {
       //   event.preventDefault();
-      //   navigate(ROUTES.ACCOUNT);
-      } 
+      //   navigate(ROUTES.HARYTLAR);
+      // }
+      else if (event.key === "F8") {
+        event.preventDefault();
+        change_wkladka.currentTime = 0;
+        change_wkladka.play();
+        navigate(ROUTES.ENTRIES);
+        // } else if (event.key === "F7") {
+        //   event.preventDefault();
+        //   navigate(ROUTES.ACCOUNT);
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -107,7 +132,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-gray-800 text-gray-800 dark:text-white  dark:border-gray-700 px-4 sm:px-6 lg:px-20 py-3 print:hidden z-50 ">
+    <header className="bg-gray-800 text-gray-800 dark:text-white  dark:border-gray-700 print:hidden z-50 ">
       {/* header links for large screens */}
       <LargeScreenLinks
         setIsMenuOpen={setIsMenuOpen}
@@ -137,11 +162,7 @@ const Header = () => {
       />
 
       {/* show avatar modal */}
-      <HeaderAvatarModal
-        showAvatarModal={showAvatarModal}
-        setShowAvatarModal={setShowAvatarModal}
-        user={user}
-      />
+      <HeaderAvatarModal showAvatarModal={showAvatarModal} setShowAvatarModal={setShowAvatarModal} user={user} />
     </header>
   );
 };

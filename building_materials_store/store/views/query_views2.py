@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from datetime import datetime
 
 
 
@@ -152,3 +153,57 @@ def transaction_detail(request, id):
     ic(transaction_obj)
 
     return Response(data, status=status.HTTP_200_OK)
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_product_for_print_qr(request):
+    products = Product.objects.prefetch_related('images').all()
+    
+    data = []
+    for product in products:
+        item = {
+            "id": product.id,
+            "name": product.name,
+            "qr_code": product.qr_code,
+            "images": []
+        }
+        
+        # Добавляем все изображения товара
+        for product_image in product.images.all():
+            image_data = {
+                "url": request.build_absolute_uri(product_image.image.url),
+                "alt_text": product_image.alt_text or product.name
+            }
+            item["images"].append(image_data)
+        
+        data.append(item)
+
+    return Response(data, status=status.HTTP_200_OK)
+
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_margin_date(request):
+    try:
+        date_focus = DateFocus.objects.latest('id')
+        data = {"date_focus": date_focus.dateFocus}
+    except DateFocus.DoesNotExist:
+        data = {}
+
+    return Response(data, status=200)
+
+
+@csrf_exempt
+def set_date_focus(request):
+    if request.method == "POST":
+        today = datetime.now().date()
+        date_str = today.strftime("%Y-%m-%d")
+        DateFocus.objects.all().delete()
+        DateFocus.objects.create(dateFocus=today)
+        ic(date_str)
+        return JsonResponse({"date_focus": str(today)})
+    return JsonResponse({"error": "Method not allowed"}, status=405)

@@ -7,6 +7,8 @@ import myAxios from "../../../axios";
 import { formatNumber } from "../../../UI/formatNumber";
 import Notification from "../../../Notification";
 
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 const FetchProduct = ({ refs }) => {
   const { t } = useTranslation();
   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
@@ -21,6 +23,7 @@ const FetchProduct = ({ refs }) => {
   };
 
   const wrapperRef = useRef(null);
+  const sound_beep = new Audio("/sounds/beep.mp3");
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -59,8 +62,18 @@ const FetchProduct = ({ refs }) => {
         // console.log("values.warehouse.id", values.warehouse.id);
         const res = await myAxios.get(`search-products/?search=${query}&warehouse=${values.warehouse.id}`);
         const activeProducts = res.data.filter((prod) => prod.is_active);
-        setProducts(activeProducts);
-        console.log(activeProducts);
+
+        if (activeProducts.length === 1 && activeProducts[0].finded_from_QR) {
+          await handleAddProduct(activeProducts[0], values, setFieldValue, refs, showNotification, getProduct);
+          setProducts([]);
+          setQuery("");
+          sound_beep.currentTime = 0;
+          sound_beep.play();
+        } else {
+          setProducts(activeProducts);
+        }
+
+        console.log("activeProducts", activeProducts);
       } catch (error) {
         console.log("oshibka pri query product", error);
       } finally {
@@ -153,7 +166,9 @@ const FetchProduct = ({ refs }) => {
     return (
       <div className="w-full flex-1 print:hidden relative" ref={wrapperRef}>
         {/* Label */}
-        <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">{t("product")}</label>
+        <label className="flex justify-between mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+          <span>{t("product")}</span> <span>qr</span>{" "}
+        </label>
 
         {/* Input с иконкой */}
         <div className="relative">
@@ -262,7 +277,11 @@ const FetchProduct = ({ refs }) => {
                     }
                   }}
                 >
-                  <span>{product.name}</span>
+                  <span className="flex gap-3 items-center">
+                    {product.images && product.images.length > 0 && <img src={`${BASE_URL}${product.images[0].image}`} className="w-16 h-16 object-cover rounded border" />}
+
+                    {product.name}
+                  </span>
                   <span>
                     {formatNumber(product.quantity_on_selected_warehouses)} {unit}
                   </span>

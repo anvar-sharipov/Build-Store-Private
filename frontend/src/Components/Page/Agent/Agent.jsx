@@ -32,6 +32,8 @@ const Agent = () => {
   // const [filteredList, setFilteredList] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const sound_up_down = new Audio("/sounds/up_down.mp3");
+
   // loading
   const [loading, setLoading] = useState(false);
   const [loadingDelete, setLoadingDelete] = useState(false);
@@ -168,22 +170,10 @@ const Agent = () => {
 
   // // Навешиваем обработчик только если нет модалей
   useEffect(() => {
-    if (
-      !openEditModal?.open &&
-      !openDeleteModal?.open &&
-      !openAddModal &&
-      !openPartnerListModal.open &&
-      !openAddPartnersModal.open
-    ) {
+    if (!openEditModal?.open && !openDeleteModal?.open && !openAddModal && !openPartnerListModal.open && !openAddPartnersModal.open) {
       searchInputRef.current.focus();
     }
-  }, [
-    openEditModal?.open,
-    openDeleteModal?.open,
-    openAddModal,
-    openPartnerListModal.open,
-    openAddPartnersModal.open,
-  ]);
+  }, [openEditModal?.open, openDeleteModal?.open, openAddModal, openPartnerListModal.open, openAddPartnersModal.open]);
 
   const fetchPartners = async () => {
     setLoading(true);
@@ -344,11 +334,7 @@ const Agent = () => {
   const prevHasMoreRef = useRef(true);
 
   useEffect(() => {
-    if (
-      prevHasMoreRef.current &&
-      !hasMore &&
-      !(document.activeElement === searchInputRef.current)
-    ) {
+    if (prevHasMoreRef.current && !hasMore && !(document.activeElement === searchInputRef.current)) {
       // Кнопка исчезла → фокус на последний li
 
       const lastIndex = visibleItems.length - 1;
@@ -359,11 +345,7 @@ const Agent = () => {
 
   return (
     <div className="p-2">
-      <Notification
-        message={t(notification.message)}
-        type={notification.type}
-        onClose={() => setNotification({ message: "", type: "" })}
-      />
+      <Notification message={t(notification.message)} type={notification.type} onClose={() => setNotification({ message: "", type: "" })} />
 
       <div className="lg:hidden text-center">
         <div className="flex justify-between items-center">
@@ -371,17 +353,11 @@ const Agent = () => {
           <div className="text-gray-600 dark:text-gray-400 flex items-center gap-3 print:hidden">
             {filteredList.length > 0 && (
               <div className="flex gap-3 items-center">
-                <span>
-                  {searchQuery
-                    ? `${t("found")}: ${filteredList.length}`
-                    : `${t("total")}: ${filteredList.length}`}
-                </span>
+                <span>{searchQuery ? `${t("found")}: ${filteredList.length}` : `${t("total")}: ${filteredList.length}`}</span>
 
                 <RiFileExcel2Fill
                   size={30}
-                  className={`cursor-pointer rounded transition-transform duration-300 text-green-700 hover:text-green-600 ${
-                    excelIconIsAnimating ? "scale-125" : "scale-100"
-                  }`}
+                  className={`cursor-pointer rounded transition-transform duration-300 text-green-700 hover:text-green-600 ${excelIconIsAnimating ? "scale-125" : "scale-100"}`}
                   onClick={() => {
                     AgentDownloadExcel(filteredList, t);
                     setExcelIconIsAnimating(true);
@@ -440,14 +416,7 @@ const Agent = () => {
 
       {/* edit modal */}
       {openEditModal.open && (
-        <AgentEditModal
-          openEditModal={openEditModal}
-          setOpenEditModal={setOpenEditModal}
-          loadingEdit={loadingEdit}
-          setLoadingEdit={setLoadingEdit}
-          handleEditAgent={handleEditAgent}
-          t={t}
-        />
+        <AgentEditModal openEditModal={openEditModal} setOpenEditModal={setOpenEditModal} loadingEdit={loadingEdit} setLoadingEdit={setLoadingEdit} handleEditAgent={handleEditAgent} t={t} />
       )}
 
       {/* add and search section */}
@@ -469,6 +438,8 @@ const Agent = () => {
             onKeyDown={(e) => {
               if (e.key === "ArrowDown") {
                 e.preventDefault();
+                sound_up_down.currentTime = 0;
+                sound_up_down.play();
                 searchInputRef.current.focus();
               }
             }}
@@ -489,9 +460,7 @@ const Agent = () => {
                 </span>
                 <RiFileExcel2Fill
                   size={30}
-                  className={`cursor-pointer rounded transition-transform duration-300 text-green-700 hover:text-green-600 ${
-                    excelIconIsAnimating ? "scale-125" : "scale-100"
-                  }`}
+                  className={`cursor-pointer rounded transition-transform duration-300 text-green-700 hover:text-green-600 ${excelIconIsAnimating ? "scale-125" : "scale-100"}`}
                   ref={excelIconRef}
                   onClick={handleDownloadExcel}
                   onMouseEnter={() => {
@@ -521,12 +490,14 @@ const Agent = () => {
             onKeyDown={(e) => {
               if (e.key === "ArrowUp") {
                 e.preventDefault();
-
+                sound_up_down.currentTime = 0;
+                sound_up_down.play();
                 addIconRef.current?.focus();
               }
               if (e.key === "ArrowDown" && filteredList.length > 0) {
                 e.preventDefault();
-
+                sound_up_down.currentTime = 0;
+                sound_up_down.play();
                 listItemRefs.current[0]?.focus();
               }
             }}
@@ -564,34 +535,32 @@ const Agent = () => {
                     } else if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
                       setOpenEditModal({ open: true, data: item, index });
-                    } else if (
-                      e.key === "ArrowDown" &&
-                      index + 1 < visibleItems.length
-                    ) {
+                    } else if (e.key === "ArrowDown" && index + 1 < visibleItems.length) {
                       e.preventDefault();
+                      sound_up_down.currentTime = 0;
+                      sound_up_down.play();
                       listItemRefs.current[index + 1]?.focus();
                     } else if (e.key === "ArrowUp" && index !== 0) {
                       e.preventDefault();
+                      sound_up_down.currentTime = 0;
+                      sound_up_down.play();
                       listItemRefs.current[index - 1]?.focus();
                     } else if (e.key === "ArrowUp" && index === 0) {
                       e.preventDefault();
+                      sound_up_down.currentTime = 0;
+                      sound_up_down.play();
                       searchInputRef.current?.focus();
-                    } else if (
-                      e.key === "ArrowDown" &&
-                      index + 1 === visibleItems.length
-                    ) {
+                    } else if (e.key === "ArrowDown" && index + 1 === visibleItems.length) {
                       e.preventDefault();
+                      sound_up_down.currentTime = 0;
+                      sound_up_down.play();
                       loadMoreButtonRef.current?.focus();
                     }
                   }}
                   className={myClass.li}
                 >
-                  <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">
-                    {index + 1}.
-                  </div>
-                  <div className="font-medium text-gray-800 dark:text-gray-200 truncate">
-                    {item.name}
-                  </div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">{index + 1}.</div>
+                  <div className="font-medium text-gray-800 dark:text-gray-200 truncate">{item.name}</div>
                   <div className="flex gap-1 justify-end">
                     <button
                       ref={(el) => (partnerListIconRefs.current[index] = el)}
@@ -605,8 +574,7 @@ const Agent = () => {
                         setHoveredPartnerIndex(null);
                       }}
                       className={`p-1 text-gray-500 hover:text-green-700 hover:bg-green-200 dark:hover:bg-green-700 rounded transition-colors dark:text-gray-200 print:hidden ${
-                        item.partners.length === 0 &&
-                        "text-red-300 dark:text-red-200"
+                        item.partners.length === 0 && "text-red-300 dark:text-red-200"
                       }`}
                       onClick={() =>
                         setOpenPartnerListModal({
@@ -618,9 +586,7 @@ const Agent = () => {
                     >
                       <div className="flex items-center">
                         <FaClipboardList size={14} />
-                        <span className="text-xs text-gray-600 dark:text-gray-400">
-                          {item.partners.length}
-                        </span>
+                        <span className="text-xs text-gray-600 dark:text-gray-400">{item.partners.length}</span>
                       </div>
                     </button>
 
@@ -636,9 +602,7 @@ const Agent = () => {
                         setHoveredEditIndex(null);
                       }}
                       className="p-1 text-gray-800 hover:text-green-700 hover:bg-green-200 dark:hover:bg-green-700 rounded transition-colors dark:text-green-500 print:hidden"
-                      onClick={() =>
-                        setOpenEditModal({ open: true, data: item, index })
-                      }
+                      onClick={() => setOpenEditModal({ open: true, data: item, index })}
                     >
                       <GrEdit size={14} />
                     </button>
@@ -654,9 +618,7 @@ const Agent = () => {
                         setHoveredDeleteIndex(null);
                       }}
                       className="p-1 text-red-500 hover:text-red-700 hover:bg-red-200 dark:hover:bg-red-400 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors print:hidden"
-                      onClick={() =>
-                        setOpenDeleteModal({ open: true, data: item, index })
-                      }
+                      onClick={() => setOpenDeleteModal({ open: true, data: item, index })}
                     >
                       <RiDeleteBin2Fill size={14} />
                     </button>
@@ -691,12 +653,8 @@ const Agent = () => {
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
           <div className="text-gray-400 text-6xl mb-4">👥</div>
-          <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">
-            {searchQuery ? t("noSearchResults") : t("empty")}
-          </h3>
-          <p className="text-gray-500 dark:text-gray-500">
-            {searchQuery ? t("tryDifferentSearch") : t("addFirstAgent")}
-          </p>
+          <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">{searchQuery ? t("noSearchResults") : t("empty")}</h3>
+          <p className="text-gray-500 dark:text-gray-500">{searchQuery ? t("tryDifferentSearch") : t("addFirstAgent")}</p>
           {searchQuery && (
             <button
               onClick={() => {

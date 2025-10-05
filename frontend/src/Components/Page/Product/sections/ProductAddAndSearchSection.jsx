@@ -6,17 +6,8 @@ import { RiFileExcel2Fill } from "react-icons/ri";
 import MySearchInput from "../../../UI/MySearchInput";
 import { SearchContext } from "../../../context/SearchContext";
 
-const ProductAddAndSearchSection = ({
-  t,
-  products,
-  listItemRefs,
-  totalCount,
-  searchInputRef,
-  setProductAddModalOpen,
-  downloadFilteredExcel,
-}) => {
-  const { searchQuery, setSearchQuery, searchParams, setSearchParams } =
-    useContext(SearchContext);
+const ProductAddAndSearchSection = ({ t, products, listItemRefs, totalCount, searchInputRef, setProductAddModalOpen, downloadFilteredExcel }) => {
+  const { searchQuery, setSearchQuery, searchParams, setSearchParams } = useContext(SearchContext);
   const addIconRef = useRef(null);
   const hoverTimeoutRef = useRef(null);
   const [addIconHovered, setAddIconHovered] = useState(false);
@@ -25,6 +16,7 @@ const ProductAddAndSearchSection = ({
   const excelIconRef = useRef(null);
   const [excelIconHovered, setExcelIconHovered] = useState(false);
 
+  const sound_up_down = new Audio("/sounds/up_down.mp3");
   // Вместо прямого вызова setSearchQuery и setSearchParams при каждом onChange — запустим задержку (например, 300 мс).
   const [tempSearch, setTempSearch] = useState(searchQuery);
   const debounceTimeoutRef = useRef(null);
@@ -101,9 +93,7 @@ const ProductAddAndSearchSection = ({
               </span>
               <RiFileExcel2Fill
                 size={30}
-                className={`cursor-pointer rounded transition-transform duration-300 text-green-700 hover:text-green-600 ${
-                  excelIconIsAnimating ? "scale-125" : "scale-100"
-                }`}
+                className={`cursor-pointer rounded transition-transform duration-300 text-green-700 hover:text-green-600 ${excelIconIsAnimating ? "scale-125" : "scale-100"}`}
                 // ref={excelIconRef}
                 onClick={downloadFilteredExcel}
                 // onMouseEnter={() => {
@@ -133,11 +123,14 @@ const ProductAddAndSearchSection = ({
           onKeyDown={(e) => {
             if (e.key === "ArrowUp") {
               e.preventDefault();
-
+              sound_up_down.currentTime = 0;
+              sound_up_down.play();
               addIconRef.current?.focus();
             }
             if (e.key === "ArrowDown") {
               e.preventDefault();
+              sound_up_down.currentTime = 0;
+              sound_up_down.play();
               listItemRefs.current[0]?.focus();
             }
           }}

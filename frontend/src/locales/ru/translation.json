@@ -497,7 +497,8 @@
   "choose close date": "Выберите дату закрытия",
   "day success is closed" : "День успешно закрыт",
   "last day is not is closed": "Предыдущий день не закрыт",
-  "permission denied": "У вас не достаточно прав"
+  "permission denied": "У вас не достаточно прав",
+  "product exist": "Товар уже добавлен в список"
  
  
 

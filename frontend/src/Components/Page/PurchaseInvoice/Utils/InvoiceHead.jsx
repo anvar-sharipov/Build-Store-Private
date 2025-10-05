@@ -16,6 +16,8 @@ import myAxios from "../../../axios";
 import { ROUTES } from "./../../../../routes";
 import { useNotification } from "../../../context/NotificationContext";
 // import { DateContext } from "../../../UI/DateProvider";
+import { FaReceipt } from 'react-icons/fa';
+import PrintInvoiceButton from "./PrintInvoiceButton";
 
 const InvoiceHead = ({
   refs,
@@ -30,6 +32,7 @@ const InvoiceHead = ({
   userVisibleColumns,
   setFakturaType,
   id,
+  authGroup,
 }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -139,11 +142,11 @@ const InvoiceHead = ({
           <Settings className="w-6 h-6 text-gray-700 dark:text-gray-200" />
         </button>
         <div className="px-1">
-          <TypeFaktura setFakturaType={setFakturaType} />
+          <TypeFaktura setFakturaType={setFakturaType} authGroup={authGroup} />
         </div>
         |
         <div className="px-1">
-          <TypePrice />
+          <TypePrice authGroup={authGroup} />
         </div>
         {id && !values.already_entry && (
           <div>
@@ -241,6 +244,19 @@ const InvoiceHead = ({
             }}
             value={values.invoice_date2}
             disabled={values.already_entry}
+            className={`
+    w-full
+    px-3 py-2
+    border border-gray-300 dark:border-gray-700
+    rounded-md
+    bg-white dark:bg-gray-800
+    text-gray-900 dark:text-gray-100
+    placeholder-gray-400 dark:placeholder-gray-500
+    focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
+    focus:border-blue-500 dark:focus:border-blue-400
+    disabled:opacity-50 disabled:cursor-not-allowed
+    print:border-0 print:bg-transparent print:shadow-none print:outline-none
+  `}
           />
           {/* {touched.invoice_date && errors.invoice_date && <div className="text-red-500 text-sm mt-1">{errors.invoice_date}</div>} */}
         </div>
@@ -258,6 +274,7 @@ const InvoiceHead = ({
             }}
             value={values.invoice_date}
             className={invoiceClasses.dateInput}
+
           />
           {/* {touched.invoice_date && errors.invoice_date && <div className="text-red-500 text-sm mt-1">{errors.invoice_date}</div>} */}
         </div>
@@ -266,6 +283,11 @@ const InvoiceHead = ({
       {/* Заголовок */}
       <div className={invoiceClasses.zagolowok}>
         {t(values.wozwrat_or_prihod)} {t("faktura")} {values.id && values.id}
+      </div>
+
+      <div>
+        {/* <FaReceipt /> */}
+        <PrintInvoiceButton invoiceData={values} />
       </div>
 
       {/* Логотип */}

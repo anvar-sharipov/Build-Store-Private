@@ -13,10 +13,11 @@ import EmployeeList from "./EmployeeList";
 import { empDownloadExcel } from "./EmpDownloadExcel";
 import { RiFileExcel2Fill } from "react-icons/ri";
 
-
 const Employee = () => {
   const { t } = useTranslation();
   const [notification, setNotification] = useState({ message: "", type: "" });
+
+  const sound_up_down = new Audio("/sounds/up_down.mp3");
 
   const { authUser, authGroup } = useContext(AuthContext);
 
@@ -111,9 +112,6 @@ const Employee = () => {
   useEffect(() => {
     fetchEmployees();
   }, []);
-
-
-
 
   const fetchEmployees = async () => {
     setLoading(true);
@@ -210,9 +208,7 @@ const Employee = () => {
         name: editName,
       });
       showNotification("employeeUpdated", "success");
-      setEmployeesRaw((prev) =>
-        prev.map((s) => (s.id === editId ? res.data : s))
-      );
+      setEmployeesRaw((prev) => prev.map((s) => (s.id === editId ? res.data : s)));
       setOpenModal(false);
       listItemRefs.current[selectedListItemRef]?.focus();
     } catch (error) {
@@ -259,6 +255,8 @@ const Employee = () => {
       setEditId(s.id);
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
+      sound_up_down.currentTime = 0;
+      sound_up_down.play();
       if (i + 1 < employees.length) {
         listItemRefs.current[i + 1]?.focus();
       } else if (hasMore) {
@@ -266,6 +264,8 @@ const Employee = () => {
       }
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
+      sound_up_down.currentTime = 0;
+      sound_up_down.play();
       if (i === 0) {
         searchInputRef.current?.focus();
       } else {
@@ -277,12 +277,16 @@ const Employee = () => {
   const handleSearchKeyDown = (e) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
+      sound_up_down.currentTime = 0;
+      sound_up_down.play();
       if (employees.length > 0) {
         listItemRefs.current[0]?.focus();
       }
     }
     if (e.key === "ArrowUp") {
       e.preventDefault();
+      sound_up_down.currentTime = 0;
+      sound_up_down.play();
       // addInputRef.current?.focus();
 
       addIconButtonRef.current?.focus();
@@ -299,6 +303,8 @@ const Employee = () => {
     }
     if (e.key === "ArrowDown") {
       e.preventDefault();
+      sound_up_down.currentTime = 0;
+      sound_up_down.play();
       searchInputRef.current?.focus();
     }
     if (e.key === "Escape") {
@@ -317,6 +323,8 @@ const Employee = () => {
     }
     if (e.key === "ArrowDown") {
       e.preventDefault();
+      sound_up_down.currentTime = 0;
+      sound_up_down.play();
       refCancelUpdateButton.current?.focus();
     }
   };
@@ -394,11 +402,7 @@ const Employee = () => {
         />
       )}
 
-      <Notification
-        message={t(notification.message)}
-        type={notification.type}
-        onClose={() => setNotification({ message: "", type: "" })}
-      />
+      <Notification message={t(notification.message)} type={notification.type} onClose={() => setNotification({ message: "", type: "" })} />
 
       <div className="lg:hidden text-center">
         <div className="flex justify-between items-center">
@@ -406,17 +410,11 @@ const Employee = () => {
           <div className="text-gray-600 dark:text-gray-400 flex items-center gap-3 print:hidden">
             {filtered.length > 0 && (
               <div className="flex gap-3 items-center">
-                <span>
-                  {search
-                    ? `${t("found")}: ${filtered.length}`
-                    : `${t("total")}: ${filtered.length}`}
-                </span>
+                <span>{search ? `${t("found")}: ${filtered.length}` : `${t("total")}: ${filtered.length}`}</span>
 
                 <RiFileExcel2Fill
                   size={30}
-                  className={`cursor-pointer rounded transition-transform duration-300 text-green-700 hover:text-green-600 ${
-                    isAnimating ? "scale-125" : "scale-100"
-                  }`}
+                  className={`cursor-pointer rounded transition-transform duration-300 text-green-700 hover:text-green-600 ${isAnimating ? "scale-125" : "scale-100"}`}
                   onClick={() => {
                     empDownloadExcel(filtered, t);
                     setIsAnimating(true);
@@ -425,7 +423,6 @@ const Employee = () => {
                   tabIndex={0}
                   aria-label="Download Excel"
                 />
-                
               </div>
             )}
             {/* <FaPrint className="text-blue-500 text-lg hover:text-xl hover:text-red-500 transition-all duration-100" /> */}

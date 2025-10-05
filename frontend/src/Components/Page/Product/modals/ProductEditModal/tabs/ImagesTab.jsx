@@ -21,7 +21,7 @@ const ImagesTab = ({ options, product, setProduct, t }) => {
       <div className="flex items-start gap-4">
         <div className="flex-1">
           <label className="block text-sm font-medium mb-1">{t("qrCodeLabel")}</label>
-          <Field name="qr_code" className={myClass.input2} placeholder={t("qrCodePlaceholder")} autoComplete="off" disabled />
+          <Field name="qr_code" className={myClass.input2} placeholder={t("qrCodePlaceholder")} autoComplete="off" />
         </div>
         <div className="mt-6">
           <QRDisplay code={values.qr_code} />

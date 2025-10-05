@@ -98,5 +98,10 @@ urlpatterns = [
     path("delete_invoice/<int:id>/", delete_invoice, name="delete_invoice"),
     
     path("transaction_detail/<int:id>/", transaction_detail, name="transaction_detail"),
+    path('get_product_for_print_qr/', get_product_for_print_qr, name='get_product_for_print_qr'),
+    path('get_margin_date/', get_margin_date, name='get_margin_date'),
+    path('set_date_focus/', set_date_focus, name='set_date_focus'),
+    
+    
 ]
 

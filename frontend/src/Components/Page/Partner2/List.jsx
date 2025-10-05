@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
- 
+
 const List = ({
   partners,
   totalPages,
@@ -18,6 +18,7 @@ const List = ({
   setFocusedPartnerId,
 }) => {
   const { t } = useTranslation();
+  const sound_up_down = new Audio("/sounds/up_down.mp3");
   const openPartnerModal = (partner) => {
     // console.log("partner", partner);
 
@@ -69,6 +70,8 @@ const List = ({
             onKeyDown={(e) => {
               if (e.key === "ArrowDown") {
                 e.preventDefault();
+                sound_up_down.currentTime = 0;
+                sound_up_down.play();
                 if (partners.length > index + 1) {
                   partnersListRefs.current[index + 1]?.focus();
                 } else {
@@ -76,6 +79,8 @@ const List = ({
                 }
               } else if (e.key === "ArrowUp") {
                 e.preventDefault();
+                sound_up_down.currentTime = 0;
+                sound_up_down.play();
                 if (index !== 0) {
                   partnersListRefs.current[index - 1]?.focus();
                 } else {

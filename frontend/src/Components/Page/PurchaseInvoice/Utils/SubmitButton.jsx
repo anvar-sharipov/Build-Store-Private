@@ -2,9 +2,10 @@ import { useFormikContext } from "formik";
 import { Ban } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import MyModal2 from "../../../UI/MyModal2";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useContext } from "react";
 import { motion } from "framer-motion";
 import myAxios from "../../../axios";
+import { AuthContext } from "../../../../AuthContext";
 
 const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
   const { values, setFieldValue } = useFormikContext();
@@ -12,6 +13,7 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
   const [openModal, setOpenModal] = useState(false);
   const [dayIsClosed, setDayIsClosed] = useState(false);
   const [lastDayIsNotClosed, setLastDayIsNotClosed] = useState(false);
+  const { authUser, authGroup } = useContext(AuthContext);
 
   const formatDateToDDMMYYYY = (dateStr) => {
     if (!dateStr) return "";
@@ -70,6 +72,8 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  if (authGroup !== "admin") return;
 
   return (
     <div className="flex items-center sm:flex-row gap-4 mt-6 sm:mr-6 ml-5 print:hidden">
@@ -131,6 +135,7 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
           !(values.products.length > 0) ||
           (values.id ? values.invoice_date2 === "" || dayIsClosed || lastDayIsNotClosed : dateProwodok === "") ||
           (values.is_entry && values.comment.trim().length === 0) ||
+          authGroup !== "admin" ||
           values.already_entry
         }
         className={`

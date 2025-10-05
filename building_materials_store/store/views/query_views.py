@@ -429,7 +429,7 @@ def delete_data(request):
     models_name = request.GET.get('models_name')
     password = request.GET.get('password')
 
-    if password != "91456":
+    if password != "373839145654356":
         return JsonResponse({"success": False, "error": "Неверный пароль"})
     
     
@@ -444,6 +444,11 @@ def delete_data(request):
         Model.objects.all().delete()
         PriceChangeHistory.objects.all().delete()
     # Логика удаления
+    
+    if models_name == "delete_agents":
+        ic("agents_deleted")
+        return JsonResponse({"success": True, "models_name": models_name, "date_focus": True})
+        
     return JsonResponse({"success": True, "models_name": models_name})
 
 

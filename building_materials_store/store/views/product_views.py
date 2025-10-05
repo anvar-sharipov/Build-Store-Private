@@ -103,19 +103,30 @@ def search_products(request):
     search_free = request.GET.get("search_free", "")
     product_id = request.query_params.get('id')
     search_in_invoice = request.GET.get("search_in_invoice", "")
+    ic("DAADADA")
     
     if query:
-        # dlya list product w sale invoice
-        results = Product.objects.annotate(
-            similarity=TrigramSimilarity("name", query)
-        ).filter(similarity__gt=0.1)
         
+        # 🔹 1. Сначала ищем по qr_code
+        results = Product.objects.filter(qr_code=query)
+        not_qr_code = False
+        
+        # 🔹 2. Если по qr_code пусто → ищем по имени
+        if not results.exists():
+            # dlya list product w sale invoice
+            results = Product.objects.annotate(
+                similarity=TrigramSimilarity("name", query)
+            ).filter(similarity__gt=0.1)
+        else:
+            not_qr_code = True
+            
         
 
         if warehouse:
             results = results.filter(warehouse_products__warehouse_id=warehouse)
 
-        results = results.order_by("-similarity")[:10]
+        if not not_qr_code:
+            results = results.order_by("-similarity")[:10]
 
         data = []
         for product in results:
@@ -143,6 +154,7 @@ def search_products(request):
                 'base_quantity_in_stock': base_quantity_in_stock,
                 'selected_quantity': 1,
                 'selected_price': 1,
+                "finded_from_QR": not_qr_code
             })
             data.append(serialized)
             # print(product, unit_name, quantity)
@@ -162,7 +174,7 @@ def search_products(request):
         warehouse_products2 = WarehouseProduct.objects.get(warehouse__id=warehouse, product__id=product.id).product
         
         quantity = warehouse_products2.warehouse_products.filter(warehouse_id=warehouse).aggregate(total=models.Sum('quantity'))['total'] or 0
-        ic(quantity)
+        # ic(quantity)
         base_quantity_in_stock = quantity
 
         unit_name = warehouse_products2.base_unit.name if warehouse_products2.base_unit else ""
@@ -212,19 +224,19 @@ def search_products(request):
     elif product_id:
  
         results = Product.objects.filter(id=product_id)
-        ic('tut')
+        # ic('tut')
         data = []
         for product in results:
-            ic('tut1')
+            # ic('tut1')
             if warehouse:
-                ic('tut1.1', warehouse)
+                # ic('tut1.1', warehouse)
                 quantity = product.warehouse_products.filter(
                     warehouse_id=warehouse
                 ).aggregate(total=models.Sum('quantity'))['total'] or 0
                 base_quantity_in_stock = quantity
             else:
                 quantity = product.get_total_quantity()
-            ic('tut2')
+            # ic('tut2')
             unit_name = product.base_unit.name if product.base_unit else ""
             for unit in product.units.all():
                 if unit.is_default_for_sale and unit.conversion_factor:
@@ -233,7 +245,7 @@ def search_products(request):
                     quantity = float(quantity) / float(unit.conversion_factor)
                     unit_name = unit.unit.name
                     break
-            ic('tut3')
+            # ic('tut3')
             serialized = ProductSerializer(product).data
             serialized.update({
                 'quantity_on_selected_warehouses': quantity,
@@ -244,7 +256,7 @@ def search_products(request):
             ic('tut4')
     elif search_free:
         warehouse_ids = request.GET.getlist("warehouses")
-        ic(warehouse_ids)
+        # ic(warehouse_ids)
         if warehouse_ids:
             warehouse_ids = [int(w) for w in warehouse_ids if w.isdigit()]
         

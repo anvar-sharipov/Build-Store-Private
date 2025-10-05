@@ -41,12 +41,14 @@ from store.models import CustomUser, Warehouse, Account, Employee, Agent, Partne
 #     print(f'Superuser {username} added to "admin" group')
 
 # # --- Создание складов ---
-# for w in ["Sklad polisem 1", "Sklad polisem 2", "Sklad polisem 3"]:
+# for w in ["Sklad 1", "Sklad 2"]:
 #     warehouse, created = Warehouse.objects.get_or_create(name=w)
 #     if created:
 #         print(f'Warehouse "{w}" created successfully!')
 #     else:
 #         print(f'Warehouse "{w}" already exists.')
+
+
 
 # # --- Создание счетов ---
 # accounts_data = [
@@ -56,9 +58,12 @@ from store.models import CustomUser, Warehouse, Account, Employee, Agent, Partne
 #     {"number": "46.1", "name": "Доходы, Клиент", "type": "dohod", "description": "Доходы, Клиент", "parent": "46"},
 #     {"number": "46.2", "name": "Доходы, Учредитель", "type": "dohod", "description": "Доходы, Учредитель", "parent": "46"},
 #     {"number": "40", "name": "Склад", "type": "dohod", "description": "Склад", "parent": None},
+#     {"number": "40.1", "name": "Sklad 1", "type": "dohod", "description": "Sklad 1", "parent": 40},
+#     {"number": "40.2", "name": "Sklad 2", "type": "dohod", "description": "Sklad 2", "parent": 40},
 #     {"number": "50", "name": "Касса USD", "type": "dohod", "description": "Касса USD", "parent": None},
 #     {"number": "80", "name": "Фонд", "type": "dohod", "description": "Фонд", "parent": None},
 # ]
+
 
 # accounts = {}
 # for acc in accounts_data:
@@ -79,13 +84,24 @@ from store.models import CustomUser, Warehouse, Account, Employee, Agent, Partne
 #     else:
 #         print(f'Account {acc["number"]} "{acc["name"]}" already exists.')
 
+
+# # --- Привязать склад к сабсчетам ---
+# acc40_1 = Account.objects.get(number="40.1")
+# acc40_2 = Account.objects.get(number="40.2")
+# warehouse_1 = Warehouse.objects.get(name="Sklad 1")
+# warehouse_2 = Warehouse.objects.get(name="Sklad 2")
+# account, created = WarehouseAccount.objects.get_or_create(warehouse = warehouse_1, account = acc40_1)
+# account, created = WarehouseAccount.objects.get_or_create(warehouse = warehouse_2, account = acc40_2)
+
+
 # # --- Создание работника ---
-# employee_name = "Shohrat, FUSO"
-# employee, created = Employee.objects.get_or_create(name=employee_name)
-# if created:
-#     print(f'Employee "{employee_name}" created successfully!')
-# else:
-#     print(f'Employee "{employee_name}" already exists.')
+# for e in ["Shohrat, FUSO", "Anvar, KIA"]:
+#     employee_name = e
+#     employee, created = Employee.objects.get_or_create(name=employee_name)
+#     if created:
+#         print(f'Employee "{employee_name}" created successfully!')
+#     else:
+#         print(f'Employee "{employee_name}" already exists.')
 
 # # --- Создание агентов ---
 # agent_names = ["Agent Smith", "Agent Ali", "Agent Timur", "Agent Ayna", "Agent Rasul"]
@@ -98,8 +114,8 @@ from store.models import CustomUser, Warehouse, Account, Employee, Agent, Partne
 # # --- Создание партнёров ---
 # partners_data = [
 #     {"name": "Merdan, Oktyabrsk, +99361335689", "type": Partner.BUYER},
-#     {"name": "Ayna, Ashgabat, +99365011234", "type": Partner.SUPPLIER},
-#     {"name": "Rasul, Mary, +99361222333", "type": Partner.BOTH},
+#     {"name": "Ayna, Ashgabat, +99365011234", "type": Partner.FOUNDER},
+#     {"name": "Rasul, Mary, +99361222333", "type": Partner.BUYER},
 #     {"name": "Annageldi, Balkan, +99364444555", "type": Partner.FOUNDER},
 # ]
 
@@ -118,26 +134,6 @@ from store.models import CustomUser, Warehouse, Account, Employee, Agent, Partne
 #         print(f'Partner "{partner.name}" created with agent "{agent}"')
 #     else:
 #         print(f'Partner "{partner.name}" already exists.')
-
-#     # # --- Привязка account через PartnerAccount ---
-#     # account = None
-#     # role = pdata["type"]
-#     # if pdata["type"] == Partner.FOUNDER:
-#     #     account = Account.objects.get(number="75")
-#     # elif pdata["type"] in [Partner.BOTH, Partner.BUYER]:
-#     #     account = Account.objects.get(number="60")
-#     # # SUPPLIER оставляем без account
-
-#     # if account:
-#     #     pa, pa_created = PartnerAccount.objects.get_or_create(
-#     #         partner=partner,
-#     #         account=account,
-#     #         role=role
-#     #     )
-#     #     if pa_created:
-#     #         print(f'PartnerAccount created for "{partner.name}" with account {account.number} ({role})')
-#     #     else:
-#     #         print(f'PartnerAccount already exists for "{partner.name}" with account {account.number} ({role})')
 
 
 # # --- Создание категорий ---
@@ -211,9 +207,8 @@ from store.models import CustomUser, Warehouse, Account, Employee, Agent, Partne
 # )[0]
 
 # # Добавляем количеста по складам продукта Polisem 18 litrow
-# w1 = Warehouse.objects.get(name="Sklad polisem 1")
-# w2 = Warehouse.objects.get(name="Sklad polisem 2")
-# w3 = Warehouse.objects.get(name="Sklad polisem 3")
+# w1 = Warehouse.objects.get(name="Sklad 1")
+# w2 = Warehouse.objects.get(name="Sklad 2")
 # WarehouseProduct.objects.update_or_create(
 #     warehouse=w1,
 #     product=product_kraska,
@@ -224,11 +219,7 @@ from store.models import CustomUser, Warehouse, Account, Employee, Agent, Partne
 #     product=product_kraska,
 #     defaults={"quantity": 14400}
 # )
-# WarehouseProduct.objects.update_or_create(
-#     warehouse=w3,
-#     product=product_kraska,
-#     defaults={"quantity": 28800}
-# )
+
 
 
 # # --- Добавление единиц для продукта ---
@@ -289,6 +280,7 @@ from store.models import CustomUser, Warehouse, Account, Employee, Agent, Partne
 
 #     print(f'Random product "{product.name}" created with units and tags')
 
+
 # # --- Создание правил проводок ---
 # operation_data = [
 #     {"code": "sale", "name": "Продажа фактура"},
@@ -300,6 +292,58 @@ from store.models import CustomUser, Warehouse, Account, Employee, Agent, Partne
 #         code=o["code"],
 #         defaults={"name": o["name"]}
 #     )
+
+# sale = Operation.objects.get(code="sale")
+# pays = Operation.objects.get(code="pays")
+
+# debit_account = Account.objects.get(number="60")
+# credit_account = Account.objects.get(number="40")
+
+# CustomePostingRule.objects.get_or_create(
+#     operation=sale, 
+#     directory_type="klient", 
+#     amount_type="revenue",
+#     debit_account=debit_account,
+#     credit_account=credit_account,
+#     defaults={"description": "Sale faktura, klient, Продажа"}
+# )
+
+# debit_account = Account.objects.get(number="46.1")
+# credit_account = Account.objects.get(number="80")
+
+# CustomePostingRule.objects.get_or_create(
+#     operation=sale, 
+#     directory_type="klient", 
+#     amount_type="profit",
+#     debit_account=debit_account,
+#     credit_account=credit_account,
+#     defaults={"description": "Sale faktura, klient, Прибыль"}
+# )
+
+# debit_account = Account.objects.get(number="75")
+# credit_account = Account.objects.get(number="40")
+
+# CustomePostingRule.objects.get_or_create(
+#     operation=sale, 
+#     directory_type="founder", 
+#     amount_type="revenue",
+#     debit_account=debit_account,
+#     credit_account=credit_account,
+#     defaults={"description": "Sale faktura, founder, Продажа"}
+# )
+
+# debit_account = Account.objects.get(number="46.2")
+# credit_account = Account.objects.get(number="80")
+
+# CustomePostingRule.objects.get_or_create(
+#     operation=sale, 
+#     directory_type="founder", 
+#     amount_type="profit",
+#     debit_account=debit_account,
+#     credit_account=credit_account,
+#     defaults={"description": "Sale faktura, founder, Прибыль"}
+# )
+
 
 EOF
 

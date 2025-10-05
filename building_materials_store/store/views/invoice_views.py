@@ -48,7 +48,12 @@ def normalize_date(date_str: str) -> str:
 @permission_classes([IsAuthenticated])
 def save_invoice(request):
     if request.method == "POST":
-        ic('save_invoice', request.user)
+        # ic('save_invoice', request.user)
+        if not request.user.groups.filter(name="admin").exists():
+            return JsonResponse({"status": "error", "message": "permission denied"}, status=403)
+                
+                
+        
         
         # def create_entries(transaction_obj, rule, product_obj, warehouse_obj, amount):
         #     Entry.objects.create(

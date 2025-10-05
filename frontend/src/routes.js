@@ -11,6 +11,8 @@ export const ROUTES = {
   PURCHASE_INVOICE_UPDATE: "/purchase-invoices/update/:id",
   ENTRIES: "/entries",
   // ACCOUNT: "/account",
+  REPORTS: "/reports",
+  PROCHEE: "/prochee",
   
 };
 
@@ -22,6 +24,7 @@ export const ROUTES_RAPORT = {
 export const PROCHEE = {
   PARTNER_TRANSACTION_ENTRY: "/partner_transaction_entry",
   OSW: "/osw",
+  QR_LIST_PRINT: "/prochee/qr-list-print",
 };
 
 

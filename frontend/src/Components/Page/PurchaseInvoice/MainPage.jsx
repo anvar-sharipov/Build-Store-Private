@@ -78,6 +78,7 @@ const MainPage = () => {
   const navigate = useNavigate();
   const [initialValues, setInitialValues] = useState(null);
   const { showNotification } = useNotification();
+  const [dateMargin, setDateMargin] = useState("")
 
   const { authUser, authGroup } = useContext(AuthContext);
 
@@ -141,6 +142,19 @@ const MainPage = () => {
   useEffect(() => {
     localStorage.setItem("letPrintInfo", letPrintInfo);
   }, [letPrintInfo]);
+
+  useEffect(() => {
+    const get_margin_date = async () => {
+      try {
+        const res = await myAxios.get("/get_margin_date")
+        setDateMargin(res.data.date_focus)
+        
+      } catch (error) {
+        console.log("cant get margin date", error);
+      }
+    }
+    get_margin_date()
+  }, [])
 
   const [visibleColumns, setVisibleColumns] = useState(() => {
     const saved = localStorage.getItem("visibleColumnsPurchase");
@@ -252,7 +266,15 @@ const MainPage = () => {
         validationSchema={validationSchema}
         onSubmit={async (values, { resetForm }) => {
           console.log("Успешно отправлено values", values);
-          // console.log("FFFFFFFFF values");
+          const date_margin = localStorage.getItem("date_margin"); // "2025-10-04"
+          const today = new Date();
+          const todayStr = today.toISOString().split("T")[0]; // "2025-10-04"
+          // Способ 1: через строки (т.к. YYYY-MM-DD сравниваются корректно)
+          if (todayStr > date_margin || date_margin !== dateMargin) {
+            showNotification(t("permission denied"), "error")
+            return;
+          }
+
 
           try {
             const response = await myAxios.post("/save-invoice/", values, {
@@ -323,8 +345,9 @@ const MainPage = () => {
                 setFakturaType={setFakturaType}
                 id={id}
                 showNotification={showNotification}
+                authGroup={authGroup}
               />
-              <fieldset disabled={values.already_entry}>
+              <fieldset disabled={values.already_entry || authGroup !== "admin"}>
                 <div className="grid grid-cols-1 md:grid-cols-10 gap-4 print:block">
                   {/* Левая колонка */}
                   <div className="col-span-3 print:hidden">

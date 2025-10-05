@@ -69,34 +69,105 @@ const Head = ({ mainRefs, handleOpenInvoice, setQuery, query, invoices }) => {
           ref={mainRefs.searchInputRef}
           onChange={(e) => setQuery(e.target.value)}
           value={query}
+          // onKeyDown={(e) => {
+          //   if (e.key === "ArrowDown") {
+          //     e.preventDefault();
+          //     sound.currentTime = 0; // сброс, чтобы можно было быстро подряд
+          //     sound.play();
+
+          //     const ids = invoices.map((inv) => inv.id); // порядок соответствует списку
+          //     if (ids.length > 0) {
+          //       mainRefs.listRefs.current[ids[0]]?.focus();
+          //     }
+
+          //   }
+          // }}
+
           onKeyDown={(e) => {
             if (e.key === "ArrowDown") {
               e.preventDefault();
               sound.currentTime = 0; // сброс, чтобы можно было быстро подряд
               sound.play();
-              // if (mainRefs.listRefs.current > 0) {
-              //   mainRefs.listRefs?.current[0].focus();
-              // }
-
-              // const ids = Object.keys(mainRefs.listRefs.current);
-              // console.log("ids", ids);
-              // if (ids.length > 0) {
-              //   mainRefs.listRefs.current[ids[0]].focus();
-              // }
 
               const ids = invoices.map((inv) => inv.id); // порядок соответствует списку
               if (ids.length > 0) {
-                mainRefs.listRefs.current[ids[0]]?.focus();
+                mainRefs.listRefs.current[`desktop_${ids[0]}`]?.focus();
+                mainRefs.listRefs.current[`large_${ids[0]}`]?.focus();
+                mainRefs.listRefs.current[`laptop_${ids[0]}`]?.focus();
+                mainRefs.listRefs.current[`mobile_${ids[0]}`]?.focus();
               }
-
-              // const firstEl = mainRefs.listRefs.current[Object.keys(mainRefs.listRefs.current)[0]];
-              // // console.log("tttttttt ==== ", firstEl);
-              // if (firstEl) {
-              //   firstEl.focus();
-              //   // console.log("tut");
-              // }
             }
           }}
+
+          // onKeyDown={(e) => {
+          //   if (e.key === "ArrowDown") {
+          //     e.preventDefault();
+          //     sound.currentTime = 0;
+          //     sound.play();
+
+          //     // Небольшая задержка для гарантии обновления DOM
+          //     setTimeout(() => {
+          //       const ids = invoices.map((inv) => inv.id);
+          //       console.log("Search -> ArrowDown: Focusing first of", ids.length, "items");
+
+          //       if (ids.length > 0) {
+          //         const firstId = ids[0];
+          //         const firstElement = mainRefs.listRefs.current[firstId];
+
+          //         if (firstElement) {
+          //           firstElement.focus();
+          //           console.log("✅ Successfully focused element:", firstId);
+          //         } else {
+          //           console.warn("❌ Element not found in refs:", firstId);
+          //           console.log("Available refs:", Object.keys(mainRefs.listRefs.current));
+          //         }
+          //       }
+          //     }, 10);
+          //   }
+          // }}
+
+          // onKeyDown={(e) => {
+          //   if (e.key === "ArrowDown") {
+          //     e.preventDefault();
+          //     sound.currentTime = 0;
+          //     sound.play();
+
+          //     setTimeout(() => {
+          //       const ids = invoices.map((inv) => inv.id);
+          //       console.log("Search -> ArrowDown: Focusing first of", ids.length, "items");
+
+          //       if (ids.length > 0) {
+          //         const firstId = ids[0];
+          //         const firstElement = mainRefs.listRefs.current[firstId];
+
+          //         if (firstElement) {
+          //           // Принудительно делаем элемент фокусируемым
+          //           firstElement.setAttribute("tabindex", "0");
+
+          //           // Фокусируем
+          //           firstElement.focus({ preventScroll: false });
+
+          //           // Прокручиваем к элементу
+          //           firstElement.scrollIntoView({
+          //             behavior: "smooth",
+          //             block: "nearest",
+          //             inline: "nearest",
+          //           });
+
+          //           // Добавляем временный стиль для визуализации
+          //           firstElement.style.boxShadow = "0 0 0 3px red";
+          //           setTimeout(() => {
+          //             firstElement.style.boxShadow = "";
+          //           }, 1000);
+
+          //           console.log("✅ Successfully focused and scrolled to element:", firstId);
+          //         } else {
+          //           console.warn("❌ Element not found in refs:", firstId);
+          //         }
+          //       }
+          //     }, 50);
+          //   }
+          // }}
         />
       </div>
     </div>

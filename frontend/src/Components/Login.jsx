@@ -5,6 +5,7 @@ import { FiUser, FiLock } from "react-icons/fi";
 import myAxios from "./axios";
 import { useTranslation } from "react-i18next";
 import Notification from "./Notification";
+import { ROUTES } from "../routes";
 
 export default function Login() {
   const { t } = useTranslation();
@@ -69,7 +70,7 @@ export default function Login() {
         localStorage.setItem("refresh", res.data.refresh);
         setMessageType("success");
         setMessage("Успешный вход");
-        window.location = "/main";
+        window.location = ROUTES.PURCHASEINVOICE;
       })
       .catch(() => {
         setMessageType("error");

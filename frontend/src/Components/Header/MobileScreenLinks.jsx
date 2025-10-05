@@ -48,11 +48,11 @@ const MobileScreenLinks = ({ isMenuOpen, ROUTES, setIsMenuOpen, t, logout, i18n,
           className="lg:hidden flex justify-between items-start gap-2 mt-3"
         >
           <div className="flex flex-col gap-2">
-            <Link to={ROUTES.MAIN} className="hover:underline text-blue-500 hover:text-blue-700 flex gap-1 items-center" onClick={() => setIsMenuOpen(false)}>
+            {/* <Link to={ROUTES.MAIN} className="hover:underline text-blue-500 hover:text-blue-700 flex gap-1 items-center" onClick={() => setIsMenuOpen(false)}>
               {t("sales_invoice")}
-            </Link>
+            </Link> */}
             <Link to={ROUTES.PURCHASEINVOICE} className="hover:underline text-blue-500 hover:text-blue-700 flex gap-1 items-center" onClick={() => setIsMenuOpen(false)}>
-              {t("purchase_invoice")}
+              {t("faktura")}
             </Link>
             <Link to={ROUTES.EMPLOYEERS} className="hover:underline text-blue-500 hover:text-blue-700 flex gap-1 items-center" onClick={() => setIsMenuOpen(false)}>
               {t("employeers")}

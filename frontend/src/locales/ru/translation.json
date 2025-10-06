@@ -498,7 +498,13 @@
   "day success is closed" : "День успешно закрыт",
   "last day is not is closed": "Предыдущий день не закрыт",
   "permission denied": "У вас не достаточно прав",
-  "product exist": "Товар уже добавлен в список"
+  "product exist": "Товар уже добавлен в список",
+  "u dont have a rule for prihod": "Нет правила проводки для приход фактуры",
+  "u have more rule than 1 for prihod faktura": "Больше 1 правила для приход фактура",
+  "u dont have a rule for wozwrat": "Нет правила проводки для возврат фактуры",
+  "u have more rule than 1 for prwozwratihod faktura": "Больше 1 правила для возврат фактура",
+  "rule must have revenue": "В правиле проводок должна быть опция продажа",
+  "print receipt":"Печать чека"
  
  
 

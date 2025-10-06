@@ -78,7 +78,7 @@ const MainPage = () => {
   const navigate = useNavigate();
   const [initialValues, setInitialValues] = useState(null);
   const { showNotification } = useNotification();
-  const [dateMargin, setDateMargin] = useState("")
+  const [dateMargin, setDateMargin] = useState("");
 
   const { authUser, authGroup } = useContext(AuthContext);
 
@@ -146,15 +146,14 @@ const MainPage = () => {
   useEffect(() => {
     const get_margin_date = async () => {
       try {
-        const res = await myAxios.get("/get_margin_date")
-        setDateMargin(res.data.date_focus)
-        
+        const res = await myAxios.get("/get_margin_date");
+        setDateMargin(res.data.date_focus);
       } catch (error) {
         console.log("cant get margin date", error);
       }
-    }
-    get_margin_date()
-  }, [])
+    };
+    get_margin_date();
+  }, []);
 
   const [visibleColumns, setVisibleColumns] = useState(() => {
     const saved = localStorage.getItem("visibleColumnsPurchase");
@@ -258,23 +257,41 @@ const MainPage = () => {
     }
   };
 
+  const getSaldo = async (date, partnerId) => {
+    try {
+      const saldo = await myAxios.get("get_saldo_for_partner_for_selected_date", {
+        params: { date: date, partnerId: partnerId },
+      });
+      console.log("saldo", saldo.data.saldo);
+      setSaldo(saldo.data.saldo);
+      // console.log('DADADADAD');
+    } catch (error) {
+      console.log("error get_saldo_for_partner_for_selected_date from fetchPartner", error);
+    }
+  };
+
   return (
     <div>
       <Formik
         initialValues={initialValues}
         enableReinitialize={true}
         validationSchema={validationSchema}
-        onSubmit={async (values, { resetForm }) => {
+        onSubmit={async (values, { resetForm, setFieldValue  }) => {
           console.log("Успешно отправлено values", values);
           const date_margin = localStorage.getItem("date_margin"); // "2025-10-04"
           const today = new Date();
           const todayStr = today.toISOString().split("T")[0]; // "2025-10-04"
           // Способ 1: через строки (т.к. YYYY-MM-DD сравниваются корректно)
-          if (todayStr > date_margin || date_margin !== dateMargin) {
-            showNotification(t("permission denied"), "error")
+          if (todayStr < date_margin || date_margin !== dateMargin) {
+            // console.log("permission denied GGGGG, todayStr today", todayStr);
+            // console.log("permission denied GGGGG date_margin", date_margin );
+            // console.log("permission denied GGGGG dateMargin db", dateMargin);
+            // console.log("permission denied GGGGG dateMargin todayStr > date_margin", todayStr > date_margin);
+            // console.log("permission denied GGGGG dateMargin date_margin !== dateMargin", date_margin !== dateMargin);
+
+            showNotification(t("permission denied"), "error");
             return;
           }
-
 
           try {
             const response = await myAxios.post("/save-invoice/", values, {
@@ -284,6 +301,9 @@ const MainPage = () => {
             });
 
             console.log("Успешно отправлено", response.data);
+            if (response.data.already_entry) {
+              setFieldValue("already_entry", true)
+            }
             if (response.data?.is_updated) {
               showNotification(`${t("faktura")} № ${response.data.id} ${t("saved")}`, "faktura_success");
               // setTimeout(() => {
@@ -296,6 +316,9 @@ const MainPage = () => {
 
             // console.log("response.data.id", response.data);
             handleOpenInvoice(response.data.id);
+            if(values.partner?.id) {
+              getSaldo(values.invoice_date2, values.partner?.id);
+            }
             // setSaldo(null)
             // resetForm();
           } catch (error) {
@@ -357,7 +380,7 @@ const MainPage = () => {
                     >
                       <FetchWarehouse />
                       <FetchAwto refs={refs} />
-                      <FetchPartner refs={refs} setSaldo={setSaldo} dateProwodok={dateProwodok} saldo={saldo} />
+                      <FetchPartner refs={refs} setSaldo={setSaldo} dateProwodok={dateProwodok} saldo={saldo} getSaldo={getSaldo} />
                       <Comment />
                     </div>
                     <Saldo saldo={saldo} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} />

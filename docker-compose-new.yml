@@ -1,0 +1,61 @@
+version: "3.9"
+
+services:
+  db_new:
+    build: ./postgres_new
+    image: new_postgres
+    container_name: new_postgres
+    restart: unless-stopped
+    env_file: .env_new
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    volumes:
+      - postgres_data_new:/var/lib/postgresql/data
+      - ./init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+      # - ./init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    networks:
+      - appnet_new
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./building_materials_store
+    image: new_backend
+    container_name: new_backend
+    restart: unless-stopped
+    env_file: .env_new
+    depends_on:
+      db_new:
+        condition: service_healthy  # Ждём пока БД будет готова
+    ports:
+      - "8001:8000"
+    networks:
+      - appnet_new
+    volumes:
+      - media_data_new:/app/media    # подключаем отдельный volume для media
+    command: ["./entrypoint.sh", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+  frontend:
+    build: ./frontend
+    image: new_frontend
+    container_name: new_frontend
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+    networks:
+      - appnet_new
+    depends_on:
+      backend:
+        condition: service_started  # Ждем запуска backend
+
+volumes:
+  postgres_data_new:
+  media_data_new:  # теперь volume для media явно создан
+
+networks:
+  appnet_new:

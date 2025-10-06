@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import myAxios from "../../../axios";
 import Fuse from "fuse.js";
 
-const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
+const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo, getSaldo }) => {
   const { t } = useTranslation();
   const { values, setFieldValue, handleBlur } = useFormikContext();
   const [isFocused, setIsFocused] = useState(false);
@@ -22,18 +22,18 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo }) => {
   const [allPartners, setAllPartners] = useState([]);
   const [filteredPartners, setFilteredPartners] = useState([]);
 
-  const getSaldo = async (date, partnerId) => {
-    try {
-      const saldo = await myAxios.get("get_saldo_for_partner_for_selected_date", {
-        params: { date: date, partnerId: partnerId },
-      });
-      console.log("saldo", saldo.data.saldo);
-      setSaldo(saldo.data.saldo);
-      // console.log('DADADADAD');
-    } catch (error) {
-      console.log("error get_saldo_for_partner_for_selected_date from fetchPartner", error);
-    }
-  };
+  // const getSaldo = async (date, partnerId) => {
+  //   try {
+  //     const saldo = await myAxios.get("get_saldo_for_partner_for_selected_date", {
+  //       params: { date: date, partnerId: partnerId },
+  //     });
+  //     console.log("saldo", saldo.data.saldo);
+  //     setSaldo(saldo.data.saldo);
+  //     // console.log('DADADADAD');
+  //   } catch (error) {
+  //     console.log("error get_saldo_for_partner_for_selected_date from fetchPartner", error);
+  //   }
+  // };
 
   if (values.id) {
     useEffect(() => {

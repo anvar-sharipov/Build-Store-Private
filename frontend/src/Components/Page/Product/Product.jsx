@@ -12,19 +12,11 @@ import { SearchContext } from "../../context/SearchContext";
 import ProductList from "./sections/ProductList";
 import ProductEditModal2 from "./modals/ProductEditModal/ProductEditModal2";
 import ProductAddModal from "./modals/ProductAddModal/ProductAddModal";
-import {
-  fetchUnits,
-  fetchCategories,
-  fetchBrands,
-  fetchModels,
-  fetchTags,
-  fetchWarehouses,
-} from "../../fetchs/optionsFetchers";
+import { fetchUnits, fetchCategories, fetchBrands, fetchModels, fetchTags, fetchWarehouses } from "../../fetchs/optionsFetchers";
 import ProductDeleteModal from "./modals/ProductDeleteModal";
 
 const Harytlar = () => {
-  const { searchQuery, setSearchQuery, searchParams, setSearchParams } =
-    useContext(SearchContext);
+  const { searchQuery, setSearchQuery, searchParams, setSearchParams } = useContext(SearchContext);
   const { t } = useTranslation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -98,9 +90,7 @@ const Harytlar = () => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `products_export_${new Date()
-          .toISOString()
-          .slice(0, 10)}.xlsx`;
+        a.download = `products_export_${new Date().toISOString().slice(0, 10)}.xlsx`;
 
         document.body.appendChild(a);
         a.click();
@@ -153,15 +143,7 @@ const Harytlar = () => {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [units, categories, brands, models, tags, warehouses] =
-          await Promise.all([
-            fetchUnits(),
-            fetchCategories(),
-            fetchBrands(),
-            fetchModels(),
-            fetchTags(),
-            fetchWarehouses(),
-          ]);
+        const [units, categories, brands, models, tags, warehouses] = await Promise.all([fetchUnits(), fetchCategories(), fetchBrands(), fetchModels(), fetchTags(), fetchWarehouses()]);
 
         if (units) {
           const formattedUnits = units.map((unit) => ({
@@ -266,9 +248,7 @@ const Harytlar = () => {
         // если это "Загрузить ещё" — добавляем к текущему + защита от дублей:
         setProducts((prev) => {
           const existingIds = new Set(prev.map((p) => p.id));
-          const newItems = res.data.results.filter(
-            (p) => !existingIds.has(p.id)
-          );
+          const newItems = res.data.results.filter((p) => !existingIds.has(p.id));
           return [...prev, ...newItems];
         });
       }
@@ -347,7 +327,7 @@ const Harytlar = () => {
           setOpenDeleteModal={setOpenDeleteModal}
         />
       ) : (
-        <div>net product</div>
+        <MyLoading />
       )}
 
       {productEditModal2.open && (
@@ -381,21 +361,9 @@ const Harytlar = () => {
         />
       )}
 
-      <Notification
-        message={t(notification.message)}
-        type={notification.type}
-        onClose={() => setNotification({ message: "", type: "" })}
-      />
+      <Notification message={t(notification.message)} type={notification.type} onClose={() => setNotification({ message: "", type: "" })} />
 
-      {openDeleteModal.open && (
-        <ProductDeleteModal
-          setOpenDeleteModal={setOpenDeleteModal}
-          openDeleteModal={openDeleteModal}
-          deleteProduct={deleteProduct}
-          loadingDeleteId={loadingDeleteId}
-          t={t}
-        />
-      )}
+      {openDeleteModal.open && <ProductDeleteModal setOpenDeleteModal={setOpenDeleteModal} openDeleteModal={openDeleteModal} deleteProduct={deleteProduct} loadingDeleteId={loadingDeleteId} t={t} />}
     </div>
   );
 };

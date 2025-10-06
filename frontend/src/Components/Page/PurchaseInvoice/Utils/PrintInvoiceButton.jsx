@@ -1,9 +1,11 @@
 import React, { useRef } from "react";
 import { FaReceipt } from "react-icons/fa";
 import { formatNumber } from "../../../UI/formatNumber";
+import { useTranslation } from "react-i18next";
 
 const PrintInvoiceButton = ({ invoiceData }) => {
   const printRef = useRef();
+  const { t } = useTranslation();
 
   const handlePrint = () => {
     const printContents = printRef.current.innerHTML;
@@ -76,7 +78,7 @@ const PrintInvoiceButton = ({ invoiceData }) => {
   return (
     <div>
       <button type="button" onClick={handlePrint} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
-        Печать чека
+        {t("print receipt")}
       </button>
 
       <div ref={printRef} style={{ display: "none" }}>
@@ -104,20 +106,18 @@ const PrintInvoiceButton = ({ invoiceData }) => {
           </thead>
           <tbody>
             {invoiceData.products.map((p) => {
-                console.log("p", p);
+              console.log("p", p);
 
-                let conversion_factor = 1
-                let unit = p.base_unit_obj.name
-                if (p.units && p.units.length > 0) {
-                    const selected_unit = p.units.find((u) => u.is_default_for_sale === true);
-                    if (selected_unit) {
-                        conversion_factor = selected_unit.conversion_factor
-                        unit = selected_unit.unit_name
-                    }
+              let conversion_factor = 1;
+              let unit = p.base_unit_obj.name;
+              if (p.units && p.units.length > 0) {
+                const selected_unit = p.units.find((u) => u.is_default_for_sale === true);
+                if (selected_unit) {
+                  conversion_factor = selected_unit.conversion_factor;
+                  unit = selected_unit.unit_name;
                 }
+              }
 
-
-                
               return (
                 <tr key={p.id}>
                   <td>{p.name}</td>

@@ -467,7 +467,13 @@
   "day success is closed": "Gün üstünlikli ýapylldy",
   "last day is not is closed": "Öňki gün ýapylmady",
   "permission denied": "Siziň ýeterlik hukuklaryňyz ýok",
-  "product exist": "Haryt eýýäm sanawa goşuldy"
+  "product exist": "Haryt eýýäm sanawa goşuldy",
+  "u dont have a rule for prihod": "Faktura boýunça girdeji geçirmek üçin düzgün ýok",
+  "u have more rule than 1 for prihod faktura": "Faktura boýunça girdeji geçirmek üçin düzgün 1-den köp",
+  "u dont have a rule for wozwrat": "Faktura boýunça gaýtarma geçirmek üçin düzgün ýok",
+  "u have more rule than 1 for wozwrat faktura": "Faktura boýunça gaýtarma geçirmek üçin düzgün 1-den köp",
+  "Rule must have revenue": "Ýüzleşik düzgüninde satuw (продажа) opsiýasy bolmaly",
+  "print receipt": "Çeki çap et"
 
 
 

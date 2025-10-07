@@ -111,7 +111,7 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo, getSaldo }) => {
           .map((r) => r.item)
       : allPartners;
     setFilteredPartners(results);
-    console.log("results", results);
+    // console.log("results", results);
   };
 
   if (values.partner?.id) {

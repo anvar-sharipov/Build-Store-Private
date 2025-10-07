@@ -105,7 +105,7 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
         });
       }
     });
-    console.log("GGGGGGGGGGGGGGGGGG", giftQuantities);
+    // console.log("GGGGGGGGGGGGGGGGGG", giftQuantities);
     
 
 
@@ -153,7 +153,7 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
           const qty = Number(normalizedValue);
           const isNumber = !isNaN(normalizedValue) && normalizedValue.trim() !== "";
 
-          console.log("values.wozwrat_or_prihodEEEEEEEEEEEE", values.wozwrat_or_prihod);
+          // console.log("values.wozwrat_or_prihodEEEEEEEEEEEE", values.wozwrat_or_prihod);
           
 
 

@@ -16,7 +16,7 @@ import myAxios from "../../../axios";
 import { ROUTES } from "./../../../../routes";
 import { useNotification } from "../../../context/NotificationContext";
 // import { DateContext } from "../../../UI/DateProvider";
-import { FaReceipt } from 'react-icons/fa';
+import { FaReceipt } from "react-icons/fa";
 import PrintInvoiceButton from "./PrintInvoiceButton";
 
 const InvoiceHead = ({
@@ -48,7 +48,7 @@ const InvoiceHead = ({
   };
   const { showNotification } = useNotification();
 
-  console.log("values.invoice_date2   GGGGG", values.invoice_date2);
+  // console.log("values.invoice_date2   GGGGG", values.invoice_date2);
 
   const modalYesBtn = useRef(null);
   const modalNoBtn = useRef(null);
@@ -104,7 +104,7 @@ const InvoiceHead = ({
     setIsDeleting(true);
     try {
       const res = await myAxios.delete(`delete_invoice/${id}/`);
-      console.log("Deleted invoice:", res.data);
+      // console.log("Deleted invoice:", res.data);
       showNotification(`${t("faktura")} №${res.data.invoice_id} ${t("succesifuly deleted")}`, "success");
       navigate(ROUTES.PURCHASEINVOICE);
     } catch (error) {
@@ -274,7 +274,6 @@ const InvoiceHead = ({
             }}
             value={values.invoice_date}
             className={invoiceClasses.dateInput}
-
           />
           {/* {touched.invoice_date && errors.invoice_date && <div className="text-red-500 text-sm mt-1">{errors.invoice_date}</div>} */}
         </div>
@@ -285,10 +284,12 @@ const InvoiceHead = ({
         {t(values.wozwrat_or_prihod)} {t("faktura")} {values.id && values.id}
       </div>
 
-      <div>
-        {/* <FaReceipt /> */}
-        <PrintInvoiceButton invoiceData={values} />
-      </div>
+      {values.products && values.products.length > 0 && (
+        <div>
+          {/* <FaReceipt /> */}
+          <PrintInvoiceButton invoiceData={values} />
+        </div>
+      )}
 
       {/* Логотип */}
       <div>

@@ -84,7 +84,7 @@ const FetchAwto = ({ refs }) => {
           .map((r) => r.item)
       : allEmployeers;
     setFilteredEmployeers(results);
-    console.log("results", results);
+    // console.log("results", results);
   };
 
   if (values.awto?.id) {

@@ -11,10 +11,14 @@ const ReportsMain = () => {
   const listRefs = useRef({});
   const sound = new Audio("/sounds/up_down.mp3");
 
+  useEffect(() => {
+    document.title = "Отчет"; // название вкладки
+  }, []);
+
   const reports = [
     { id: 1, name: t("PRICE_CHANGE_REPORT"), icon: DollarSign, color: "blue", to: ROUTES_RAPORT.PRICE_CHANGE_REPORT },
-    { id: 2, name: "Оборотно сальдовая ведомость", icon: TrendingUp, color: "emerald", to: PROCHEE.OSW },
-    { id: 3, name: "Аналитика доходов", icon: BarChart3, color: "purple" },
+    { id: 2, name: "Оборотно сальдовая ведомость", icon: TrendingUp, color: "emerald", to: ROUTES_RAPORT.OSW2 },
+    { id: 3, name: "Складская аналитика 2", icon: BarChart3, color: "purple" },
     { id: 4, name: "Статистика клиентов", icon: PieChart, color: "amber" },
     { id: 5, name: "Отчет активности", icon: Activity, color: "rose" },
     { id: 6, name: "Календарь событий", icon: Calendar, color: "indigo" },

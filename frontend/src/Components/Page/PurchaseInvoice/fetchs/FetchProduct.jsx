@@ -39,7 +39,7 @@ const FetchProduct = ({ refs }) => {
   const getProduct = async (productId, warehouseId, mainProductId) => {
     try {
       const res = await myAxios.get("/get-product/", { params: { product_id: productId, warehouse_id: warehouseId, main_product_id: mainProductId } });
-      console.log("res.data gift", res.data);
+      // console.log("res.data gift", res.data);
 
       return res.data; // важно
     } catch (error) {
@@ -87,7 +87,7 @@ const FetchProduct = ({ refs }) => {
   // ###### onKeydown li START
   // вынесенная функция
   const handleAddProduct = async (product, values, setFieldValue, refs, showNotification, getProduct) => {
-    console.log("main product", product);
+    // console.log("main product", product);
 
     const exists = values.products.some((p) => p.id === product.id);
     if (exists) {
@@ -166,9 +166,9 @@ const FetchProduct = ({ refs }) => {
     return (
       <div className="w-full flex-1 print:hidden relative" ref={wrapperRef}>
         {/* Label */}
-        <label className="flex justify-between mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-          <span>{t("product")}</span> <span>qr</span>{" "}
-        </label>
+        {/* <label className="flex justify-between mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"> */}
+          <span className="text-sm">{t("product")}</span>
+        {/* </label> */}
 
         {/* Input с иконкой */}
         <div className="relative">

@@ -120,7 +120,7 @@ export default function SidebarLeft() {
     { to: ROUTES.AGENTS, label: t("agents"), key: "F5", icon: Users, color: "text-amber-400" },
     { to: ROUTES.REPORTS, label: t("reports"), key: "F6", icon: PieChart, color: "text-pink-400" },
     { to: ROUTES.PROCHEE, label: t("prochee"), key: "F7", icon: MoreHorizontal, color: "text-indigo-400" },
-    { to: ROUTES.ENTRIES, label: t("entries"), key: "F8", icon: BarChart, color: "text-rose-400" },
+    // { to: ROUTES.ENTRIES, label: t("entries"), key: "F8", icon: BarChart, color: "text-rose-400" },
   ];
 
   const adminItems = [

@@ -303,8 +303,10 @@ def save_invoice(request):
                             if not rules.exists():
                                     transaction.set_rollback(True)
                                     return JsonResponse({"status": "error", "message": f"u dont have a rule for {wozwrat_or_prihod}"}, status=400)
+                                
+                            
                             transaction_obj = Transaction.objects.create(
-                                description=f"Faktura № {str(invoice.pk)}\n{comment}", 
+                                description=f"Faktura ({wozwrat_or_prihod}) № {str(invoice.pk)}\n{comment}", 
                                 date=invoice_date, invoice=invoice, 
                                 partner=partner_obj
                             )
@@ -550,7 +552,7 @@ def save_invoice(request):
                                 return JsonResponse({"status": "error", "message": f"u dont have a rule for {wozwrat_or_prihod}"}, status=400)
                             
                             transaction_obj = Transaction.objects.create(
-                                description=f"Faktura № {str(invoice.pk)}\n{comment}", 
+                                description=f"Faktura ({wozwrat_or_prihod}) № {str(invoice.pk)}\n{comment}", 
                                 date=invoice_date2, invoice=invoice, 
                                 partner=partner_obj
                             )

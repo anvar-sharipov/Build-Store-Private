@@ -61,7 +61,7 @@ const getDefaultValues = async (id = null, dateProwodok = null, setDateProwodok)
         entry_created_at = MyFormatDate(data.entry_created_at_handle);
       }
 
-      console.log("data.products", data.products);
+      // console.log("data.products", data.products);
       // localStorage.setItem("dateProwodok", convertToISODate(invoice_date));
 
       // if (setDateProwodok) {

@@ -106,7 +106,7 @@ const PrintInvoiceButton = ({ invoiceData }) => {
           </thead>
           <tbody>
             {invoiceData.products.map((p) => {
-              console.log("p", p);
+              // console.log("p", p);
 
               let conversion_factor = 1;
               let unit = p.base_unit_obj.name;

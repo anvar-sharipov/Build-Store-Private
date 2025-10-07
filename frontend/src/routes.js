@@ -9,7 +9,7 @@ export const ROUTES = {
   PURCHASEINVOICE: "/purchase_invoice",
   PURCHASE_INVOICE_CREATE: "/purchase-invoices/create",
   PURCHASE_INVOICE_UPDATE: "/purchase-invoices/update/:id",
-  ENTRIES: "/entries",
+  // ENTRIES: "/entries",
   // ACCOUNT: "/account",
   REPORTS: "/reports",
   PROCHEE: "/prochee",
@@ -18,13 +18,16 @@ export const ROUTES = {
 
 export const ROUTES_RAPORT = {
   PRICE_CHANGE_REPORT: "/report/price-changes",
+  OSW2: "/osw2",
+  DETAIL_REPORT_1: "/detail-report-level-1",
 };
 
 
 export const PROCHEE = {
   PARTNER_TRANSACTION_ENTRY: "/partner_transaction_entry",
-  OSW: "/osw",
+  // OSW: "/osw",
   QR_LIST_PRINT: "/prochee/qr-list-print",
+  ENTRIES2: "/entries2",
 };
 
 

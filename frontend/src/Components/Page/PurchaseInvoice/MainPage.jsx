@@ -190,7 +190,7 @@ const MainPage = () => {
   };
 
   const { dateFrom, setDateFrom, dateTo, setDateTo, dateProwodok, setDateProwodok } = useContext(DateContext);
-  console.log("dateProwodok", dateProwodok);
+  // console.log("dateProwodok", dateProwodok);
 
   //   useEffect(() => {
   // const handleKeyDown = (e) => {
@@ -262,7 +262,7 @@ const MainPage = () => {
       const saldo = await myAxios.get("get_saldo_for_partner_for_selected_date", {
         params: { date: date, partnerId: partnerId },
       });
-      console.log("saldo", saldo.data.saldo);
+      // console.log("saldo", saldo.data.saldo);
       setSaldo(saldo.data.saldo);
       // console.log('DADADADAD');
     } catch (error) {
@@ -277,7 +277,7 @@ const MainPage = () => {
         enableReinitialize={true}
         validationSchema={validationSchema}
         onSubmit={async (values, { resetForm, setFieldValue  }) => {
-          console.log("Успешно отправлено values", values);
+          // console.log("Успешно отправлено values", values);
           const date_margin = localStorage.getItem("date_margin"); // "2025-10-04"
           const today = new Date();
           const todayStr = today.toISOString().split("T")[0]; // "2025-10-04"
@@ -300,17 +300,17 @@ const MainPage = () => {
               },
             });
 
-            console.log("Успешно отправлено", response.data);
+            // console.log("Успешно отправлено", response.data);
             if (response.data.already_entry) {
               setFieldValue("already_entry", true)
             }
             if (response.data?.is_updated) {
-              showNotification(`${t("faktura")} № ${response.data.id} ${t("saved")}`, "faktura_success");
+              showNotification(`${t("faktura")} № ${response.data.id} ${t("saved")}`, "success");
               // setTimeout(() => {
               //   window.location.reload();
               // }, 1000);
             } else {
-              showNotification(t(response.data.message), "faktura_success");
+              showNotification(t(response.data.message), "success");
               // handleOpenInvoice(response.data.id);
             }
 
@@ -346,7 +346,7 @@ const MainPage = () => {
             setFieldValue("invoice_date", dateProwodok);
           }, [dateProwodok]);
 
-          console.log("values", values);
+          // console.log("values", values);
 
           const fakturaBgDynamic =
             values.wozwrat_or_prihod === "wozwrat" ? "bg-red-200 dark:bg-red-900" : values.wozwrat_or_prihod === "prihod" ? "bg-green-200 dark:bg-green-900" : "bg-white dark:bg-gray-900";

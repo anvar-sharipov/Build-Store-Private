@@ -7,7 +7,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from datetime import datetime
-
+from django.utils.dateparse import parse_date
+from django.db.models import Sum, F
+import json
 
 
 
@@ -207,3 +209,231 @@ def set_date_focus(request):
         ic(date_str)
         return JsonResponse({"date_focus": str(today)})
     return JsonResponse({"error": "Method not allowed"}, status=405)
+
+
+
+
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+# osw2
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_account_for_osw2(request):
+    # Получаем даты
+    date_from = request.GET.get('dateFrom')
+    date_to = request.GET.get('dateTo')
+
+    if date_from:
+        date_from = parse_date(date_from)
+    if date_to:
+        date_to = parse_date(date_to)
+
+    # Активные счета
+    accounts = Account.objects.filter(is_active=True)
+
+    data = []
+    data_dict = {}  # ключ = номер счета, значение = агрегированные данные
+    
+    # Функция для добавления или суммирования счета в data_dict
+    def add_or_update(acc_number, acc_name):
+        if acc_number not in data_dict:
+            data_dict[acc_number] = {
+                "number": acc_number,
+                "name": acc_name,
+                "initial_debit": float(initial_debit),
+                "initial_credit": float(initial_credit),
+                "initial_balance": float(initial_balance),
+                "debit": float(period_debit),
+                "credit": float(period_credit),
+                "period_debit": float(period_debit),
+                "period_credit": float(period_credit),
+                
+                "final_debit": float(initial_debit) + float(period_debit),
+                "final_credit": float(initial_credit) + float(period_credit),
+                "final_balance": float(final_balance),
+            }
+        else:
+            d = data_dict[acc_number]
+            d['initial_debit'] += float(initial_debit)
+            d['initial_credit'] += float(initial_credit)
+            d['initial_balance'] += float(initial_balance)
+            d['debit'] += float(period_debit)
+            d['credit'] += float(period_credit)
+            d['period_debit'] += float(period_debit)
+            d['period_credit'] += float(period_credit)
+            
+            d["final_debit"] += float(initial_debit) + float(period_debit)
+            d["final_credit"] += float(initial_credit) + float(period_credit)
+            d['final_balance'] += float(final_balance)
+
+    for a in accounts:
+        # Начальный остаток
+        entries_before = Entry.objects.filter(account=a)
+        if date_from:
+            entries_before = entries_before.filter(transaction__date__lt=date_from)
+
+        initial_debit = entries_before.aggregate(total=Sum('debit'))['total'] or 0
+        initial_credit = entries_before.aggregate(total=Sum('credit'))['total'] or 0
+        initial_balance = initial_debit - initial_credit
+
+        # Проводки в период
+        entries_period = Entry.objects.filter(account=a)
+        if date_from and date_to:
+            entries_period = entries_period.filter(transaction__date__range=[date_from, date_to])
+        elif date_from:
+            entries_period = entries_period.filter(transaction__date__gte=date_from)
+        elif date_to:
+            entries_period = entries_period.filter(transaction__date__lte=date_to)
+
+        period_debit = entries_period.aggregate(total=Sum('debit'))['total'] or 0
+        period_credit = entries_period.aggregate(total=Sum('credit'))['total'] or 0
+
+        final_balance = initial_balance + period_debit - period_credit
+
+        
+
+        # Добавляем ребёнка
+        add_or_update(a.number, a.name)
+
+        # Добавляем родителя, если есть
+        if a.parent:
+            add_or_update(a.parent.number, a.parent.name)
+
+    # Преобразуем словарь в список для ответа
+    data = list(data_dict.values())
+
+    return Response(data, status=200)
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_detail_account(request):
+    # Получаем даты и номер счета
+    date_from = request.GET.get('dateFrom')
+    date_to = request.GET.get('dateTo')
+    account_number = request.GET.get('account')
+
+    if date_from:
+        date_from = parse_date(date_from)
+    if date_to:
+        date_to = parse_date(date_to)
+
+    try:
+        account = Account.objects.get(number=account_number)
+    except Account.DoesNotExist:
+        return Response({"error": "Account not found"}, status=404)
+
+    # Проводки для выбранного счета в период
+    entries = Entry.objects.filter(account=account)
+    if date_from and date_to:
+        entries = entries.filter(transaction__date__range=[date_from, date_to])
+    elif date_from:
+        entries = entries.filter(transaction__date__gte=date_from)
+    elif date_to:
+        entries = entries.filter(transaction__date__lte=date_to)
+
+    # Группируем по транзакциям
+    transactions = {}
+    for e in entries.select_related('transaction'):
+        t_id = e.transaction.id
+        if t_id not in transactions:
+            transactions[t_id] = {
+                "transaction_id": t_id,
+                "date": e.transaction.date.strftime("%Y-%m-%d"),
+                "description": e.transaction.description,
+                "debit": 0,
+                "credit": 0,
+                "invoice": {
+                    "id": e.transaction.invoice.id,
+                    # "number": e.transaction.invoice.number
+                } if e.transaction.invoice else None,
+                "partner": {
+                    "id": e.transaction.partner.id,
+                    "name": e.transaction.partner.name
+                } if e.transaction.partner else None,
+                
+            }
+        transactions[t_id]['debit'] += float(e.debit)
+        transactions[t_id]['credit'] += float(e.credit)
+
+    # Сортируем по дате
+    data = sorted(transactions.values(), key=lambda x: x['date'])
+
+    return Response({
+        "account": {
+            "number": account.number,
+            "name": account.name,
+        },
+        "transactions": data
+    }, status=200)
+
+# osw2
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+
+
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from django.utils.dateparse import parse_date
+from decimal import Decimal
+import json
+from django.db import transaction as db_transaction
+
+@csrf_exempt
+def create_entry(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+
+            date = parse_date(data.get("date"))
+            if not date:
+                return JsonResponse({"status": "error", "message": "Неверная дата"}, status=400)
+
+            debit_acc_number = data.get("debitAccount")
+            credit_acc_number = data.get("creditAccount")
+            amount = Decimal(data.get("amount") or 0)
+            if amount <= 0:
+                return JsonResponse({"status": "error", "message": "Сумма должна быть больше 0"}, status=400)
+
+            comment = data.get("comment", "")
+            partner_id = data.get("partnerId")
+            partner = Partner.objects.get(id=partner_id) if partner_id else None
+
+            # Весь процесс в атомарной транзакции
+            with db_transaction.atomic():
+                transaction_obj = Transaction.objects.create(
+                    date=date,
+                    description=comment,
+                    partner=partner
+                )
+
+                debit_account = Account.objects.get(number=debit_acc_number)
+                credit_account = Account.objects.get(number=credit_acc_number)
+
+                Entry.objects.create(
+                    transaction=transaction_obj,
+                    account=debit_account,
+                    debit=amount,
+                    credit=Decimal("0.00")
+                )
+
+                Entry.objects.create(
+                    transaction=transaction_obj,
+                    account=credit_account,
+                    debit=Decimal("0.00"),
+                    credit=amount
+                )
+
+            return JsonResponse({"status": "success", "transaction_id": transaction_obj.id})
+
+        except Account.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Счёт не найден"}, status=400)
+        except Partner.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Партнёр не найден"}, status=400)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=400)
+

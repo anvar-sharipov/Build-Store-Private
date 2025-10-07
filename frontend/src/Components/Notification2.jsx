@@ -7,8 +7,8 @@ const Notification2 = ({ message, type = "info", onClose, id }) => {
       const audio = new Audio(
         type === "success" ? "/sounds/success.mp3" : 
         type === "error" ? "/sounds/error.mp3" :
-        type === "warning" ? "/sounds/warning.mp3" :
-        type === "faktura_success" ? "/sounds/faktura_success.mp3" : "/sounds/warning.mp3"
+        type === "warning" ? "/sounds/warning.mp3" : "/sounds/warning.mp3"
+        // type === "faktura_success" ? "/sounds/success.mp3" : "/sounds/warning.mp3"
       );
       audio.play().catch(() => {}); // Игнорируем ошибки воспроизведения
     }

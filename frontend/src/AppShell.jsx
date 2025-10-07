@@ -20,17 +20,19 @@ import MainPage from "./Components/Page/Faktura/SaleInvoice2/MainPage";
 import MainPagePurchase from "./Components/Page/PurchaseInvoice/MainPage";
 import Partner2 from "./Components/Page/Partner2/Partner2";
 import PartnerTransactionEntry from "./Components/Page/PartnerTransactionEntry/PartnerTransactionEntry";
-import OSW from "./Components/Page/OSW/OSW";
 import ImportProducts from "./Components/Page/Admin/ImportProducts";
 import PurchaseInvoice from "./Components/Page/PurchaseInvoice/PurchaseInvoice";
 import { DateProvider } from "./Components/UI/DateProvider";
 import ImportPartners from "./Components/Page/Admin/ImportPartners";
 import DeleteData from "./Components/Page/Admin/DeleteData";
-import Entries from "./Components/Page/Entries/Entries";
+// import Entries from "./Components/Page/Entries/Entries";
 import { NotificationProvider } from "./Components/context/NotificationContext";
 import ReportsMain from "./Components/Page/Reports2/ReportsMain";
 import ProcheeMain from "./Components/Page/Prochee/ProcheeMain";
 import QrListPrint from "./Components/Page/Prochee/QrListPrint/QrListPrint";
+import OSW2 from "./Components/Page/OSW2/OSW2";
+import DetailReport1 from "./Components/Page/OSW2/DetailReport1";
+import Entries2 from "./Components/Page/Entries2/Entries2";
 
 function AppShell() {
   const location = useLocation();
@@ -42,7 +44,6 @@ function AppShell() {
     location.pathname.includes("/purchase-invoices/create");
 
   const hideRightBar = location.pathname === "/prochee/qr-list-print" || location.pathname === "/prochee" || location.pathname === "/reports";
-  console.log("hideRightBar", hideRightBar);
   return (
     <>
       <NotificationProvider>
@@ -66,7 +67,8 @@ function AppShell() {
                     <Route path={ROUTES.EMPLOYEERS} element={<Employee />} />
                     <Route path={ROUTES.PARTNERS_new} element={<Partner2 />} />
                     <Route path={ROUTES.AGENTS} element={<Agent />} />
-                    <Route path={ROUTES.ENTRIES} element={<Entries />} />
+                    {/* <Route path={ROUTES.ENTRIES} element={<Entries />} /> */}
+                    
                     <Route path={ROUTES.REPORTS} element={<ReportsMain />} />
                     <Route path={ROUTES.PROCHEE} element={<ProcheeMain />} />
                     {/* <Route path={ROUTES.ACCOUNT} element={<Account />} /> */}
@@ -74,7 +76,10 @@ function AppShell() {
                     <Route path={ROUTES_RAPORT.PRICE_CHANGE_REPORT} element={<PriceChangeReport />} />
 
                     <Route path={PROCHEE.PARTNER_TRANSACTION_ENTRY} element={<PartnerTransactionEntry />} />
-                    <Route path={PROCHEE.OSW} element={<OSW />} />
+                    <Route path={PROCHEE.ENTRIES2} element={<Entries2 />} />
+                    {/* <Route path={PROCHEE.OSW} element={<OSW />} /> */}
+                    <Route path={ROUTES_RAPORT.OSW2} element={<OSW2 />} />
+                    <Route path={ROUTES_RAPORT.DETAIL_REPORT_1} element={<DetailReport1 />} />
                     <Route path={PROCHEE.QR_LIST_PRINT} element={<QrListPrint />} />
 
                     {/* PurchaseInvoice */}

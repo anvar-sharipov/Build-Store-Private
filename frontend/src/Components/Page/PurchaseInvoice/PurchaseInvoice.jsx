@@ -24,8 +24,8 @@ const PurchaseInvoice = () => {
   const { dateProwodok } = useContext(DateContext);
 
   const { authUser, authGroup } = useContext(AuthContext);
-  console.log("authUser", authUser);
-  console.log("authGroup", authGroup);
+  // console.log("authUser", authUser);
+  // console.log("authGroup", authGroup);
 
   useEffect(() => {
     document.title = `${t("faktura")}`; // название вкладки

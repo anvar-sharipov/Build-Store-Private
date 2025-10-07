@@ -33,7 +33,7 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
         // console.log("res.data.last_day_not_closed", res.data.last_day_not_closed);
         const is_closed = res.data.is_closed;
         const last_day_not_closed = res.data.last_day_not_closed;
-        console.log("is_closed", is_closed);
+        // console.log("is_closed", is_closed);
 
         // if (!last_day_not_closed) {
         //   console.log("pred den zakryt mojno delat");

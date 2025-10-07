@@ -111,15 +111,15 @@ const Header = () => {
       //   event.preventDefault();
       //   navigate(ROUTES.HARYTLAR);
       // }
-      else if (event.key === "F8") {
-        event.preventDefault();
-        change_wkladka.currentTime = 0;
-        change_wkladka.play();
-        navigate(ROUTES.ENTRIES);
+      // else if (event.key === "F8") {
+      //   event.preventDefault();
+      //   change_wkladka.currentTime = 0;
+      //   change_wkladka.play();
+      //   navigate(ROUTES.ENTRIES);
         // } else if (event.key === "F7") {
         //   event.preventDefault();
         //   navigate(ROUTES.ACCOUNT);
-      }
+      // }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);

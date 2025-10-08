@@ -9,7 +9,6 @@ echo "Running migrations..."
 python manage.py migrate --noinput
 echo "Database structure migrated successfully. Starting server..."
 
-
 # # Можно добавить немного задержки после миграций (иногда база не успевает подняться):
 # sleep 2
 
@@ -47,29 +46,37 @@ echo "Database structure migrated successfully. Starting server..."
 #     print(f'Superuser {username} added to "admin" group')
 
 # # --- Создание складов ---
-# for w in ["Sklad 1", "Sklad 2"]:
-#     warehouse, created = Warehouse.objects.get_or_create(name=w)
+# for w in ["Sklad 1 USD", "Sklad 2 USD", "Sklad 1 TMT"]:
+#     if w == "Sklad 1 TMT":
+#         warehouse, created = Warehouse.objects.get_or_create(name=w, currency="TMT")
+#     else:
+#         warehouse, created = Warehouse.objects.get_or_create(name=w, currency="USD")
 #     if created:
 #         print(f'Warehouse "{w}" created successfully!')
 #     else:
 #         print(f'Warehouse "{w}" already exists.')
 
-
-
 # # --- Создание счетов ---
 # accounts_data = [
-#     {"number": "60", "name": "Клиент", "type": "both", "description": "Клиент", "parent": None},
-#     {"number": "75", "name": "Учредитель", "type": "both", "description": "Учредитель", "parent": None},
-#     {"number": "46", "name": "Доходы, общие", "type": "both", "description": "Доходы, общие", "parent": None},
-#     {"number": "46.1", "name": "Доходы, Клиент", "type": "both", "description": "Доходы, Клиент", "parent": "46"},
-#     {"number": "46.2", "name": "Доходы, Учредитель", "type": "both", "description": "Доходы, Учредитель", "parent": "46"},
-#     {"number": "40", "name": "Склад", "type": "both", "description": "Склад", "parent": None},
-#     {"number": "40.1", "name": "Sklad 1", "type": "both", "description": "Sklad 1", "parent": "40"},
-#     {"number": "40.2", "name": "Sklad 2", "type": "both", "description": "Sklad 2", "parent": "40"},
+#     {"number": "60", "name": "Клиент USD", "type": "both", "description": "Клиент USD", "parent": None},
+#     {"number": "62", "name": "Клиент TMT", "type": "both", "description": "Клиент TMT", "parent": None},
+#     {"number": "75", "name": "Учредитель USD", "type": "both", "description": "Учредитель USD", "parent": None},
+#     {"number": "76", "name": "Учредитель TMT", "type": "both", "description": "Учредитель TMT", "parent": None},
+#     {"number": "46", "name": "Доход USD (общий)", "type": "both", "description": "Доход USD (общий), родитель", "parent": None},
+#     {"number": "46.1", "name": "Доход USD клиент", "type": "both", "description": "Доход USD клиент, субсчёт для 46", "parent": "46"},
+#     {"number": "46.2", "name": "Доход USD учредитель", "type": "both", "description": "Доход USD учредитель, субсчёт для 46", "parent": "46"},
+#     {"number": "47", "name": "Доход TMT (общий)", "type": "both", "description": "Доход TMT (общий), родитель", "parent": None},
+#     {"number": "47.1", "name": "Доход TMT клиент", "type": "both", "description": "Доход TMT клиент, субсчёт для 47", "parent": "47"},
+#     {"number": "47.2", "name": "Доход TMT учредитель", "type": "both", "description": "Доход TMT учредитель, субсчёт для 47", "parent": "47"},
+#     {"number": "40", "name": "Склад USD", "type": "both", "description": "Склад USD, родитель", "parent": None},
+#     {"number": "40.1", "name": "Sklad 1 USD", "type": "both", "description": "Sklad 1 USD, субсчёт для 40", "parent": "40"},
+#     {"number": "40.2", "name": "Sklad 2 USD", "type": "both", "description": "Sklad 2 USD, субсчёт для 40", "parent": "40"},
+#     {"number": "42", "name": "Склад TMT", "type": "both", "description": "Sklad TMT, родитель", "parent": None},
+#     {"number": "42.1", "name": "Sklad 1 TMT", "type": "both", "description": "Sklad 1 TMT, субсчёт для 42", "parent": "42"},
 #     {"number": "50", "name": "Касса USD", "type": "both", "description": "Касса USD", "parent": None},
 #     {"number": "80", "name": "Фонд", "type": "both", "description": "Фонд", "parent": None},
+#     {"number": "52", "name": "Kassa TMT", "type": "both", "description": "Kassa TMT", "parent": None},
 # ]
-
 
 # accounts = {}
 # for acc in accounts_data:
@@ -90,15 +97,16 @@ echo "Database structure migrated successfully. Starting server..."
 #     else:
 #         print(f'Account {acc["number"]} "{acc["name"]}" already exists.')
 
-
 # # --- Привязать склад к сабсчетам ---
 # acc40_1 = Account.objects.get(number="40.1")
 # acc40_2 = Account.objects.get(number="40.2")
-# warehouse_1 = Warehouse.objects.get(name="Sklad 1")
-# warehouse_2 = Warehouse.objects.get(name="Sklad 2")
-# account, created = WarehouseAccount.objects.get_or_create(warehouse = warehouse_1, account = acc40_1)
-# account, created = WarehouseAccount.objects.get_or_create(warehouse = warehouse_2, account = acc40_2)
-
+# acc42_1 = Account.objects.get(number="42.1")
+# warehouse_1_USD = Warehouse.objects.get(name="Sklad 1 USD")
+# warehouse_2_USD = Warehouse.objects.get(name="Sklad 2 USD")
+# warehouse_1_TMT = Warehouse.objects.get(name="Sklad 1 TMT")
+# account, created = WarehouseAccount.objects.get_or_create(warehouse = warehouse_1_USD, account = acc40_1)
+# account, created = WarehouseAccount.objects.get_or_create(warehouse = warehouse_2_USD, account = acc40_2)
+# account, created = WarehouseAccount.objects.get_or_create(warehouse = warehouse_1_TMT, account = acc42_1)
 
 # # --- Создание работника ---
 # for e in ["Shohrat, FUSO", "Anvar, KIA"]:
@@ -140,7 +148,6 @@ echo "Database structure migrated successfully. Starting server..."
 #         print(f'Partner "{partner.name}" created with agent "{agent}"')
 #     else:
 #         print(f'Partner "{partner.name}" already exists.')
-
 
 # # --- Создание категорий ---
 # # categories = ["kraska", "instrumenty", "himija", "materialy", "zapchasti"]
@@ -232,8 +239,6 @@ echo "Database structure migrated successfully. Starting server..."
 #     defaults={"quantity": 14400}
 # )
 
-
-
 # # --- Добавление единиц для продукта ---
 # ProductUnit.objects.get_or_create(
 #     product=product_kraska,
@@ -310,78 +315,163 @@ echo "Database structure migrated successfully. Starting server..."
 # pays = Operation.objects.get(code="pays")
 # purchase = Operation.objects.get(code="purchase")
 
+# # #########################################################################################################################################################################################################
+# # #########################################################################################################################################################################################################
+# # Sale faktura START
+
+# # # USD START
 # debit_account = Account.objects.get(number="60")
 # credit_account = Account.objects.get(number="40")
-
 # CustomePostingRule.objects.get_or_create(
 #     operation=sale, 
 #     directory_type="klient", 
 #     amount_type="revenue",
 #     debit_account=debit_account,
 #     credit_account=credit_account,
-#     defaults={"description": "Sale faktura, klient, Продажа"}
+#     currency="USD",
+#     defaults={"description": "Sale faktura, klient, Продажа, USD"}
 # )
 
 # debit_account = Account.objects.get(number="46.1")
 # credit_account = Account.objects.get(number="80")
-
 # CustomePostingRule.objects.get_or_create(
 #     operation=sale, 
 #     directory_type="klient", 
 #     amount_type="profit",
 #     debit_account=debit_account,
 #     credit_account=credit_account,
-#     defaults={"description": "Sale faktura, klient, Прибыль"}
+#     currency="USD",
+#     defaults={"description": "Sale faktura, klient, Прибыль, USD"}
 # )
 
 # debit_account = Account.objects.get(number="75")
 # credit_account = Account.objects.get(number="40")
-
 # CustomePostingRule.objects.get_or_create(
 #     operation=sale, 
 #     directory_type="founder", 
 #     amount_type="revenue",
 #     debit_account=debit_account,
 #     credit_account=credit_account,
-#     defaults={"description": "Sale faktura, founder, Продажа"}
+#     currency="USD",
+#     defaults={"description": "Sale faktura, founder, Продажа, USD"}
 # )
 
 # debit_account = Account.objects.get(number="46.2")
 # credit_account = Account.objects.get(number="80")
-
 # CustomePostingRule.objects.get_or_create(
 #     operation=sale, 
 #     directory_type="founder", 
 #     amount_type="profit",
 #     debit_account=debit_account,
 #     credit_account=credit_account,
-#     defaults={"description": "Sale faktura, founder, Прибыль"}
+#     currency="USD",
+#     defaults={"description": "Sale faktura, founder, Прибыль, USD"}
+# )
+# # # USD END
+
+# # # TMT START
+# debit_account = Account.objects.get(number="62")
+# credit_account = Account.objects.get(number="42")
+# CustomePostingRule.objects.get_or_create(
+#     operation=sale, 
+#     directory_type="klient", 
+#     amount_type="revenue",
+#     debit_account=debit_account,
+#     credit_account=credit_account,
+#     currency="TMT",
+#     defaults={"description": "Sale faktura, klient, Продажа, TMT"}
 # )
 
+# debit_account = Account.objects.get(number="47.1")
+# credit_account = Account.objects.get(number="80")
+# CustomePostingRule.objects.get_or_create(
+#     operation=sale, 
+#     directory_type="klient", 
+#     amount_type="profit",
+#     debit_account=debit_account,
+#     credit_account=credit_account,
+#     currency="TMT",
+#     defaults={"description": "Sale faktura, klient, Прибыль, TMT"}
+# )
+
+# debit_account = Account.objects.get(number="47.2")
+# credit_account = Account.objects.get(number="80")
+# CustomePostingRule.objects.get_or_create(
+#     operation=sale, 
+#     directory_type="founder", 
+#     amount_type="profit",
+#     debit_account=debit_account,
+#     credit_account=credit_account,
+#     currency="TMT",
+#     defaults={"description": "Sale faktura, founder, Прибыль, TMT"}
+# )
+
+# debit_account = Account.objects.get(number="76")
+# credit_account = Account.objects.get(number="42")
+# CustomePostingRule.objects.get_or_create(
+#     operation=sale, 
+#     directory_type="founder", 
+#     amount_type="revenue",
+#     debit_account=debit_account,
+#     credit_account=credit_account,
+#     currency="TMT",
+#     defaults={"description": "Sale faktura, founder, Продажа, TMT"}
+# )
+# # # TMT END
+# # Sale faktura END
+# # #########################################################################################################################################################################################################
+
+# # #########################################################################################################################################################################################################
+# # Purchase faktura START
 # debit_account = Account.objects.get(number="40")
 # credit_account = Account.objects.get(number="60")
-
 # CustomePostingRule.objects.get_or_create(
 #     operation=purchase, 
 #     directory_type="klient", 
 #     amount_type="revenue",
 #     debit_account=debit_account,
 #     credit_account=credit_account,
-#     defaults={"description": "purchase faktura, klient"}
+#     currency="USD",
+#     defaults={"description": "purchase faktura, klient, USD"}
 # )
 
 # debit_account = Account.objects.get(number="40")
 # credit_account = Account.objects.get(number="75")
-
 # CustomePostingRule.objects.get_or_create(
 #     operation=purchase, 
 #     directory_type="founder", 
 #     amount_type="revenue",
 #     debit_account=debit_account,
 #     credit_account=credit_account,
-#     defaults={"description": "purchase faktura, founder"}
+#     currency="USD",
+#     defaults={"description": "purchase faktura, founder, USD"}
 # )
 
+# debit_account = Account.objects.get(number="42")
+# credit_account = Account.objects.get(number="76")
+# CustomePostingRule.objects.get_or_create(
+#     operation=purchase, 
+#     directory_type="founder", 
+#     amount_type="revenue",
+#     debit_account=debit_account,
+#     credit_account=credit_account,
+#     currency="TMT",
+#     defaults={"description": "Purchase faktura, founder, продажа, TMT"}
+# )
+
+# debit_account = Account.objects.get(number="42")
+# credit_account = Account.objects.get(number="62")
+# CustomePostingRule.objects.get_or_create(
+#     operation=purchase, 
+#     directory_type="founder", 
+#     amount_type="revenue",
+#     debit_account=debit_account,
+#     credit_account=credit_account,
+#     currency="TMT",
+#     defaults={"description": "purchase faktura, klient, продажа, TMT"}
+# )
+# # Purchase faktura END
+# # #########################################################################################################################################################################################################
 
 # EOF
 

@@ -10,6 +10,13 @@ from datetime import datetime
 from django.utils.dateparse import parse_date
 from django.db.models import Sum, F
 import json
+from django.http import HttpResponse
+from openpyxl import Workbook, load_workbook
+from datetime import datetime
+from io import BytesIO
+from openpyxl.styles import PatternFill
+
+
 
 
 
@@ -437,3 +444,137 @@ def create_entry(request):
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=400)
 
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upload_sales_excel_for_analis(request):
+    file = request.FILES.get("file")
+    if not file:
+        return HttpResponse("Файл не получен", status=400)
+
+    try:
+        wb = load_workbook(filename=file, data_only=True)
+        ws = wb.active
+
+        products = {}
+
+        # собираем данные
+        for row in ws.iter_rows(min_row=6, values_only=True):
+            if row[0] and "Hemmesi" in str(row[0]):
+                break
+
+            product_name = row[9]  # Harydyň ady
+            document = row[3]      # Dokument
+            date_str = row[1]      # Senesi
+            quantity = float(row[12] or 0)  # Mukdary
+            price = float(row[11] or 0)     # Bahasy
+            client = row[4]       # Kime
+
+            try:
+                date_ = datetime.strptime(date_str, "%d.%m.%y").date()
+            except Exception:
+                continue
+
+            if product_name not in products:
+                products[product_name] = {
+                    "price": price,
+                    "sale_quantity": 0,
+                    "total_sale": 0,
+                    "purchase_date": None,
+                    "last_sale_date": None,
+                    "clients": set()
+                }
+
+            if "Girdeji faktura" in document:
+                products[product_name]["purchase_date"] = date_
+            elif "Söwda" in document:
+                products[product_name]["sale_quantity"] += quantity
+                products[product_name]["total_sale"] += price * quantity
+                products[product_name]["last_sale_date"] = (
+                    date_ if not products[product_name]["last_sale_date"]
+                    else max(products[product_name]["last_sale_date"], date_)
+                )
+                if client:
+                    products[product_name]["clients"].add(client)
+
+        # вычисляем диапазон для градиента
+        all_days = [
+            (v["last_sale_date"] - v["purchase_date"]).days
+            for v in products.values()
+            if v["purchase_date"] and v["last_sale_date"]
+        ]
+        min_days = min(all_days) if all_days else 0
+        max_days = max(all_days) if all_days else 1
+
+        def get_fill(days):
+            if days is None:
+                return PatternFill(fill_type=None)
+            ratio = (days - min_days) / (max_days - min_days + 1e-5)
+            if ratio < 0.5:
+                green = 255
+                red = int(255 * ratio * 2)
+                blue = 0
+            else:
+                red = 255
+                green = int(255 * (1 - (ratio-0.5)*2))
+                blue = 0
+            hex_color = f"{red:02X}{green:02X}{blue:02X}"
+            return PatternFill(start_color=hex_color, end_color=hex_color, fill_type="solid")
+
+        # создаём новый Excel
+        out_wb = Workbook()
+        out_ws = out_wb.active
+        out_ws.title = "Sales Analysis"
+
+        headers = [
+            "Наименование товара",
+            "Цена (Сумма/Количество)",
+            "Количество продажи",
+            "Сумма продажи",
+            "Дата Прихода",
+            "Дата Продажи последней штуки",
+            "Количество дней",
+            "Количество клиента"
+        ]
+        out_ws.append(headers)
+
+        # заполняем данные и красим строки
+        for name, info in products.items():
+            purchase_date = info["purchase_date"]
+            last_sale_date = info["last_sale_date"]
+            days_diff = (last_sale_date - purchase_date).days if purchase_date and last_sale_date else None
+
+            out_ws.append([
+                name,
+                info["price"],
+                info["sale_quantity"],
+                info["total_sale"],
+                purchase_date.isoformat() if purchase_date else None,
+                last_sale_date.isoformat() if last_sale_date else None,
+                days_diff,
+                len(info["clients"])
+            ])
+
+            row_idx = out_ws.max_row
+            fill = get_fill(days_diff)
+            for col_idx in range(1, len(headers)+1):
+                out_ws.cell(row=row_idx, column=col_idx).fill = fill
+
+        # сохраняем и возвращаем
+        output = BytesIO()
+        out_wb.save(output)
+        output.seek(0)
+
+        response = HttpResponse(
+            output,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename="sales_analysis.xlsx"'
+        return response
+
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return HttpResponse(f"Ошибка при обработке файла: {e}", status=500)

@@ -20,6 +20,7 @@ export const ROUTES_RAPORT = {
   PRICE_CHANGE_REPORT: "/report/price-changes",
   OSW2: "/osw2",
   DETAIL_REPORT_1: "/detail-report-level-1",
+  SALES_ANALIS: "/sales-analis",
 };
 
 

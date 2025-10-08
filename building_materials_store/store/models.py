@@ -109,9 +109,16 @@ class Product(models.Model):
 
 
 class Warehouse(models.Model):
+    CURRENCY_CHOICES = [
+        ('USD', 'USD'),
+        ('TMT', 'TMT'),
+    ]
+    
     name = models.CharField(max_length=100, unique=True, verbose_name="Название склада")
     location = models.CharField(max_length=255, blank=True, verbose_name="Адрес (необязательно)")
     is_active = models.BooleanField(default=True, verbose_name="Активен")
+    currency = models.CharField(verbose_name="Валюта", max_length=20, choices=CURRENCY_CHOICES, default="USD", null=True, blank=True)
+    
    
     class Meta:
         verbose_name = "Склад"
@@ -704,20 +711,27 @@ class Operation(models.Model):
         verbose_name = "Операция"
         verbose_name_plural = "Операции"
         
+        
+        
 
 class CustomePostingRule(models.Model):
     CONTENT_TYPE_CHOICES = [('klient', 'Покупатель'), ('founder', 'Учредитель')] # ('supplier', 'Поставщик'),
-    AMOUNT_TYPE_CHOICES = [('revenue', 'Продажа'), ('cogs', 'Себестоимость'), ('profit', 'Прибыль')] # ('pays', 'Платежи')
-    PAYS_TYPE_CHOICES = [('income', 'Приход'), ('expense', 'Расход')]
+    AMOUNT_TYPE_CHOICES = [('revenue', 'Продажа (цена)'), ('cogs', 'Себестоимость'), ('profit', 'Прибыль (доход цена)')] # ('pays', 'Платежи')
+    # PAYS_TYPE_CHOICES = [('income', 'Приход'), ('expense', 'Расход')]
+    CURRENCY_CHOICES = [
+        ('USD', 'USD'),
+        ('TMT', 'TMT'),
+    ]
     
     operation = models.ForeignKey(Operation, on_delete=models.PROTECT, verbose_name="Операция")
     # warehouse = models.ForeignKey('Warehouse', on_delete=models.PROTECT, null=True, blank=True, verbose_name="Склад")
-    directory_type = models.CharField(max_length=1000, choices=CONTENT_TYPE_CHOICES, null=True, blank=True, verbose_name="Вид справочника")
+    directory_type = models.CharField(max_length=1000, choices=CONTENT_TYPE_CHOICES, null=True, blank=True, verbose_name="Вид партнера")
     debit_account = models.ForeignKey('Account', on_delete=models.PROTECT, related_name='postingrule_debit', verbose_name="Дебетовый счёт")
     credit_account = models.ForeignKey('Account', on_delete=models.PROTECT, related_name='postingrule_credit', verbose_name="Кредитовый счёт")
     description = models.CharField(max_length=255, blank=True, null=True, verbose_name="Описание") 
     amount_type = models.CharField(max_length=20, choices=AMOUNT_TYPE_CHOICES, verbose_name="Тип суммы (использоваит при Фактурах)", blank=True, null=True,)
-    pays_type = models.CharField(max_length=20, choices=PAYS_TYPE_CHOICES, verbose_name="Тип платежа (использоваит при платежах)", blank=True, null=True,)
+    # pays_type = models.CharField(max_length=20, choices=PAYS_TYPE_CHOICES, verbose_name="Тип платежа (использоваит при платежах)", blank=True, null=True,)
+    currency = models.CharField(verbose_name="Валюта", max_length=20, choices=CURRENCY_CHOICES, default="USD", null=True, blank=True)
     
     class Meta:
         verbose_name = "Правило проводки"

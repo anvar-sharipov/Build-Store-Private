@@ -185,8 +185,8 @@ class TagAdmin(admin.ModelAdmin):
 # Склады
 @admin.register(Warehouse)
 class WarehouseAdmin(admin.ModelAdmin):
-    list_display = ('name', 'location')
-    search_fields = ('name', 'location')
+    list_display = ('name', 'location', 'currency')
+    search_fields = ('name', 'location', 'currency')
     
     # def product_count(self, obj):
     #     return obj.stock_items.count()
@@ -482,11 +482,10 @@ class OperationAdmin(admin.ModelAdmin):
 
 @admin.register(CustomePostingRule)
 class CustomePostingRuleAdmin(admin.ModelAdmin):
-    list_display = ('operation', 'directory_type', 'debit_account', 'credit_account', 'amount_type', 'description')
-    list_filter = ('operation', 'directory_type', 'amount_type')
+    list_display = ('operation', 'directory_type', 'debit_account', 'credit_account', 'amount_type', 'currency', 'description')
+    list_filter = ('operation', 'directory_type', 'amount_type', 'currency')
     search_fields = ('operation__name', 'directory_type', 'debit_account__code', 'credit_account__code', 'description')
     ordering = ('operation', 'directory_type')
-    
 
 
 @admin.register(WarehouseAccount)

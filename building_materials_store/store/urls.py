@@ -107,6 +107,9 @@ urlpatterns = [
     
     path('create_entry/', create_entry, name='create_entry'),
     
+    path('upload_sales_excel_for_analis/', upload_sales_excel_for_analis, name='upload_sales_excel_for_analis'),
+    
+    
     
     
     

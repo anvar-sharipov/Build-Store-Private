@@ -33,6 +33,7 @@ import QrListPrint from "./Components/Page/Prochee/QrListPrint/QrListPrint";
 import OSW2 from "./Components/Page/OSW2/OSW2";
 import DetailReport1 from "./Components/Page/OSW2/DetailReport1";
 import Entries2 from "./Components/Page/Entries2/Entries2";
+import SalesAnalys from "./Components/Page/Reports2/SalesAnalys/SalesAnalys";
 
 function AppShell() {
   const location = useLocation();
@@ -79,8 +80,10 @@ function AppShell() {
                     <Route path={PROCHEE.ENTRIES2} element={<Entries2 />} />
                     {/* <Route path={PROCHEE.OSW} element={<OSW />} /> */}
                     <Route path={ROUTES_RAPORT.OSW2} element={<OSW2 />} />
+                    <Route path={ROUTES_RAPORT.SALES_ANALIS} element={<SalesAnalys />} />
                     <Route path={ROUTES_RAPORT.DETAIL_REPORT_1} element={<DetailReport1 />} />
                     <Route path={PROCHEE.QR_LIST_PRINT} element={<QrListPrint />} />
+      
 
                     {/* PurchaseInvoice */}
                     <Route path={ROUTES.PURCHASEINVOICE} element={<PurchaseInvoice />} />

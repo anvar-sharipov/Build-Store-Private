@@ -51,11 +51,7 @@ const OSW2 = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px] print:hidden">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center gap-4"
-        >
+        <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-4">
           <Loader2 className="w-12 h-12 text-blue-500 dark:text-blue-400 animate-spin" />
           <p className="text-gray-600 dark:text-gray-400">Загрузка данных...</p>
         </motion.div>
@@ -65,11 +61,7 @@ const OSW2 = () => {
 
   if (osw.length === 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col items-center justify-center min-h-[400px] gap-4 print:hidden"
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center min-h-[400px] gap-4 print:hidden">
         <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600" />
         <p className="text-gray-500 dark:text-gray-400">Нет данных за выбранный период</p>
       </motion.div>
@@ -84,7 +76,9 @@ const OSW2 = () => {
           {/* Print Header */}
           <div className="mb-6 text-center">
             <h1 className="text-2xl font-bold mb-2">Оборотно-сальдовая ведомость</h1>
-            <p className="text-sm text-gray-600">Период: {dateFrom} — {dateTo}</p>
+            <p className="text-sm text-gray-600">
+              Период: {dateFrom} — {dateTo}
+            </p>
           </div>
 
           <table className="w-full border-collapse border-2 border-black">
@@ -119,34 +113,31 @@ const OSW2 = () => {
               {osw.map((o, idx) => {
                 return (
                   <tr key={o.number} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                    <td className="border border-black px-3 py-2 font-mono text-sm font-semibold">
-                      {o.number}
-                    </td>
-                    <td className="border border-black px-3 py-2 text-sm">
-                      {o.name}
-                    </td>
-                    <td className="border border-black px-3 py-2 text-right font-mono text-sm">
-                      {formatNumber(o.initial_debit)}
-                    </td>
-                    <td className="border border-black px-3 py-2 text-right font-mono text-sm">
-                      {formatNumber(o.initial_credit)}
-                    </td>
-                    <td className="border border-black px-3 py-2 text-right font-mono text-sm font-semibold">
-                      {formatNumber(o.debit)}
-                    </td>
-                    <td className="border border-black px-3 py-2 text-right font-mono text-sm font-semibold">
-                      {formatNumber(o.credit)}
-                    </td>
-                    <td className="border border-black px-3 py-2 text-right font-mono text-sm">
-                      {formatNumber(o.period_debit)}
-                    </td>
-                    <td className="border border-black px-3 py-2 text-right font-mono text-sm">
-                      {formatNumber(o.period_credit)}
-                    </td>
+                    <td className="border border-black px-3 py-2 font-mono text-sm font-semibold">{o.number}</td>
+                    <td className="border border-black px-3 py-2 text-sm">{o.name}</td>
+                    <td className="border border-black px-3 py-2 text-right font-mono text-sm">{formatNumber(o.initial_debit)}</td>
+                    <td className="border border-black px-3 py-2 text-right font-mono text-sm">{formatNumber(o.initial_credit)}</td>
+                    <td className="border border-black px-3 py-2 text-right font-mono text-sm font-semibold">{formatNumber(o.debit)}</td>
+                    <td className="border border-black px-3 py-2 text-right font-mono text-sm font-semibold">{formatNumber(o.credit)}</td>
+                    <td className="border border-black px-3 py-2 text-right font-mono text-sm">{formatNumber(o.period_debit)}</td>
+                    <td className="border border-black px-3 py-2 text-right font-mono text-sm">{formatNumber(o.period_credit)}</td>
                   </tr>
                 );
               })}
             </tbody>
+            <tfoot>
+              <tr className="bg-gray-200 font-bold">
+                <td className="border-2 border-black px-3 py-2 text-right" colSpan={2}>
+                  Итого
+                </td>
+                <td className="border-2 border-black px-3 py-2 text-right">{formatNumber(osw.reduce((sum, o) => sum + o.initial_debit, 0))}</td>
+                <td className="border-2 border-black px-3 py-2 text-right">{formatNumber(osw.reduce((sum, o) => sum + o.initial_credit, 0))}</td>
+                <td className="border-2 border-black px-3 py-2 text-right">{formatNumber(osw.reduce((sum, o) => sum + o.debit, 0))}</td>
+                <td className="border-2 border-black px-3 py-2 text-right">{formatNumber(osw.reduce((sum, o) => sum + o.credit, 0))}</td>
+                <td className="border-2 border-black px-3 py-2 text-right">{formatNumber(osw.reduce((sum, o) => sum + o.period_debit, 0))}</td>
+                <td className="border-2 border-black px-3 py-2 text-right">{formatNumber(osw.reduce((sum, o) => sum + o.period_credit, 0))}</td>
+              </tr>
+            </tfoot>
           </table>
 
           {/* Print Footer */}
@@ -162,21 +153,17 @@ const OSW2 = () => {
       {/* Screen Version - Modern Design */}
       <div className="p-4 md:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen print:hidden">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 flex items-center gap-3"
-        >
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 flex items-center gap-3">
           <div className="p-3 bg-blue-500 dark:bg-blue-600 rounded-xl shadow-lg">
             <TrendingUp className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">
-              Оборотно-сальдовая ведомость
-            </h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">Оборотно-сальдовая ведомость</h1>
             <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
               <Calendar className="w-4 h-4" />
-              <span>{dateFrom} — {dateTo}</span>
+              <span>
+                {dateFrom} — {dateTo}
+              </span>
             </div>
           </div>
         </motion.div>
@@ -192,8 +179,12 @@ const OSW2 = () => {
             <table className="w-full">
               <thead className="bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 text-white">
                 <tr>
-                  <th className="px-6 py-4 text-left font-semibold" rowSpan={2}>Счёт</th>
-                  <th className="px-6 py-4 text-left font-semibold" rowSpan={2}>Название</th>
+                  <th className="px-6 py-4 text-left font-semibold" rowSpan={2}>
+                    Счёт
+                  </th>
+                  <th className="px-6 py-4 text-left font-semibold" rowSpan={2}>
+                    Название
+                  </th>
                   <th className="px-6 py-3 text-center font-semibold border-l border-blue-400" colSpan={2}>
                     На начало
                   </th>
@@ -226,41 +217,36 @@ const OSW2 = () => {
                       onMouseLeave={() => setHoveredRow(null)}
                       className="border-b border-gray-200 dark:border-gray-700 cursor-pointer transition-all duration-200 hover:bg-blue-50 dark:hover:bg-gray-700"
                     >
-                      <td className="px-6 py-4 font-mono text-sm font-semibold text-blue-600 dark:text-blue-400">
-                        {o.number}
-                      </td>
+                      <td className="px-6 py-4 font-mono text-sm font-semibold text-blue-600 dark:text-blue-400">{o.number}</td>
                       <td className="px-6 py-4 text-gray-700 dark:text-gray-300">
                         <div className="flex items-center justify-between">
                           <span>{o.name}</span>
-                          <ChevronRight
-                            className={`w-5 h-5 text-gray-400 transition-all duration-200 ${
-                              hoveredRow === o.number ? "translate-x-1 text-blue-500" : ""
-                            }`}
-                          />
+                          <ChevronRight className={`w-5 h-5 text-gray-400 transition-all duration-200 ${hoveredRow === o.number ? "translate-x-1 text-blue-500" : ""}`} />
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-600 dark:text-gray-400 border-l border-gray-200 dark:border-gray-700">
-                        {formatNumber(o.initial_debit)}
-                      </td>
-                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-600 dark:text-gray-400">
-                        {formatNumber(o.initial_credit)}
-                      </td>
-                      <td className="px-4 py-4 text-right font-mono text-sm font-semibold text-green-600 dark:text-green-400 border-l border-gray-200 dark:border-gray-700">
-                        {formatNumber(o.debit)}
-                      </td>
-                      <td className="px-4 py-4 text-right font-mono text-sm font-semibold text-red-600 dark:text-red-400">
-                        {formatNumber(o.credit)}
-                      </td>
-                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-600 dark:text-gray-400 border-l border-gray-200 dark:border-gray-700">
-                        {formatNumber(o.final_debit)}
-                      </td>
-                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-600 dark:text-gray-400">
-                        {formatNumber(o.final_credit)}
-                      </td>
+                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-600 dark:text-gray-400 border-l border-gray-200 dark:border-gray-700">{formatNumber(o.initial_debit)}</td>
+                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-600 dark:text-gray-400">{formatNumber(o.initial_credit)}</td>
+                      <td className="px-4 py-4 text-right font-mono text-sm font-semibold text-green-600 dark:text-green-400 border-l border-gray-200 dark:border-gray-700">{formatNumber(o.debit)}</td>
+                      <td className="px-4 py-4 text-right font-mono text-sm font-semibold text-red-600 dark:text-red-400">{formatNumber(o.credit)}</td>
+                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-600 dark:text-gray-400 border-l border-gray-200 dark:border-gray-700">{formatNumber(o.final_debit)}</td>
+                      <td className="px-4 py-4 text-right font-mono text-sm text-gray-600 dark:text-gray-400">{formatNumber(o.final_credit)}</td>
                     </motion.tr>
                   ))}
                 </AnimatePresence>
               </tbody>
+              <tfoot className="bg-blue-100 dark:bg-blue-800 font-semibold text-sm">
+                <tr>
+                  <td className="px-6 py-4 text-right" colSpan={2}>
+                    Итого
+                  </td>
+                  <td className="px-4 py-4 text-right">{formatNumber(osw.reduce((sum, o) => sum + o.initial_debit, 0))}</td>
+                  <td className="px-4 py-4 text-right">{formatNumber(osw.reduce((sum, o) => sum + o.initial_credit, 0))}</td>
+                  <td className="px-4 py-4 text-right">{formatNumber(osw.reduce((sum, o) => sum + o.debit, 0))}</td>
+                  <td className="px-4 py-4 text-right">{formatNumber(osw.reduce((sum, o) => sum + o.credit, 0))}</td>
+                  <td className="px-4 py-4 text-right">{formatNumber(osw.reduce((sum, o) => sum + o.final_debit, 0))}</td>
+                  <td className="px-4 py-4 text-right">{formatNumber(osw.reduce((sum, o) => sum + o.final_credit, 0))}</td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         </motion.div>
@@ -279,77 +265,53 @@ const OSW2 = () => {
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
-                      СЧЁТ
-                    </div>
-                    <div className="text-xl font-bold text-blue-600 dark:text-blue-400 font-mono">
-                      {o.number}
-                    </div>
+                    <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">СЧЁТ</div>
+                    <div className="text-xl font-bold text-blue-600 dark:text-blue-400 font-mono">{o.number}</div>
                   </div>
                   <ChevronRight className="w-6 h-6 text-gray-400 dark:text-gray-500 mt-2" />
                 </div>
 
-                <div className="text-gray-700 dark:text-gray-300 font-medium mb-4">
-                  {o.name}
-                </div>
+                <div className="text-gray-700 dark:text-gray-300 font-medium mb-4">{o.name}</div>
 
                 <div className="space-y-3">
                   <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                    <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
-                      НА НАЧАЛО
-                    </div>
+                    <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">НА НАЧАЛО</div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">Дт</div>
-                        <div className="font-mono text-sm text-gray-700 dark:text-gray-300">
-                          {formatNumber(o.initial_debit)}
-                        </div>
+                        <div className="font-mono text-sm text-gray-700 dark:text-gray-300">{formatNumber(o.initial_debit)}</div>
                       </div>
                       <div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">Kт</div>
-                        <div className="font-mono text-sm text-gray-700 dark:text-gray-300">
-                          {formatNumber(o.initial_credit)}
-                        </div>
+                        <div className="font-mono text-sm text-gray-700 dark:text-gray-300">{formatNumber(o.initial_credit)}</div>
                       </div>
                     </div>
                   </div>
 
                   <div className="bg-gradient-to-r from-green-50 to-red-50 dark:from-green-900/20 dark:to-red-900/20 rounded-lg p-3">
-                    <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
-                      ОБОРОТЫ
-                    </div>
+                    <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">ОБОРОТЫ</div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">Дт</div>
-                        <div className="font-mono text-sm font-semibold text-green-600 dark:text-green-400">
-                          {formatNumber(o.debit)}
-                        </div>
+                        <div className="font-mono text-sm font-semibold text-green-600 dark:text-green-400">{formatNumber(o.debit)}</div>
                       </div>
                       <div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">Kт</div>
-                        <div className="font-mono text-sm font-semibold text-red-600 dark:text-red-400">
-                          {formatNumber(o.credit)}
-                        </div>
+                        <div className="font-mono text-sm font-semibold text-red-600 dark:text-red-400">{formatNumber(o.credit)}</div>
                       </div>
                     </div>
                   </div>
 
                   <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-                    <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
-                      САЛЬДО НА КОНЕЦ
-                    </div>
+                    <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">САЛЬДО НА КОНЕЦ</div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">Дт</div>
-                        <div className="font-mono text-sm text-gray-700 dark:text-gray-300">
-                          {formatNumber(o.final_debit)}
-                        </div>
+                        <div className="font-mono text-sm text-gray-700 dark:text-gray-300">{formatNumber(o.final_debit)}</div>
                       </div>
                       <div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">Kт</div>
-                        <div className="font-mono text-sm text-gray-700 dark:text-gray-300">
-                          {formatNumber(o.final_credit)}
-                        </div>
+                        <div className="font-mono text-sm text-gray-700 dark:text-gray-300">{formatNumber(o.final_credit)}</div>
                       </div>
                     </div>
                   </div>

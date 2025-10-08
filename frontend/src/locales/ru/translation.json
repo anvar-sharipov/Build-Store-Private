@@ -504,7 +504,8 @@
   "u dont have a rule for wozwrat": "Нет правила проводки для возврат фактуры",
   "u have more rule than 1 for prwozwratihod faktura": "Больше 1 правила для возврат фактура",
   "rule must have revenue": "В правиле проводок должна быть опция продажа",
-  "print receipt":"Печать чека"
+  "print receipt":"Печать чека",
+  "success entry": "Проводка успешно создана"
  
  
 

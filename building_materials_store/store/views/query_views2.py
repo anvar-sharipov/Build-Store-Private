@@ -15,6 +15,8 @@ from openpyxl import Workbook, load_workbook
 from datetime import datetime
 from io import BytesIO
 from openpyxl.styles import PatternFill
+from django.db import transaction
+
 
 
 
@@ -394,55 +396,57 @@ from django.db import transaction as db_transaction
 def create_entry(request):
     if request.method == "POST":
         try:
-            data = json.loads(request.body)
+            with transaction.atomic():
+                data = json.loads(request.body)
 
-            date = parse_date(data.get("date"))
-            if not date:
-                return JsonResponse({"status": "error", "message": "Неверная дата"}, status=400)
+                date = parse_date(data.get("date"))
+                if not date:
+                    return JsonResponse({"status": "error", "message": "Неверная дата"}, status=400)
 
-            debit_acc_number = data.get("debitAccount")
-            credit_acc_number = data.get("creditAccount")
-            amount = Decimal(data.get("amount") or 0)
-            if amount <= 0:
-                return JsonResponse({"status": "error", "message": "Сумма должна быть больше 0"}, status=400)
+                debit_acc_number = data.get("debitAccount")
+                credit_acc_number = data.get("creditAccount")
+                amount = Decimal(data.get("amount") or 0)
+                if amount <= 0:
+                    return JsonResponse({"status": "error", "message": "Сумма должна быть больше 0"}, status=400)
 
-            comment = data.get("comment", "")
-            partner_id = data.get("partnerId")
-            partner = Partner.objects.get(id=partner_id) if partner_id else None
+                comment = data.get("comment", "")
+                partner_id = data.get("partnerId")
+                partner = Partner.objects.get(id=partner_id) if partner_id else None
 
-            # Весь процесс в атомарной транзакции
-            with db_transaction.atomic():
-                transaction_obj = Transaction.objects.create(
-                    date=date,
-                    description=comment,
-                    partner=partner
-                )
+                # Весь процесс в атомарной транзакции
+                with db_transaction.atomic():
+                    transaction_obj = Transaction.objects.create(
+                        date=date,
+                        description=comment,
+                        partner=partner
+                    )
 
-                debit_account = Account.objects.get(number=debit_acc_number)
-                credit_account = Account.objects.get(number=credit_acc_number)
+                    debit_account = Account.objects.get(number=debit_acc_number)
+                    credit_account = Account.objects.get(number=credit_acc_number)
 
-                Entry.objects.create(
-                    transaction=transaction_obj,
-                    account=debit_account,
-                    debit=amount,
-                    credit=Decimal("0.00")
-                )
+                    Entry.objects.create(
+                        transaction=transaction_obj,
+                        account=debit_account,
+                        debit=amount,
+                        credit=Decimal("0.00")
+                    )
 
-                Entry.objects.create(
-                    transaction=transaction_obj,
-                    account=credit_account,
-                    debit=Decimal("0.00"),
-                    credit=amount
-                )
-
-            return JsonResponse({"status": "success", "transaction_id": transaction_obj.id})
+                    Entry.objects.create(
+                        transaction=transaction_obj,
+                        account=credit_account,
+                        debit=Decimal("0.00"),
+                        credit=amount
+                    )
+                return JsonResponse({"message": "success entry", "transaction_id": transaction_obj.id})
 
         except Account.DoesNotExist:
             return JsonResponse({"status": "error", "message": "Счёт не найден"}, status=400)
         except Partner.DoesNotExist:
             return JsonResponse({"status": "error", "message": "Партнёр не найден"}, status=400)
         except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)}, status=400)
+            ic(e)
+            # create error
+            return JsonResponse({"status": "error", "message": "transactionChange", "reason_for_the_error": str(e)}, status=400)
 
 
 

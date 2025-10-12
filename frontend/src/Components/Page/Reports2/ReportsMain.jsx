@@ -18,8 +18,8 @@ const ReportsMain = () => {
   const reports = [
     { id: 1, name: t("PRICE_CHANGE_REPORT"), icon: DollarSign, color: "blue", to: ROUTES_RAPORT.PRICE_CHANGE_REPORT },
     { id: 2, name: "Оборотно сальдовая ведомость", icon: TrendingUp, color: "emerald", to: ROUTES_RAPORT.OSW2 },
-    { id: 3, name: "Анализ движения товаров (excel)", icon: BarChart3, color: "purple", to: ROUTES_RAPORT.SALES_ANALIS },
-    { id: 4, name: "Статистика клиентов", icon: PieChart, color: "amber" },
+    { id: 3, name: "Анализ движения товаров без учёта возврата (excel)", icon: BarChart3, color: "purple", to: ROUTES_RAPORT.SALES_ANALIS },
+    { id: 4, name: "Анализ движения товаров с учётом возврата (excel)", icon: PieChart, color: "amber", to: ROUTES_RAPORT.SALES_ANALIS_WITHOUT_RETURN },
     { id: 5, name: "Отчет активности", icon: Activity, color: "rose" },
     { id: 6, name: "Календарь событий", icon: Calendar, color: "indigo" },
     { id: 7, name: "Отчет по расходам", icon: DollarSign, color: "red" },

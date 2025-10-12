@@ -149,7 +149,7 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
@@ -174,6 +174,10 @@ CSRF_TRUSTED_ORIGINS = [
     "https://192.168.25.74:3000",
     "http://192.168.0.2:3000",
     "https://192.168.0.2:3000",
+    'https://192.168.25.74',
+    'https://localhost',
+    'http://192.168.25.74',
+    'http://localhost',
 ]
 
 
@@ -199,3 +203,7 @@ AUTH_USER_MODEL = 'store.CustomUser'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+
+# HTTPS настройки
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

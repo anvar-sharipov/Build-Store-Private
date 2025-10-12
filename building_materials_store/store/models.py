@@ -109,15 +109,16 @@ class Product(models.Model):
 
 
 class Warehouse(models.Model):
-    CURRENCY_CHOICES = [
-        ('USD', 'USD'),
-        ('TMT', 'TMT'),
-    ]
+    # CURRENCY_CHOICES = [
+    #     ('USD', 'USD'),
+    #     ('TMT', 'TMT'),
+    # ]
     
     name = models.CharField(max_length=100, unique=True, verbose_name="Название склада")
     location = models.CharField(max_length=255, blank=True, verbose_name="Адрес (необязательно)")
     is_active = models.BooleanField(default=True, verbose_name="Активен")
-    currency = models.CharField(verbose_name="Валюта", max_length=20, choices=CURRENCY_CHOICES, default="USD", null=True, blank=True)
+    # currency = models.CharField(verbose_name="Валюта", max_length=20, choices=CURRENCY_CHOICES, default="USD", null=True, blank=True)
+    currency  = models.ForeignKey('Currency', on_delete=models.PROTECT, verbose_name="Валюта", null=True, blank=True,)
     
    
     class Meta:
@@ -718,10 +719,10 @@ class CustomePostingRule(models.Model):
     CONTENT_TYPE_CHOICES = [('klient', 'Покупатель'), ('founder', 'Учредитель')] # ('supplier', 'Поставщик'),
     AMOUNT_TYPE_CHOICES = [('revenue', 'Продажа (цена)'), ('cogs', 'Себестоимость'), ('profit', 'Прибыль (доход цена)')] # ('pays', 'Платежи')
     # PAYS_TYPE_CHOICES = [('income', 'Приход'), ('expense', 'Расход')]
-    CURRENCY_CHOICES = [
-        ('USD', 'USD'),
-        ('TMT', 'TMT'),
-    ]
+    # CURRENCY_CHOICES = [
+    #     ('USD', 'USD'),
+    #     ('TMT', 'TMT'),
+    # ]
     
     operation = models.ForeignKey(Operation, on_delete=models.PROTECT, verbose_name="Операция")
     # warehouse = models.ForeignKey('Warehouse', on_delete=models.PROTECT, null=True, blank=True, verbose_name="Склад")
@@ -731,7 +732,8 @@ class CustomePostingRule(models.Model):
     description = models.CharField(max_length=255, blank=True, null=True, verbose_name="Описание") 
     amount_type = models.CharField(max_length=20, choices=AMOUNT_TYPE_CHOICES, verbose_name="Тип суммы (использоваит при Фактурах)", blank=True, null=True,)
     # pays_type = models.CharField(max_length=20, choices=PAYS_TYPE_CHOICES, verbose_name="Тип платежа (использоваит при платежах)", blank=True, null=True,)
-    currency = models.CharField(verbose_name="Валюта", max_length=20, choices=CURRENCY_CHOICES, default="USD", null=True, blank=True)
+    # currency = models.CharField(verbose_name="Валюта", max_length=20, choices=CURRENCY_CHOICES, default="USD", null=True, blank=True)
+    currency  = models.ForeignKey('Currency', on_delete=models.PROTECT, verbose_name="Валюта", null=True, blank=True,)
     
     class Meta:
         verbose_name = "Правило проводки"
@@ -874,3 +876,13 @@ class DateFocus(models.Model):
 
     def __str__(self):
         return str(self.dateFocus)
+    
+    
+    
+
+class Currency(models.Model):
+    code = models.CharField(max_length=10, unique=True, verbose_name="Код валюты")
+    name = models.CharField(max_length=50, verbose_name="Название")
+
+    def __str__(self):
+        return self.code

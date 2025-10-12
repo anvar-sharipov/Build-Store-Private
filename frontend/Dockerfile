@@ -2,44 +2,26 @@ FROM node:20 AS build
 
 WORKDIR /app
 
-# Копируем package.json и package-lock.json/yarn.lock
 COPY package*.json ./
-
-# Устанавливаем зависимости
 RUN npm ci
 
-# Копируем весь код проекта
 COPY . .
-
-# Билдим Vite (dist создаётся по умолчанию)
 RUN npm run build
 
 # Продакшен сервер — Nginx
 FROM nginx:alpine
+
+# Устанавливаем openssl для генерации сертификатов
+RUN apk add --no-cache openssl
+
+# Копируем билд
 COPY --from=build /app/dist /usr/share/nginx/html
-# COPY nginx_new.conf /etc/nginx/conf.d/default.conf
+
+# Копируем nginx конфигурацию
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
 
+# Копируем скрипт генерации сертификата
+COPY generate-cert.sh /docker-entrypoint.d/10-generate-cert.sh
+RUN chmod +x /docker-entrypoint.d/10-generate-cert.sh
 
-
-# FROM node:20 AS build
-
-# WORKDIR /app
-
-# # Копируем package.json и package-lock.json/yarn.lock
-# COPY package*.json ./
-
-# # Устанавливаем зависимости
-# RUN npm ci
-
-# # Копируем весь код проекта
-# COPY . .
-
-# # Билдим Vite (dist создаётся по умолчанию)
-# RUN npm run build
-
-# # Продакшен сервер — Nginx
-# FROM nginx:alpine
-# COPY --from=build /app/dist /usr/share/nginx/html
-# EXPOSE 80
+EXPOSE 80 443

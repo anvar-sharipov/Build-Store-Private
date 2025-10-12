@@ -474,7 +474,9 @@
   "u have more rule than 1 for wozwrat faktura": "Faktura boýunça gaýtarma geçirmek üçin düzgün 1-den köp",
   "Rule must have revenue": "Ýüzleşik düzgüninde satuw (продажа) opsiýasy bolmaly",
   "print receipt": "Çeki çap et",
-  "success entry": "Prowodka üstünlikli döredildi"
+  "success entry": "Prowodka üstünlikli döredildi",
+  "currency is not valid": "Anbar üçin nädogry walýuta",
+  "detail report": "Jikme-jik hasabat"
 
 
 

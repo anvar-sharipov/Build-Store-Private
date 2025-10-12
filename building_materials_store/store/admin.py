@@ -181,13 +181,21 @@ class TagAdmin(admin.ModelAdmin):
         return obj.product_set.count()  # <- исправлено
     product_count.short_description = 'Товаров'
 
-
-# Склады
 @admin.register(Warehouse)
 class WarehouseAdmin(admin.ModelAdmin):
-    list_display = ('name', 'location', 'currency')
-    search_fields = ('name', 'location', 'currency')
-    
+    list_display = ('name', 'location', 'currency', 'is_active')
+    search_fields = ('name', 'location', 'currency__code')
+    list_filter = ('is_active', 'currency')
+    ordering = ('name',)
+
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'location', 'is_active')
+        }),
+        ('Валюта', {
+            'fields': ('currency',)
+        }),
+    )
     # def product_count(self, obj):
     #     return obj.stock_items.count()
     # product_count.short_description = 'Товаров'
@@ -482,11 +490,29 @@ class OperationAdmin(admin.ModelAdmin):
 
 @admin.register(CustomePostingRule)
 class CustomePostingRuleAdmin(admin.ModelAdmin):
-    list_display = ('operation', 'directory_type', 'debit_account', 'credit_account', 'amount_type', 'currency', 'description')
+    list_display = (
+        'operation', 'directory_type', 'debit_account', 'credit_account',
+        'amount_type', 'currency', 'description'
+    )
     list_filter = ('operation', 'directory_type', 'amount_type', 'currency')
-    search_fields = ('operation__name', 'directory_type', 'debit_account__code', 'credit_account__code', 'description')
+    search_fields = (
+        'operation__name', 'directory_type',
+        'debit_account__code', 'credit_account__code',
+        'description'
+    )
     ordering = ('operation', 'directory_type')
 
+    fieldsets = (
+        (None, {
+            'fields': ('operation', 'directory_type', 'description')
+        }),
+        ('Счета', {
+            'fields': ('debit_account', 'credit_account')
+        }),
+        ('Типы и валюта', {
+            'fields': ('amount_type', 'currency')
+        }),
+    )
 
 @admin.register(WarehouseAccount)
 class WarehouseAccountAdmin(admin.ModelAdmin):
@@ -787,3 +813,8 @@ class DateFocusAdmin(admin.ModelAdmin):
 
 
 
+@admin.register(Currency)
+class CurrencyAdmin(admin.ModelAdmin):
+    list_display = ("code", "name")  # показывать в списке
+    search_fields = ("code", "name")  # поиск по коду и названию
+    ordering = ("code",)  # сортировка по коду

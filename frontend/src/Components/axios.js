@@ -1,7 +1,8 @@
 // axiosInstance.js
 import axios from "axios";
 import { useEffect } from "react";
-const API_BASE = import.meta.env.VITE_BASE_URL;
+// const API_BASE = import.meta.env.VITE_BASE_URL;
+const API_BASE = import.meta.env.VITE_BASE_URL || "";
 console.log('API_BASE', API_BASE);
 
 

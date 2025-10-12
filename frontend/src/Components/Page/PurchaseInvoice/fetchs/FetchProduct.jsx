@@ -7,7 +7,8 @@ import myAxios from "../../../axios";
 import { formatNumber } from "../../../UI/formatNumber";
 import Notification from "../../../Notification";
 
-const BASE_URL = import.meta.env.VITE_BASE_URL;
+// const BASE_URL = import.meta.env.VITE_BASE_URL;
+const BASE_URL = import.meta.env.VITE_BASE_URL || "";
 
 const FetchProduct = ({ refs }) => {
   const { t } = useTranslation();

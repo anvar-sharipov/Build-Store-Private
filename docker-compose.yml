@@ -12,7 +12,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
-      # - ./init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
     networks:
       - appnet
     healthcheck:
@@ -23,35 +22,41 @@ services:
 
   backend:
     build: ./building_materials_store
-    # image: polisem_docker-backend:latest
     restart: unless-stopped
     env_file: .env
     depends_on:
       db:
-        condition: service_healthy  # Ждём пока БД будет готова
+        condition: service_healthy
     ports:
       - "8000:8000"
     networks:
       - appnet
     volumes:
-      - media_data:/app/media    # подключаем отдельный volume для media
-    command: ["./entrypoint.sh", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+      - media_data:/app/media
+      - static_data:/app/staticfiles
+    command: ["./entrypoint.sh", "gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "building_materials_store.wsgi:application"]
 
   frontend:
     build: ./frontend
-    # image: polisem_docker-frontend:latest
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "80:80"
+      - "443:443"
     networks:
       - appnet
     depends_on:
       backend:
-        condition: service_started  # Ждем запуска backend
+        condition: service_started
+    volumes:
+      - ssl_certs:/etc/nginx/ssl
+      - static_data:/app/staticfiles
+      - media_data:/app/media
 
 volumes:
   postgres_data:
-  media_data:  # теперь volume для media явно создан
+  media_data:
+  static_data:
+  ssl_certs:
 
 networks:
   appnet:

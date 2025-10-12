@@ -21,6 +21,7 @@ export const ROUTES_RAPORT = {
   OSW2: "/osw2",
   DETAIL_REPORT_1: "/detail-report-level-1",
   SALES_ANALIS: "/sales-analis",
+  SALES_ANALIS_WITHOUT_RETURN: "/sales-analis-without-return",
 };
 
 

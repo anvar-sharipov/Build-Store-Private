@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useContext, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileText, TrendingUp, Calendar, ChevronRight, Loader2 } from "lucide-react";
@@ -7,11 +8,16 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES_RAPORT } from "../../../routes";
 
 const OSW2 = () => {
+  const { t } = useTranslation();
   const { dateFrom, dateTo } = useContext(DateContext);
   const [osw, setOsw] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hoveredRow, setHoveredRow] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = `${t("osw")}`; // название вкладки
+  }, []);
 
   useEffect(() => {
     const getAccounts = async () => {
@@ -75,7 +81,7 @@ const OSW2 = () => {
         <div className="print:block hidden p-8">
           {/* Print Header */}
           <div className="mb-6 text-center">
-            <h1 className="text-2xl font-bold mb-2">Оборотно-сальдовая ведомость</h1>
+            <h1 className="text-2xl font-bold mb-2">{t("osw")}</h1>
             <p className="text-sm text-gray-600">
               Период: {dateFrom} — {dateTo}
             </p>
@@ -158,7 +164,7 @@ const OSW2 = () => {
             <TrendingUp className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">Оборотно-сальдовая ведомость</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">{t("osw")}</h1>
             <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
               <Calendar className="w-4 h-4" />
               <span>

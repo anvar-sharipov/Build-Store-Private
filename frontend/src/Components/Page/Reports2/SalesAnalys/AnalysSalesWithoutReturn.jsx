@@ -4,7 +4,9 @@ import { Upload, FileSpreadsheet, Download, AlertCircle, CheckCircle2, Loader2 }
 import myAxios from "../../../axios";
 import MyLoading2 from "../../../UI/MyLoading2";
 
-const SalesAnalys = () => {
+
+
+const AnalysSalesWithoutReturn = () => {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -57,7 +59,7 @@ const SalesAnalys = () => {
       setLoading(true);
       setMessage("");
 
-      const res = await myAxios.post("/upload_sales_excel_for_analis/", formData, {
+      const res = await myAxios.post("/upload_sales_excel_for_analis_with_return/", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -110,7 +112,7 @@ const SalesAnalys = () => {
             <FileSpreadsheet className="w-12 h-12 text-white" />
           </motion.div>
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            Анализ продаж без учёта возврата
+            Анализ продаж с учётом возврата
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
             Загрузите Excel-файл для получения детального анализа
@@ -304,4 +306,4 @@ const SalesAnalys = () => {
   );
 };
 
-export default SalesAnalys;
+export default AnalysSalesWithoutReturn;

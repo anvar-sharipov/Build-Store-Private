@@ -6,7 +6,8 @@ import { useState, useRef, useEffect } from "react";
 import TDPrice from "./TDPrice";
 import { HiX } from "react-icons/hi";
 
-const BASE_URL = import.meta.env.VITE_BASE_URL;
+// const BASE_URL = import.meta.env.VITE_BASE_URL;
+const BASE_URL = import.meta.env.VITE_BASE_URL || "";
 
 const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
   const { values, setFieldValue, touched, errors } = useFormikContext();

@@ -89,29 +89,29 @@ WSGI_APPLICATION = 'building_materials_store.wsgi.application'
 #     }
 # }
 
-# dlya local host
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',  
-        'NAME': config('DATABASE_NAME'),                  
-        'USER': config('DATABASE_USER'),                      
-        'PASSWORD': config('DATABASE_PASSWORD'),                            
-        'HOST': 'localhost',                       
-        'PORT': '5432',                             
-    }
-}
-
-# # dlya docker
+# # dlya local host
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',  
 #         'NAME': config('DATABASE_NAME'),                  
 #         'USER': config('DATABASE_USER'),                      
 #         'PASSWORD': config('DATABASE_PASSWORD'),                            
-#         'HOST': config('DATABASE_HOST'),                     
+#         'HOST': 'localhost',                       
 #         'PORT': '5432',                             
 #     }
 # }
+
+# dlya docker
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',  
+        'NAME': config('DATABASE_NAME'),                  
+        'USER': config('DATABASE_USER'),                      
+        'PASSWORD': config('DATABASE_PASSWORD'),                            
+        'HOST': config('DATABASE_HOST'),                     
+        'PORT': '5432',                             
+    }
+}
 
 
 
@@ -177,6 +177,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://192.168.25.74',
     'https://localhost',
     'http://192.168.25.74',
+    # "http://192.168.0.2:8000",
+    # "https://192.168.0.2:8000",
     'http://localhost',
 ]
 

@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from datetime import datetime
 from django.utils.dateparse import parse_date
-from django.db.models import Sum, F
+from django.db.models import Sum, F, Q
 import json
 from django.http import HttpResponse
 from openpyxl import Workbook, load_workbook
@@ -16,6 +16,7 @@ from datetime import datetime
 from io import BytesIO
 from openpyxl.styles import PatternFill
 from django.db import transaction
+from datetime import datetime, date
 
 
 
@@ -456,145 +457,366 @@ def create_entry(request):
 
 
 
+# # samyy perwyy kod rabotaet no ochen skudnyy po kolonkam i ne uchitywaet wozwrat
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def upload_sales_excel_for_analis(request):
+#     file = request.FILES.get("file")
+#     if not file:
+#         return HttpResponse("Файл не получен", status=400)
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def upload_sales_excel_for_analis(request):
-    file = request.FILES.get("file")
-    if not file:
-        return HttpResponse("Файл не получен", status=400)
+#     try:
+#         wb = load_workbook(filename=file, data_only=True)
+#         ws = wb.active
 
-    try:
-        wb = load_workbook(filename=file, data_only=True)
-        ws = wb.active
+#         products = {}
 
-        products = {}
+#         # собираем данные
+#         for row in ws.iter_rows(min_row=6, values_only=True):
+#             if row[0] and "Hemmesi" in str(row[0]):
+#                 break
 
-        # собираем данные
-        for row in ws.iter_rows(min_row=6, values_only=True):
-            if row[0] and "Hemmesi" in str(row[0]):
-                break
+#             product_name = row[9]  # Harydyň ady
+#             document = row[3]      # Dokument
+#             date_str = row[1]      # Senesi
+#             quantity = float(row[12] or 0)  # Mukdary
+#             price = float(row[11] or 0)     # Bahasy
+#             client = row[4]       # Kime
 
-            product_name = row[9]  # Harydyň ady
-            document = row[3]      # Dokument
-            date_str = row[1]      # Senesi
-            quantity = float(row[12] or 0)  # Mukdary
-            price = float(row[11] or 0)     # Bahasy
-            client = row[4]       # Kime
+#             try:
+#                 date_ = datetime.strptime(date_str, "%d.%m.%y").date()
+#             except Exception:
+#                 continue
 
-            try:
-                date_ = datetime.strptime(date_str, "%d.%m.%y").date()
-            except Exception:
-                continue
+#             if product_name not in products:
+#                 products[product_name] = {
+#                     "price": price,
+#                     "sale_quantity": 0,
+#                     "total_sale": 0,
+#                     "purchase_date": None,
+#                     "last_sale_date": None,
+#                     "clients": set()
+#                 }
 
-            if product_name not in products:
-                products[product_name] = {
-                    "price": price,
-                    "sale_quantity": 0,
-                    "total_sale": 0,
-                    "purchase_date": None,
-                    "last_sale_date": None,
-                    "clients": set()
-                }
+#             if "Girdeji faktura" in document:
+#                 products[product_name]["purchase_date"] = date_
+#             elif "Söwda" in document:
+#                 products[product_name]["sale_quantity"] += quantity
+#                 products[product_name]["total_sale"] += price * quantity
+#                 products[product_name]["last_sale_date"] = (
+#                     date_ if not products[product_name]["last_sale_date"]
+#                     else max(products[product_name]["last_sale_date"], date_)
+#                 )
+#                 if client:
+#                     products[product_name]["clients"].add(client)
 
-            if "Girdeji faktura" in document:
-                products[product_name]["purchase_date"] = date_
-            elif "Söwda" in document:
-                products[product_name]["sale_quantity"] += quantity
-                products[product_name]["total_sale"] += price * quantity
-                products[product_name]["last_sale_date"] = (
-                    date_ if not products[product_name]["last_sale_date"]
-                    else max(products[product_name]["last_sale_date"], date_)
-                )
-                if client:
-                    products[product_name]["clients"].add(client)
+#         # вычисляем диапазон для градиента
+#         all_days = [
+#             (v["last_sale_date"] - v["purchase_date"]).days
+#             for v in products.values()
+#             if v["purchase_date"] and v["last_sale_date"]
+#         ]
+#         min_days = min(all_days) if all_days else 0
+#         max_days = max(all_days) if all_days else 1
 
-        # вычисляем диапазон для градиента
-        all_days = [
-            (v["last_sale_date"] - v["purchase_date"]).days
-            for v in products.values()
-            if v["purchase_date"] and v["last_sale_date"]
-        ]
-        min_days = min(all_days) if all_days else 0
-        max_days = max(all_days) if all_days else 1
+#         def get_fill(days):
+#             if days is None:
+#                 return PatternFill(fill_type=None)
+#             ratio = (days - min_days) / (max_days - min_days + 1e-5)
+#             if ratio < 0.5:
+#                 green = 255
+#                 red = int(255 * ratio * 2)
+#                 blue = 0
+#             else:
+#                 red = 255
+#                 green = int(255 * (1 - (ratio-0.5)*2))
+#                 blue = 0
+#             hex_color = f"{red:02X}{green:02X}{blue:02X}"
+#             return PatternFill(start_color=hex_color, end_color=hex_color, fill_type="solid")
 
-        def get_fill(days):
-            if days is None:
-                return PatternFill(fill_type=None)
-            ratio = (days - min_days) / (max_days - min_days + 1e-5)
-            if ratio < 0.5:
-                green = 255
-                red = int(255 * ratio * 2)
-                blue = 0
-            else:
-                red = 255
-                green = int(255 * (1 - (ratio-0.5)*2))
-                blue = 0
-            hex_color = f"{red:02X}{green:02X}{blue:02X}"
-            return PatternFill(start_color=hex_color, end_color=hex_color, fill_type="solid")
+#         # создаём новый Excel
+#         out_wb = Workbook()
+#         out_ws = out_wb.active
+#         out_ws.title = "Sales Analysis"
 
-        # создаём новый Excel
-        out_wb = Workbook()
-        out_ws = out_wb.active
-        out_ws.title = "Sales Analysis"
+#         headers = [
+#             "Наименование товара",
+#             "Цена (Сумма/Количество)",
+#             "Количество продажи",
+#             "Сумма продажи",
+#             "Дата Прихода",
+#             "Дата Продажи последней штуки",
+#             "Количество дней",
+#             "Количество клиента"
+#         ]
+#         out_ws.append(headers)
 
-        headers = [
-            "Наименование товара",
-            "Цена (Сумма/Количество)",
-            "Количество продажи",
-            "Сумма продажи",
-            "Дата Прихода",
-            "Дата Продажи последней штуки",
-            "Количество дней",
-            "Количество клиента"
-        ]
-        out_ws.append(headers)
+#         # заполняем данные и красим строки
+#         for name, info in products.items():
+#             purchase_date = info["purchase_date"]
+#             last_sale_date = info["last_sale_date"]
+#             days_diff = (last_sale_date - purchase_date).days if purchase_date and last_sale_date else None
 
-        # заполняем данные и красим строки
-        for name, info in products.items():
-            purchase_date = info["purchase_date"]
-            last_sale_date = info["last_sale_date"]
-            days_diff = (last_sale_date - purchase_date).days if purchase_date and last_sale_date else None
+#             out_ws.append([
+#                 name,
+#                 info["price"],
+#                 info["sale_quantity"],
+#                 info["total_sale"],
+#                 purchase_date.isoformat() if purchase_date else None,
+#                 last_sale_date.isoformat() if last_sale_date else None,
+#                 days_diff,
+#                 len(info["clients"])
+#             ])
 
-            out_ws.append([
-                name,
-                info["price"],
-                info["sale_quantity"],
-                info["total_sale"],
-                purchase_date.isoformat() if purchase_date else None,
-                last_sale_date.isoformat() if last_sale_date else None,
-                days_diff,
-                len(info["clients"])
-            ])
+#             row_idx = out_ws.max_row
+#             fill = get_fill(days_diff)
+#             for col_idx in range(1, len(headers)+1):
+#                 out_ws.cell(row=row_idx, column=col_idx).fill = fill
 
-            row_idx = out_ws.max_row
-            fill = get_fill(days_diff)
-            for col_idx in range(1, len(headers)+1):
-                out_ws.cell(row=row_idx, column=col_idx).fill = fill
+#         # сохраняем и возвращаем
+#         output = BytesIO()
+#         out_wb.save(output)
+#         output.seek(0)
 
-        # сохраняем и возвращаем
-        output = BytesIO()
-        out_wb.save(output)
-        output.seek(0)
+#         response = HttpResponse(
+#             output,
+#             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+#         )
+#         response['Content-Disposition'] = 'attachment; filename="sales_analysis.xlsx"'
+#         return response
 
-        response = HttpResponse(
-            output,
-            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
-        response['Content-Disposition'] = 'attachment; filename="sales_analysis.xlsx"'
-        return response
-
-    except Exception as e:
-        import traceback
-        print(traceback.format_exc())
-        return HttpResponse(f"Ошибка при обработке файла: {e}", status=500)
+#     except Exception as e:
+#         import traceback
+#         print(traceback.format_exc())
+#         return HttpResponse(f"Ошибка при обработке файла: {e}", status=500)
     
     
     
     
 
+# kod rabochiy i uchitywaet wozwrat no kolonki wse rawno skudnye
+# def _parse_date(cell):
+#     """Поддерживаем datetime, 'dd.mm.YYYY', 'dd.mm.yy' и пустые значения."""
+#     if cell is None:
+#         return None
+#     if isinstance(cell, datetime):
+#         return cell.date()
+#     s = str(cell).strip()
+#     if not s:
+#         return None
+#     for fmt in ("%d.%m.%Y", "%d.%m.%y", "%Y-%m-%d"):
+#         try:
+#             return datetime.strptime(s, fmt).date()
+#         except Exception:
+#             pass
+#     return None
 
-def _parse_date(cell):
+
+# def _to_float(cell):
+#     try:
+#         return float(cell) if cell is not None else 0.0
+#     except Exception:
+#         return 0.0
+# # rabotaet no nado dobawit neskolko kolonok poprosil azamat
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def upload_sales_excel_for_analis_with_return(request):
+#     file = request.FILES.get("file")
+#     if not file:
+#         return HttpResponse("Файл не получен", status=400)
+
+#     try:
+#         wb = load_workbook(filename=file, data_only=True)
+#         ws = wb.active
+
+#         # products: ключ = название товара, значение = список партий (FIFO)
+#         products = {}
+
+#         for row in ws.iter_rows(min_row=6, values_only=True):
+#             # стоп-условие
+#             if row[0] and "Hemmesi" in str(row[0]):
+#                 break
+
+#             remark = str(row[2]).strip().lower() if row[2] else ""  # C - Resmi-nama belgisi
+#             document = str(row[3] or "")                            # D - Dokument
+#             date_cell = row[1]                                      # B - дата
+#             product_name = row[9]                                   # J - Harydyň ady
+#             qty_in_row = _to_float(row[12])                         # M - количество
+#             price = _to_float(row[11])                              # L - цена
+#             client = row[4]                                         # E - клиент
+
+#             if not product_name or date_cell is None:
+#                 continue
+
+#             date_ = _parse_date(date_cell)
+#             if date_ is None:
+#                 continue
+
+#             # Инициализация
+#             if product_name not in products:
+#                 products[product_name] = []
+
+#             # === Приход ===
+#             if "Girdeji faktura" in document:
+#                 if "wozwrat" in remark:
+#                     continue
+
+#                 purchase_qty = qty_in_row
+#                 party = {
+#                     "purchase_date": date_,
+#                     "purchase_qty": purchase_qty,
+#                     "remaining": purchase_qty,
+#                     "sale_qty": 0.0,
+#                     "total_sale": 0.0,
+#                     "price": price,              # добавили цену за единицу
+#                     "last_sale_touch": None,
+#                     "sold_out_date": None,
+#                     "clients_net": {}
+#                 }
+#                 products[product_name].append(party)
+
+#             # === Продажа / Возврат ===
+#             elif "Söwda" in document:
+#                 is_return = "wozwrat" in remark
+#                 qty_to_process = qty_in_row
+
+#                 if not products.get(product_name):
+#                     continue
+
+#                 for party in products[product_name]:
+#                     if qty_to_process <= 0:
+#                         break
+
+#                     if is_return:
+#                         can_take_back = min(party["sale_qty"], qty_to_process)
+#                         if can_take_back <= 0:
+#                             continue
+#                         party["sale_qty"] -= can_take_back
+#                         party["total_sale"] -= can_take_back * price
+#                         party["remaining"] += can_take_back
+#                         if client:
+#                             party["clients_net"][client] = party["clients_net"].get(client, 0.0) - can_take_back
+#                         if party["remaining"] > 0:
+#                             party["sold_out_date"] = None
+#                         qty_to_process -= can_take_back
+
+#                     else:
+#                         if party["remaining"] <= 0:
+#                             continue
+#                         take = min(party["remaining"], qty_to_process)
+#                         party["remaining"] -= take
+#                         party["sale_qty"] += take
+#                         party["total_sale"] += take * price
+#                         party["last_sale_touch"] = date_ if not party["last_sale_touch"] else max(party["last_sale_touch"], date_)
+#                         if client:
+#                             party["clients_net"][client] = party["clients_net"].get(client, 0.0) + take
+#                         if party["remaining"] == 0:
+#                             party["sold_out_date"] = date_
+#                         qty_to_process -= take
+
+#                 if qty_to_process > 0:
+#                     pass
+
+#             else:
+#                 continue
+
+#         # === Формируем Excel ===
+#         out_wb = Workbook()
+#         out_ws = out_wb.active
+#         out_ws.title = "Sales Analysis"
+
+#         headers = [
+#             "Наименование товара",
+#             "Цена за штуку",
+#             "Дата прихода партии",
+#             "Дата продажи последней банки этой партии",
+#             "Кол-во в партии (приход)",
+#             "Продано из этой партии (шт)",
+#             "Остаток партии (шт)",
+#             "Сумма продаж по партии",
+#             "Количество клиентов",
+#             "Количество дней (до последней продажи)"
+#         ]
+#         out_ws.append(headers)
+#         out_ws.freeze_panes = out_ws['A2']
+
+#         # Заполняем строки
+#         for product_name, parties in products.items():
+#             for p in parties:
+#                 last_unit_date = p["sold_out_date"] if p["sold_out_date"] else p["last_sale_touch"]
+#                 clients_count = sum(1 for q in p["clients_net"].values() if q > 0)
+#                 days_diff = (last_unit_date - p["purchase_date"]).days if last_unit_date and p["purchase_date"] else None
+
+#                 out_ws.append([
+#                     product_name,
+#                     p["price"],
+#                     p["purchase_date"].isoformat(),
+#                     last_unit_date.isoformat() if last_unit_date else None,
+#                     p["purchase_qty"],
+#                     p["sale_qty"],
+#                     p["remaining"],
+#                     p["total_sale"],
+#                     clients_count,
+#                     days_diff
+#                 ])
+
+#         # === Заливка ячеек по количеству дней ===
+#         all_days = []
+#         for parties in products.values():
+#             for p in parties:
+#                 d = p["sold_out_date"] if p["sold_out_date"] else p["last_sale_touch"]
+#                 if d and p["purchase_date"]:
+#                     all_days.append((d - p["purchase_date"]).days)
+
+#         min_days = min(all_days) if all_days else 0
+#         max_days = max(all_days) if all_days else 1
+
+#         def get_fill(days):
+#             if days is None:
+#                 return PatternFill(fill_type=None)
+#             ratio = (days - min_days) / (max_days - min_days + 1e-5)
+#             red = int(255 * ratio)
+#             green = int(255 * (1 - ratio))
+#             hex_color = f"{red:02X}{green:02X}00"
+#             return PatternFill(start_color=hex_color, end_color=hex_color, fill_type="solid")
+
+#         for row_idx in range(2, out_ws.max_row + 1):
+#             purchase_cell = out_ws.cell(row=row_idx, column=3).value  # C
+#             last_unit_cell = out_ws.cell(row=row_idx, column=4).value  # D
+#             try:
+#                 pd = datetime.fromisoformat(purchase_cell).date() if purchase_cell else None
+#                 ld = datetime.fromisoformat(last_unit_cell).date() if last_unit_cell else None
+#                 days = (ld - pd).days if (pd and ld) else None
+#             except Exception:
+#                 days = None
+#             fill = get_fill(days)
+#             for col in range(1, len(headers) + 1):
+#                 out_ws.cell(row=row_idx, column=col).fill = fill
+
+#         output = BytesIO()
+#         out_wb.save(output)
+#         output.seek(0)
+
+#         response = HttpResponse(
+#             output,
+#             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+#         )
+#         response['Content-Disposition'] = 'attachment; filename="sales_analysis_by_party.xlsx"'
+#         return response
+
+#     except Exception as e:
+#         import traceback
+#         print(traceback.format_exc())
+#         return HttpResponse(f"Ошибка при обработке файла: {e}", status=500)
+
+
+
+
+
+
+
+# Gotowyy kod sdelannoe s chatGPT
+def _parse_date1(cell):
     """Поддерживаем datetime, 'dd.mm.YYYY', 'dd.mm.yy' и пустые значения."""
     if cell is None:
         return None
@@ -610,17 +832,26 @@ def _parse_date(cell):
             pass
     return None
 
-
 def _to_float(cell):
     try:
         return float(cell) if cell is not None else 0.0
     except Exception:
         return 0.0
 
+def parse_excel_date(cell_value):
+    if isinstance(cell_value, datetime):
+        return cell_value.date()
+    elif isinstance(cell_value, str):
+        try:
+            return datetime.strptime(cell_value, "%d.%m.%Y").date()
+        except Exception:
+            return None
+    return None
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def upload_sales_excel_for_analis_with_return(request):
+def upload_sales_excel_for_analis(request):
     file = request.FILES.get("file")
     if not file:
         return HttpResponse("Файл не получен", status=400)
@@ -629,38 +860,34 @@ def upload_sales_excel_for_analis_with_return(request):
         wb = load_workbook(filename=file, data_only=True)
         ws = wb.active
 
-        # products: ключ = название товара, значение = список партий (FIFO)
         products = {}
 
         for row in ws.iter_rows(min_row=6, values_only=True):
-            # стоп-условие
             if row[0] and "Hemmesi" in str(row[0]):
                 break
 
-            remark = str(row[2]).strip().lower() if row[2] else ""  # C - Resmi-nama belgisi
-            document = str(row[3] or "")                            # D - Dokument
-            date_cell = row[1]                                      # B - дата
-            product_name = row[9]                                   # J - Harydyň ady
-            qty_in_row = _to_float(row[12])                         # M - количество
-            price = _to_float(row[11])                              # L - цена
-            client = row[4]                                         # E - клиент
+            remark = str(row[2]).strip().lower() if row[2] else ""
+            document = str(row[3] or "")
+            date_cell = row[1]
+            product_name = row[9]
+            qty_in_row = _to_float(row[12])
+            price = _to_float(row[11])
+            client = row[4]
 
             if not product_name or date_cell is None:
                 continue
 
-            date_ = _parse_date(date_cell)
+            date_ = _parse_date1(date_cell)
             if date_ is None:
                 continue
 
-            # Инициализация
             if product_name not in products:
                 products[product_name] = []
 
-            # === Приход ===
+            # Приход
             if "Girdeji faktura" in document:
                 if "wozwrat" in remark:
                     continue
-
                 purchase_qty = qty_in_row
                 party = {
                     "purchase_date": date_,
@@ -668,14 +895,14 @@ def upload_sales_excel_for_analis_with_return(request):
                     "remaining": purchase_qty,
                     "sale_qty": 0.0,
                     "total_sale": 0.0,
-                    "price": price,              # добавили цену за единицу
+                    "price": price,
                     "last_sale_touch": None,
                     "sold_out_date": None,
                     "clients_net": {}
                 }
                 products[product_name].append(party)
 
-            # === Продажа / Возврат ===
+            # Продажа / возврат
             elif "Söwda" in document:
                 is_return = "wozwrat" in remark
                 qty_to_process = qty_in_row
@@ -699,7 +926,6 @@ def upload_sales_excel_for_analis_with_return(request):
                         if party["remaining"] > 0:
                             party["sold_out_date"] = None
                         qty_to_process -= can_take_back
-
                     else:
                         if party["remaining"] <= 0:
                             continue
@@ -714,53 +940,112 @@ def upload_sales_excel_for_analis_with_return(request):
                             party["sold_out_date"] = date_
                         qty_to_process -= take
 
-                if qty_to_process > 0:
-                    pass
-
-            else:
-                continue
-
-        # === Формируем Excel ===
+        # Формируем Excel
         out_wb = Workbook()
         out_ws = out_wb.active
         out_ws.title = "Sales Analysis"
 
         headers = [
-            "Наименование товара",
-            "Цена за штуку",
-            "Дата прихода партии",
-            "Дата продажи последней банки этой партии",
-            "Кол-во в партии (приход)",
-            "Продано из этой партии (шт)",
-            "Остаток партии (шт)",
-            "Сумма продаж по партии",
-            "Количество клиентов",
-            "Количество дней (до последней продажи)"
-        ]
+                "Название товара",
+                "Цена за единицу",
+                "Дата когда партия пришла на склад",
+                "Дата когда продали последнюю единицу из партии",
+                "Сколько штук было в партии при поступлении",
+                "Сколько штук уже продали из этой партии",
+                "Сколько штук осталось непроданными в партии",
+                "На какую сумму продали товар из этой партии",
+                "На какую сумму остался непроданный товар в партии",
+                "На какую сумму поступила вся партия изначально",
+                "Скольким разным клиентам продали товар из этой партии",
+                "Сколько дней прошло от прихода партии до последней продажи",
+                "Сколько дней товар отсутствовал после распродажи партии (пока не пришла новая)",
+                "Сколько дней товар лежит без продаж (от последней продажи до сегодня или до новой партии)",
+                "Общее количество пассивных дней (без остатка + без движения)",
+                "На сколько дней хватит текущего остатка при текущей скорости продаж",
+                "Сколько штук товара мы упустили из-за отсутствия на складе (могли бы продать)",
+                "На какую сумму мы потеряли продажи из-за отсутствия товара"
+            ]
+
         out_ws.append(headers)
         out_ws.freeze_panes = out_ws['A2']
+        today = date.today()
 
-        # Заполняем строки
+        # План по упущенной продаже
+        # Считаем среднюю продажу за день для товара по всем партиям
         for product_name, parties in products.items():
-            for p in parties:
+            # Общая продажа и дни для расчета средней продажи в день
+            total_sold_all = sum(p["sale_qty"] for p in parties)
+            total_days_all = sum(
+                ((p["sold_out_date"] or p["last_sale_touch"]) - p["purchase_date"]).days
+                for p in parties
+                if (p["sold_out_date"] or p["last_sale_touch"])
+            )
+            avg_sale_per_day_product = total_sold_all / total_days_all if total_days_all else 0
+
+            for i, p in enumerate(parties):
                 last_unit_date = p["sold_out_date"] if p["sold_out_date"] else p["last_sale_touch"]
                 clients_count = sum(1 for q in p["clients_net"].values() if q > 0)
                 days_diff = (last_unit_date - p["purchase_date"]).days if last_unit_date and p["purchase_date"] else None
 
+                sum_remaining = p["price"] * p["remaining"]
+                sum_purchase = p["price"] * p["purchase_qty"]
+
+                # Дни без остатка
+                if p["sold_out_date"]:
+                    next_party = parties[i + 1] if i + 1 < len(parties) else None
+                    if next_party:
+                        days_no_stock = (next_party["purchase_date"] - p["sold_out_date"]).days
+                    else:
+                        days_no_stock = (today - p["sold_out_date"]).days
+                else:
+                    days_no_stock = 0
+
+                # Дни без движения
+                if not p["last_sale_touch"]:
+                    days_no_movement = (today - p["purchase_date"]).days
+                else:
+                    next_party = parties[i + 1] if i + 1 < len(parties) else None
+                    if next_party:
+                        days_no_movement = (next_party["purchase_date"] - p["last_sale_touch"]).days
+                    else:
+                        days_no_movement = (today - p["last_sale_touch"]).days
+
+                total_passive_days = (days_no_stock or 0) + (days_no_movement or 0)
+
+                # План дней при текущем остатке (для текущей партии)
+                if p["sale_qty"] > 0 and days_diff:
+                    avg_sale_per_day_party = p["sale_qty"] / days_diff
+                    plan_days = p["remaining"] / avg_sale_per_day_party
+                else:
+                    plan_days = None
+
+                # === Новые колонки: упущенные продажи ===
+                days_no_stock = max(days_no_stock, 0)
+                missed_qty = round(avg_sale_per_day_product * days_no_stock, 2) if avg_sale_per_day_product > 0 else 0
+                missed_sum = round(missed_qty * p["price"], 2)
+
                 out_ws.append([
                     product_name,
                     p["price"],
-                    p["purchase_date"].isoformat(),
-                    last_unit_date.isoformat() if last_unit_date else None,
+                    p["purchase_date"].strftime("%d.%m.%Y") if p["purchase_date"] else None,
+                    last_unit_date.strftime("%d.%m.%Y") if last_unit_date else None,
                     p["purchase_qty"],
                     p["sale_qty"],
                     p["remaining"],
                     p["total_sale"],
+                    sum_remaining,
+                    sum_purchase,
                     clients_count,
-                    days_diff
+                    days_diff,
+                    days_no_stock,
+                    days_no_movement,
+                    total_passive_days,
+                    round(plan_days, 2) if plan_days is not None else None,
+                    missed_qty,    # упущенные продажи количество
+                    missed_sum     # упущенные продажи сумма
                 ])
 
-        # === Заливка ячеек по количеству дней ===
+        # Заливка ячеек по количеству дней
         all_days = []
         for parties in products.values():
             for p in parties:
@@ -781,14 +1066,13 @@ def upload_sales_excel_for_analis_with_return(request):
             return PatternFill(start_color=hex_color, end_color=hex_color, fill_type="solid")
 
         for row_idx in range(2, out_ws.max_row + 1):
-            purchase_cell = out_ws.cell(row=row_idx, column=3).value  # C
-            last_unit_cell = out_ws.cell(row=row_idx, column=4).value  # D
-            try:
-                pd = datetime.fromisoformat(purchase_cell).date() if purchase_cell else None
-                ld = datetime.fromisoformat(last_unit_cell).date() if last_unit_cell else None
-                days = (ld - pd).days if (pd and ld) else None
-            except Exception:
-                days = None
+            purchase_cell = out_ws.cell(row=row_idx, column=3).value
+            last_unit_cell = out_ws.cell(row=row_idx, column=4).value
+
+            pd = _parse_date1(purchase_cell)
+            ld = _parse_date1(last_unit_cell)
+            days = (ld - pd).days if (pd and ld) else None
+
             fill = get_fill(days)
             for col in range(1, len(headers) + 1):
                 out_ws.cell(row=row_idx, column=col).fill = fill
@@ -808,3 +1092,419 @@ def upload_sales_excel_for_analis_with_return(request):
         import traceback
         print(traceback.format_exc())
         return HttpResponse(f"Ошибка при обработке файла: {e}", status=500)
+
+
+
+
+
+
+
+
+# polnyyk kod kotoryy dal mne claude.ai
+def _parse_date2(cell):
+    """Поддерживаем datetime, 'dd.mm.YYYY', 'dd.mm.yy' и пустые значения."""
+    if cell is None:
+        return None
+    if isinstance(cell, datetime):
+        return cell.date()
+    s = str(cell).strip()
+    if not s:
+        return None
+    for fmt in ("%d.%m.%Y", "%d.%m.%y", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(s, fmt).date()
+        except Exception:
+            pass
+    return None
+
+def _to_float(cell):
+    try:
+        return float(cell) if cell is not None else 0.0
+    except Exception:
+        return 0.0
+
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upload_sales_excel_for_analis_with_return(request):
+    file = request.FILES.get("file")
+    if not file:
+        return HttpResponse("Файл не получен", status=400)
+
+    try:
+        wb = load_workbook(filename=file, data_only=True)
+        ws = wb.active
+
+        products = {}
+
+        for row in ws.iter_rows(min_row=6, values_only=True):
+            if row[0] and "Hemmesi" in str(row[0]):
+                break
+
+            remark = str(row[2]).strip().lower() if row[2] else ""
+            document = str(row[3] or "")
+            date_cell = row[1]
+            product_name = row[9]
+            qty_in_row = _to_float(row[12])
+            price = _to_float(row[11])
+            client = row[4]
+
+            if not product_name or date_cell is None:
+                continue
+
+            date_ = _parse_date2(date_cell)
+            if date_ is None:
+                continue
+
+            if product_name not in products:
+                products[product_name] = []
+
+            # Приход
+            if "Girdeji faktura" in document:
+                if "wozwrat" in remark:
+                    continue
+                purchase_qty = qty_in_row
+                party = {
+                    "purchase_date": date_,
+                    "purchase_qty": purchase_qty,
+                    "remaining": purchase_qty,
+                    "sale_qty": 0.0,
+                    "total_sale": 0.0,
+                    "price": price,
+                    "last_sale_touch": None,
+                    "sold_out_date": None,
+                    "clients_net": {}
+                }
+                products[product_name].append(party)
+
+            # Продажа / возврат
+            elif "Söwda" in document:
+                is_return = "wozwrat" in remark
+                qty_to_process = qty_in_row
+
+                if not products.get(product_name):
+                    continue
+
+                for party in products[product_name]:
+                    if qty_to_process <= 0:
+                        break
+
+                    if is_return:
+                        can_take_back = min(party["sale_qty"], qty_to_process)
+                        if can_take_back <= 0:
+                            continue
+                        party["sale_qty"] -= can_take_back
+                        party["total_sale"] -= can_take_back * price
+                        party["remaining"] += can_take_back
+                        if client:
+                            party["clients_net"][client] = party["clients_net"].get(client, 0.0) - can_take_back
+                        if party["remaining"] > 0:
+                            party["sold_out_date"] = None
+                        qty_to_process -= can_take_back
+                    else:
+                        if party["remaining"] <= 0:
+                            continue
+                        take = min(party["remaining"], qty_to_process)
+                        party["remaining"] -= take
+                        party["sale_qty"] += take
+                        party["total_sale"] += take * price
+                        party["last_sale_touch"] = date_ if not party["last_sale_touch"] else max(party["last_sale_touch"], date_)
+                        if client:
+                            party["clients_net"][client] = party["clients_net"].get(client, 0.0) + take
+                        if party["remaining"] == 0:
+                            party["sold_out_date"] = date_
+                        qty_to_process -= take
+
+        # Расчет упущенных продаж ПО ТОВАРУ
+        today = date.today()
+        product_missed_sales = {}
+
+        for product_name, parties in products.items():
+            if not parties:
+                continue
+            
+            # Сортируем партии по дате прихода
+            sorted_parties = sorted(parties, key=lambda x: x["purchase_date"])
+            
+            # 1. Находим периоды когда товар был полностью распродан
+            total_days_out_of_stock = 0
+            
+            for i, party in enumerate(sorted_parties):
+                if party["sold_out_date"]:
+                    next_party = sorted_parties[i + 1] if i + 1 < len(sorted_parties) else None
+                    if next_party:
+                        # Период между распродажей и следующим приходом
+                        gap_days = (next_party["purchase_date"] - party["sold_out_date"]).days
+                        total_days_out_of_stock += max(0, gap_days)
+                    else:
+                        # Последняя партия распродана, товара нет до сегодня
+                        gap_days = (today - party["sold_out_date"]).days
+                        total_days_out_of_stock += max(0, gap_days)
+            
+            # 2. Считаем среднюю продажу в день (только когда товар БЫЛ)
+            total_sold = sum(p["sale_qty"] for p in sorted_parties)
+            
+            # Дни когда товар был в продаже
+            if sorted_parties[0]["purchase_date"] and sorted_parties[-1].get("sold_out_date"):
+                # Если последняя партия распродана
+                total_period = (sorted_parties[-1]["sold_out_date"] - sorted_parties[0]["purchase_date"]).days
+            elif sorted_parties[0]["purchase_date"] and sorted_parties[-1].get("last_sale_touch"):
+                # Если последняя партия еще есть
+                total_period = (sorted_parties[-1]["last_sale_touch"] - sorted_parties[0]["purchase_date"]).days
+            else:
+                total_period = 0
+            
+            # Вычитаем дни отсутствия товара
+            days_with_stock = max(1, total_period - total_days_out_of_stock)
+            
+            # Средняя продажа в день
+            avg_sale_per_day = total_sold / days_with_stock if days_with_stock > 0 else 0
+            
+            # 3. Упущенные продажи = средняя * дни без товара
+            missed_qty = round(avg_sale_per_day * total_days_out_of_stock, 2)
+            missed_sum = round(missed_qty * (sorted_parties[0]["price"] if sorted_parties else 0), 2)
+            
+            product_missed_sales[product_name] = {
+                "missed_qty": missed_qty,
+                "missed_sum": missed_sum,
+                "days_out_of_stock": total_days_out_of_stock
+            }
+
+        # Формируем Excel
+        out_wb = Workbook()
+        out_ws = out_wb.active
+        out_ws.title = "Sales Analysis"
+
+        headers = [
+                "Название товара",
+                "Цена за единицу",
+                "Дата когда партия пришла на склад",
+                "Дата когда продали последнюю единицу из партии",
+                "Сколько штук было в партии при поступлении",
+                "Сколько штук уже продали из этой партии",
+                "Сколько штук осталось непроданными в партии",
+                "На какую сумму продали товар из этой партии",
+                "На какую сумму остался непроданный товар в партии",
+                "На какую сумму поступила вся партия изначально",
+                "Скольким разным клиентам продали товар из этой партии",
+                "Сколько дней прошло от прихода партии до последней продажи",
+                "Сколько дней товар отсутствовал после распродажи партии (пока не пришла новая)",
+                "Сколько дней товар лежит без продаж (от последней продажи до сегодня или до новой партии)",
+                "Общее количество пассивных дней (без остатка + без движения)",
+                "На сколько дней хватит текущего остатка при текущей скорости продаж",
+                "Сколько штук товара мы упустили из-за отсутствия на складе (могли бы продать)",
+                "На какую сумму мы потеряли продажи из-за отсутствия товара"
+            ]
+
+        out_ws.append(headers)
+        out_ws.freeze_panes = out_ws['A2']
+
+        # План по упущенной продаже
+        for product_name, parties in products.items():
+            missed_data = product_missed_sales.get(product_name, {"missed_qty": 0, "missed_sum": 0})
+            
+            for i, p in enumerate(parties):
+                last_unit_date = p["sold_out_date"] if p["sold_out_date"] else p["last_sale_touch"]
+                clients_count = sum(1 for q in p["clients_net"].values() if q > 0)
+                days_diff = (last_unit_date - p["purchase_date"]).days if last_unit_date and p["purchase_date"] else None
+
+                sum_remaining = p["price"] * p["remaining"]
+                sum_purchase = p["price"] * p["purchase_qty"]
+
+                # Дни без остатка
+                if p["sold_out_date"]:
+                    next_party = parties[i + 1] if i + 1 < len(parties) else None
+                    if next_party:
+                        days_no_stock = (next_party["purchase_date"] - p["sold_out_date"]).days
+                    else:
+                        days_no_stock = (today - p["sold_out_date"]).days
+                else:
+                    days_no_stock = 0
+
+                # Дни без движения
+                if not p["last_sale_touch"]:
+                    days_no_movement = (today - p["purchase_date"]).days
+                else:
+                    next_party = parties[i + 1] if i + 1 < len(parties) else None
+                    if next_party:
+                        days_no_movement = (next_party["purchase_date"] - p["last_sale_touch"]).days
+                    else:
+                        days_no_movement = (today - p["last_sale_touch"]).days
+
+                total_passive_days = (days_no_stock or 0) + (days_no_movement or 0)
+
+                # План дней при текущем остатке (для текущей партии)
+                if p["sale_qty"] > 0 and days_diff:
+                    avg_sale_per_day_party = p["sale_qty"] / days_diff
+                    plan_days = p["remaining"] / avg_sale_per_day_party
+                else:
+                    plan_days = None
+
+                # Упущенные продажи показываем только для ПЕРВОЙ партии товара
+                if i == 0:
+                    missed_qty = missed_data["missed_qty"]
+                    missed_sum = missed_data["missed_sum"]
+                else:
+                    missed_qty = 0
+                    missed_sum = 0
+
+                out_ws.append([
+                    product_name,
+                    p["price"],
+                    p["purchase_date"].strftime("%d.%m.%Y") if p["purchase_date"] else None,
+                    last_unit_date.strftime("%d.%m.%Y") if last_unit_date else None,
+                    p["purchase_qty"],
+                    p["sale_qty"],
+                    p["remaining"],
+                    p["total_sale"],
+                    sum_remaining,
+                    sum_purchase,
+                    clients_count,
+                    days_diff,
+                    days_no_stock,
+                    days_no_movement,
+                    total_passive_days,
+                    round(plan_days, 2) if plan_days is not None else None,
+                    missed_qty,
+                    missed_sum
+                ])
+
+        # Заливка ячеек по количеству дней
+        all_days = []
+        for parties in products.values():
+            for p in parties:
+                d = p["sold_out_date"] if p["sold_out_date"] else p["last_sale_touch"]
+                if d and p["purchase_date"]:
+                    all_days.append((d - p["purchase_date"]).days)
+
+        min_days = min(all_days) if all_days else 0
+        max_days = max(all_days) if all_days else 1
+
+        def get_fill(days):
+            if days is None:
+                return PatternFill(fill_type=None)
+            ratio = (days - min_days) / (max_days - min_days + 1e-5)
+            red = int(255 * ratio)
+            green = int(255 * (1 - ratio))
+            hex_color = f"{red:02X}{green:02X}00"
+            return PatternFill(start_color=hex_color, end_color=hex_color, fill_type="solid")
+
+        for row_idx in range(2, out_ws.max_row + 1):
+            purchase_cell = out_ws.cell(row=row_idx, column=3).value
+            last_unit_cell = out_ws.cell(row=row_idx, column=4).value
+            pd = parse_excel_date(purchase_cell)
+            ld = parse_excel_date(last_unit_cell)
+            days = (ld - pd).days if (pd and ld) else None
+            fill = get_fill(days)
+            for col in range(1, len(headers) + 1):
+                out_ws.cell(row=row_idx, column=col).fill = fill
+
+        output = BytesIO()
+        out_wb.save(output)
+        output.seek(0)
+
+        response = HttpResponse(
+            output,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename="sales_analysis_by_party.xlsx"'
+        return response
+
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return HttpResponse(f"Ошибка при обработке файла: {e}", status=500)
+
+
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def get_cards(request):
+    data = request.data
+    date_from = data.get('date_from')
+    date_to = data.get('date_to')
+
+    if not date_from or not date_to:
+        return JsonResponse({"status": "error", "message": "choose date"}, status=400)
+
+    # Проверка формата даты
+    try:
+        date_from_obj = datetime.strptime(date_from, "%Y-%m-%d").date()
+        date_to_obj = datetime.strptime(date_to, "%Y-%m-%d").date()
+    except ValueError:
+        return JsonResponse({"status": "error", "message": "invalid date format"}, status=400)
+
+    if date_to_obj < date_from_obj:
+        return JsonResponse({"status": "error", "message": "To date must be after From date"}, status=400)
+
+    result = []
+
+    # Проходим по всем активным счетам
+    for acc in Account.objects.filter(is_active=True).order_by("number"):
+        # ---- 1️⃣ Сальдо на начало ----
+        before_entries = Entry.objects.filter(
+            account=acc,
+            transaction__date__lt=date_from_obj
+        ).aggregate(
+            debit=Sum('debit', default=Decimal('0.00')),
+            credit=Sum('credit', default=Decimal('0.00'))
+        )
+        saldo_start = before_entries['debit'] - before_entries['credit']
+
+        # ---- 2️⃣ Проводки за период ----
+        period_entries = Entry.objects.filter(
+            account=acc,
+            transaction__date__range=[date_from_obj, date_to_obj]
+        ).select_related('transaction').order_by('transaction__date')
+
+        # ---- 2a️⃣ Агрегируем по транзакциям ----
+        movements_dict = {}
+        for e in period_entries:
+            t_id = e.transaction.id
+            if t_id not in movements_dict:
+                movements_dict[t_id] = {
+                    "date": e.transaction.date.strftime("%d.%m.%Y"),
+                    "description": e.transaction.description,
+                    "debit": float(e.debit),
+                    "credit": float(e.credit),
+                }
+            else:
+                # суммируем дебет и кредит по одной транзакции
+                movements_dict[t_id]['debit'] += float(e.debit)
+                movements_dict[t_id]['credit'] += float(e.credit)
+
+        movements = list(movements_dict.values())
+
+        # Если нет движений за период, пропускаем этот счет
+        if not movements:
+            continue
+
+        # ---- 3️⃣ Обороты за период ----
+        period_sum = period_entries.aggregate(
+            debit=Sum('debit', default=Decimal('0.00')),
+            credit=Sum('credit', default=Decimal('0.00'))
+        )
+
+        # ---- 4️⃣ Сальдо на конец ----
+        saldo_end = saldo_start + period_sum['debit'] - period_sum['credit']
+
+        # ---- Сохраняем результат ----
+        result.append({
+            "id": acc.id,
+            "account": f"{acc.number} {acc.name}",
+            "saldo_start": float(saldo_start),
+            "movements": movements,
+            "debit_turnover": float(period_sum['debit']),
+            "credit_turnover": float(period_sum['credit']),
+            "saldo_end": float(saldo_end),
+        })
+
+    return Response({
+        "date_from": date_from,
+        "date_to": date_to,
+        "accounts": result,
+    })

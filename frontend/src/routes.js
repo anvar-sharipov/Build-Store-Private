@@ -22,6 +22,7 @@ export const ROUTES_RAPORT = {
   DETAIL_REPORT_1: "/detail-report-level-1",
   SALES_ANALIS: "/sales-analis",
   SALES_ANALIS_WITHOUT_RETURN: "/sales-analis-without-return",
+  ACOOUNT_CARDS: "/account-cards",
 };
 
 

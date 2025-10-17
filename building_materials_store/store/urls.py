@@ -104,6 +104,7 @@ urlpatterns = [
     
     path('get_account_for_osw2/', get_account_for_osw2, name='get_account_for_osw2'),
     path('get_detail_account/', get_detail_account, name='get_detail_account'),
+    path('get_cards/', get_cards, name='get_cards'),
     
     path('create_entry/', create_entry, name='create_entry'),
     

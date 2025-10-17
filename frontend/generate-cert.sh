@@ -17,7 +17,7 @@ echo "Generating self-signed SSL certificate..."
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -keyout "$KEY_FILE" \
     -out "$CERT_FILE" \
-    -subj "/C=RU/ST=Busan/L=Busan/O=LocalDev/CN=192.168.25.74" \
-    -addext "subjectAltName=IP:192.168.25.74,IP:127.0.0.1,DNS:localhost"
+    -subj "/C=RU/ST=Busan/L=Busan/O=LocalDev/CN=192.168.0.2" \
+    -addext "subjectAltName=IP:192.168.0.2,IP:127.0.0.1,DNS:localhost"
 
 echo "SSL certificate generated successfully"

@@ -20,6 +20,7 @@
   "delivers": "Awto",
   "add": "Goş", 
   "search": "Gözle...",
+  "search2": "Gözle",
   "noData": "Tapylmady",
   "loadMore": "Has köp görkez",
   "theme": "Tema",
@@ -317,8 +318,8 @@
   "createAccount62": "62-nji hasaby dörediň",
   "createAccount90": "90-nji hasaby dörediň",
   "prochee": "Beýlekiler",
-  "account": "Schyot",
-  "searchAccount": "Schyotlary gözlemek",
+  "account": "Sçýot",
+  "searchAccount": "Sçýotlary gözlemek",
   "asset": "Aktiw",
   "liability": "Pessiw",
   "income": "Giren serişdeler",
@@ -476,7 +477,21 @@
   "print receipt": "Çeki çap et",
   "success entry": "Prowodka üstünlikli döredildi",
   "currency is not valid": "Anbar üçin nädogry walýuta",
-  "detail report": "Jikme-jik hasabat"
+  "detail report": "Jikme-jik hasabat",
+  "account cards" : "Hasap kartoçkalary",
+  "date from": "Seneden",
+  "date to": "Senä çenli",
+  "select account": "Sçýody saýlaň",
+  "To date must be after From date": "'Senä çenli' senesi 'Seneden' senesinden soň bolmaly",
+  "choose date": "Sene saýlaň",
+  "cant find account": "Sçýot tapylmady",
+  "Saldo start": "Başlangyç saldo",
+  "Debit turnover": "Debet aýlanyşy",
+  "Credit turnover": "Kredit aýlanyşy",
+  "Saldo end": "Soňky saldo",
+  "Date": "Sene",
+  "Description": "Kommentariya",
+  "Debit": "Debet"
 
 
 

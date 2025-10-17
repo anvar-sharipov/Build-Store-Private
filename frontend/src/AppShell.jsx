@@ -35,6 +35,7 @@ import DetailReport1 from "./Components/Page/OSW2/DetailReport1";
 import Entries2 from "./Components/Page/Entries2/Entries2";
 import SalesAnalys from "./Components/Page/Reports2/SalesAnalys/SalesAnalys";
 import AnalysSalesWithoutReturn from "./Components/Page/Reports2/SalesAnalys/AnalysSalesWithoutReturn";
+import AccountCards from "./Components/Page/Reports2/AccountCards/AccountCards";
 
 function AppShell() {
   const location = useLocation();
@@ -83,6 +84,8 @@ function AppShell() {
                     <Route path={ROUTES_RAPORT.OSW2} element={<OSW2 />} />
                     <Route path={ROUTES_RAPORT.SALES_ANALIS} element={<SalesAnalys />} />
                     <Route path={ROUTES_RAPORT.SALES_ANALIS_WITHOUT_RETURN} element={<AnalysSalesWithoutReturn />} />
+                    <Route path={ROUTES_RAPORT.ACOOUNT_CARDS} element={<AccountCards />} />
+
                     <Route path={ROUTES_RAPORT.DETAIL_REPORT_1} element={<DetailReport1 />} />
                     <Route path={PROCHEE.QR_LIST_PRINT} element={<QrListPrint />} />
       

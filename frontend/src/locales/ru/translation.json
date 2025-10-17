@@ -507,7 +507,21 @@
   "print receipt":"Печать чека",
   "success entry": "Проводка успешно создана",
   "currency is not valid": "Некорректная валюта для склада",
-  "detail report": "Детальный отчет"
+  "detail report": "Детальный отчет",
+  "account cards" : "Карточки счетов",
+  "date from": "Дата с",
+  "date to": "Дата по",
+  "select account": "Выберите счет",
+  "To date must be after From date": "Дата 'по' должна быть позже даты 'с'",
+  "choose date": "Выберите дату",
+  "cant find account": "Счет не найден",
+  "Saldo start": "Сальдо на начало",
+  "Debit turnover": "Оборот по дебету",
+  "Credit turnover": "Оборот по кредиту",
+  "Saldo end": "Сальдо на конец",
+  "Date": "Дата",
+  "Description": "Описание",
+  "Debit": "Дебет"
 
  
  

@@ -1420,7 +1420,6 @@ def upload_sales_excel_for_analis_with_return(request):
 
 
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def get_cards(request):
@@ -1431,7 +1430,6 @@ def get_cards(request):
     if not date_from or not date_to:
         return JsonResponse({"status": "error", "message": "choose date"}, status=400)
 
-    # Проверка формата даты
     try:
         date_from_obj = datetime.strptime(date_from, "%Y-%m-%d").date()
         date_to_obj = datetime.strptime(date_to, "%Y-%m-%d").date()
@@ -1443,11 +1441,20 @@ def get_cards(request):
 
     result = []
 
-    # Проходим по всем активным счетам
+    # --- 🔹 Перебираем все активные счета
     for acc in Account.objects.filter(is_active=True).order_by("number"):
+
+        # --- 🔹 Находим всех потомков (включая сам счёт)
+        all_accounts = Account.objects.filter(
+            Q(id=acc.id) | Q(parent=acc) | Q(parent__parent=acc)
+        )
+
+        # Если иерархия может быть глубже, то лучше рекурсивно:
+        # all_accounts = get_all_children(acc)
+
         # ---- 1️⃣ Сальдо на начало ----
         before_entries = Entry.objects.filter(
-            account=acc,
+            account__in=all_accounts,
             transaction__date__lt=date_from_obj
         ).aggregate(
             debit=Sum('debit', default=Decimal('0.00')),
@@ -1457,11 +1464,10 @@ def get_cards(request):
 
         # ---- 2️⃣ Проводки за период ----
         period_entries = Entry.objects.filter(
-            account=acc,
+            account__in=all_accounts,
             transaction__date__range=[date_from_obj, date_to_obj]
         ).select_related('transaction').order_by('transaction__date')
 
-        # ---- 2a️⃣ Агрегируем по транзакциям ----
         movements_dict = {}
         for e in period_entries:
             t_id = e.transaction.id
@@ -1473,13 +1479,11 @@ def get_cards(request):
                     "credit": float(e.credit),
                 }
             else:
-                # суммируем дебет и кредит по одной транзакции
                 movements_dict[t_id]['debit'] += float(e.debit)
                 movements_dict[t_id]['credit'] += float(e.credit)
 
         movements = list(movements_dict.values())
 
-        # Если нет движений за период, пропускаем этот счет
         if not movements:
             continue
 
@@ -1492,7 +1496,7 @@ def get_cards(request):
         # ---- 4️⃣ Сальдо на конец ----
         saldo_end = saldo_start + period_sum['debit'] - period_sum['credit']
 
-        # ---- Сохраняем результат ----
+        # ---- ✅ Добавляем в результат
         result.append({
             "id": acc.id,
             "account": f"{acc.number} {acc.name}",
@@ -1508,3 +1512,97 @@ def get_cards(request):
         "date_to": date_to,
         "accounts": result,
     })
+    
+    
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_account_cards(request, id):
+    date_from = request.GET.get('dateFrom')
+    date_to = request.GET.get('dateTo')
+
+    # Родительский счёт
+    parent_account = Account.objects.get(id=id)
+
+    # Все дочерние счета
+    child_accounts = parent_account.children.all()
+    all_accounts = [parent_account] + list(child_accounts)
+
+    # Сначала собираем все движения за период
+    movements_by_partner = {}
+
+    for acc in all_accounts:
+        entries = Entry.objects.filter(
+            account=acc,
+            transaction__date__gte=date_from,
+            transaction__date__lte=date_to
+        ).select_related('transaction', 'transaction__invoice', 'transaction__partner')
+
+        for e in entries:
+            partner_name = e.transaction.partner.name if e.transaction.partner else "Без партнёра"
+            if partner_name not in movements_by_partner:
+                movements_by_partner[partner_name] = {
+                    "id": parent_account.id,
+                    "account": str(parent_account),
+                    "partner": partner_name,
+                    "date_from": date_from,
+                    "date_to": date_to,
+                    "saldo_start": Decimal('0.00'),
+                    "debit_turnover": Decimal('0.00'),
+                    "credit_turnover": Decimal('0.00'),
+                    "saldo_end": Decimal('0.00'),
+                    "movements": []
+                }
+
+            debit = e.debit or Decimal('0.00')
+            credit = e.credit or Decimal('0.00')
+            description = ""
+            if e.transaction.invoice:
+                description = f"Faktura #{e.transaction.invoice.id}"
+                if e.transaction.invoice.comment:
+                    description += f" {e.transaction.invoice.comment}"
+            else:
+                description = e.transaction.description
+
+            movements_by_partner[partner_name]["movements"].append({
+                "date": e.transaction.date.strftime('%d.%m.%Y'),
+                "description": description,
+                "debit": debit,
+                "credit": credit
+            })
+
+            # Считаем обороты
+            movements_by_partner[partner_name]["debit_turnover"] += debit
+            movements_by_partner[partner_name]["credit_turnover"] += credit
+
+    # Считаем saldo_start и saldo_end для каждого партнёра
+    for partner_name, data in movements_by_partner.items():
+        saldo_start = Decimal('0.00')
+        # Начальный остаток на date_from
+        for acc in all_accounts:
+            entries_before = Entry.objects.filter(
+                account=acc,
+                transaction__date__lt=date_from,
+                transaction__partner__name=partner_name if partner_name != "Без партнёра" else None
+            )
+            sums = entries_before.aggregate(
+                debit_sum=Sum('debit'), credit_sum=Sum('credit')
+            )
+            debit_sum = sums['debit_sum'] or Decimal('0.00')
+            credit_sum = sums['credit_sum'] or Decimal('0.00')
+            saldo_start += debit_sum - credit_sum
+        data["saldo_start"] = saldo_start
+
+        # Текущий остаток по движениям
+        current_saldo = saldo_start
+        for m in sorted(data["movements"], key=lambda x: x['date']):
+            current_saldo += m['debit'] - m['credit']
+            m['saldo'] = current_saldo
+
+        data["saldo_end"] = current_saldo
+
+    # Возвращаем список карточек по партнёрам
+    return Response(list(movements_by_partner.values()))
+
+

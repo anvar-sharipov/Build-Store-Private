@@ -149,13 +149,14 @@ const AccountCards = () => {
                     {acc.movements.map((m, idx) => (
                       <tr key={idx} className="hover:bg-gray-50">
                         <td className="p-2 border-b">
-                          {(() => {
+                          {/* {(() => {
                             const d = new Date(m.date);
                             const day = String(d.getDate()).padStart(2, "0");
                             const month = String(d.getMonth() + 1).padStart(2, "0");
                             const year = d.getFullYear();
                             return `${day}.${month}.${year}`;
-                          })()}
+                          })()} */}
+                          {m.date}
                         </td>
                         <td className="p-2 border-b">{m.description}</td>
                         <td className="p-2 border-b text-right">{m.debit || "-"}</td>

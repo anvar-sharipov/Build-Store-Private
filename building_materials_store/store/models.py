@@ -307,14 +307,14 @@ class Agent(models.Model):
 
 class Partner(models.Model):
     BUYER = 'klient'
-    SUPPLIER = 'supplier'
-    BOTH = 'both'
+    # SUPPLIER = 'supplier'
+    # BOTH = 'both'
     FOUNDER = 'founder'  # учредитель
 
     PARTNER_TYPE_CHOICES = [
         (BUYER, 'Alyjy (Покупатель)'),
-        (SUPPLIER, 'Üpjünçi (Поставщик)'),
-        (BOTH, 'Alyjy we Üpjünçi (Покупатель и поставщик)'),
+        # (SUPPLIER, 'Üpjünçi (Поставщик)'),
+        # (BOTH, 'Alyjy we Üpjünçi (Покупатель и поставщик)'),
         (FOUNDER, 'Uchreditel (Учредитель)'),
     ]
 
@@ -322,9 +322,11 @@ class Partner(models.Model):
     # СВЯЗЬ С AGENT
     agent = models.ForeignKey('Agent', on_delete=models.PROTECT, null=True, blank=True, verbose_name='Agent'
     )
-    type = models.CharField(max_length=20, choices=PARTNER_TYPE_CHOICES, default=SUPPLIER, verbose_name='Partneriň görnüşi')
+    type = models.CharField(max_length=20, choices=PARTNER_TYPE_CHOICES, default=BUYER, verbose_name='Partneriň görnüşi')
     # account = models.ForeignKey('Account', on_delete=models.PROTECT, null=True, blank=True, verbose_name='Account')
     balance = models.DecimalField(max_digits=12, decimal_places=3, default=Decimal('0.000'), verbose_name='Balans (deb/kred)')
+    balance_tmt = models.DecimalField(max_digits=12, decimal_places=3, default=Decimal('0.000'), verbose_name='Balans TMT')
+    balance_usd = models.DecimalField(max_digits=12, decimal_places=3, default=Decimal('0.000'), verbose_name='Balans USD')
     is_active = models.BooleanField(default=True, verbose_name='Активен')
 
     def __str__(self):
@@ -833,13 +835,15 @@ class PartnerBalanceSnapshot(models.Model):
     """
     closing = models.ForeignKey(DayClosing, on_delete=models.CASCADE, related_name="partner_balances", null=True, blank=True)
     partner = models.ForeignKey("Partner", on_delete=models.CASCADE, null=True, blank=True)
-    balance = models.DecimalField(max_digits=12, decimal_places=3, null=True, blank=True)
+    balance = models.DecimalField(max_digits=12, decimal_places=3, null=True, blank=True, default=Decimal('0.000'), verbose_name='Баланс old')
+    balance_tmt = models.DecimalField(max_digits=12, decimal_places=3, default=Decimal('0.000'), verbose_name='Balans TMT')
+    balance_usd = models.DecimalField(max_digits=12, decimal_places=3, default=Decimal('0.000'), verbose_name='Balans USD')
 
     class Meta:
         unique_together = ("closing", "partner")
 
     def __str__(self):
-        return f"{self.partner.name} — {self.balance} ({self.closing.date})"
+        return f"{self.partner.name} — USD:{self.balance_usd} - TMT:{self.balance_tmt} ({self.closing.date})"
     
     
     

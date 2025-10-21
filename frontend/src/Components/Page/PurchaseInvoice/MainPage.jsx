@@ -282,16 +282,16 @@ const MainPage = () => {
           const today = new Date();
           const todayStr = today.toISOString().split("T")[0]; // "2025-10-04"
           // Способ 1: через строки (т.к. YYYY-MM-DD сравниваются корректно)
-          if (todayStr < date_margin || date_margin !== dateMargin) {
-            // console.log("permission denied GGGGG, todayStr today", todayStr);
-            // console.log("permission denied GGGGG date_margin", date_margin );
-            // console.log("permission denied GGGGG dateMargin db", dateMargin);
-            // console.log("permission denied GGGGG dateMargin todayStr > date_margin", todayStr > date_margin);
-            // console.log("permission denied GGGGG dateMargin date_margin !== dateMargin", date_margin !== dateMargin);
+          // if (todayStr < date_margin || date_margin !== dateMargin) {
+          //   // console.log("permission denied GGGGG, todayStr today", todayStr);
+          //   // console.log("permission denied GGGGG date_margin", date_margin );
+          //   // console.log("permission denied GGGGG dateMargin db", dateMargin);
+          //   // console.log("permission denied GGGGG dateMargin todayStr > date_margin", todayStr > date_margin);
+          //   // console.log("permission denied GGGGG dateMargin date_margin !== dateMargin", date_margin !== dateMargin);
 
-            showNotification(t("permission denied"), "error");
-            return;
-          }
+          //   showNotification(t("permission denied"), "error");
+          //   return;
+          // }
 
           try {
             const response = await myAxios.post("/save-invoice/", values, {

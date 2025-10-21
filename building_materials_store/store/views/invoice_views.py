@@ -461,9 +461,11 @@ def save_invoice(request):
                                         transaction.set_rollback(True)
                                         return JsonResponse({"status": "error", "message": "The warehouse account dont have a parent account"}, status=400)
                                     
-                                    
-                          
-                                    partner_obj.balance -= Decimal(sale_price * quantity)
+                                    ic(warehouse_obj.currency.code)
+                                    if warehouse_obj.currency.code == "TMT":
+                                        partner_obj.balance_tmt -= Decimal(sale_price * quantity)
+                                    else:
+                                        partner_obj.balance_usd -= Decimal(sale_price * quantity)
                                     for rule in rules:
                                         if not rule.amount_type in ['revenue', 'profit']:
                                             transaction.set_rollback(True)
@@ -755,6 +757,10 @@ def save_invoice(request):
                                         return JsonResponse({"status": "error", "message": "The warehouse account dont have a parent account"}, status=400) 
    
                                     partner_obj.balance -= Decimal(sale_price * quantity)
+                                    if warehouse_obj.currency.code == "TMT":
+                                        partner_obj.balance_tmt -= Decimal(sale_price * quantity)
+                                    else:
+                                        partner_obj.balance_usd -= Decimal(sale_price * quantity)
                                     ic(rules, len(rules))
                                     for rule in rules:
                                         if not rule.amount_type in ['revenue', 'profit']:
@@ -950,7 +956,7 @@ def get_invoice_data(request, id):
         if p.agent:
             agent_id = p.agent.id
             agent_name = p.agent.name
-        partner_json = {"agent":agent_id, "agent_name":agent_name, "balance":p.balance, "id":p.id, "is_active":p.is_active, "name":p.name, "type": p.type, "type_display":p.get_type_display()}
+        partner_json = {"agent":agent_id, "agent_name":agent_name, "balance":p.balance, "balance_usd":p.balance_usd, "balance_tmt":p.balance_tmt, "id":p.id, "is_active":p.is_active, "name":p.name, "type": p.type, "type_display":p.get_type_display()}
     else:
         partner_json = None
         

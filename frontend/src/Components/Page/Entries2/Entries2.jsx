@@ -74,8 +74,8 @@ const Entries2 = () => {
         getSaldo(dateProwodok, values.partner.id);
       }
     } catch (error) {
-      console.error("Ошибка отправки проводки:", error.response.data.reason_for_the_error);
-      showNotification(t(error.response.data.reason_for_the_error), "error");
+      console.error("Ошибка отправки проводки:", error.response.data.message);
+      showNotification(t(error.response.data.message), "error");
     }
   };
 

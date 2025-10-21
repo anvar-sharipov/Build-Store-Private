@@ -39,5 +39,5 @@ class PartnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Partner
         # fields = ['id', 'name', 'type', 'type_display', 'agent', 'agent_id', 'agent_name', 'balance', 'balance_on_date', 'today_sales', 'final_balance', 'debit_total', 'credit_total', 'account_62_debit', 'account_62_credit', 'is_active']
-        fields = ['id', 'name', 'type', 'type_display', 'agent', 'agent_id', 'agent_name', 'balance', 'is_active']
+        fields = ['id', 'name', 'type', 'type_display', 'agent', 'agent_id', 'agent_name', 'balance', 'is_active', 'balance_tmt', 'balance_usd']
         

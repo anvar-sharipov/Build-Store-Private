@@ -521,7 +521,12 @@
   "Saldo end": "Сальдо на конец",
   "Date": "Дата",
   "Description": "Описание",
-  "Debit": "Дебет"
+  "Debit": "Дебет",
+  "No posting rule for this partner type and currency": "Нет правила проводки для этого типа партнера и валюты",
+  "Transaction Journal": "Журнал операций",
+  "Period": "Период",
+  "Operation": "Операции",
+  "Amount": "Сумма"
 
  
  

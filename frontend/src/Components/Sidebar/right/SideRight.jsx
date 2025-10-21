@@ -14,28 +14,26 @@ const FILTER_CONFIG = {
   "/partners_new": {
     type: [
       { key: "klient", labelKey: "klient" },
-      // { key: "supplier", labelKey: "supplier" },
-      // { key: "both2", labelKey: "both2" },
       { key: "founder", labelKey: "founder" },
       { key: "all", labelKey: "all" },
     ],
-    sort: [
-      { key: "asc", labelKey: "asc" }, // по возрастанию
-      { key: "desc", labelKey: "desc" }, // по убыванию
+    sort_tmt: [
+      { key: "balance_tmt_asc", labelKey: "asc" },
+      { key: "balance_tmt_desc", labelKey: "desc" },
+    ],
+    sort_usd: [
+      { key: "balance_usd_asc", labelKey: "asc" },
+      { key: "balance_usd_desc", labelKey: "desc" },
     ],
     status: [
       { key: "true", labelKey: "active" },
       { key: "false", labelKey: "inactive" },
       { key: "all", labelKey: "all" },
     ],
-    // sort: [
-    //   { key: "asc", labelKey: "balance_asc" },   // по возрастанию баланса
-    //   { key: "desc", labelKey: "balance_desc" }, // по убыванию баланса
-    // ],
   },
   "/agents": {
     sort: [
-      { key: "asc", labelKey: "asc" }, // po wozrastaniyu
+      { key: "asc", labelKey: "asc" },
       { key: "desc", labelKey: "desc" },
     ],
   },
@@ -50,7 +48,6 @@ export default function SidebarRight() {
 
   const [offset, setOffset] = useState(0);
   const currentPath = location.pathname;
-
 
   const config = FILTER_CONFIG[currentPath] ?? {};
 
@@ -129,10 +126,11 @@ export default function SidebarRight() {
 
   //   Если текущая страница не найдена в FILTER_CONFIG — не показываем сайдбар
   if (!(currentPath in FILTER_CONFIG) && currentPath !== "/products" && currentPath !== "/main" && currentPath !== "/purchase_invoice") return null;
-  
 
   const typeOptions = config.type || [];
-  const sortOptions = config.sort || [];
+  const sortTmtOptions = config.sort_tmt || [];
+  const sortUsdOptions = config.sort_usd || [];
+  const sortOptions = config.sort || []; // для других страниц
   const statusOptions = config.status || [];
 
   //   Смотрим текущий фильтр из URL, Смотрим, какой фильтр сейчас выбран. Если ничего нет — значит "all".
@@ -143,11 +141,16 @@ export default function SidebarRight() {
 
   //   Когда пользователь кликает на фильтр, Мы добавляем (или убираем) ?type=something в адрес страницы.
   const handleChange = (paramName, value) => {
+    console.log("handleChange called:", paramName, value);
+    console.log("Before:", searchParams.toString());
+
     if (value === "all") {
       searchParams.delete(paramName);
     } else {
       searchParams.set(paramName, value);
     }
+
+    console.log("After:", searchParams.toString());
     setSearchParams(searchParams);
   };
 
@@ -184,6 +187,56 @@ export default function SidebarRight() {
             return (
               <label key={option.key} className={`flex items-center py-1 cursor-pointer ${isChecked ? "text-blue-700 font-semibold" : "text-gray-700"}`}>
                 <input type="radio" name="filter-status" checked={isChecked} onChange={() => handleChange("is_active", option.key)} className="mr-2 accent-blue-600" />
+                {t(option.labelKey)}
+              </label>
+            );
+          })}
+        </>
+      )}
+
+      {/* Сортировка по балансу TMT */}
+      {sortTmtOptions.length > 0 && (
+        <>
+          <h3 className="font-semibold mb-2 mt-4 text-gray-400">{t("balance")} TMT</h3>
+          {sortTmtOptions.map((option) => {
+            const isChecked = selectedSort === option.key;
+            return (
+              <label key={option.key} className={`flex items-center py-1 cursor-pointer ${isChecked ? "text-blue-700 font-semibold" : "text-gray-700"}`}>
+                <input
+                  type="radio"
+                  name="filter-sort"
+                  checked={isChecked}
+                  onChange={() => {
+                    console.log("Changing sort to:", option.key);
+                    handleChange("sort", option.key);
+                  }}
+                  className="mr-2 accent-blue-600"
+                />
+                {t(option.labelKey)}
+              </label>
+            );
+          })}
+        </>
+      )}
+
+      {/* Сортировка по балансу USD */}
+      {sortUsdOptions.length > 0 && (
+        <>
+          <h3 className="font-semibold mb-2 mt-4 text-gray-400">{t("balance")} USD</h3>
+          {sortUsdOptions.map((option) => {
+            const isChecked = selectedSort === option.key;
+            return (
+              <label key={option.key} className={`flex items-center py-1 cursor-pointer ${isChecked ? "text-blue-700 font-semibold" : "text-gray-700"}`}>
+                <input
+                  type="radio"
+                  name="filter-sort"
+                  checked={isChecked}
+                  onChange={() => {
+                    console.log("Changing sort to:", option.key);
+                    handleChange("sort", option.key);
+                  }}
+                  className="mr-2 accent-blue-600"
+                />
                 {t(option.labelKey)}
               </label>
             );
@@ -239,9 +292,19 @@ export default function SidebarRight() {
           <h3 className="font-semibold mb-2 mt-4 text-gray-400">{t("balance")}</h3>
           {sortOptions.map((option) => {
             const isChecked = selectedSort === option.key;
+            console.log("Sort option:", option.key, "Selected:", selectedSort, "Checked:", isChecked); // ✅ Добавьте для отладки
             return (
               <label key={option.key} className={`flex items-center py-1 cursor-pointer ${isChecked ? "text-blue-700 font-semibold" : "text-gray-700"}`}>
-                <input type="radio" name="filter-sort" checked={selectedSort === option.key} onChange={() => handleChange("sort", option.key)} className="mr-2 accent-blue-600" />
+                <input
+                  type="radio"
+                  name="filter-sort"
+                  checked={isChecked}
+                  onChange={() => {
+                    console.log("Changing sort to:", option.key); // ✅ Добавьте для отладки
+                    handleChange("sort", option.key);
+                  }}
+                  className="mr-2 accent-blue-600"
+                />
                 {t(option.labelKey)}
               </label>
             );

@@ -63,8 +63,8 @@ const Partner2 = () => {
   // Обновляем URL при изменении page или query
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    console.log('tut', params);
-    
+    console.log("tut", params);
+
     if (query) {
       params.set("search", query);
     } else {
@@ -89,6 +89,8 @@ const Partner2 = () => {
   }, []);
 
   // Обновленная функция fetchPartners с поддержкой фильтров
+  // Замените функцию fetchPartners в Partner2.jsx:
+
   const fetchPartners = async (page = 1, search = "") => {
     setLoading(true);
     try {
@@ -97,7 +99,7 @@ const Partner2 = () => {
 
       // Основные параметры
       params.set("page", page);
-      params.set("page_size", pageSize); 
+      params.set("page_size", pageSize);
       if (search) {
         params.set("search", search);
       }
@@ -107,6 +109,13 @@ const Partner2 = () => {
       const isActive = searchParams.get("is_active");
       const agent = searchParams.get("agent");
       const sort = searchParams.get("sort");
+
+      console.log("🔍 Параметры запроса:", {
+        type,
+        isActive,
+        agent,
+        sort,
+      });
 
       if (type && type !== "all") {
         params.set("type", type);
@@ -120,24 +129,23 @@ const Partner2 = () => {
         params.set("agent", agent);
       }
 
-      // Добавляем сортировку если нужно
-      // if (sort && sort !== "desc") {
-      //   // Если у вас есть поддержка сортировки в API, добавьте соответствующий параметр
-      //   params.set("ordering", sort === "asc" ? "balance" : "-balance");
-      // }
-      if (sort === "asc") {
-        params.set("ordering", "balance");
-      } else if (sort === "desc") {
-        params.set("ordering", "-balance");
+      // ✅ ИСПРАВЛЕНИЕ: передаём параметр sort как есть
+      if (sort) {
+        params.set("sort", sort);
+        console.log("✅ Добавлен параметр сортировки:", sort);
       }
 
+      console.log("📤 Финальный URL:", `partners/?${params.toString()}`);
+
       const res = await myAxios.get(`partners/?${params.toString()}`);
+      console.log("📥 Получено партнёров:", res.data.results?.length);
+
       setPartners(res.data.results);
       setCount(res.data.count);
       setNext(res.data.next);
       setPrevious(res.data.previous);
     } catch (error) {
-      console.error("Ошибка при получении партнёров", error);
+      console.error("❌ Ошибка при получении партнёров", error);
       showNotification("Ошибка при получении партнёров", "error");
     } finally {
       setLoading(false);
@@ -205,6 +213,8 @@ const Partner2 = () => {
       setPartnerValue({
         name: "",
         balance: 0,
+        balance_usd: 0,
+        balance_tmt: 0,
         accounts_id: [],
         type: "klient",
         agent: null,

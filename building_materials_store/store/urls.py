@@ -113,7 +113,7 @@ urlpatterns = [
     path('upload_sales_excel_for_analis/', upload_sales_excel_for_analis, name='upload_sales_excel_for_analis'),
     path('upload_sales_excel_for_analis_with_return/', upload_sales_excel_for_analis_with_return, name='upload_sales_excel_for_analis_with_return'),
     
-    
+    path("get_transaction_journal/", get_transaction_journal, name="get_transaction_journal"),
     
     
     

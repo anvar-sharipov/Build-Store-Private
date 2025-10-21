@@ -62,119 +62,113 @@ from . base_views import IsInAdminOrWarehouseGroup, CustomPageNumberPagination
 
 class PartnerViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    queryset = Partner.objects.all().order_by('-pk')
+    queryset = Partner.objects.all()
     serializer_class = PartnerSerializer
     pagination_class = CustomPageNumberPagination
-    # filter_backends = [filters.SearchFilter]
-    # search_fields = ['name']
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filter_backends = [DjangoFilterBackend]
     filterset_class = PartnerFilter
-    ordering_fields = ['balance']  # 👈 укажи разрешённые поля для сортировки
-    ordering = ['-pk']  # 👈 сортировка по умолчанию
 
     def get_permissions(self):
         return [IsInAdminOrWarehouseGroup()]
-    
-    
-
 
     def paginate_queryset(self, queryset):
-        ic('tut2222', self)        
         """
-        Если в query-параметрах есть ?no_pagination=1, 
-        то отключаем пагинацию и отдаём весь queryset.
+        Если в query-параметрах есть ?no_pagination=1, то отключаем пагинацию и отдаём весь queryset.
         """
         if self.request.query_params.get('no_pagination') == '1':
             return None
         return super().paginate_queryset(queryset)
-
-    # def get_queryset(self):
-    #     queryset = super().get_queryset()
-    #     agent_id = self.request.query_params.get('agent_id')
-    #     search = self.request.query_params.get('search')
-
-    #     if agent_id:
-    #         queryset = queryset.filter(agent_id=agent_id)
-
-    #     if search:
-    #         # Добавляем аннотацию с похожестью
-    #         queryset = queryset.annotate(
-    #             similarity=TrigramSimilarity('name', search),
-    #         ).filter(similarity__gt=0.1)  # порог — настроить по желанию
-
-    #         # Сортируем по убыванию похожести
-    #         queryset = queryset.order_by('-similarity', '-pk')
-
-    #     return queryset
     
+    def get_queryset(self):
+        """
+        Применяем фильтрацию и сортировку
+        """
+        queryset = super().get_queryset()
+        
+        # Сначала применяем фильтры через DjangoFilterBackend
+        queryset = self.filter_queryset(queryset)
+        
+        # Затем применяем сортировку
+        sort_value = self.request.query_params.get('sort', 'desc')
+        ic(self.request.query_params)
+        
+        sort_map = {
+            'asc': 'pk',
+            'desc': '-pk',
+            'balance_tmt_asc': 'balance_tmt',
+            'balance_tmt_desc': '-balance_tmt',
+            'balance_usd_asc': 'balance_usd',
+            'balance_usd_desc': '-balance_usd',
+        }
+        
+        order_field = sort_map.get(sort_value, '-pk')
+        queryset = queryset.order_by(order_field)
+        
+        return queryset
     
+    def list(self, request, *args, **kwargs):
+        """
+        Переопределяем list для корректной работы сортировки
+        """
+        queryset = self.get_queryset()
+        
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     def create(self, request, *args, **kwargs):
-        ic('tut5')
-        # time.sleep(2)
         try:
             with transaction.atomic():
                 data = request.data
-                ic('tut3')
-                agent = data['agent']
-                ic('tut4')
-                balance = data['balance']
-                is_active = data['is_active']
-                name = data['name']
-                partner_type  = data['type']
-                # accounts_id = data['accounts_id']
-                
-                ic(data)
-                
+                agent = data.get('agent')
+                balance = data.get('balance')
+                is_active = data.get('is_active')
+                name = data.get('name')
+                partner_type = data.get('type')
+
                 if not name or not name.strip():
                     return Response({'detail': 'errorName'}, status=status.HTTP_400_BAD_REQUEST)
-                
+
                 if balance is None:
                     return Response({'detail': 'balanceMissing'}, status=status.HTTP_400_BAD_REQUEST)
-                
+
                 try:
                     balance_value = Decimal(balance)
                 except (InvalidOperation, TypeError):
                     return Response({'detail': 'balanceInvalid'}, status=status.HTTP_400_BAD_REQUEST)
-                
+
                 if Partner.objects.filter(name=name).exists():
                     return Response({'detail': 'alreadyHavePartner'}, status=status.HTTP_400_BAD_REQUEST)
-                
-                # Можно добавить проверку на отрицательное значение, если нужно
+
                 if balance_value < 0:
                     return Response({'detail': 'balanceNegative'}, status=status.HTTP_400_BAD_REQUEST)
-                ic('tut1')
+
                 agent_obj = Agent.objects.get(id=agent["id"]) if agent else None
-                ic('tut2')
-            
+
                 partner = Partner.objects.create(
                     name=name,
                     balance=balance_value,
                     is_active=is_active,
-                    type=partner_type ,
+                    type=partner_type,
                     agent=agent_obj
                 )
-                
-                # if accounts_id:
-                #     for acc in accounts_id:
-                #         a = Account.objects.get(id=acc['id'])
-                #         PartnerAccount.objects.create(
-                #             partner=partner,
-                #             account=a,
-                #             role=partner_type
-                #         )
-                                
-                # return Response({"message": "данные получены"}, status=200)
+
                 serializer = PartnerSerializer(partner)
-                return Response({'detail': 'successSave', "partner_id": partner.id, 'partner': serializer.data}, status=status.HTTP_201_CREATED)
-        
+                return Response({
+                    'detail': 'successSave',
+                    "partner_id": partner.id,
+                    'partner': serializer.data
+                }, status=status.HTTP_201_CREATED)
+
         except Exception as e:
             ic(e)
             return Response({'detail': 'transactionChange'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    
-    
+
     def update(self, request, *args, **kwargs):
-        # time.sleep(2)
         try:
             with transaction.atomic():
                 data = request.data
@@ -184,7 +178,6 @@ class PartnerViewSet(viewsets.ModelViewSet):
                 is_active = data.get("is_active")
                 name = data.get("name")
                 partner_type = data.get("type")
-                # accounts_id = data.get("accounts_id")
 
                 if not partner_id:
                     return Response({'detail': 'missingPartnerId'}, status=status.HTTP_400_BAD_REQUEST)
@@ -205,14 +198,9 @@ class PartnerViewSet(viewsets.ModelViewSet):
                 except (InvalidOperation, TypeError):
                     return Response({'detail': 'balanceInvalid'}, status=status.HTTP_400_BAD_REQUEST)
 
-                # if balance_value < 0:
-                #     return Response({'detail': 'balanceNegative'}, status=status.HTTP_400_BAD_REQUEST)
-
-                # Проверка на дубликат имени
                 if Partner.objects.filter(name=name).exclude(id=partner_id).exists():
                     return Response({'detail': 'alreadyHavePartner'}, status=status.HTTP_400_BAD_REQUEST)
 
-                # Обновляем партнёра
                 partner.name = name
                 partner.balance = balance_value
                 partner.is_active = is_active
@@ -220,57 +208,18 @@ class PartnerViewSet(viewsets.ModelViewSet):
                 partner.agent = Agent.objects.get(id=agent["id"]) if agent else None
                 partner.save()
 
-                # # Обновим аккаунты
-                # PartnerAccount.objects.filter(partner=partner).delete()
-                # if accounts_id:
-                #     for acc in accounts_id:
-                #         a = Account.objects.get(id=acc['id'])
-                #         PartnerAccount.objects.create(
-                #             partner=partner,
-                #             account=a,
-                #             role=partner_type
-                #         )
                 serializer = PartnerSerializer(partner)
-                return Response({'detail': 'successUpdated', 'partner': serializer.data}, status=status.HTTP_200_OK)
+                return Response({
+                    'detail': 'successUpdated',
+                    'partner': serializer.data
+                }, status=status.HTTP_200_OK)
 
         except Exception as e:
             ic(e)
             return Response({'detail': 'transactionChange'}, status=status.HTTP_400_BAD_REQUEST)
-            
         
     
     
-    
-    
-        
-
-        # serializer = self.get_serializer(data=data)
-        # serializer.is_valid(raise_exception=True)
-        # partner = serializer.save()
-
-        # return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    # def destroy(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     # time.sleep(2)
-    #     self.perform_destroy(instance)
-    #     return Response(
-    #         {"message": "partnerDeleted"},
-    #         status=status.HTTP_204_NO_CONTENT
-    #     )
-    
-
-    # def update(self, request, *args, **kwargs):
-    #     # time.sleep(2)
-    #     partial = kwargs.pop('partial', False)
-    #     instance = self.get_object()
-    #     serializer = self.get_serializer(instance, data=request.data, partial=partial)
-    #     serializer.is_valid(raise_exception=True)
-    #     self.perform_update(serializer)
-    #     return Response(serializer.data) # res.data
-    
-
-
 class PartnerEntriesView(APIView):
     def get(self, request, partner_id):
         entries = Entry.objects.filter(

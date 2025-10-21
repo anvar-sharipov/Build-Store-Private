@@ -303,82 +303,22 @@ def get_osw(request):
 # get saldo       ishem saldo dlya partnera na wybrannuyu daty, saleInvoice
 
 def get_saldo(partner_obj, getDate):
-    rule = CustomePostingRule.objects.filter(operation__code="sale", directory_type=partner_obj.type, amount_type="revenue").first()
-    
-    # rule_pays = CustomePostingRule.objects.filter(operation__code="pays", directory_type=partner_obj.type, pays_type="expense").first()
-    
-    
-    
-    # # less, debit
-    # transactions = Transaction.objects.filter(partner=partner_obj, date__lt=getDate)
-    # transactions_less_debit_dict = {}
-    # for t in transactions:
-    #     entries = Entry.objects.filter(transaction=t)
-    #     transactions_less_debit_dict[t.id] = {"invoice": t}
-    #     total_debit = 0
-    #     for e in entries:
-    #         # ic(e)
-    #         if e.account.number == rule.debit_account.number:
-    #             total_debit += e.debit
-    #         elif e.account.number == rule_pays.debit_account.number:
-    #             total_debit += e.debit     
-    #     transactions_less_debit_dict[t.id]["total_debit"] = total_debit
-    # # ic(transactions_less_dict)
-    # # less, kredit
-    # transactions = Transaction.objects.filter(partner=partner_obj, date__lt=getDate)
-    # transactions_less_credit_dict = {}
-    # for t in transactions:
-    #     entries = Entry.objects.filter(transaction=t)
-    #     transactions_less_credit_dict[t.id] = {"invoice": t}
-    #     total_debit = 0
-    #     for e in entries:
-            
-    #         if e.account.number == rule.credit_account.number:
-    #             ic(e)
-    #             total_debit += e.credit
-    #         elif e.account.number == rule_pays.credit_account.number:
-    #             ic(e)
-    #             total_debit += e.credit     
-    #     transactions_less_credit_dict[t.id]["total_debit"] = total_debit
-
-
-
-    # # current, sale
-    # transactions = Transaction.objects.filter(partner=partner_obj, date=getDate)
-    # transactions_current_dict = {}
-    # for t in transactions:
-    #     entries = Entry.objects.filter(transaction=t)
-    #     transactions_current_dict[t.id] = {"invoice": t}
-    #     total_debit = 0
-    #     for e in entries:
-    #         if e.account.number == rule.debit_account.number:
-    #             total_debit += e.debit
-    #             # ic(e)
-    #         else:
-    #             total_debit += e.debit
-    #     transactions_current_dict[t.id]["total_debit"] = total_debit
-    # # ic(transactions_current_dict)
-            
-    
-    # # less pays debit
-    # # transactions = Transaction.objects.filter(partner=partner_obj, date__lt=getDate)
-    
-    
-    
-    
-    
-    
-    
-    
+    # USD
+    rule = CustomePostingRule.objects.filter(operation__code="sale", directory_type=partner_obj.type, amount_type="revenue", currency__code="USD").first()
+   
     if not rule:
         value = [Decimal('0.00'), Decimal('0.00')]
         return {"start": value, "oborot": value, "final": value, "saldo": value}
     account = rule.debit_account
+    ic(account)
     entries_start = Entry.objects.filter(transaction__partner=partner_obj, transaction__date__lt=getDate).filter(account=account)
     debit_start = entries_start.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
     credit_start = entries_start.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
     
     entries_oborot = Entry.objects.filter(transaction__partner=partner_obj, transaction__date__date=getDate).filter(account=account)
+    # ic(partner_obj)
+    # ic("GGGGGGGGGGGGGGGGGGGGGGGGGG 192", Entry.objects.filter(transaction__partner=partner_obj))
+    ic("EEEEEEEEEEEEEEEEEEEEE 192", entries_oborot)
     today_entries = []
     desc = ''
     already_have_pks = []
@@ -410,8 +350,61 @@ def get_saldo(partner_obj, getDate):
     saldo = debit_end - credit_end
     saldo_debit = abs(saldo) if saldo > 0 else 0
     saldo_credit = abs(saldo) if saldo < 0 else 0
+    
+    # TMT
+    rule = CustomePostingRule.objects.filter(operation__code="sale", directory_type=partner_obj.type, amount_type="revenue", currency__code="TMT").first()
+   
+    if not rule:
+        value = [Decimal('0.00'), Decimal('0.00')]
+        return {"start": value, "oborot": value, "final": value, "saldo": value}
+    account = rule.debit_account
+    ic(account)
+    entries_start = Entry.objects.filter(transaction__partner=partner_obj, transaction__date__lt=getDate).filter(account=account)
+    debit_start_tmt = entries_start.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
+    credit_start_tmt = entries_start.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
+    
+    entries_oborot = Entry.objects.filter(transaction__partner=partner_obj, transaction__date__date=getDate).filter(account=account)
+    # ic(partner_obj)
+    # ic("GGGGGGGGGGGGGGGGGGGGGGGGGG 192", Entry.objects.filter(transaction__partner=partner_obj))
+    ic("EEEEEEEEEEEEEEEEEEEEE 192", entries_oborot)
+    today_entries_tmt = []
+    desc_tmt = ''
+    already_have_pks = []
+    if entries_oborot:
+        count = 0
+        for e in entries_oborot:
+            str_date = e.transaction.date.strftime("%d-%m-%Y %H:%M")
+            if e.transaction.pk in already_have_pks:
+                for c in today_entries_tmt:
+                    if c[4] == e.transaction.pk:
+                        c[2] += e.debit
+                        c[3] += e.credit
+            else:
+                today_entries_tmt.append([str_date, e.transaction.description, e.debit, e.credit, e.transaction.pk])
+                already_have_pks.append(e.transaction.pk)
+            count += 1
+            desc_tmt += f"{count}) {e.transaction.description}"
+            desc_tmt += "\n"
+    
 
-    return {"start": [debit_start, credit_start], "oborot": [debit_oborot, credit_oborot, desc], "final": [debit_end, credit_end], "saldo": [saldo_debit, saldo_credit], "today_entries":today_entries}  
+    debit_oborot_tmt = entries_oborot.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
+    credit_oborot_tmt = entries_oborot.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
+    # ic(today_entries)
+  
+    
+    debit_end_tmt = debit_start_tmt + debit_oborot_tmt
+    credit_end_tmt = credit_start_tmt + credit_oborot_tmt
+    
+    saldo = debit_end_tmt - credit_end_tmt
+    saldo_debit_tmt = abs(saldo) if saldo > 0 else 0
+    saldo_credit_tmt = abs(saldo) if saldo < 0 else 0
+    
+
+    return {
+        "start": [debit_start, credit_start], "oborot": [debit_oborot, credit_oborot, desc], "final": [debit_end, credit_end], "saldo": [saldo_debit, saldo_credit], "today_entries":today_entries,
+        "start_tmt": [debit_start_tmt, credit_start_tmt], "oborot_tmt": [debit_oborot_tmt, credit_oborot_tmt, desc_tmt], "final_tmt": [debit_end_tmt, credit_end_tmt], "saldo_tmt": [saldo_debit_tmt, saldo_credit_tmt], "today_entries_tmt":today_entries_tmt,
+        } 
+     
 @require_GET
 def get_saldo_for_partner_for_selected_date(request):
     getDate = request.GET.get('date')
@@ -672,3 +665,58 @@ def universal_entries(request):
         return JsonResponse({"error": "Дебет или кредит счет не найден"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+    
+    
+    
+@require_GET
+def get_transaction_journal(request):
+    date_from = request.GET.get("dateFrom")
+    date_to = request.GET.get("dateTo")
+
+    if not date_from or not date_to:
+        return JsonResponse({"error": "Не указаны даты"}, status=400)
+
+    allowed_accounts = ['50', '52', '60', '62', '75', '76']
+
+    transactions = Transaction.objects.filter(
+        date__range=[date_from, date_to],
+        partner__isnull=False
+    ).prefetch_related('entries', 'partner')
+
+    journal = []
+
+    for tr in transactions:
+        entries = tr.entries.all()
+        account_numbers = [e.account.number for e in entries]
+
+        # Проверяем, что хотя бы один счет в списке allowed_accounts
+        if not any(acc in allowed_accounts for acc in account_numbers):
+            continue
+
+        # Проверяем, что все счета транзакции входят в allowed_accounts
+        if not all(acc in allowed_accounts for acc in account_numbers):
+            continue
+
+        # Фильтруем проводки только по нужным счетам (для дебета/кредита)
+        filtered_entries = [e for e in entries if e.account.number in allowed_accounts]
+
+        debit_accounts = ', '.join(str(e.account.number) for e in filtered_entries if e.debit > 0)
+        credit_accounts = ', '.join(str(e.account.number) for e in filtered_entries if e.credit > 0)
+        amount = sum(e.debit for e in filtered_entries)
+
+        journal.append({
+            "date": tr.date.strftime("%d.%m.%Y"),
+            "operation": f"{tr.description}, {tr.partner.name if tr.partner else ''}",
+            "debit": debit_accounts,
+            "credit": credit_accounts,
+            "amount": float(amount)
+        })
+
+    total_amount = sum(item['amount'] for item in journal)
+    period_str = f"Period from {date_from} to {date_to}"
+
+    return JsonResponse({
+        "journal": journal,
+        "period": period_str,
+        "totalAmount": total_amount
+    }, safe=False)

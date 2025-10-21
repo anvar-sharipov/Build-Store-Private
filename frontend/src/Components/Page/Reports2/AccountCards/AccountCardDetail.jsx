@@ -15,6 +15,7 @@ const AccountCardDetail = () => {
           params: { dateFrom, dateTo },
         });
         setCards(res.data);
+        console.log("res.data", res.data);
       } catch (error) {
         console.error("Ошибка при получении детальной карточки:", error);
       }
@@ -27,17 +28,33 @@ const AccountCardDetail = () => {
   return (
     <div className="p-2 space-y-6">
       {cards.map((data, i) => (
-        <div key={i}>
-          <h2 className="text-base font-semibold mb-1">
-            Карточка счёта: {data.account} {data.partner && `— ${data.partner}`}
-          </h2>
-          <p className="text-sm mb-2">
-            Период с {data.date_from} по {data.date_to}
-          </p>
+        <div key={i} className="print:break-inside-avoid">
+          {/* Шапка карточки */}
+          {/* <div className="print:table-header-repeat">
+            <h2 className="text-base font-semibold mb-1">
+              Карточка счёта: {data.account} {data.partner && `— ${data.partner}`}
+            </h2>
+            <p className="text-sm mb-2">
+              Период с {data.date_from} по {data.date_to}
+            </p>
+          </div> */}
 
-          <table className="w-full border border-black border-collapse text-sm">
-            <thead>
-              <tr className="bg-gray-200">
+          {/* Таблица */}
+          <table className="w-full border border-black border-collapse text-sm print:break-inside-avoid">
+            <thead className="table-header-repeat bg-gray-200">
+              <tr>
+                <th colSpan={5} className="border border-black p-1 text-left">
+                  <div>
+                    <h2 className="text-base font-semibold mb-1">
+                      Карточка счёта: {data.account} {data.partner && `— ${data.partner}`}
+                    </h2>
+                    <p className="text-sm mb-2">
+                      Период с {data.date_from} по {data.date_to}
+                    </p>
+                  </div>
+                </th>
+              </tr>
+              <tr>
                 <th className="border border-black p-1">Дата</th>
                 <th className="border border-black p-1">Операции</th>
                 <th className="border border-black p-1 text-right">Дебет</th>
@@ -46,6 +63,7 @@ const AccountCardDetail = () => {
               </tr>
             </thead>
             <tbody>
+              {/* Начальный баланс */}
               <tr className="font-semibold bg-gray-100">
                 <td className="border border-black p-1">{data.date_from}</td>
                 <td className="border border-black p-1">Saldo на начало</td>
@@ -54,6 +72,7 @@ const AccountCardDetail = () => {
                 <td className="border border-black p-1 text-right">{data.saldo_start}</td>
               </tr>
 
+              {/* Операции */}
               {data.movements.map((m, idx) => (
                 <tr key={idx}>
                   <td className="border border-black p-1">{m.date}</td>
@@ -64,6 +83,7 @@ const AccountCardDetail = () => {
                 </tr>
               ))}
 
+              {/* Обороты */}
               <tr className="font-semibold bg-gray-200">
                 <td className="border border-black p-1"></td>
                 <td className="border border-black p-1">Обороты за период</td>
@@ -72,6 +92,7 @@ const AccountCardDetail = () => {
                 <td className="border border-black p-1 text-right"></td>
               </tr>
 
+              {/* Конечный баланс */}
               <tr className="font-semibold bg-gray-100">
                 <td className="border border-black p-1">{data.date_to}</td>
                 <td className="border border-black p-1">Saldo на конец</td>

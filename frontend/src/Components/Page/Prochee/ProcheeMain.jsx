@@ -23,7 +23,7 @@ const ProcheeMain = () => {
     // { id: 1, name: "Проводка платежей", icon: Settings, color: "slate", to: PROCHEE.PARTNER_TRANSACTION_ENTRY },
     { id: 1, name: "Проводки", icon: Settings, color: "slate", to: PROCHEE.ENTRIES2 },
     { id: 3, name: "QR code", icon: QrCode, color: "fuchsia", to: PROCHEE.QR_LIST_PRINT },
-    { id: 4, name: "Избранное 2", icon: Users, color: "cyan" },
+    { id: 4, name: "Журнал операций", icon: Users, color: "cyan", to: PROCHEE.TRANSACTION_JOURNAL },
     { id: 5, name: "Уведомления", icon: Bell, color: "yellow" },
     { id: 6, name: "Безопасность", icon: Shield, color: "green" },
     { id: 7, name: "База данных", icon: Database, color: "violet" },

@@ -32,6 +32,7 @@ export const PROCHEE = {
   // OSW: "/osw",
   QR_LIST_PRINT: "/prochee/qr-list-print",
   ENTRIES2: "/entries2",
+  TRANSACTION_JOURNAL: "/transaction- journal",
 };
 
 

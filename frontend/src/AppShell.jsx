@@ -37,6 +37,7 @@ import SalesAnalys from "./Components/Page/Reports2/SalesAnalys/SalesAnalys";
 import AnalysSalesWithoutReturn from "./Components/Page/Reports2/SalesAnalys/AnalysSalesWithoutReturn";
 import AccountCards from "./Components/Page/Reports2/AccountCards/AccountCards";
 import AccountCardDetail from "./Components/Page/Reports2/AccountCards/AccountCardDetail";
+import TransactionJournal from "./Components/Page/Prochee/TransactionJournal";
 
 function AppShell() {
   const location = useLocation();
@@ -90,6 +91,7 @@ function AppShell() {
 
                     <Route path={ROUTES_RAPORT.DETAIL_REPORT_1} element={<DetailReport1 />} />
                     <Route path={PROCHEE.QR_LIST_PRINT} element={<QrListPrint />} />
+                    <Route path={PROCHEE.TRANSACTION_JOURNAL} element={<TransactionJournal />} />
       
 
                     {/* PurchaseInvoice */}

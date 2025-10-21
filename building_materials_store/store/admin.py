@@ -237,10 +237,10 @@ class AgentAdmin(admin.ModelAdmin):
 # Партнеры
 @admin.register(Partner)
 class PartnerAdmin(admin.ModelAdmin):
-    list_display = ('name', 'type', 'balance', 'agent', 'invoice_count')
+    list_display = ('name', 'type', 'agent', 'invoice_count')
     list_filter = ('type', 'agent')
     search_fields = ('name',)
-    readonly_fields = ('balance',)
+    readonly_fields = ('balance_usd', 'balance_tmt')
     
     def invoice_count(self, obj):
         return obj.salesinvoice_set.count()
@@ -619,7 +619,7 @@ class DayClosingLogAdmin(admin.ModelAdmin):
 
 @admin.register(PartnerBalanceSnapshot)
 class PartnerBalanceSnapshotAdmin(admin.ModelAdmin):
-    list_display = ("closing", "partner", "balance")
+    list_display = ("closing", "partner", "balance", "balance_tmt", "balance_usd")
     search_fields = ("partner__name",)
     list_filter = ("closing",)
 

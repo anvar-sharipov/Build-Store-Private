@@ -663,9 +663,15 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                 {/* Name balance */}
                 <div className="flex gap-4 items-center">
                   <label htmlFor="name" className="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    {t("balance")}
+                    {t("balance USD")}:
                   </label>
-                  <span>{values.balance}</span>
+                  {/* <span>{values.balance}</span> */}
+                  <span>{values.balance_usd}</span>
+                    |
+                  <label htmlFor="name" className="block font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {t("balance TMT")}:
+                  </label>
+                  <span>{values.balance_tmt}</span>
                   {/* <Field
                     onKeyDown={(e) => {
                       if (e.key === "ArrowUp") {

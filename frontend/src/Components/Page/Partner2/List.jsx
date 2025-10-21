@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { formatNumber } from "../../UI/formatNumber";
 
 const List = ({
   partners,
@@ -35,6 +36,8 @@ const List = ({
     setPartnerValue({
       name: partner.name,
       balance: partner.balance,
+      balance_usd: partner.balance_usd,
+      balance_tmt: partner.balance_tmt,
       // accounts_id: accounts_id,
       type: partner.type,
       agent: agent_obj,
@@ -101,7 +104,11 @@ const List = ({
           >
             {/* <div></div> */}
             <div>{partner.name}</div>
-            <div>{partner.balance}</div>
+            <div>
+            <div>USD: {formatNumber(partner.balance_usd)}</div>
+            <div>TMT: {formatNumber(partner.balance_tmt)}</div>
+            </div>
+            
           </li>
         ))}
       </ul>

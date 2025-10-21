@@ -51,12 +51,12 @@ const Saldo = ({ saldo, letPrintSaldo, setLetPrintSaldo }) => {
         </div>
       </div>
 
-      {/* Compact Table */}
+      {/* Compact Table USD */}
       <table className="w-full table-auto border-collapse print:text-[10px]">
         <thead>
           <tr className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 print:bg-white print:!text-black">
             <th colSpan={2} className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">
-              {t("Indicator")}
+              {t("Indicator")} USD
             </th>
             <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">{t("Debit")}</th>
             <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">{t("Credit")}</th>
@@ -122,8 +122,85 @@ const Saldo = ({ saldo, letPrintSaldo, setLetPrintSaldo }) => {
               {parseFloat(saldo.saldo[1]) !== 0 ? saldo.saldo[1] : "-"}
             </td>
           </tr>
-        </tbody>
+        </tbody> 
       </table>
+
+      <br className="py-2" />
+
+      {/* TMT */}
+      <table className="w-full table-auto border-collapse print:text-[10px]">
+        <thead>
+          <tr className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 print:bg-white print:!text-black">
+            <th colSpan={2} className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">
+              {t("Indicator")} TMT
+            </th>
+            <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">{t("Debit")}</th>
+            <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">{t("Credit")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {/* Начало */}
+          <tr className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
+            <td colSpan={2} className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium">
+              {t("Opening balance")}
+            </td>
+            <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right">{saldo.start_tmt[0]}</td>
+            <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right">{saldo.start_tmt[1]}</td>
+          </tr>
+
+          {/* Entries */}
+          {saldo.today_entries_tmt.length > 0 ? (
+            saldo.today_entries_tmt.map((e, idx) => (
+              <tr
+                key={idx}
+                className="cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white print:cursor-default transition-colors"
+                onClick={() => handleRowClick(e[4])}
+              >
+                <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black">
+                  {e[0].split(" ")[0].replace(/-/g, ".")}
+                </td>
+                <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black">{e[1]}</td>
+                <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-right whitespace-pre-line">
+                  {parseFloat(e[2]) !== 0 ? e[2] : "-"}
+                </td>
+                <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-right">
+                  {parseFloat(e[3]) !== 0 ? e[3] : "-"}
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-center">-</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-center">-</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-center">-</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-center">-</td>
+            </tr>
+          )}
+
+          {/* Итого */}
+          <tr className="bg-gray-100 dark:bg-gray-750 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white dark:bg-gray-800">
+            <td colSpan={2} className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold">
+              {t("Total turnover")}
+            </td>
+            <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">{saldo.final_tmt[0]}</td>
+            <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">{saldo.final_tmt[1]}</td>
+          </tr>
+
+          {/* Конец */}
+          <tr className="bg-gray-100 dark:bg-gray-750 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white dark:bg-gray-800">
+            <td colSpan={2} className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold">
+              {t("Closing balance")}
+            </td>
+            <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">
+              {parseFloat(saldo.saldo_tmt[0]) !== 0 ? saldo.saldo_tmt[0] : "-"}
+            </td>
+            <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">
+              {parseFloat(saldo.saldo_tmt[1]) !== 0 ? saldo.saldo_tmt[1] : "-"}
+            </td>
+          </tr>
+        </tbody> 
+      </table>
+
     </div>
   );
 };

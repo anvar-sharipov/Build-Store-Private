@@ -13,6 +13,8 @@ export const partnerDownloadExcel = (data, t) => {
     [t("type_eng")]: emp.type_display,
     [t("is_active")]: emp.is_active,
     [t("balance")]: emp.balance,
+    [t("balance_usd")]: emp.balance_usd,
+    [t("balance_tmt")]: emp.balance_tmt,
   }));
 
   const worksheet = XLSX.utils.json_to_sheet(worksheetData);

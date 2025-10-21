@@ -491,7 +491,12 @@
   "Saldo end": "Soňky saldo",
   "Date": "Sene",
   "Description": "Kommentariya",
-  "Debit": "Debet"
+  "Debit": "Debet",
+  "No posting rule for this partner type and currency": "Bu hyzmatdaşyň görnüşi we walýutasy üçin prowodka düzgünçiligi ýok",
+  "Transaction Journal": "Amallaryň gündeligi",
+  "Period": "Period",
+  "Operation": "Amallar",
+  "Amount": "Summa"
 
 
 

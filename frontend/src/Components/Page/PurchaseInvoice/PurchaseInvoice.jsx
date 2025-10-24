@@ -21,6 +21,11 @@ const PurchaseInvoice = () => {
   // const [query, setQuery] = useState("");
   const [query, setQuery] = useState(() => searchParams.get("query") || "");
 
+  // useEffect(() => {
+  //   console.log("query", searchParams);
+    
+  // },[searchParams])
+
   const { dateProwodok } = useContext(DateContext);
 
   const { authUser, authGroup } = useContext(AuthContext);
@@ -122,6 +127,7 @@ const PurchaseInvoice = () => {
     } else {
       newParams.delete("query");
     }
+    
     setSearchParams(newParams); // именно это триггерит обновление
   }, [query, setSearchParams]);
 

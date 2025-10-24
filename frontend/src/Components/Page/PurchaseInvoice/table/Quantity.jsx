@@ -17,7 +17,7 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
   const [localErrorQuantity, setLocalErrorQuantity] = useState("");
 
   useEffect(() => {
-    if (Number(product.selected_quantity) > (product.quantity_on_selected_warehouses || 0) && values.wozwrat_or_prihod === "rashod") {
+    if (Number(product.selected_quantity) > (product.quantity_on_selected_warehouses || 0) && (values.wozwrat_or_prihod === "rashod" || values.wozwrat_or_prihod === "transfer")) {
       setLocalErrorQuantity(`${t("OnStock")} ${product.quantity_on_selected_warehouses}`);
       setFieldValue("send", false);
     }
@@ -160,7 +160,7 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
           if (!isNumber) {
             setLocalErrorQuantity(`${t("quantity must be a digit")}`);
             setFieldValue("send", false);
-          } else if (qty > product.quantity_on_selected_warehouses && values.wozwrat_or_prihod === "rashod") {
+          } else if (qty > product.quantity_on_selected_warehouses && (values.wozwrat_or_prihod === "rashod" || values.wozwrat_or_prihod === "transfer")) {
             setLocalErrorQuantity(`${t("OnStock")} ${product.quantity_on_selected_warehouses}`);
             setFieldValue("send", false);
           } else if (qty < 0.001) {

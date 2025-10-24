@@ -96,7 +96,7 @@ def save_invoice(request):
     
         try:
             data = json.loads(request.body)
-            # ic(data['id'])
+            ic(data)
             is_entry = data['is_entry']  
             awto = data['awto']
             awto_send = data['awto_send']
@@ -108,9 +108,12 @@ def save_invoice(request):
             products = data['products']
             type_price = data['type_price']
             warehouse = data['warehouse']
+            warehouse2 = data['warehouse2']
             wozwrat_or_prihod = data['wozwrat_or_prihod']
             comment=data["comment"]
             invoice_id = data['id']
+            
+            ic(warehouse2)
             
             
             #####################################################################################################################################################################
@@ -119,7 +122,7 @@ def save_invoice(request):
             if not send:
                 return JsonResponse({"status": "error", "message": "fill in all the fields"}, status=400)
             
-            if wozwrat_or_prihod not in ["wozwrat", "prihod", "rashod"]:
+            if wozwrat_or_prihod not in ["wozwrat", "prihod", "rashod", "transfer"]:
                 return JsonResponse({"status": "error", "message": "choose rashod, prihod or wozwrat"}, status=400)
             
             if not invoice_date:
@@ -133,7 +136,6 @@ def save_invoice(request):
             
             if not warehouse:
                 return JsonResponse({"status": "error", "message": "selectWarehouse"}, status=400)
-            
             try:
                 warehouse_obj = Warehouse.objects.get(id=warehouse["id"])
             except:
@@ -141,6 +143,26 @@ def save_invoice(request):
             
             if not warehouse_obj.currency or warehouse_obj.currency.code not in ["USD", "TMT"]:
                 return JsonResponse({"status": "error", "message": "currency is not valid"}, status=400)
+            
+            
+            if wozwrat_or_prihod == "transfer":
+                if not warehouse2:
+                    return JsonResponse({"status": "error", "message": "selectWarehouse2"}, status=400)
+                try:
+                    warehouse_obj2 = Warehouse.objects.get(id=warehouse2["id"])
+                except:
+                    return JsonResponse({"status": "error", "message": "cant find warehouse in database"}, status=400)
+                
+                if not warehouse_obj2.currency or warehouse_obj2.currency.code not in ["USD", "TMT"]:
+                    return JsonResponse({"status": "error", "message": "currency is not valid"}, status=400)
+                
+                
+                if warehouse_obj.currency.code != warehouse_obj2.currency.code:
+                    return JsonResponse({"status": "error", "message": "currency warehouse1 is not match with currency warehouse2"}, status=400)
+            else:
+                warehouse_obj2 = None
+                
+            
 
             
             if is_entry:
@@ -212,6 +234,7 @@ def save_invoice(request):
                             send=send,
                             type_price=type_price,
                             warehouse=warehouse_obj,
+                            warehouse2=warehouse_obj2,
                             wozwrat_or_prihod=wozwrat_or_prihod,
                             created_by=request.user,
                             created_at_handle=invoice_date,
@@ -286,33 +309,40 @@ def save_invoice(request):
                         
                         if is_entry:
                             partner_obj = Partner.objects.select_for_update().get(id=partner["id"])
-                            if wozwrat_or_prihod == "rashod":
-                                operation = Operation.objects.filter(code="sale")
-                            elif wozwrat_or_prihod == "prihod":
-                                operation = Operation.objects.filter(code="purchase")
-                            elif wozwrat_or_prihod == "wozwrat":
-                                operation = Operation.objects.filter(code="return")
-                            if not operation.exists():
-                                transaction.set_rollback(True)
-                                return JsonResponse({"status": "error", "message": f"u dont have a rule for {wozwrat_or_prihod}"}, status=400)
-                            if len(operation) != 1:
-                                    transaction.set_rollback(True)
-                                    return JsonResponse({"status": "error", "message": f"u have more rule than 1 for {wozwrat_or_prihod} faktura"}, status=400)
-                            if not partner_obj.type:
-                                    transaction.set_rollback(True)
-                                    return JsonResponse({"status": "error", "message": "partner dont have a type"}, status=400)  
-                            rules = CustomePostingRule.objects.filter(operation=operation[0], directory_type=partner_obj.type, currency=warehouse_obj.currency)
-                            
-                            if not rules.exists():
+                            if wozwrat_or_prihod == "transfer":
+                                transaction_obj = Transaction.objects.create(
+                                    description=f"Faktura ({wozwrat_or_prihod}) № {str(invoice.pk)}\n{comment}", 
+                                    date=invoice_date, invoice=invoice, 
+                                    partner=partner_obj
+                                )
+                            else:
+                                if wozwrat_or_prihod == "rashod":
+                                    operation = Operation.objects.filter(code="sale")
+                                elif wozwrat_or_prihod == "prihod":
+                                    operation = Operation.objects.filter(code="purchase")
+                                elif wozwrat_or_prihod == "wozwrat":
+                                    operation = Operation.objects.filter(code="return")
+                                if not operation.exists():
                                     transaction.set_rollback(True)
                                     return JsonResponse({"status": "error", "message": f"u dont have a rule for {wozwrat_or_prihod}"}, status=400)
+                                if len(operation) != 1:
+                                        transaction.set_rollback(True)
+                                        return JsonResponse({"status": "error", "message": f"u have more rule than 1 for {wozwrat_or_prihod} faktura"}, status=400)
+                                if not partner_obj.type:
+                                        transaction.set_rollback(True)
+                                        return JsonResponse({"status": "error", "message": "partner dont have a type"}, status=400)  
+                                rules = CustomePostingRule.objects.filter(operation=operation[0], directory_type=partner_obj.type, currency=warehouse_obj.currency)
                                 
-                            
-                            transaction_obj = Transaction.objects.create(
-                                description=f"Faktura ({wozwrat_or_prihod}) № {str(invoice.pk)}\n{comment}", 
-                                date=invoice_date, invoice=invoice, 
-                                partner=partner_obj
-                            )
+                                if not rules.exists():
+                                    transaction.set_rollback(True)
+                                    return JsonResponse({"status": "error", "message": f"u dont have a rule for {wozwrat_or_prihod}"}, status=400)
+                                    
+                                
+                                transaction_obj = Transaction.objects.create(
+                                    description=f"Faktura ({wozwrat_or_prihod}) № {str(invoice.pk)}\n{comment}", 
+                                    date=invoice_date, invoice=invoice, 
+                                    partner=partner_obj
+                                )
                                 
                             # ###########################################################################################################################################################
                             # wozwrat              
@@ -483,7 +513,94 @@ def save_invoice(request):
                                 invoice.entry_created_by = request.user
                                 partner_obj.save()
                                 invoice.save()
-                                        
+                            
+                            elif wozwrat_or_prihod == "transfer":
+                                for product in products:  
+                                    product_obj = product_map[product['id']]   
+                                    quantity = Decimal(product['selected_quantity'])
+                                    sale_price = Decimal(product['selected_price'])
+                                    purchase_price = Decimal(product['purchase_price'])  
+                                    
+                                    # minus s perwogo sklada
+                                    conversion_factor = 1
+                                    units = product['units']
+                                    if units:
+                                        for u in units:
+                                            if u['is_default_for_sale']:
+                                                conversion_factor = Decimal(u['conversion_factor'])
+                                    minus_to_stock = conversion_factor * Decimal(quantity)
+                                    wp = WarehouseProduct.objects.select_for_update().get(warehouse=warehouse_obj, product=product_obj)
+                                    if wp.quantity < minus_to_stock:
+                                        transaction.set_rollback(True)
+                                        return JsonResponse({"status": "error", "message": "Not enough product in stock"}, status=400)    
+                                    wp.quantity -= Decimal(minus_to_stock)
+                                    wp.save() 
+                                    
+                                    # plus на второй склад
+                                    plus_to_stock = minus_to_stock
+                                    # plus на второй склад
+                                    wp, created = WarehouseProduct.objects.select_for_update().get_or_create(
+                                        warehouse=warehouse_obj2,
+                                        product=product_obj,
+                                        defaults={'quantity': 0}
+                                    )
+                                    wp.quantity += plus_to_stock
+                                    wp.save()
+                                    
+                                    warehouse_account = WarehouseAccount.objects.filter(warehouse=warehouse_obj)
+                                    if not warehouse_account.exists():
+                                        transaction.set_rollback(True)
+                                        return JsonResponse({"status": "error", "message": "The warehouse is not tied to an account"}, status=400)  
+                                    if len(warehouse_account) != 1:
+                                        return JsonResponse({"status": "error", "message": "To many linked account on this warehouse"}, status=400)
+                                    
+                                    warehouse_account_obj = warehouse_account[0].account
+                                    
+                                    if warehouse_account_obj.parent:
+                                        warehouse_parent_account = warehouse_account_obj.parent
+                                    else:
+                                        transaction.set_rollback(True)
+                                        return JsonResponse({"status": "error", "message": "The warehouse account dont have a parent account"}, status=400)
+                                    
+                                    warehouse_account2 = WarehouseAccount.objects.filter(warehouse=warehouse_obj2)
+                                    if not warehouse_account2.exists():
+                                        transaction.set_rollback(True)
+                                        return JsonResponse({"status": "error", "message": "The warehouse is not tied to an account"}, status=400)  
+                                    if len(warehouse_account2) != 1:
+                                        return JsonResponse({"status": "error", "message": "To many linked account on this warehouse"}, status=400)
+                                    
+                                    warehouse_account_obj2 = warehouse_account2[0].account
+                                    
+                                    if warehouse_account_obj2.parent:
+                                        warehouse_parent_account2 = warehouse_account_obj2.parent
+                                    else:
+                                        transaction.set_rollback(True)
+                                        return JsonResponse({"status": "error", "message": "The warehouse account dont have a parent account"}, status=400)
+                                    
+                                    #  def create_entries(transaction_obj, rule, product_obj, warehouse_obj, amount, warehouse_parent_account, warehouse_account_obj):
+                                    debit_acc = warehouse_account_obj2
+                                    credit_acc = warehouse_account_obj
+                                    amount = Decimal(sale_price * quantity)
+                                    Entry.objects.create(
+                                        transaction=transaction_obj,
+                                        account=debit_acc,
+                                        product=product_obj,
+                                        warehouse=warehouse_obj2,
+                                        debit=amount,
+                                    )
+                                    
+                                    Entry.objects.create(
+                                        transaction=transaction_obj,
+                                        account=credit_acc,
+                                        product=product_obj,
+                                        warehouse=warehouse_obj,
+                                        credit=amount
+                                    )
+                                invoice.entry_created_at = invoice_date
+                                invoice.entry_created_at_handle = invoice_date
+                                invoice.entry_created_by = request.user
+                                invoice.save()
+                                                                
                         # 1/0 
                         # create success 
                         return JsonResponse({"status": "ok", "message": f"invoice saved", "id": invoice.id})
@@ -513,6 +630,7 @@ def save_invoice(request):
                         invoice.send = send
                         invoice.type_price = type_price
                         invoice.warehouse = warehouse_obj
+                        invoice.warehouse2 = warehouse_obj2
                         invoice.wozwrat_or_prihod = wozwrat_or_prihod
                         invoice.updated_at = timezone.now()
                         invoice.updated_at_handle = invoice_date2
@@ -578,36 +696,44 @@ def save_invoice(request):
                             if invoice.entry_created_at:
                                 return JsonResponse({"status": "error", "message": "Invoice already posted"}, status=400)
                             
-                            if wozwrat_or_prihod == "rashod":
-                                operation = Operation.objects.filter(code="sale")
-                            elif wozwrat_or_prihod == "prihod":
-                                operation = Operation.objects.filter(code="purchase")
-                            elif wozwrat_or_prihod == "wozwrat":
-                                operation = Operation.objects.filter(code="wozwrat")
+                            if wozwrat_or_prihod == "transfer":
+                                transaction_obj = Transaction.objects.create(
+                                    description=f"Faktura ({wozwrat_or_prihod}) № {str(invoice.pk)}\n{comment}", 
+                                    date=invoice_date2, invoice=invoice, 
+                                    partner=partner_obj
+                                )
+                            else:
+                            
+                                if wozwrat_or_prihod == "rashod":
+                                    operation = Operation.objects.filter(code="sale")
+                                elif wozwrat_or_prihod == "prihod":
+                                    operation = Operation.objects.filter(code="purchase")
+                                elif wozwrat_or_prihod == "wozwrat":
+                                    operation = Operation.objects.filter(code="wozwrat")
+                                    
+                                if not operation.exists():
+                                    transaction.set_rollback(True)
+                                    return JsonResponse({"status": "error", "message": f"u dont have a rule for {wozwrat_or_prihod}"}, status=400)
                                 
-                            if not operation.exists():
-                                transaction.set_rollback(True)
-                                return JsonResponse({"status": "error", "message": f"u dont have a rule for {wozwrat_or_prihod}"}, status=400)
-                            
-                            if len(operation) != 1:
-                                transaction.set_rollback(True)
-                                return JsonResponse({"status": "error", "message": f"u have more rule than 1 for {wozwrat_or_prihod} faktura"}, status=400)
-                            
-                            if not partner_obj.type:
-                                transaction.set_rollback(True)
-                                return JsonResponse({"status": "error", "message": "partner dont have a type"}, status=400)
-                            
-                            rules = CustomePostingRule.objects.filter(operation=operation[0], directory_type=partner_obj.type, currency=warehouse_obj.currency)
-                            
-                            if not rules.exists():
-                                transaction.set_rollback(True)
-                                return JsonResponse({"status": "error", "message": f"u dont have a rule for {wozwrat_or_prihod}"}, status=400)
-                            
-                            transaction_obj = Transaction.objects.create(
-                                description=f"Faktura ({wozwrat_or_prihod}) № {str(invoice.pk)}\n{comment}", 
-                                date=invoice_date2, invoice=invoice, 
-                                partner=partner_obj
-                            )
+                                if len(operation) != 1:
+                                    transaction.set_rollback(True)
+                                    return JsonResponse({"status": "error", "message": f"u have more rule than 1 for {wozwrat_or_prihod} faktura"}, status=400)
+                                
+                                if not partner_obj.type:
+                                    transaction.set_rollback(True)
+                                    return JsonResponse({"status": "error", "message": "partner dont have a type"}, status=400)
+                                
+                                rules = CustomePostingRule.objects.filter(operation=operation[0], directory_type=partner_obj.type, currency=warehouse_obj.currency)
+                                
+                                if not rules.exists():
+                                    transaction.set_rollback(True)
+                                    return JsonResponse({"status": "error", "message": f"u dont have a rule for {wozwrat_or_prihod}"}, status=400)
+                                
+                                transaction_obj = Transaction.objects.create(
+                                    description=f"Faktura ({wozwrat_or_prihod}) № {str(invoice.pk)}\n{comment}", 
+                                    date=invoice_date2, invoice=invoice, 
+                                    partner=partner_obj
+                                )
 
                             # #######################################################################################################################################
                             # wozwrat
@@ -778,6 +904,94 @@ def save_invoice(request):
                                 invoice.entry_created_at_handle = invoice_date2
                                 invoice.entry_created_by = request.user
                                 partner_obj.save()
+                        
+                            elif wozwrat_or_prihod == "transfer":
+                                for product in products:  
+                                    product_obj = product_map[product['id']]   
+                                    quantity = Decimal(product['selected_quantity'])
+                                    sale_price = Decimal(product['selected_price'])
+                                    purchase_price = Decimal(product['purchase_price'])  
+                                    
+                                    # minus s perwogo sklada
+                                    conversion_factor = 1
+                                    units = product['units']
+                                    if units:
+                                        for u in units:
+                                            if u['is_default_for_sale']:
+                                                conversion_factor = Decimal(u['conversion_factor'])
+                                    minus_to_stock = conversion_factor * Decimal(quantity)
+                                    wp = WarehouseProduct.objects.select_for_update().get(warehouse=warehouse_obj, product=product_obj)
+                                    if wp.quantity < minus_to_stock:
+                                        transaction.set_rollback(True)
+                                        return JsonResponse({"status": "error", "message": "Not enough product in stock"}, status=400)    
+                                    wp.quantity -= Decimal(minus_to_stock)
+                                    wp.save() 
+                                    
+                                    # plus на второй склад
+                                    plus_to_stock = minus_to_stock
+                                    # plus на второй склад
+                                    wp, created = WarehouseProduct.objects.select_for_update().get_or_create(
+                                        warehouse=warehouse_obj2,
+                                        product=product_obj,
+                                        defaults={'quantity': 0}
+                                    )
+                                    wp.quantity += plus_to_stock
+                                    wp.save()
+                                    
+                                    warehouse_account = WarehouseAccount.objects.filter(warehouse=warehouse_obj)
+                                    if not warehouse_account.exists():
+                                        transaction.set_rollback(True)
+                                        return JsonResponse({"status": "error", "message": "The warehouse is not tied to an account"}, status=400)  
+                                    if len(warehouse_account) != 1:
+                                        return JsonResponse({"status": "error", "message": "To many linked account on this warehouse"}, status=400)
+                                    
+                                    warehouse_account_obj = warehouse_account[0].account
+                                    
+                                    if warehouse_account_obj.parent:
+                                        warehouse_parent_account = warehouse_account_obj.parent
+                                    else:
+                                        transaction.set_rollback(True)
+                                        return JsonResponse({"status": "error", "message": "The warehouse account dont have a parent account"}, status=400)
+                                    
+                                    warehouse_account2 = WarehouseAccount.objects.filter(warehouse=warehouse_obj2)
+                                    if not warehouse_account2.exists():
+                                        transaction.set_rollback(True)
+                                        return JsonResponse({"status": "error", "message": "The warehouse is not tied to an account"}, status=400)  
+                                    if len(warehouse_account2) != 1:
+                                        return JsonResponse({"status": "error", "message": "To many linked account on this warehouse"}, status=400)
+                                    
+                                    warehouse_account_obj2 = warehouse_account2[0].account
+                                    
+                                    if warehouse_account_obj2.parent:
+                                        warehouse_parent_account2 = warehouse_account_obj2.parent
+                                    else:
+                                        transaction.set_rollback(True)
+                                        return JsonResponse({"status": "error", "message": "The warehouse account dont have a parent account"}, status=400)
+                                    
+                                    #  def create_entries(transaction_obj, rule, product_obj, warehouse_obj, amount, warehouse_parent_account, warehouse_account_obj):
+                                    debit_acc = warehouse_account_obj2
+                                    credit_acc = warehouse_account_obj
+                                    amount = Decimal(sale_price * quantity)
+                                    Entry.objects.create(
+                                        transaction=transaction_obj,
+                                        account=debit_acc,
+                                        product=product_obj,
+                                        warehouse=warehouse_obj2,
+                                        debit=amount,
+                                    )
+                                    
+                                    Entry.objects.create(
+                                        transaction=transaction_obj,
+                                        account=credit_acc,
+                                        product=product_obj,
+                                        warehouse=warehouse_obj,
+                                        credit=amount
+                                    )
+                                invoice.entry_created_at = invoice_date
+                                invoice.entry_created_at_handle = invoice_date
+                                invoice.entry_created_by = request.user
+                                
+
                         invoice.save()
                                 
                                 
@@ -824,6 +1038,7 @@ def get_invoices(request):
     query = request.GET.get('query')
     selectedEntry = request.GET.get('selectedEntry')
     sortInvoice = request.GET.get('sortInvoice')
+    ic(selectedEntry)
     
     
     ic(partner_id)
@@ -848,13 +1063,21 @@ def get_invoices(request):
             invoices = invoices.order_by("-pk")
                         
         
-    ic(sortInvoice)
+    # ic(sortInvoice)
+    
+    # if selectedEntry:
+    #     if selectedEntry == "entried":
+    #         invoices = invoices.filter(is_entry=True)
+    #     elif selectedEntry == "notEntried":
+    #         invoices = invoices.filter(is_entry=False)
     
     if selectedEntry:
         if selectedEntry == "entried":
-            invoices = invoices.filter(is_entry=True)
+            invoices = invoices.filter(is_entry=True, canceled_at__isnull=True)
         elif selectedEntry == "notEntried":
-            invoices = invoices.filter(is_entry=False)
+            invoices = invoices.filter(is_entry=False, canceled_at__isnull=True)
+        elif selectedEntry == "canceled":
+            invoices = invoices.filter(canceled_at__isnull=False)
             
 
     
@@ -914,6 +1137,7 @@ def get_invoices(request):
             "total_selected_price": str(total_selected_price),
             "total_income_price": str(total_income_price),
             "total_dicount_price": str(total_dicount_price),
+            "canceled_at": invoice.canceled_at, 
             # можно добавить больше полей по необходимости
         })
 
@@ -966,6 +1190,12 @@ def get_invoice_data(request, id):
     else:
         warehouse_json = None
         
+    if invoice.warehouse2:
+        w = invoice.warehouse2
+        warehouse_json2 = {"id":w.id, "is_active":w.is_active, "location":w.location, "name":w.name}
+    else:
+        warehouse_json2 = None
+        
     # ic(invoice.created_by.username)
     
     if invoice.created_by:
@@ -977,6 +1207,11 @@ def get_invoice_data(request, id):
         entry_created_by_json_name = invoice.entry_created_by.username
     else:
         entry_created_by_json_name = None
+        
+    if invoice.canceled_by:
+        canceled_by_json_name = invoice.canceled_by.username
+    else:
+        canceled_by_json_name = None
         
         
         
@@ -1086,12 +1321,16 @@ def get_invoice_data(request, id):
         "send": invoice.send,
         "type_price": invoice.type_price,
         "warehouse": warehouse_json,
+        "warehouse2": warehouse_json2,
         "wozwrat_or_prihod": invoice.wozwrat_or_prihod,
         "created_by": created_by_json_name,
         "entry_created_by": entry_created_by_json_name,
         "created_at": invoice.created_at,
         "updated_at": invoice.updated_at,
         "entry_created_at": invoice.entry_created_at,
+        "canceled_by": canceled_by_json_name, 
+        "canceled_at": invoice.canceled_at, 
+        "canceled_comment": invoice.canceled_comment,
         "products": products,
         "created_at_handle": invoice.created_at_handle,
         "updated_at_handle": invoice.updated_at_handle,
@@ -1120,3 +1359,127 @@ def delete_invoice(request, id):
         return Response({"status": "ok", "message": f"Invoice deleted", "invoice_id": id}, status=status.HTTP_200_OK)
     except Invoice.DoesNotExist:
         return JsonResponse({"status": "error", "message": "cant find invoice"}, status=404)
+    
+    
+    
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def cancel_entry(request):
+    ic("cancel_entry")
+    if request.method == "POST":
+        if not request.user.groups.filter(name="admin").exists():
+            return JsonResponse({"status": "error", "message": "permission denied"}, status=403)
+
+        try:
+            data = json.loads(request.body)
+            invoice_id = data.get("id")
+            canceled_comment = data.get("comment", "").strip()
+            ic(canceled_comment)
+            
+            if not canceled_comment:
+                return JsonResponse({"status": "error", "message": "enter a reason cancel faktura"}, status=400)
+            
+          
+            if not invoice_id:
+                return JsonResponse({"status": "error", "message": "no invoice id"}, status=400)
+
+            with transaction.atomic():
+                invoice = Invoice.objects.select_for_update().get(id=invoice_id)
+
+                if not invoice.is_entry:
+                    return JsonResponse({"status": "error", "message": "entry not found"}, status=400)
+                if invoice.canceled_at:
+                    return JsonResponse({"status": "error", "message": "entry already canceled"}, status=400)
+
+                items = InvoiceItem.objects.filter(invoice=invoice)
+                transaction_obj = Transaction.objects.filter(invoice=invoice).first()
+                if not transaction_obj:
+                    return JsonResponse({"status": "error", "message": "transaction not found"}, status=400)
+
+                wozwrat_or_prihod = invoice.wozwrat_or_prihod
+                warehouse_obj = invoice.warehouse
+                warehouse_obj2 = invoice.warehouse2
+                partner_obj = invoice.partner
+
+                for item in items:
+                    product = item.product
+                    quantity = Decimal(item.selected_quantity)
+
+                    # safer unit handling
+                    conversion_factor = Decimal(1)
+                    u_set = getattr(item, 'unitforinvoiceitem_set', None)
+                    if u_set:
+                        u = u_set.filter(is_default_for_sale=True).first()
+                        if u:
+                            conversion_factor = Decimal(u.conversion_factor)
+
+                    qty = conversion_factor * quantity
+                    sale_price = Decimal(item.selected_price) * Decimal(item.selected_quantity)
+
+                    # logic by document type
+                    if wozwrat_or_prihod == "rashod":
+                        wp = WarehouseProduct.objects.select_for_update().get(warehouse=warehouse_obj, product=product)
+                        wp.quantity += qty
+                        wp.save()
+
+                        if warehouse_obj.currency.code == "TMT":
+                            partner_obj.balance_tmt += sale_price
+                        else:
+                            partner_obj.balance_usd += sale_price
+                        partner_obj.save()
+
+                    elif wozwrat_or_prihod == "prihod":
+                        wp = WarehouseProduct.objects.select_for_update().get(warehouse=warehouse_obj, product=product)
+                        if wp.quantity < qty:
+                            return JsonResponse({"status": "error", "message": "Not enough stock to cancel"}, status=400)
+                        wp.quantity -= qty
+                        wp.save()
+
+                    elif wozwrat_or_prihod == "wozwrat":
+                        wp = WarehouseProduct.objects.select_for_update().get(warehouse=warehouse_obj, product=product)
+                        if wp.quantity < qty:
+                            return JsonResponse({"status": "error", "message": "Not enough stock to cancel"}, status=400)
+                        wp.quantity -= qty
+                        wp.save()
+
+                    elif wozwrat_or_prihod == "transfer":
+                        if not warehouse_obj2:
+                            return JsonResponse({"status": "error", "message": "warehouse2 not found"}, status=400)
+                        wp2 = WarehouseProduct.objects.select_for_update().get(warehouse=warehouse_obj2, product=product)
+                        if wp2.quantity < qty:
+                            return JsonResponse({"status": "error", "message": "Not enough stock on warehouse2 to cancel"}, status=400)
+                        wp2.quantity -= qty
+                        wp2.save()
+
+                        # добавить обратно на warehouse1 с get_or_create
+                        wp1, _ = WarehouseProduct.objects.select_for_update().get_or_create(
+                            warehouse=warehouse_obj, product=product, defaults={'quantity': 0}
+                        )
+                        wp1.quantity += qty
+                        wp1.save()
+
+                # удалить бухгалтерские проводки
+                Entry.objects.filter(transaction=transaction_obj).delete()
+
+                # отметить отмену
+                invoice.canceled_by = request.user
+                invoice.canceled_at = timezone.now()
+                invoice.canceled_comment = canceled_comment
+                invoice.is_entry = False
+                invoice.save()
+
+                return JsonResponse({"status": "ok", "message": "entry canceled successfully"})
+
+        except Invoice.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "invoice not found"}, status=404)
+        except Exception as e:
+            ic(e)
+            return JsonResponse({"status": "error", "message": "cancel failed", "reason": str(e)}, status=400)
+
+
+ 
+ 
+ 
+    
+    

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import MyFormatDate from "../../UI/MyFormatDate";
-import { FileText, ArrowUpCircle, ArrowDownCircle, RefreshCw, User, DollarSign, TrendingUp, Tag } from "lucide-react";
+import { FileText, ArrowUpCircle, ArrowDownCircle, RefreshCw, User, DollarSign, TrendingUp, Tag, XCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatNumber } from "../../UI/formatNumber";
 import { GiCoins } from "react-icons/gi";
@@ -42,6 +42,13 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
           icon: <RefreshCw className="w-5 h-5 text-rose-500" />,
           badge: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300",
         };
+      case "canceled":
+        return {
+          bg: "bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/20 dark:to-gray-900/20",
+          border: "border-l-4 border-gray-400",
+          icon: <XCircle className="w-5 h-5 text-gray-500" />,
+          badge: "bg-gray-200 text-gray-800 dark:bg-gray-700/30 dark:text-gray-300",
+        };
       default:
         return {
           bg: "bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20",
@@ -71,17 +78,12 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
   // <div className="hidden 2xl:block">Очень большой экран (≥1536px)</div>
 
   return (
-
-    
     <div>
-
-
       {/* #################################################################################################################################################################################### */}
       {/* Мобильный (≤640px) */}
       {/* <div className="block sm:hidden">Мобильный (≤640px)</div> */}
       {/* Мобильный (≤640px) */}
       {/* #################################################################################################################################################################################### */}
-
 
       {/* #################################################################################################################################################################################### */}
       {/* Мобильный (≤640px) */}
@@ -102,7 +104,14 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
           <ul className="space-y-2">
             <AnimatePresence>
               {invoices.map((invoice, idx) => {
-                const typeConfig = getInvoiceTypeConfig(invoice.wozwrat_or_prihod);
+                let typeConfig;
+                if (invoice.canceled_at) {
+                  typeConfig = getInvoiceTypeConfig("canceled");
+                } else {
+                  typeConfig = getInvoiceTypeConfig(invoice.wozwrat_or_prihod);
+                }
+
+                // console.log("invoice fff", invoice);
 
                 return (
                   <motion.li
@@ -193,7 +202,13 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                       </div>
 
                       {/* Статус проведения */}
-                      {invoice.is_entry ? (
+
+                      {invoice.canceled_at ? (
+                        <div className="flex items-center space-x-1 text-red-700 dark:text-red-400">
+                          <div className="w-2 h-2 bg-red-800 rounded-full animate-pulse"></div>
+                          <span className="text-xs font-semibold">{t("Canceled")}</span>
+                        </div>
+                      ) : invoice.is_entry ? (
                         <div className="flex items-center space-x-1 text-emerald-600 dark:text-emerald-400">
                           <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                           <span className="text-xs font-semibold">{t("Posted")}</span>
@@ -247,7 +262,12 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
           <ul className="space-y-3">
             <AnimatePresence>
               {invoices.map((invoice, idx) => {
-                const typeConfig = getInvoiceTypeConfig(invoice.wozwrat_or_prihod);
+                let typeConfig;
+                if (invoice.canceled_at) {
+                  typeConfig = getInvoiceTypeConfig("canceled");
+                } else {
+                  typeConfig = getInvoiceTypeConfig(invoice.wozwrat_or_prihod);
+                }
 
                 return (
                   <motion.li
@@ -341,7 +361,13 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                             </div>
 
                             {/* Статус компактный */}
-                            {invoice.is_entry ? (
+
+                            {invoice.canceled_at ? (
+                              <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg backdrop-blur-sm shadow-sm">
+                                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                                <span className="text-[10px] font-bold text-red-700 dark:text-red-300">{t("Canceled")}</span>
+                              </div>
+                            ) : invoice.is_entry ? (
                               <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-700 rounded-lg backdrop-blur-sm shadow-sm">
                                 <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
                                 <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">{t("Posted")}</span>
@@ -437,7 +463,12 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
           <ul className="space-y-4">
             <AnimatePresence>
               {invoices.map((invoice, idx) => {
-                const typeConfig = getInvoiceTypeConfig(invoice.wozwrat_or_prihod);
+                let typeConfig;
+                if (invoice.canceled_at) {
+                  typeConfig = getInvoiceTypeConfig("canceled");
+                } else {
+                  typeConfig = getInvoiceTypeConfig(invoice.wozwrat_or_prihod);
+                }
 
                 return (
                   <motion.li
@@ -564,10 +595,23 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                             <span className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Дата</span>
                             <time className="text-sm font-bold text-gray-700 dark:text-gray-300 whitespace-nowrap">{MyFormatDate(invoice.invoice_date)}</time>
                           </div>
-                          
 
                           {/* Статус */}
-                          {invoice.is_entry ? (
+
+                          {invoice.canceled_at ? (
+                            <div className="flex flex-col items-center px-4 py-3 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/60 dark:to-teal-950/60 border-2 border-red-300 dark:border-red-700 rounded-xl shadow-lg group-hover:shadow-xl transition-all backdrop-blur-xl">
+                              <div className="flex items-center gap-2 mb-1">
+                                <div className="relative">
+                                  <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></div>
+                                  <div className="absolute inset-0 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping opacity-75"></div>
+                                </div>
+                                <span className="text-xs font-bold text-red-700 dark:text-red-300">{t("Canceled")}</span>
+                              </div>
+                              <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          ) : invoice.is_entry ? (
                             <div className="flex flex-col items-center px-4 py-3 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/60 dark:to-teal-950/60 border-2 border-emerald-300 dark:border-emerald-700 rounded-xl shadow-lg group-hover:shadow-xl transition-all backdrop-blur-xl">
                               <div className="flex items-center gap-2 mb-1">
                                 <div className="relative">
@@ -687,7 +731,12 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
           <ul className="space-y-3">
             <AnimatePresence>
               {invoices.map((invoice, idx) => {
-                const typeConfig = getInvoiceTypeConfig(invoice.wozwrat_or_prihod);
+                let typeConfig;
+                if (invoice.canceled_at) {
+                  typeConfig = getInvoiceTypeConfig("canceled");
+                } else {
+                  typeConfig = getInvoiceTypeConfig(invoice.wozwrat_or_prihod);
+                }
 
                 return (
                   <motion.li
@@ -812,7 +861,16 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                           </div>
 
                           {/* Статус проведения */}
-                          {invoice.is_entry ? (
+
+                          {invoice.canceled_at ? (
+                            <div className="flex items-center space-x-2 px-3 py-2 bg-emerald-50 dark:bg-emerald-900/30 border border-red-200 dark:border-red-700 rounded-lg backdrop-blur-sm shadow-sm group-hover:shadow-md transition-all duration-300">
+                              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50"></div>
+                              <span className="text-xs font-semibold text-red-700 dark:text-red-300">{t("Canceled")}</span>
+                              <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          ) : invoice.is_entry ? (
                             <div className="flex items-center space-x-2 px-3 py-2 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-700 rounded-lg backdrop-blur-sm shadow-sm group-hover:shadow-md transition-all duration-300">
                               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-500/50"></div>
                               <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">{t("Posted")}</span>

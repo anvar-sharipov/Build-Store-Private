@@ -420,18 +420,19 @@ def create_entry(request):
                 partner = Partner.objects.get(id=partner_id) if partner_id else None
                 
                 # USD
-                rule_usd = CustomePostingRule.objects.filter(operation__code="sale", directory_type=partner.type, amount_type="revenue", currency__code="USD").first()
-                rule_tmt = CustomePostingRule.objects.filter(operation__code="sale", directory_type=partner.type, amount_type="revenue", currency__code="TMT").first()
-                
-                if not rule_usd and not rule_tmt:
-                    return JsonResponse({"status": "error", "message": "No posting rule for this partner type and currency"}, status=400)
-                
-                
-                ic(rule_usd.debit_account)
-                ic(rule_usd.credit_account)
-                ic(rule_tmt.debit_account)
-                ic(rule_tmt.credit_account)
-                
+                if partner:
+                    rule_usd = CustomePostingRule.objects.filter(operation__code="sale", directory_type=partner.type, amount_type="revenue", currency__code="USD").first()
+                    rule_tmt = CustomePostingRule.objects.filter(operation__code="sale", directory_type=partner.type, amount_type="revenue", currency__code="TMT").first()
+                    
+                    if not rule_usd and not rule_tmt:
+                        return JsonResponse({"status": "error", "message": "No posting rule for this partner type and currency"}, status=400)
+                    
+                    
+                    ic(rule_usd.debit_account)
+                    ic(rule_usd.credit_account)
+                    ic(rule_tmt.debit_account)
+                    ic(rule_tmt.credit_account)
+                    
                 
                 
                 # Весь процесс в атомарной транзакции
@@ -449,17 +450,18 @@ def create_entry(request):
                     ic(debit_account)
                     ic(credit_account)
                     
-                    if credit_account == rule_tmt.debit_account:
-                        partner.balance_tmt += amount
-                    elif credit_account == rule_usd.debit_account:
-                        partner.balance_usd += amount
-                        
-                    if debit_account == rule_tmt.debit_account:
-                        partner.balance_tmt -= amount
-                    elif debit_account == rule_usd.debit_account:
-                        partner.balance_usd -= amount
-                        
-                    partner.save()
+                    if partner:
+                        if credit_account == rule_tmt.debit_account:
+                            partner.balance_tmt += amount
+                        elif credit_account == rule_usd.debit_account:
+                            partner.balance_usd += amount
+                            
+                        if debit_account == rule_tmt.debit_account:
+                            partner.balance_tmt -= amount
+                        elif debit_account == rule_usd.debit_account:
+                            partner.balance_usd -= amount
+                            
+                        partner.save()
                         
                         
                     

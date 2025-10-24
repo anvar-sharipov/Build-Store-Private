@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import { useFormikContext } from "formik";
 import invoiceClasses from "./classes";
 import { Settings } from "lucide-react";
@@ -16,8 +16,9 @@ import myAxios from "../../../axios";
 import { ROUTES } from "./../../../../routes";
 import { useNotification } from "../../../context/NotificationContext";
 // import { DateContext } from "../../../UI/DateProvider";
-import { FaReceipt } from "react-icons/fa";
+// import { FaReceipt } from "react-icons/fa";
 import PrintInvoiceButton from "./PrintInvoiceButton";
+// import { DateContext } from "../../../UI/DateProvider";
 
 const InvoiceHead = ({
   refs,
@@ -38,8 +39,11 @@ const InvoiceHead = ({
   const { t } = useTranslation();
   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
   const [openModal, setOpenModal] = useState(false);
+  const [entryCancelModal, setEntryCancelModal] = useState(false);
+  const [cancelComment, setCancelComment] = useState("");
   const [modalDeleteInvoice, setModalDeleteInvoice] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [dayIsClosed, setDayIsClosed] = useState(false);
   const sound_open_faktura = new Audio("/sounds/open_faktura.mp3");
   const handleClick = () => {
     sound_open_faktura.currentTime = 0;
@@ -48,7 +52,54 @@ const InvoiceHead = ({
   };
   const { showNotification } = useNotification();
 
-  // console.log("values.invoice_date2   GGGGG", values.invoice_date2);
+  // const { dateProwodok } = useContext(DateContext);
+
+  const handleCancelEntry = async (comment) => {
+    try {
+      const res = await myAxios.post("cancel_entry/", {
+        id: values.id,
+        comment: comment,
+      });
+
+      console.log("Entry canceled successfully:", res.data);
+      // при успехе можно закрыть модалку или обновить данные
+      setEntryCancelModal(false);
+      setCancelComment("")
+      showNotification(t(response.data.message), "success");
+
+      // например, если у тебя есть функция обновления данных:
+      // await fetchEntries();
+    } catch (error) {
+      console.error("Can't cancel invoice entry:", error);
+      showNotification(`${t(error.response.data.message)}`, "error");
+    }
+  };
+
+  useEffect(() => {
+    const checkDate = async () => {
+      try {
+        const res = await myAxios.get("check_day_closed", {
+          params: { date: values.invoice_date2 },
+        });
+        setDayIsClosed(res.data.is_closed);
+        // setLastDayIsNotClosed(res.data.last_day_not_closed);
+        // console.log("dateProwodok", dateProwodok);
+        // console.log("values.invoice_date2", values.invoice_date2);
+        // console.log("res.data", res.data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    // if (dateProwodok) {
+    checkDate();
+    // }
+  }, []);
+
+  // useEffect(() => {
+  //   console.log("dayIsClosed", dayIsClosed);
+  // }, [dayIsClosed]);
+
+  console.log("values GGGGG", values);
 
   const modalYesBtn = useRef(null);
   const modalNoBtn = useRef(null);
@@ -148,7 +199,7 @@ const InvoiceHead = ({
         <div className="px-1">
           <TypePrice authGroup={authGroup} />
         </div>
-        {id && !values.already_entry && (
+        {id && !values.already_entry && !values.canceled_at && (
           <div>
             <MyButton variant="red" type="button" onClick={() => setModalDeleteInvoice(true)} id="invoice-delete-btn" title="ctrl + delete">
               {t("delete")}
@@ -229,6 +280,55 @@ const InvoiceHead = ({
         )}
       </div>
 
+      {entryCancelModal && (
+        <MyModal2 onClose={() => setEntryCancelModal(false)}>
+          {/* Иконка */}
+          <div className="flex justify-center mb-4">
+            <AlertTriangle className="w-12 h-12 text-amber-500 dark:text-amber-400" />
+          </div>
+
+          {/* Текст */}
+          <h2 className="text-lg font-semibold text-center text-zinc-800 dark:text-zinc-100 mb-2">{t("Are you sure you want to cancel this entry?")}</h2>
+          <p className="text-center text-sm text-zinc-600 dark:text-zinc-400 mb-6">{t("This action cannot be undone.")}</p>
+
+          <textarea
+            value={cancelComment}
+            onChange={(e) => setCancelComment(e.target.value)}
+            placeholder={t("Enter reason for cancel entry")}
+            className="w-full p-2 border rounded-md border-zinc-300 dark:border-zinc-700 mb-4"
+          />
+
+          {/* Кнопки */}
+          <div className="flex justify-center gap-3">
+            {/* Отмена */}
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setEntryCancelModal(false)}
+              className="px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
+            >
+              {t("No, go back")}
+            </motion.button>
+
+            {/* Подтверждение */}
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                // onConfirm();
+                handleCancelEntry(cancelComment);
+                // setEntryCancelModal(false);
+              }}
+              className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-all shadow-sm"
+            >
+              {t("Yes, cancel entry")}
+            </motion.button>
+          </div>
+        </MyModal2>
+      )}
+
       {/* Дата */}
       {values.id ? (
         <div>
@@ -243,7 +343,7 @@ const InvoiceHead = ({
               }
             }}
             value={values.invoice_date2}
-            disabled={values.already_entry}
+            disabled={values.already_entry || values.canceled_at}
             className={`
     w-full
     px-3 py-2
@@ -281,11 +381,27 @@ const InvoiceHead = ({
 
       {/* Заголовок */}
       <div className={invoiceClasses.zagolowok}>
-        {t(values.wozwrat_or_prihod)} {t("faktura")} {values.id && values.id}
+        {t(values.wozwrat_or_prihod)} {t("faktura")} {values.id && values.id} {values.canceled_at && <div className="text-red-500">({t("Canceled")})</div> }
       </div>
 
+      {values.already_entry && !dayIsClosed && (
+        <div className="print:hidden">
+          <MyButton type="button" variant="red" onClick={() => setEntryCancelModal(true)}>
+            {t("Change entry")}
+          </MyButton>
+        </div>
+      )}
+
+      {values.already_entry && dayIsClosed && (
+        <div className="print:hidden">
+          <MyButton type="button" disabled="disabled" variant="red">
+            {t("Day already closed")}
+          </MyButton>
+        </div>
+      )}
+
       {values.products && values.products.length > 0 && (
-        <div>
+        <div className="print:hidden">
           {/* <FaReceipt /> */}
           <PrintInvoiceButton invoiceData={values} />
         </div>

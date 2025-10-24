@@ -61,6 +61,15 @@ const getDefaultValues = async (id = null, dateProwodok = null, setDateProwodok)
         entry_created_at = MyFormatDate(data.entry_created_at_handle);
       }
 
+      let entry_canceled_at = null
+      if (data.canceled_at) {
+        entry_canceled_at = MyFormatDate(data.canceled_at);
+      }
+
+      // console.log("entry_canceled_at", entry_canceled_at);
+      // console.log("data.canceled_by", data.canceled_by);
+      
+
       // console.log("data.products", data.products);
       // localStorage.setItem("dateProwodok", convertToISODate(invoice_date));
 
@@ -72,7 +81,11 @@ const getDefaultValues = async (id = null, dateProwodok = null, setDateProwodok)
       localStorage.setItem("type_price", type_price);
 
       const warehouse = data.warehouse;
+      console.log("data", data);
+      
+      const warehouse2 = data.warehouse2;
       localStorage.setItem("purchaseWarehouse", JSON.stringify(warehouse));
+      localStorage.setItem("purchaseWarehouse2", JSON.stringify(warehouse2));
       localStorage.setItem("wozwrat_or_prihod_purchase", data.wozwrat_or_prihod);
 
      
@@ -90,13 +103,18 @@ const getDefaultValues = async (id = null, dateProwodok = null, setDateProwodok)
         send: data.send,
         type_price: type_price,
         warehouse: data.warehouse,
+        warehouse2: data.warehouse2,
         wozwrat_or_prihod: data.wozwrat_or_prihod,
         created_by: data.created_by,
         entry_created_by: data.entry_created_by,
+        canceled_comment: data.canceled_comment,
         created_at: created_at,
         updated_at: updated_at,
         entry_created_at: entry_created_at,
         products: data.products || [],
+
+        canceled_by:data.canceled_by,
+        canceled_at:entry_canceled_at,
 
 
         id: data.id,
@@ -139,6 +157,7 @@ const getDefaultValues = async (id = null, dateProwodok = null, setDateProwodok)
       id: null,
       invoice_date: dateProwodok || localStorage.getItem("dateProwodok"),
       warehouse: localStorage.getItem("purchaseWarehouse") ? JSON.parse(localStorage.getItem("purchaseWarehouse")) : null,
+      warehouse2: localStorage.getItem("purchaseWarehouse2") ? JSON.parse(localStorage.getItem("purchaseWarehouse2")) : null,
       partner: null,
       awto: null,
       products: [],

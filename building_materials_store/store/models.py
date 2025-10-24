@@ -516,6 +516,7 @@ class Invoice(models.Model):
         ("rashod", "Расход (Продажа)"),
         ("prihod", "Приход (Закупка)"),
         ("wozwrat", "Возврат"),
+        ("transfer", "Переход"),
     ]
     
     TYPE_PRICE_CHOICES = [("wholesale_price", "Опт"), ("retail_price", "Розница")]
@@ -525,11 +526,12 @@ class Invoice(models.Model):
     comment = models.TextField(null=True, blank=True, verbose_name="Примечание")
     invoice_date = models.DateTimeField(verbose_name="Дата накладной (фактура)", null=True, blank=True)
     is_entry = models.BooleanField(default=False, verbose_name="Проводка создана")
-    partner = models.ForeignKey(Partner, on_delete=models.PROTECT, verbose_name="Партнёр", null=True, blank=True) 
+    partner = models.ForeignKey(Partner, on_delete=models.PROTECT, verbose_name="Партнёр", null=True, blank=True)
     partner_send = models.BooleanField(default=False)
     send = models.BooleanField(default=False)
     type_price = models.CharField(max_length=50, choices=TYPE_PRICE_CHOICES, default="wholesale_price", verbose_name="Тип цены", null=True, blank=True)
-    warehouse = models.ForeignKey(Warehouse, on_delete=models.PROTECT, verbose_name="Склад", null=True, blank=True)
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.PROTECT, verbose_name="Склад", null=True, blank=True, related_name="invoices_from")
+    warehouse2 = models.ForeignKey(Warehouse, on_delete=models.PROTECT, verbose_name="На склад (если переход со склада на склад)", null=True, blank=True, related_name="invoices_to")
     wozwrat_or_prihod = models.CharField(max_length=50, choices=INVOICE_TYPE_CHOICES, verbose_name="Тип накладной", null=True, blank=True)
 
     # Кто создал накладную (черновик)
@@ -546,6 +548,10 @@ class Invoice(models.Model):
     created_at_handle = models.DateTimeField(verbose_name="Дата создания (черновик)", null=True, blank=True)
     updated_at_handle = models.DateTimeField(verbose_name="Дата обновления", null=True, blank=True)
     entry_created_at_handle = models.DateTimeField(null=True, blank=True,verbose_name="Дата сохранения с проводкой")
+    
+    canceled_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="invoices_calnceled", null=True, blank=True, verbose_name="Отменил проводку")
+    canceled_at = models.DateTimeField(verbose_name="Дата Отмены проводки", null=True, blank=True)
+    canceled_comment = models.TextField(null=True, blank=True, verbose_name="Причина отмены")
 
 
     class Meta:

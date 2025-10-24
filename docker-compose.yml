@@ -1,8 +1,8 @@
-version: "3.9"
-
 services:
   db:
-    image: postgres:16-alpine
+    # image: polisem-postgres:latest
+    image: postgres-polisem:0.2
+    container_name: polisem_postgres
     restart: unless-stopped
     env_file: .env
     environment:
@@ -22,6 +22,9 @@ services:
 
   backend:
     build: ./building_materials_store
+    # image: polisem-backend:latest
+    image: backend-polisem:0.2
+    container_name: polisem_backend
     restart: unless-stopped
     env_file: .env
     depends_on:
@@ -38,6 +41,9 @@ services:
 
   frontend:
     build: ./frontend
+    # image: polisem-frontend:latest
+    image: frontend-polisem:0.2
+    container_name: polisem_frontend
     restart: unless-stopped
     ports:
       - "80:80"

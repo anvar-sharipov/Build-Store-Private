@@ -150,7 +150,7 @@ const DetailReport1 = () => {
                                 {t.description}
                               </span>
                               <span className="text-gray-500 dark:text-gray-400 text-xs">
-                                {t.partner.name}
+                                {t.partner?.name}
                               </span>
                             </div>
                           )}

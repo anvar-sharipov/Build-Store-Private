@@ -438,7 +438,7 @@
   "choose products": "Выберите товар",
   "choose whosale price or retail price": "Выберите оптовую или розничную цену",
   "cant find warehouse in database": "Не удаётся найти склад в базе данных",
-  "choose rashod, prihod or wozwrat": "Выберите расход, приход или возврат",
+  "choose rashod, prihod or wozwrat": "Выберите расход, приход, возврат или переход",
   "partner is not active": "Выбранный партнер не активен",
   "wozwrat invoice saved with entry":"Возврат фактура сохранена с проводкой",
   "prihod invoice saved with entry":"Приход фактура сохранена с проводкой",
@@ -526,7 +526,21 @@
   "Transaction Journal": "Журнал операций",
   "Period": "Период",
   "Operation": "Операции",
-  "Amount": "Сумма"
+  "Amount": "Сумма",
+  "transfer": "Переход со склада на склад",
+  "from warehouse": "С склада",
+  "to warehouse": "На склада",
+  "selectWarehouse2": "Выберите склад 2",
+  "currency warehouse1 is not match with currency warehouse2": "Валюта склада 1 не совпадает с валютой склада 2",
+  "Change entry": "Отмена проводки",
+  "Day already closed": "День Закрыт",
+  "Are you sure you want to cancel this entry?": "Вы уверены, что хотите отменить эту проводку?",
+  "This action cannot be undone.": "Это действие нельзя будет отменить.",
+  "No, go back": "Нет, вернуться назад",
+  "Yes, cancel entry": "Да, отменить проводку",
+  "Enter reason for cancel entry": "Введите причину отмены фактуры",
+  "Canceled": "Отменена"
+
 
  
  

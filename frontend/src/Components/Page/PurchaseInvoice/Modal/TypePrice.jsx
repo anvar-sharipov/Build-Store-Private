@@ -8,7 +8,7 @@ const TypePrice = ({ authGroup }) => {
 
   return (
     <div>
-      <fieldset disabled={authGroup !== "admin" || values.already_entry}>
+      <fieldset disabled={authGroup !== "admin" || values.already_entry || values.canceled_at}>
         {/* <span className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">{t("type faktura")}</span> */}
         <div className="flex items-center space-x-6">
           <label className="flex items-center space-x-2 cursor-pointer">

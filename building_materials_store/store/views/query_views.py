@@ -446,30 +446,7 @@ def delete_data(request):
 
 
 
-########################################################################################################################################################################## START
-# close day
 
-
-
-# @require_GET
-# def check_day_closed(request):
-#     date_str = request.GET.get("date")  # формат YYYY-MM-DD
-#     if not date_str:
-#         return JsonResponse({"success": False, "error": "Дата не указана"})
-    
-#     ic(date_str)
-
-
-#     try:
-#         chosen_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-#     except ValueError:
-#         return JsonResponse({"success": False, "error": "Неверный формат даты. Используйте YYYY-MM-DD"})
-
-#     day = DayClosing.objects.filter(date=chosen_date).first()
-#     return JsonResponse({
-#         "success": True,
-#         "is_closed": bool(day and getattr(day, "is_closed", True))
-#     })
     
     
 @require_GET

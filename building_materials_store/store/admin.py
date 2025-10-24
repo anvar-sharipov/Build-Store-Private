@@ -663,8 +663,7 @@ class StockSnapshotAdmin(admin.ModelAdmin):
 
 
 
-from django.contrib import admin
-from .models import Invoice, InvoiceItem, FreeItemForInvoiceItem, UnitForInvoiceItem
+
 
 
 class FreeItemForInvoiceItemInline(admin.TabularInline):
@@ -709,14 +708,26 @@ class InvoiceAdmin(admin.ModelAdmin):
         "created_by",
         "send",
         "is_entry",
+        "canceled_by",
+        "canceled_at",
+        "created_at",
+        "canceled_comment",
+    )
+    list_filter = (
+        "wozwrat_or_prihod",
+        "type_price",
+        "warehouse",
+        "partner",
+        "send",
+        "is_entry",
+        "canceled_by",
         "created_at",
     )
-    list_filter = ("wozwrat_or_prihod", "type_price", "warehouse", "partner", "send", "is_entry", "created_at")
-    search_fields = ("id", "partner__name", "warehouse__name", "created_by__username")
+    search_fields = ("id", "partner__name", "warehouse__name", "created_by__username", "canceled_by__username")
     date_hierarchy = "created_at"
-    autocomplete_fields = ("partner", "warehouse", "awto", "created_by", "entry_created_by")
+    autocomplete_fields = ("partner", "warehouse", "awto", "created_by", "entry_created_by", "canceled_by")
     inlines = [InvoiceItemInline]
-    readonly_fields = ("created_at", "updated_at", "entry_created_at")
+    readonly_fields = ("created_at", "updated_at", "entry_created_at", "canceled_at")
 
     fieldsets = (
         ("Основная информация", {
@@ -736,6 +747,13 @@ class InvoiceAdmin(admin.ModelAdmin):
                 "partner_send",
                 "awto_send",
                 "is_entry",
+            )
+        }),
+        ("Отмена проводки", {
+            "fields": (
+                "canceled_by",
+                "canceled_at",
+                "canceled_comment",
             )
         }),
         ("Служебные поля", {

@@ -370,7 +370,7 @@ const MainPage = () => {
                 showNotification={showNotification}
                 authGroup={authGroup}
               />
-              <fieldset disabled={values.already_entry || authGroup !== "admin"}>
+              <fieldset disabled={values.already_entry || authGroup !== "admin" || values.canceled_at}>
                 <div className="grid grid-cols-1 md:grid-cols-10 gap-4 print:block">
                   {/* Левая колонка */}
                   <div className="col-span-3 print:hidden">

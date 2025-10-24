@@ -415,7 +415,7 @@
   "choose products": "Haryt saýla",
   "choose whosale price or retail price": "Toptan ýa-da bölek bahasyny saýlaň",
   "cant find warehouse in database": "Maglumatlar bazasyndan ammar tapylmady",
-  "choose rashod, prihod or wozwrat": "Çykdajy, gelip düşme ýa-da yzyna gaýtaryşy saýlaň",
+  "choose rashod, prihod or wozwrat": "Çykdajy, gelip düşme, gaýtaryş ýa-da geçiş saýlaň",
   "partner is not active": "Saýlanan partner aktiw däl",
   "wozwrat invoice saved with entry": "Yzyna gaýtaryş faktura geçirilen ýazgy bilen saklandy",
   "prihod invoice saved with entry": "Giriş faktura geçirilen ýazgy bilen saklandy",
@@ -496,7 +496,20 @@
   "Transaction Journal": "Amallaryň gündeligi",
   "Period": "Period",
   "Operation": "Amallar",
-  "Amount": "Summa"
+  "Amount": "Summa",
+  "transfer": "Ammardan ammara geçiş",
+  "from warehouse": "Ammarden",
+  "to warehouse": "Ammara",
+  "selectWarehouse2": "2-nji Ambar saýlaň",
+  "currency warehouse1 is not match with currency warehouse2": "1-nji ammar bilen 2-nji ammaranyň walýutasy gabat gelmeýär",
+  "Change entry": "Prowodkany aýyr",
+  "Day already closed": "Gün ýapylan",
+  "Are you sure you want to cancel this entry?": "Bu geçirişi ýatyrmak isleýändigiňize ynanýarsyňyzmy?",
+  "This action cannot be undone.": "Bu hereketi yzyna gaýtaryp bolmaz.",
+  "No, go back": "Ýok, yzyna dolan",
+  "Yes, cancel entry": "Hawa, geçirişi ýatyr",
+  "Enter reason for cancel entry": "Fakturany ýatyrmak sebäbini giriziň",
+  "Canceled": "Ýatyryldy"
 
 
 

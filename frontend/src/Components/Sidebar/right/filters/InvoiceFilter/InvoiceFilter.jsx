@@ -48,7 +48,7 @@ const InvoiceFilter = () => {
     } else {
       params.delete("partner_id");
     }
-    if (selectedEntry === "entried" || selectedEntry === "notEntried") {
+    if (selectedEntry === "entried" || selectedEntry === "notEntried" || selectedEntry === "canceled") {
       params.set("selectedEntry", selectedEntry);
     } else {
       params.delete("selectedEntry");
@@ -66,6 +66,7 @@ const InvoiceFilter = () => {
     { value: "wozwrat", label: t("wozwrat"), color: "from-rose-500 to-pink-600", icon: "↩️" },
     { value: "prihod", label: t("prihod"), color: "from-blue-500 to-indigo-600", icon: "📥" },
     { value: "rashod", label: t("rashod"), color: "from-emerald-500 to-teal-600", icon: "📤" },
+    { value: "transfer", label: t("transfer"), color: "from-emerald-500 to-teal-600", icon: "📤" },
   ];
 
   const hasActiveFilters = wozwratOrPrihod || selectedPartner || selectedEntry || sortInvoice;

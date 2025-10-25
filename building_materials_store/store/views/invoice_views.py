@@ -383,6 +383,10 @@ def save_invoice(request):
                                         return JsonResponse({"status": "error", "message": "The warehouse account dont have a parent account"}, status=400)
                                     
                                     # partner_obj.balance -= Decimal(sale_price * quantity)
+                                    if warehouse_obj.currency.code == "TMT":
+                                        partner_obj.balance_tmt += Decimal(sale_price * quantity)
+                                    else:
+                                        partner_obj.balance_usd += Decimal(sale_price * quantity)
                                     for rule in rules:
                                         if not rule.amount_type in ['revenue']:
                                             transaction.set_rollback(True)
@@ -435,6 +439,10 @@ def save_invoice(request):
                                         return JsonResponse({"status": "error", "message": "The warehouse account dont have a parent account"}, status=400)
                                     
                                     # partner_obj.balance -= Decimal(sale_price * quantity)
+                                    if warehouse_obj.currency.code == "TMT":
+                                        partner_obj.balance_tmt += Decimal(sale_price * quantity)
+                                    else:
+                                        partner_obj.balance_usd += Decimal(sale_price * quantity)
                                     for rule in rules:
                                         if not rule.amount_type in ['revenue']:
                                             transaction.set_rollback(True)
@@ -773,6 +781,10 @@ def save_invoice(request):
                                         return JsonResponse({"status": "error", "message": "The warehouse account dont have a parent account"}, status=400) 
    
                                     # partner_obj.balance -= Decimal(sale_price * quantity)
+                                    if warehouse_obj.currency.code == "TMT":
+                                        partner_obj.balance_tmt += Decimal(sale_price * quantity)
+                                    else:
+                                        partner_obj.balance_usd += Decimal(sale_price * quantity)
                                     ic(rules, len(rules))
                                     for rule in rules:
                                         if not rule.amount_type in ['revenue']:
@@ -825,6 +837,10 @@ def save_invoice(request):
                                         return JsonResponse({"status": "error", "message": "The warehouse account dont have a parent account"}, status=400) 
    
                                     # partner_obj.balance -= Decimal(sale_price * quantity)
+                                    if warehouse_obj.currency.code == "TMT":
+                                        partner_obj.balance_tmt += Decimal(sale_price * quantity)
+                                    else:
+                                        partner_obj.balance_usd += Decimal(sale_price * quantity)
                                     ic(rules, len(rules))
                                     for rule in rules:
                                         if not rule.amount_type in ['revenue']:
@@ -1435,6 +1451,12 @@ def cancel_entry(request):
                             return JsonResponse({"status": "error", "message": "Not enough stock to cancel"}, status=400)
                         wp.quantity -= qty
                         wp.save()
+                        
+                        if warehouse_obj.currency.code == "TMT":
+                            partner_obj.balance_tmt -= Decimal(sale_price * quantity)
+                        else:
+                            partner_obj.balance_usd -= Decimal(sale_price * quantity)
+                        partner_obj.save()
 
                     elif wozwrat_or_prihod == "wozwrat":
                         wp = WarehouseProduct.objects.select_for_update().get(warehouse=warehouse_obj, product=product)
@@ -1442,6 +1464,12 @@ def cancel_entry(request):
                             return JsonResponse({"status": "error", "message": "Not enough stock to cancel"}, status=400)
                         wp.quantity -= qty
                         wp.save()
+                        
+                        if warehouse_obj.currency.code == "TMT":
+                            partner_obj.balance_tmt -= Decimal(sale_price * quantity)
+                        else:
+                            partner_obj.balance_usd -= Decimal(sale_price * quantity)
+                        partner_obj.save()
 
                     elif wozwrat_or_prihod == "transfer":
                         if not warehouse_obj2:

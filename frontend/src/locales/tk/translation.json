@@ -508,8 +508,9 @@
   "This action cannot be undone.": "Bu hereketi yzyna gaýtaryp bolmaz.",
   "No, go back": "Ýok, yzyna dolan",
   "Yes, cancel entry": "Hawa, geçirişi ýatyr",
-  "Enter reason for cancel entry": "Fakturany ýatyrmak sebäbini giriziň",
-  "Canceled": "Ýatyryldy"
+  "enter a reason cancel faktura": "Fakturany ýatyrmak sebäbini giriziň",
+  "Canceled": "Ýatyryldy",
+  "entry canceled successfully": "Prowodka üstünlikli ýatyryldy"
 
 
 

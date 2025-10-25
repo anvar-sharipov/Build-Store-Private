@@ -65,12 +65,14 @@ const InvoiceHead = ({
       // при успехе можно закрыть модалку или обновить данные
       setEntryCancelModal(false);
       setCancelComment("")
-      showNotification(t(response.data.message), "success");
+      showNotification(t(res.data.message), "success");
 
       // например, если у тебя есть функция обновления данных:
       // await fetchEntries();
     } catch (error) {
       console.error("Can't cancel invoice entry:", error);
+      console.log("error ===", error);
+      
       showNotification(`${t(error.response.data.message)}`, "error");
     }
   };

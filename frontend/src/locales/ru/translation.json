@@ -538,8 +538,9 @@
   "This action cannot be undone.": "Это действие нельзя будет отменить.",
   "No, go back": "Нет, вернуться назад",
   "Yes, cancel entry": "Да, отменить проводку",
-  "Enter reason for cancel entry": "Введите причину отмены фактуры",
-  "Canceled": "Отменена"
+  "enter a reason cancel faktura": "Введите причину отмены фактуры",
+  "Canceled": "Отменена",
+  "entry canceled successfully": "Проводка успешно отменена"
 
 
  

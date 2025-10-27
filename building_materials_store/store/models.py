@@ -672,6 +672,9 @@ class Transaction(models.Model):
     # invoice = models.ForeignKey(SalesInvoice, null=True, blank=True, on_delete=models.SET_NULL)
     invoice = models.ForeignKey(Invoice, null=True, blank=True, on_delete=models.SET_NULL)
     partner = models.ForeignKey(Partner, null=True, blank=True, on_delete=models.SET_NULL, verbose_name='Партнер')
+    created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, verbose_name="Создал", help_text="Пользователь, создавший эту операцию")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания", null=True, blank=True)
+
 
     def __str__(self):
         return f"{self.date.strftime('%Y-%m-%d %H:%M')} — {self.description}"

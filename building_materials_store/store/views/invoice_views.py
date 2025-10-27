@@ -48,6 +48,7 @@ def normalize_date(date_str: str) -> str:
 @permission_classes([IsAuthenticated])
 def save_invoice(request):
     if request.method == "POST":
+        
         # ic('save_invoice', request.user)
         if not request.user.groups.filter(name="admin").exists():
             return JsonResponse({"status": "error", "message": "permission denied"}, status=403)
@@ -313,7 +314,8 @@ def save_invoice(request):
                                 transaction_obj = Transaction.objects.create(
                                     description=f"Faktura ({wozwrat_or_prihod}) № {str(invoice.pk)}\n{comment}", 
                                     date=invoice_date, invoice=invoice, 
-                                    partner=partner_obj
+                                    partner=partner_obj,
+                                    created_by=request.user
                                 )
                             else:
                                 if wozwrat_or_prihod == "rashod":
@@ -341,7 +343,8 @@ def save_invoice(request):
                                 transaction_obj = Transaction.objects.create(
                                     description=f"Faktura ({wozwrat_or_prihod}) № {str(invoice.pk)}\n{comment}", 
                                     date=invoice_date, invoice=invoice, 
-                                    partner=partner_obj
+                                    partner=partner_obj,
+                                    created_by=request.user
                                 )
                                 
                             # ###########################################################################################################################################################
@@ -708,7 +711,8 @@ def save_invoice(request):
                                 transaction_obj = Transaction.objects.create(
                                     description=f"Faktura ({wozwrat_or_prihod}) № {str(invoice.pk)}\n{comment}", 
                                     date=invoice_date2, invoice=invoice, 
-                                    partner=partner_obj
+                                    partner=partner_obj,
+                                    created_by=request.user
                                 )
                             else:
                             
@@ -740,7 +744,8 @@ def save_invoice(request):
                                 transaction_obj = Transaction.objects.create(
                                     description=f"Faktura ({wozwrat_or_prihod}) № {str(invoice.pk)}\n{comment}", 
                                     date=invoice_date2, invoice=invoice, 
-                                    partner=partner_obj
+                                    partner=partner_obj,
+                                    created_by=request.user
                                 )
 
                             # #######################################################################################################################################

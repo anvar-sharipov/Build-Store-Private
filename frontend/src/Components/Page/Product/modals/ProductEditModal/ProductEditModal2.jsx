@@ -14,6 +14,7 @@ import { CiNoWaitingSign } from "react-icons/ci";
 import { Package, Tag, DollarSign, Ruler, Image } from "lucide-react";
 import { myClass } from "../../../../tailwindClasses";
 import ImagesTab from "./tabs/ImagesTab";
+import { useNotification } from "../../../../context/NotificationContext";
 
 const ProductEditModal2 = ({
   setProducts,
@@ -23,14 +24,19 @@ const ProductEditModal2 = ({
   t,
   setOptions,
   isCreate,
-  showNotification,
+  // showNotification,
   setNotification,
   notification,
   warehouses,
+  listItemRefs
 }) => {
   const [product, setProduct] = useState(productEditModal2.data);
   const [activeTab, setActiveTab] = useState("basic");
   const [loadingModal, setLoadingModal] = useState(false);
+  // console.log("productEditModal2", productEditModal2);
+
+  const { showNotification } = useNotification();
+  
 
   // console.log("product", product);
   // console.log('options', options);
@@ -175,6 +181,9 @@ const ProductEditModal2 = ({
           prev.map((p) => (p.id === res.data.id ? res.data : p))
         );
       }
+      // productEditModal2
+      listItemRefs.current[productEditModal2.index]?.focus();
+      showNotification(t("saved"), "success");
     } catch (error) {
       // console.log("eerrorrr", error);
 
@@ -262,7 +271,7 @@ const ProductEditModal2 = ({
                   ) : isCreate ? (
                     t("save")
                   ) : (
-                    t("edit")
+                    t("save")
                   )}
                 </button>
               </div>

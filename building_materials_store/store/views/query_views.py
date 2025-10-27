@@ -617,7 +617,8 @@ def universal_entries(request):
                 # Создать транзакцию
                 transaction_obj = Transaction.objects.create(
                     date=date,
-                    description=description
+                    description=description,
+                    created_by=request.user
                 )
                 
                 # Создать проводки

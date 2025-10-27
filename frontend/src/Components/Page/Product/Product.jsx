@@ -343,6 +343,7 @@ const Harytlar = () => {
           setNotification={setNotification}
           notification={notification}
           // warehouses={warehouses}
+          listItemRefs={listItemRefs}
         />
       )}
 

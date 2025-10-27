@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 // My jsx
-import { ROUTES } from "../../routes";
+import { ROUTES, PROCHEE } from "../../routes";
 // icons
 import myAxios from "../axios";
 import LargeScreenLinks from "./LargeScreenLinks";
@@ -66,6 +66,7 @@ const Header = () => {
     { code: "tk", flag: "🇹🇲" },
   ];
 
+
   useEffect(() => {
     const handleKeyDown = (event) => {
       // if (event.key === "F1") {
@@ -80,28 +81,33 @@ const Header = () => {
         event.preventDefault();
         change_wkladka.currentTime = 0;
         change_wkladka.play();
-        navigate(ROUTES.HARYTLAR);
+        navigate(PROCHEE.ENTRIES2);
       } else if (event.key === "F3") {
         event.preventDefault();
         change_wkladka.currentTime = 0;
         change_wkladka.play();
-        navigate(ROUTES.EMPLOYEERS);
+        navigate(ROUTES.PARTNERS_new );
       } else if (event.key === "F4") {
         event.preventDefault();
         change_wkladka.currentTime = 0;
         change_wkladka.play();
-        navigate(ROUTES.PARTNERS_new);
+        navigate(ROUTES.HARYTLAR);
       } else if (event.key === "F5") {
         event.preventDefault();
         change_wkladka.currentTime = 0;
         change_wkladka.play();
-        navigate(ROUTES.AGENTS);
+        navigate(ROUTES.EMPLOYEERS);
       } else if (event.key === "F6") {
         event.preventDefault();
         change_wkladka.currentTime = 0;
         change_wkladka.play();
-        navigate(ROUTES.REPORTS);
+        navigate(ROUTES.AGENTS);
       } else if (event.key === "F7") {
+        event.preventDefault();
+        change_wkladka.currentTime = 0;
+        change_wkladka.play();
+        navigate(ROUTES.REPORTS);
+      } else if (event.key === "F8") {
         event.preventDefault();
         change_wkladka.currentTime = 0;
         change_wkladka.play();

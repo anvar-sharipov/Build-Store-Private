@@ -246,6 +246,7 @@ def get_account_for_osw2(request):
 
     # Активные счета
     accounts = Account.objects.filter(is_active=True)
+    parent_accounts = []
 
     data = []
     data_dict = {}  # ключ = номер счета, значение = агрегированные данные
@@ -313,10 +314,22 @@ def get_account_for_osw2(request):
 
         # Добавляем родителя, если есть
         if a.parent:
+            # ic(a.parent)
+            if a.parent.number not in parent_accounts:
+                parent_accounts.append(a.parent.number)
             add_or_update(a.parent.number, a.parent.name)
 
     # Преобразуем словарь в список для ответа
+    # ic(data_dict)
+    
+    for acc, values in data_dict.items():
+        if acc in parent_accounts:
+            ic(acc)
+            values["is_parent"] = True
+        else:
+            values["is_parent"] = False
     data = list(data_dict.values())
+    ic(data)
 
     return Response(data, status=200)
 
@@ -325,10 +338,9 @@ def get_account_for_osw2(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_detail_account(request):
-    # Получаем даты и номер счета
+    account_number = request.GET.get('account')
     date_from = request.GET.get('dateFrom')
     date_to = request.GET.get('dateTo')
-    account_number = request.GET.get('account')
 
     if date_from:
         date_from = parse_date(date_from)
@@ -339,14 +351,21 @@ def get_detail_account(request):
         account = Account.objects.get(number=account_number)
     except Account.DoesNotExist:
         return Response({"error": "Account not found"}, status=404)
-    
-    # Получить все дочерние счета
-    # children_accounts = account.children.all()
 
-    # Получить все счета: выбранный + все его дочерние
     all_accounts = [account] + list(account.children.all())
 
-    # Проводки для выбранного счета в период
+    # Начальное сальдо до date_from
+    if date_from:
+        initial_entries = Entry.objects.filter(
+            account__in=all_accounts,
+            transaction__date__lt=date_from
+        )
+        initial_debit = sum([float(e.debit) for e in initial_entries])
+        initial_credit = sum([float(e.credit) for e in initial_entries])
+    else:
+        initial_debit = initial_credit = 0
+
+    # Проводки за выбранный период
     entries = Entry.objects.filter(account__in=all_accounts)
     if date_from and date_to:
         entries = entries.filter(transaction__date__range=[date_from, date_to])
@@ -355,40 +374,40 @@ def get_detail_account(request):
     elif date_to:
         entries = entries.filter(transaction__date__lte=date_to)
 
-    # Группируем по транзакциям
-    transactions = {}
+    transactions = []
     for e in entries.select_related('transaction'):
-        t_id = e.transaction.id
-        if t_id not in transactions:
-            transactions[t_id] = {
-                "transaction_id": t_id,
-                "date": e.transaction.date.strftime("%Y-%m-%d"),
-                "description": e.transaction.description,
-                "debit": 0,
-                "credit": 0,
-                "invoice": {
-                    "id": e.transaction.invoice.id,
-                    # "number": e.transaction.invoice.number
-                } if e.transaction.invoice else None,
-                "partner": {
-                    "id": e.transaction.partner.id,
-                    "name": e.transaction.partner.name
-                } if e.transaction.partner else None,
-                
-            }
-        transactions[t_id]['debit'] += float(e.debit)
-        transactions[t_id]['credit'] += float(e.credit)
+        transactions.append({
+            "transaction_id": e.transaction.id,
+            "date": e.transaction.date.strftime("%Y-%m-%d"),
+            "description": e.transaction.description,
+            "debit": float(e.debit),
+            "credit": float(e.credit),
+            "created_by": e.transaction.created_by.username if e.transaction.created_by else None,
+        })
 
-    # Сортируем по дате
-    data = sorted(transactions.values(), key=lambda x: x['date'])
+    # Итоги по оборотам и конечное сальдо
+    period_debit = sum([t['debit'] for t in transactions])
+    period_credit = sum([t['credit'] for t in transactions])
+    final_debit = initial_debit + period_debit
+    final_credit = initial_credit + period_credit
+
+    osw = [{
+        "initial_debit": initial_debit,
+        "initial_credit": initial_credit,
+        "debit": period_debit,
+        "credit": period_credit,
+        "final_debit": final_debit,
+        "final_credit": final_credit,
+    }]
 
     return Response({
         "account": {
             "number": account.number,
             "name": account.name,
         },
-        "transactions": data
-    }, status=200)
+        "transactions": transactions,
+        "osw": osw,
+    })
 
 # osw2
 ##################################################################################################################################################################
@@ -399,8 +418,11 @@ def get_detail_account(request):
 
 
 @csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_entry(request):
     if request.method == "POST":
+        ic(request.user)
         try:
             with transaction.atomic():
                 data = json.loads(request.body)
@@ -440,7 +462,8 @@ def create_entry(request):
                     transaction_obj = Transaction.objects.create(
                         date=date,
                         description=comment,
-                        partner=partner
+                        partner=partner,
+                        created_by=request.user
                     )
 
                     debit_account = Account.objects.get(number=debit_acc_number)
@@ -1458,7 +1481,6 @@ def upload_sales_excel_for_analis_with_return(request):
 
 
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def get_cards(request):
@@ -1487,11 +1509,6 @@ def get_cards(request):
         all_accounts = Account.objects.filter(
             Q(id=acc.id) | Q(parent=acc) | Q(parent__parent=acc)
         )
-        
-        # ic(all_accounts)
-
-        # Если иерархия может быть глубже, то лучше рекурсивно:
-        # all_accounts = get_all_children(acc)
 
         # ---- 1️⃣ Сальдо на начало ----
         before_entries = Entry.objects.filter(
@@ -1502,13 +1519,6 @@ def get_cards(request):
             credit=Sum('credit', default=Decimal('0.00'))
         )
         saldo_start = before_entries['debit'] - before_entries['credit']
-        
-        # test = Entry.objects.filter(transaction__date=date_from_obj)
-        # test2 = Transaction.objects.all()
-        # ic(date_from_obj)
-        # ic(test2)
-        # for t in test2:
-        #     ic(t.date)
 
         # ---- 2️⃣ Проводки за период ----
         period_entries = Entry.objects.filter(
@@ -1532,9 +1542,6 @@ def get_cards(request):
 
         movements = list(movements_dict.values())
 
-        if not movements:
-            continue
-
         # ---- 3️⃣ Обороты за период ----
         period_sum = period_entries.aggregate(
             debit=Sum('debit', default=Decimal('0.00')),
@@ -1543,6 +1550,10 @@ def get_cards(request):
 
         # ---- 4️⃣ Сальдо на конец ----
         saldo_end = saldo_start + period_sum['debit'] - period_sum['credit']
+
+        # ---- ✅ Пропускаем счета с нулевым сальдо на начало И конец И без движений ----
+        if saldo_start == 0 and saldo_end == 0 and not movements:
+            continue
 
         # ---- ✅ Добавляем в результат
         result.append({
@@ -1560,8 +1571,6 @@ def get_cards(request):
         "date_to": date_to,
         "accounts": result,
     })
-    
-    
 
 
 @api_view(['GET'])

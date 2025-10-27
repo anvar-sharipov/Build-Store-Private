@@ -114,12 +114,14 @@ export default function SidebarLeft() {
 
   const menuItems = [
     { to: ROUTES.PURCHASEINVOICE, label: t("faktura"), key: "F1", icon: FileText, color: "text-blue-400" },
-    { to: ROUTES.HARYTLAR, label: t("towary"), key: "F2", icon: Package, color: "text-emerald-400" },
-    { to: ROUTES.EMPLOYEERS, label: t("employeers"), key: "F3", icon: User, color: "text-purple-400" },
-    { to: ROUTES.PARTNERS_new, label: t("partners"), key: "F4", icon: UserCheck, color: "text-cyan-400" },
-    { to: ROUTES.AGENTS, label: t("agents"), key: "F5", icon: Users, color: "text-amber-400" },
-    { to: ROUTES.REPORTS, label: t("reports"), key: "F6", icon: PieChart, color: "text-pink-400" },
-    { to: ROUTES.PROCHEE, label: t("prochee"), key: "F7", icon: MoreHorizontal, color: "text-indigo-400" },
+    { to: PROCHEE.ENTRIES2, label: t("entries"), key: "F2", icon: Package, color: "text-emerald-400" },
+    { to: ROUTES.PARTNERS_new, label: t("partners"), key: "F3", icon: UserCheck, color: "text-cyan-400" },
+    { to: ROUTES.HARYTLAR, label: t("towary"), key: "F4", icon: Package, color: "text-rose-400" },
+    { to: ROUTES.EMPLOYEERS, label: t("employeers"), key: "F5", icon: User, color: "text-purple-400" },
+    { to: ROUTES.AGENTS, label: t("agents"), key: "F6", icon: Users, color: "text-amber-400" },
+    { to: ROUTES.REPORTS, label: t("reports"), key: "F7", icon: PieChart, color: "text-pink-400" },
+    { to: ROUTES.PROCHEE, label: t("prochee"), key: "F8", icon: MoreHorizontal, color: "text-indigo-400" },
+    
     // { to: ROUTES.ENTRIES, label: t("entries"), key: "F8", icon: BarChart, color: "text-rose-400" },
   ];
 

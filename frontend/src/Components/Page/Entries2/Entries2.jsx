@@ -7,6 +7,7 @@ import myAxios from "../../axios";
 import { Formik, Form, Field } from "formik";
 import FetchPartner from "../PurchaseInvoice/fetchs/FetchPartner";
 import Saldo from "../PurchaseInvoice/Utils/Saldo";
+import Saldo2 from "../PurchaseInvoice/Utils/Saldo2";
 import { useNotification } from "../../context/NotificationContext";
 import MyModal2 from "../../UI/MyModal2";
 
@@ -14,6 +15,7 @@ const Entries2 = () => {
   const { t } = useTranslation();
   const { dateProwodok } = useContext(DateContext);
   const [saldo, setSaldo] = useState(null);
+  const [saldo2, setSaldo2] = useState(null);
   const [accounts, setAccounts] = useState([]);
   const { showNotification } = useNotification();
   const [openModal, setOpenModal] = useState(false);
@@ -56,6 +58,18 @@ const Entries2 = () => {
     }
   };
 
+  const getSaldo2 = async (date, partnerId) => {
+    try {
+      const res = await myAxios.get("get_saldo_for_partner_for_selected_date2", {
+        params: { date, partnerId },
+      });
+      setSaldo2(res.data.saldo);
+    } catch (error) {
+      console.log("Ошибка get_saldo_for_partner_for_selected_date2", error);
+      setSaldo2(null);
+    }
+  };
+
   const handleSubmit = async (values, { resetForm }) => {
     try {
       const payload = {
@@ -72,6 +86,7 @@ const Entries2 = () => {
 
       if (values.partner?.id) {
         getSaldo(dateProwodok, values.partner.id);
+        getSaldo2(dateProwodok, values.partner.id);
       }
     } catch (error) {
       console.error("Ошибка отправки проводки:", error.response.data.message);
@@ -174,8 +189,10 @@ const Entries2 = () => {
           useEffect(() => {
             if (values.partner?.id) {
               getSaldo(dateProwodok, values.partner.id);
+              getSaldo2(dateProwodok, values.partner.id);
             } else {
               setSaldo(null);
+              setSaldo2(null);
             }
           }, [values.partner, dateProwodok]);
 
@@ -274,7 +291,8 @@ const Entries2 = () => {
 
                       {/* Партнёр */}
                       <div className="pt-2">
-                        <FetchPartner refs={refs} setSaldo={setSaldo} dateProwodok={dateProwodok} saldo={saldo} getSaldo={getSaldo} />
+                        {/* <FetchPartner refs={refs} setSaldo={setSaldo} dateProwodok={dateProwodok} saldo={saldo} getSaldo={getSaldo} /> */}
+                        <FetchPartner refs={refs} setSaldo={setSaldo} dateProwodok={dateProwodok} saldo={saldo} getSaldo={getSaldo} saldo2={saldo2} getSaldo2={getSaldo2} setSaldo2={setSaldo2} />
                       </div>
 
                       {/* Комментарий */}
@@ -307,7 +325,8 @@ const Entries2 = () => {
 
                   {/* Сальдо - Справа (1 колонка) */}
                   <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="lg:col-span-1">
-                    {saldo && <Saldo saldo={saldo} />}
+                    {/* {saldo && <Saldo saldo={saldo} />} */}
+                    {saldo2 && <Saldo2 saldo2={saldo2} />}
                   </motion.div>
                 </div>
               </motion.div>

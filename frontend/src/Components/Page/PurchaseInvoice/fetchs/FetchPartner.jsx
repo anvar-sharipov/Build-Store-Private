@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import myAxios from "../../../axios";
 import Fuse from "fuse.js";
 
-const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo, getSaldo }) => {
+const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo, getSaldo, saldo2, getSaldo2, setSaldo2 }) => {
   const { t } = useTranslation();
   const { values, setFieldValue, handleBlur } = useFormikContext();
   const [isFocused, setIsFocused] = useState(false);
@@ -39,6 +39,7 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo, getSaldo }) => {
     useEffect(() => {
       if (values.partner?.id && values.invoice_date2) {
         getSaldo(values.invoice_date2, values.partner?.id);
+        getSaldo2(values.invoice_date2, values.partner?.id);
       } else {
         setSaldo(null);
       }
@@ -47,6 +48,7 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo, getSaldo }) => {
     useEffect(() => {
       if (values.partner?.id && dateProwodok) {
         getSaldo(dateProwodok, values.partner?.id);
+        getSaldo2(dateProwodok, values.partner?.id);
       } else {
         setSaldo(null);
       }
@@ -147,6 +149,7 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo, getSaldo }) => {
                 setFilteredPartners([]);
                 refs.partnerListRef.current = [];
                 setSaldo(null);
+                setSaldo2(null);
                 setTimeout(() => {
                   refs.partnerRef.current?.focus();
                 }, 0);
@@ -162,6 +165,7 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo, getSaldo }) => {
               setFilteredPartners([]);
               refs.partnerListRef.current = [];
               setSaldo(null);
+              setSaldo2(null);
               setTimeout(() => {
                 refs.partnerRef.current?.focus();
               }, 0);
@@ -244,6 +248,7 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo, getSaldo }) => {
                 setFieldValue("partner", emp);
                 setFilteredPartners([]);
                 getSaldo(dateProwodok, emp.id);
+                getSaldo2(dateProwodok, emp.id);
                 refs.productRef.current?.focus();
               }}
               onKeyDown={(e) => {
@@ -252,6 +257,7 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo, getSaldo }) => {
                   setFieldValue("partner", emp);
                   setFilteredPartners([]);
                   getSaldo(dateProwodok, emp.id);
+                  getSaldo2(dateProwodok, emp.id);
                   refs.productRef.current?.focus();
                 } else if (e.key == "ArrowDown") {
                   e.preventDefault();

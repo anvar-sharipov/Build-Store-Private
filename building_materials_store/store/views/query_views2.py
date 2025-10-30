@@ -474,15 +474,20 @@ def create_entry(request):
                     ic(credit_account)
                     
                     if partner:
+                        ic("tut", credit_account, debit_account, rule_tmt.debit_account, rule_usd.debit_account)
                         if credit_account == rule_tmt.debit_account:
+                            ic("tut1")
                             partner.balance_tmt += amount
                         elif credit_account == rule_usd.debit_account:
                             partner.balance_usd += amount
+                            ic("tut2")
                             
                         if debit_account == rule_tmt.debit_account:
                             partner.balance_tmt -= amount
+                            ic("tut3")
                         elif debit_account == rule_usd.debit_account:
                             partner.balance_usd -= amount
+                            ic("tut4")
                             
                         partner.save()
                         

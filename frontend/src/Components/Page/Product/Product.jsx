@@ -130,6 +130,10 @@ const Harytlar = () => {
     index: null,
   });
 
+  const focusRow = (index) => {
+    listItemRefs.current[productEditModal2.index]?.focus();
+  };
+
   const [options, setOptions] = useState({
     base_units: [],
     categories: [],
@@ -344,6 +348,7 @@ const Harytlar = () => {
           notification={notification}
           // warehouses={warehouses}
           listItemRefs={listItemRefs}
+          focusRow={focusRow}
         />
       )}
 

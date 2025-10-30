@@ -844,16 +844,23 @@ class PartnerBalanceSnapshot(models.Model):
     """
     closing = models.ForeignKey(DayClosing, on_delete=models.CASCADE, related_name="partner_balances", null=True, blank=True)
     partner = models.ForeignKey("Partner", on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Старые поля (для обратной совместимости)
     balance = models.DecimalField(max_digits=12, decimal_places=3, null=True, blank=True, default=Decimal('0.000'), verbose_name='Баланс old')
     balance_tmt = models.DecimalField(max_digits=12, decimal_places=3, default=Decimal('0.000'), verbose_name='Balans TMT')
     balance_usd = models.DecimalField(max_digits=12, decimal_places=3, default=Decimal('0.000'), verbose_name='Balans USD')
+    
+    # НОВЫЕ ПОЛЯ - отдельно по каждому счету
+    balance_60_usd = models.DecimalField(max_digits=12, decimal_places=3, default=Decimal('0.000'), verbose_name='60 Клиент USD')
+    balance_62_tmt = models.DecimalField(max_digits=12, decimal_places=3, default=Decimal('0.000'), verbose_name='62 Клиент TMT')
+    balance_75_usd = models.DecimalField(max_digits=12, decimal_places=3, default=Decimal('0.000'), verbose_name='75 Учредитель USD')
+    balance_76_tmt = models.DecimalField(max_digits=12, decimal_places=3, default=Decimal('0.000'), verbose_name='76 Учредитель TMT')
 
     class Meta:
         unique_together = ("closing", "partner")
 
     def __str__(self):
-        return f"{self.partner.name} — USD:{self.balance_usd} - TMT:{self.balance_tmt} ({self.closing.date})"
-    
+        return f"{self.partner.name} — 60:{self.balance_60_usd} 62:{self.balance_62_tmt} 75:{self.balance_75_usd} 76:{self.balance_76_tmt} ({self.closing.date})"
     
     
 class StockSnapshot(models.Model):

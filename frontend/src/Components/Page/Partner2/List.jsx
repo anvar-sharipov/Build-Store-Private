@@ -17,6 +17,8 @@ const List = ({
   setPartnerValue,
   focusedPartnerId,
   setFocusedPartnerId,
+  setFocusedPartnerIndex,
+  focusedPartnerIndex,
 }) => {
   const { t } = useTranslation();
   const sound_up_down = new Audio("/sounds/up_down.mp3");
@@ -91,10 +93,13 @@ const List = ({
                 }
               } else if (e.key === "Enter") {
                 e.preventDefault();
+                // setFocusedPartnerId
+                setFocusedPartnerIndex(index)
                 openPartnerModal(partner);
               }
             }}
             onDoubleClick={() => {
+              setFocusedPartnerIndex(index)
               openPartnerModal(partner);
             }}
             ref={(el) => (partnersListRefs.current[index] = el)}
@@ -105,10 +110,9 @@ const List = ({
             {/* <div></div> */}
             <div>{partner.name}</div>
             <div>
-            <div>USD: {formatNumber(partner.balance_usd)}</div>
-            <div>TMT: {formatNumber(partner.balance_tmt)}</div>
+              <div>USD: {formatNumber(partner.balance_usd)}</div>
+              <div>TMT: {formatNumber(partner.balance_tmt)}</div>
             </div>
-            
           </li>
         ))}
       </ul>

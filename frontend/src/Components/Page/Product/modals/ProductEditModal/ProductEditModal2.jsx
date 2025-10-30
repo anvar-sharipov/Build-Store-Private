@@ -1,6 +1,6 @@
 // ProductEditModal2.jsx
 import MyModal2 from "../../../../UI/MyModal2";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import BasicTab from "./tabs/BasicTab";
@@ -28,7 +28,8 @@ const ProductEditModal2 = ({
   setNotification,
   notification,
   warehouses,
-  listItemRefs
+  listItemRefs,
+  focusRow,
 }) => {
   const [product, setProduct] = useState(productEditModal2.data);
   const [activeTab, setActiveTab] = useState("basic");
@@ -36,6 +37,7 @@ const ProductEditModal2 = ({
   // console.log("productEditModal2", productEditModal2);
 
   const { showNotification } = useNotification();
+
   
 
   // console.log("product", product);
@@ -67,9 +69,7 @@ const ProductEditModal2 = ({
     height: product.height || "",
     is_active: product.is_active ?? true,
     base_unit: product.base_unit_obj ? String(product.base_unit_obj.id) : "",
-    category: product.category_name_obj
-      ? String(product.category_name_obj.id)
-      : "",
+    category: product.category_name_obj ? String(product.category_name_obj.id) : "",
     brand: product.brand_obj ? String(product.brand_obj.id) : "",
     model: product.model_obj ? String(product.model_obj.id) : "",
     tags: product.tags_obj ? product.tags_obj.map((tag) => String(tag.id)) : [],
@@ -100,9 +100,7 @@ const ProductEditModal2 = ({
         if (!value || value === initialValues.name) return true;
 
         try {
-          const res = await myAxios(
-            `/check-name-unique/?name=${encodeURIComponent(value)}`
-          );
+          const res = await myAxios(`/check-name-unique/?name=${encodeURIComponent(value)}`);
           return !res.data.exists;
         } catch (e) {
           console.log("errorr in check-name-unique", e);
@@ -113,27 +111,14 @@ const ProductEditModal2 = ({
     //   .typeError(t("enterNumber"))
     //   .min(0, t("quantityNonNegative"))
     //   .notRequired(),
-    base_unit: Yup.number()
-      .required(t("selectUnit"))
-      .typeError(t("invalidValue")),
-    category: Yup.number()
-      .required(t("selectCategory"))
-      .typeError(t("invalidValue")),
+    base_unit: Yup.number().required(t("selectUnit")).typeError(t("invalidValue")),
+    category: Yup.number().required(t("selectCategory")).typeError(t("invalidValue")),
     // warehouse: Yup.number()
     //   .required(t("selectWarehouse"))
     //   .typeError(t("invalidValue")),
-    purchase_price: Yup.number()
-      .typeError(t("enterPrice"))
-      .min(0, t("priceNonNegative"))
-      .notRequired(),
-    retail_price: Yup.number()
-      .typeError(t("enterPrice"))
-      .min(0, t("priceNonNegative"))
-      .notRequired(),
-    wholesale_price: Yup.number()
-      .typeError(t("enterPrice"))
-      .min(0, t("priceNonNegative"))
-      .notRequired(),
+    purchase_price: Yup.number().typeError(t("enterPrice")).min(0, t("priceNonNegative")).notRequired(),
+    retail_price: Yup.number().typeError(t("enterPrice")).min(0, t("priceNonNegative")).notRequired(),
+    wholesale_price: Yup.number().typeError(t("enterPrice")).min(0, t("priceNonNegative")).notRequired(),
     weight: Yup.number().min(0, t("nonNegative")).notRequired(),
     volume: Yup.number().min(0, t("nonNegative")).notRequired(),
     length: Yup.number().min(0, t("nonNegative")).notRequired(),
@@ -141,22 +126,14 @@ const ProductEditModal2 = ({
     height: Yup.number().min(0, t("nonNegative")).notRequired(),
     units: Yup.array().of(
       Yup.object().shape({
-        unit: Yup.number()
-          .required(t("selectUnit"))
-          .typeError(t("invalidValue")),
-        conversion_factor: Yup.number()
-          .required(t("enterConversionFactor"))
-          .positive(t("positiveFactor"))
-          .typeError(t("invalidValue")),
+        unit: Yup.number().required(t("selectUnit")).typeError(t("invalidValue")),
+        conversion_factor: Yup.number().required(t("enterConversionFactor")).positive(t("positiveFactor")).typeError(t("invalidValue")),
         is_default_for_sale: Yup.boolean(),
       })
     ),
     free_items: Yup.array().of(
       Yup.object().shape({
-        quantity_per_unit: Yup.number()
-          .required(t("enterQuantity"))
-          .min(0, t("quantityNonNegative"))
-          .typeError(t("invalidValue")),
+        quantity_per_unit: Yup.number().required(t("enterQuantity")).min(0, t("quantityNonNegative")).typeError(t("invalidValue")),
         gift_product: Yup.string().required(t("selectProduct")),
       })
     ),
@@ -177,9 +154,7 @@ const ProductEditModal2 = ({
         setProducts((prev) => [res.data, ...prev]);
       } else {
         res = await myAxios.put(`/products/${values.id}/`, payload);
-        setProducts((prev) =>
-          prev.map((p) => (p.id === res.data.id ? res.data : p))
-        );
+        setProducts((prev) => prev.map((p) => (p.id === res.data.id ? res.data : p)));
       }
       // productEditModal2
       listItemRefs.current[productEditModal2.index]?.focus();
@@ -202,67 +177,36 @@ const ProductEditModal2 = ({
   return (
     <MyModal2
       onClose={() => {
+        try {
+          focusRow(productEditModal2.index)
+        } catch {}
+        
         setProductEditModal2({ open: false, data: null, index: null });
       }}
+      closeOnBackdropClick={false}
     >
-      <Formik
-        initialValues={initialValues}
-        onSubmit={onSubmit}
-        validationSchema={validationSchema}
-        validateOnMount={true}
-      >
+      <Formik initialValues={initialValues} onSubmit={onSubmit} validationSchema={validationSchema} validateOnMount={true}>
         {({ touched, errors, isValid, isSubmitting }) => (
           <Form>
-            <HeaderForTabs
-              tabs={tabs}
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-            />
+            <HeaderForTabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
             <div className="flex flex-col max-h-[80vh] border p-2 bg-gray-200 dark:bg-gray-800">
               <div className="flex-1 overflow-auto pr-1">
                 {activeTab === "basic" ? (
-                  <BasicTab
-                    options={options}
-                    loadingModal={loadingModal}
-                    setOptions={setOptions}
-                    productId={product.id}
-                    t={t}
-                    warehouses={warehouses}
-                  />
+                  <BasicTab options={options} loadingModal={loadingModal} setOptions={setOptions} productId={product.id} t={t} warehouses={warehouses} />
                 ) : activeTab === "prices" ? (
                   <PricesTab options={options} setOptions={setOptions} t={t} />
                 ) : activeTab === "dimensions" ? (
-                  <DimensionsTab
-                    options={options}
-                    setOptions={setOptions}
-                    t={t}
-                  />
+                  <DimensionsTab options={options} setOptions={setOptions} t={t} />
                 ) : activeTab === "categories" ? (
-                  <CategoriesTab
-                    options={options}
-                    setOptions={setOptions}
-                    className={errors.category ? "bg-red-300" : ""}
-                    t={t}
-                  />
+                  <CategoriesTab options={options} setOptions={setOptions} className={errors.category ? "bg-red-300" : ""} t={t} />
                 ) : activeTab === "images" ? (
-                  <ImagesTab
-                    options={options}
-                    setOptions={setOptions}
-                    product={product}
-                    setProduct={setProduct}
-                    t={t}
-                    
-                  />
+                  <ImagesTab options={options} setOptions={setOptions} product={product} setProduct={setProduct} t={t} />
                 ) : null}
               </div>
 
               <div className="mt-4 pt-2 border-t border-gray-300 text-right dark:bg-gray-900 sticky bottom-0">
-                <button
-                  type="submit"
-                  className={myClass.button}
-                  disabled={!isValid || isSubmitting || loadingModal}
-                >
+                <button type="submit" className={myClass.button} disabled={!isValid || isSubmitting || loadingModal}>
                   {loadingModal ? (
                     <span className="flex items-center gap-2">
                       <CiNoWaitingSign className="animate-spin" />

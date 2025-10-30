@@ -129,9 +129,15 @@ def save_invoice(request):
             if not invoice_date:
                 return JsonResponse({"status": "error", "message": "choose date prowodok"}, status=400)
             
+            if DayClosing.objects.filter(date=invoice_date).exists():
+                # Конвертируем строку в дату и обратно в нужный формат
+                # date_obj = datetime.strptime(invoice_date, '%Y-%m-%d')
+                # formatted_date = date_obj.strftime('%d.%m.%Y')
+                return JsonResponse({"status": "error", "message": f"day is closed"}, status=400)
+            
             if not products:
                 return JsonResponse({"status": "error", "message": "choose products"}, status=400)
-                
+            
             if not type_price:
                 return JsonResponse({"status": "error", "message": "choose whosale price or retail price"}, status=400)
             

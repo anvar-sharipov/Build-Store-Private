@@ -619,10 +619,35 @@ class DayClosingLogAdmin(admin.ModelAdmin):
 
 @admin.register(PartnerBalanceSnapshot)
 class PartnerBalanceSnapshotAdmin(admin.ModelAdmin):
-    list_display = ("closing", "partner", "balance", "balance_tmt", "balance_usd")
+    list_display = ("closing", "partner", "balance_60_usd", "balance_62_tmt", "balance_75_usd", "balance_76_tmt", "balance_usd", "balance_tmt")
     search_fields = ("partner__name",)
-    list_filter = ("closing",)
-
+    list_filter = ("closing", "partner__type")
+    
+    # Поля только для чтения
+    readonly_fields = ("closing", "partner", "balance_60_usd", "balance_62_tmt", "balance_75_usd", "balance_76_tmt", "balance_usd", "balance_tmt", "balance")
+    
+    # Группировка полей в форме редактирования
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('closing', 'partner')
+        }),
+        ('Балансы по счетам', {
+            'fields': (
+                ('balance_60_usd', 'balance_62_tmt'),
+                ('balance_75_usd', 'balance_76_tmt'),
+            )
+        }),
+        ('Итоговые балансы', {
+            'fields': (
+                ('balance_usd', 'balance_tmt'),
+                'balance'
+            )
+        }),
+    )
+    
+    # Порядок отображения в списке
+    list_display_links = ("partner",)
+    
     def has_add_permission(self, request):
         return False
 
@@ -631,7 +656,31 @@ class PartnerBalanceSnapshotAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
-
+    
+    # Дополнительные методы для красивого отображения
+    def get_balance_60_usd(self, obj):
+        return f"{obj.balance_60_usd:,.2f}" if obj.balance_60_usd else "0.00"
+    get_balance_60_usd.short_description = "60 Клиент USD"
+    
+    def get_balance_62_tmt(self, obj):
+        return f"{obj.balance_62_tmt:,.2f}" if obj.balance_62_tmt else "0.00"
+    get_balance_62_tmt.short_description = "62 Клиент TMT"
+    
+    def get_balance_75_usd(self, obj):
+        return f"{obj.balance_75_usd:,.2f}" if obj.balance_75_usd else "0.00"
+    get_balance_75_usd.short_description = "75 Учредитель USD"
+    
+    def get_balance_76_tmt(self, obj):
+        return f"{obj.balance_76_tmt:,.2f}" if obj.balance_76_tmt else "0.00"
+    get_balance_76_tmt.short_description = "76 Учредитель TMT"
+    
+    def get_balance_usd(self, obj):
+        return f"{obj.balance_usd:,.2f}" if obj.balance_usd else "0.00"
+    get_balance_usd.short_description = "Итого USD"
+    
+    def get_balance_tmt(self, obj):
+        return f"{obj.balance_tmt:,.2f}" if obj.balance_tmt else "0.00"
+    get_balance_tmt.short_description = "Итого TMT"
 
 @admin.register(StockSnapshot)
 class StockSnapshotAdmin(admin.ModelAdmin):

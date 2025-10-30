@@ -305,7 +305,17 @@ def get_osw(request):
 def get_saldo(partner_obj, getDate):
     # USD
     rule = CustomePostingRule.objects.filter(operation__code="sale", directory_type=partner_obj.type, amount_type="revenue", currency__code="USD").first()
-   
+    
+    # Partner.objects.all().update(balance_tmt = 0, balance_usd = 0)
+    # Transaction.objects.all().delete()
+    # Entry.objects.all().delete()
+    # Invoice.objects.all().delete()
+    
+    # DayClosing.objects.all().delete()
+    # DayClosingLog.objects.all().delete()
+    # PartnerBalanceSnapshot.objects.all().delete()
+    # StockSnapshot.objects.all().delete()
+    
     if not rule:
         value = [Decimal('0.00'), Decimal('0.00')]
         return {"start": value, "oborot": value, "final": value, "saldo": value}
@@ -404,7 +414,89 @@ def get_saldo(partner_obj, getDate):
         "start": [debit_start, credit_start], "oborot": [debit_oborot, credit_oborot, desc], "final": [debit_end, credit_end], "saldo": [saldo_debit, saldo_credit], "today_entries":today_entries,
         "start_tmt": [debit_start_tmt, credit_start_tmt], "oborot_tmt": [debit_oborot_tmt, credit_oborot_tmt, desc_tmt], "final_tmt": [debit_end_tmt, credit_end_tmt], "saldo_tmt": [saldo_debit_tmt, saldo_credit_tmt], "today_entries_tmt":today_entries_tmt,
         } 
-     
+
+
+def get_saldo2(partner_obj, getDate):
+    results = {}
+    
+    # Для каждого счета отдельно
+    accounts_to_check = [
+        ('60', 'USD'),  # Клиент USD
+        ('62', 'TMT'),  # Клиент TMT  
+        ('75', 'USD'),  # Учредитель USD
+        ('76', 'TMT')   # Учредитель TMT
+    ]
+    
+    for account_number, currency in accounts_to_check:
+        account = Account.objects.get(number=account_number)
+        
+        # Начальное сальдо (до выбранной даты)
+        entries_start = Entry.objects.filter(
+            transaction__partner=partner_obj,
+            transaction__date__lt=getDate
+        ).filter(account=account)
+        
+        debit_start = entries_start.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
+        credit_start = entries_start.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
+        
+        # Обороты за выбранную дату
+        entries_oborot = Entry.objects.filter(
+            transaction__partner=partner_obj,
+            transaction__date__date=getDate  
+        ).filter(account=account)
+        
+        debit_oborot = entries_oborot.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
+        credit_oborot = entries_oborot.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
+        
+        # Детали операций за день (аналогично оригинальной функции)
+        today_entries = []
+        desc = ''
+        already_have_pks = []
+        
+        if entries_oborot:
+            count = 0
+            for e in entries_oborot:
+                str_date = e.transaction.date.strftime("%d-%m-%Y %H:%M")
+                if e.transaction.pk in already_have_pks:
+                    for c in today_entries:
+                        if c[4] == e.transaction.pk:
+                            c[2] += e.debit
+                            c[3] += e.credit
+                else:
+                    today_entries.append([str_date, e.transaction.description, e.debit, e.credit, e.transaction.pk])
+                    already_have_pks.append(e.transaction.pk)
+                count += 1
+                desc += f"{count}) {e.transaction.description}"
+                desc += "\n"
+        
+        # Итоговые расчеты
+        debit_end = debit_start + debit_oborot
+        credit_end = credit_start + credit_oborot
+        saldo = debit_end - credit_end
+        saldo_debit = abs(saldo) if saldo > 0 else 0
+        saldo_credit = abs(saldo) if saldo < 0 else 0
+        
+        results[f"{account_number}_{currency}"] = {
+            "account_name": f"{account.number} {account.name}",
+            "start": [debit_start, credit_start],
+            "oborot": [debit_oborot, credit_oborot, desc], 
+            "final": [debit_end, credit_end],
+            "saldo": [saldo_debit, saldo_credit],
+            "today_entries": today_entries
+        }
+    
+    ic(results)
+    return results
+
+@require_GET
+def get_saldo_for_partner_for_selected_date2(request):
+    getDate = request.GET.get('date')
+    partnerId = request.GET.get('partnerId')
+    partner_obj = Partner.objects.get(pk=partnerId)
+    saldo = get_saldo2(partner_obj, getDate)
+    return JsonResponse({"saldo": saldo}, safe=False)
+
+
 @require_GET
 def get_saldo_for_partner_for_selected_date(request):
     getDate = request.GET.get('date')
@@ -488,31 +580,16 @@ def check_day_closed(request):
     
     
     
-
 @csrf_exempt
 def close_day(request):
     if request.method != "POST":
         return JsonResponse({"success": False, "error": "Только POST запросы разрешены"})
 
-    # try:
-    #     # data = json.loads(request.body)
-    #     # close_date = data.get("date")  # формат YYYY-MM-DD
-    #     # reason = data.get("reason", "")
-    #     # user_id = data.get("user_id")
-
-    #     # user = User.objects.get(id=user_id)
-        
-    # except Exception as e:
-    #     return JsonResponse({"success": False, "error": f"Неверные данные: {str(e)}"})
-    
-    
     data = json.loads(request.body)
     close_date = data.get("date")
     reason = data.get("reason", "")
     user_id = data.get("user_id")
 
-
-    
     if not close_date:
         return JsonResponse({"success": False, "error": "choose close date"})
     
@@ -523,22 +600,9 @@ def close_day(request):
         return JsonResponse({"success": False, "error": "youDidntAuthenticated"})
     
     user = User.objects.get(id=user_id)
-    
-    # invoices = Invoice.objects.filter(invoice_date=close_date)
-    # ic(invoices)
-    
-    # # if invoices.exists():
-    # #     for invoice in invoices:
-    # #         if not invoice.is_entry:
-    # #             invoice.
-    
-        
 
     try:
         with transaction.atomic():
-            # 1/0
-   
-
             # если уже закрыт
             if DayClosing.objects.filter(date=close_date).exists():
                 transaction.set_rollback(True)
@@ -547,7 +611,6 @@ def close_day(request):
             day_closing = DayClosing.objects.create(date=close_date)
 
             # обновляем статус
-            
             day_closing.closed_at = timezone.now()
             day_closing.closed_by = user
             day_closing.note = reason
@@ -561,15 +624,42 @@ def close_day(request):
                 reason=reason
             )
 
-            # снимки балансов партнёров
+            # ФУНКЦИИ ДЛЯ ВЫЧИСЛЕНИЯ БАЛАНСОВ ПО КАЖДОМУ СЧЕТУ
+            def calculate_balance_by_account(partner, target_date, account_number):
+                """Вычисляет баланс по конкретному счету"""
+                entries = Entry.objects.filter(
+                    transaction__partner=partner,
+                    transaction__date__lte=target_date,
+                    account__number=account_number
+                )
+                debit = entries.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
+                credit = entries.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
+                return debit - credit
+
+            # снимки балансов партнёров ОТДЕЛЬНО ПО КАЖДОМУ СЧЕТУ
             for partner in Partner.objects.all():
+                balance_60_usd = calculate_balance_by_account(partner, close_date, '60')
+                balance_62_tmt = calculate_balance_by_account(partner, close_date, '62')
+                balance_75_usd = calculate_balance_by_account(partner, close_date, '75')
+                balance_76_tmt = calculate_balance_by_account(partner, close_date, '76')
+                
+                # Итоговые балансы по валютам (для обратной совместимости)
+                total_usd = balance_60_usd + balance_75_usd
+                total_tmt = balance_62_tmt + balance_76_tmt
+                
                 PartnerBalanceSnapshot.objects.create(
                     closing=day_closing,
                     partner=partner,
-                    balance=partner.balance
+                    balance_60_usd=balance_60_usd,
+                    balance_62_tmt=balance_62_tmt,
+                    balance_75_usd=balance_75_usd,
+                    balance_76_tmt=balance_76_tmt,
+                    balance_usd=total_usd,  # для обратной совместимости
+                    balance_tmt=total_tmt,  # для обратной совместимости
+                    balance=Decimal('0.000')  # старое поле
                 )
 
-            # снимки складов
+            # снимки складов (остается без изменений)
             for wp in WarehouseProduct.objects.all():
                 StockSnapshot.objects.create(
                     closing=day_closing,
@@ -582,8 +672,6 @@ def close_day(request):
                     firma_price=wp.product.firma_price,
                     quantity=wp.quantity
                 )
-                
-            
 
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)})

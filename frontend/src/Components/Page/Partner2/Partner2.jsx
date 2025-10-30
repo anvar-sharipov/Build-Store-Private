@@ -42,6 +42,7 @@ const Partner2 = () => {
 
   // dlya focus posle update i create na partenra
   const [focusedPartnerId, setFocusedPartnerId] = useState(null);
+  const [focusedPartnerIndex, setFocusedPartnerIndex] = useState(null);
 
   useEffect(() => {
     const pageFromUrl = parseInt(searchParams.get("page")) || 1;
@@ -50,12 +51,12 @@ const Partner2 = () => {
     setQuery(queryFromUrl);
   }, [searchParams]);
 
-  useEffect(() => {
-    if (!openModal && !focusedPartnerId) {
-      searchInputRef.current?.focus();
-    }
-    setPartnerValue;
-  }, [openModal]);
+  // useEffect(() => {
+  //   if (!openModal && !focusedPartnerId) {
+  //     searchInputRef.current?.focus();
+  //   }
+  //   setPartnerValue;
+  // }, [openModal]);
 
   // dlya pokaza search i page w url
   const navigate = useNavigate();
@@ -249,6 +250,10 @@ const Partner2 = () => {
           setPartners={setPartners}
           setFocusedPartnerId={setFocusedPartnerId}
           openModal={openModal}
+          focusedPartnerId={focusedPartnerId}
+          setFocusedPartnerIndex={setFocusedPartnerIndex}
+          focusedPartnerIndex={focusedPartnerIndex}
+          partnersListRefs={partnersListRefs}
         ></PartnerModal>
       )}
       {loading ? (
@@ -269,6 +274,8 @@ const Partner2 = () => {
           setPartnerValue={setPartnerValue}
           focusedPartnerId={focusedPartnerId}
           setFocusedPartnerId={setFocusedPartnerId}
+          setFocusedPartnerIndex={setFocusedPartnerIndex}
+          focusedPartnerIndex={focusedPartnerIndex}
         />
       )}
 

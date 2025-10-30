@@ -7,14 +7,16 @@ import { useTranslation } from "react-i18next";
 import MySearchInput from "../../UI/MySearchInput";
 import { div } from "framer-motion/client";
 // import { useFormikContext } from "formik";
-import Notification from "../../Notification";
+// import Notification from "../../Notification";
 import SmartTooltip from "../../SmartTooltip";
 import MyLoading from "../../UI/MyLoading";
 import { ROUTES } from "../../../routes";
 import { myClass } from "../../tailwindClasses";
+import { useNotification } from "../../context/NotificationContext";
 
-const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, setFocusedPartnerId, openModal }) => {
+const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, setFocusedPartnerId, openModal, focusedPartnerId, setFocusedPartnerIndex, focusedPartnerIndex, partnersListRefs }) => {
   // const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
+  const { showNotification } = useNotification();
   const nameRef = useRef(null);
   const balanceRef = useRef(null);
   const agentRef = useRef(null);
@@ -37,11 +39,11 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
 
   const [queryAccount, setQueryAccount] = useState("");
   const [accounts, setAccounts] = useState([]);
-  const [notification, setNotification] = useState({ message: "", type: "" });
-  const showNotification = (message, type) => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification({ message: "", type: "" }), 3000);
-  };
+  // const [notification, setNotification] = useState({ message: "", type: "" });
+  // const showNotification = (message, type) => {
+  //   setNotification({ message, type });
+  //   setTimeout(() => setNotification({ message: "", type: "" }), 3000);
+  // };
 
   useEffect(() => {
     nameRef.current?.focus();
@@ -106,8 +108,16 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
   }, []);
   return (
     <div>
-      <Notification message={t(notification.message)} type={notification.type} onClose={() => setNotification({ message: "", type: "" })} />
-      <MyModal2 onClose={() => setOpenModal(false)}>
+      {/* <Notification message={t(notification.message)} type={notification.type} onClose={() => setNotification({ message: "", type: "" })} /> */}
+      <MyModal2
+        onClose={() => {
+          partnersListRefs.current[focusedPartnerIndex].focus()
+          setFocusedPartnerIndex(null)
+
+          return setOpenModal(false);
+        }}
+        closeOnBackdropClick={false}
+      >
         <div className="text-center mb-6">
           <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">{t("addPartner2")}</h2>
         </div>
@@ -135,7 +145,6 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                 } finally {
                   setLoading(false);
                   setOpenModal(false);
-                  
                 }
               };
               handleCreate();
@@ -160,7 +169,7 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                   showNotification(t(error.response.data.detail), "error");
                 } finally {
                   setLoading(false);
-                  // setOpenModal(false);
+                  setOpenModal(false);
                 }
               };
               handleUpdate();
@@ -666,8 +675,7 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                     {t("balance USD")}:
                   </label>
                   {/* <span>{values.balance}</span> */}
-                  <span>{values.balance_usd}</span>
-                    |
+                  <span>{values.balance_usd}</span>|
                   <label htmlFor="name" className="block font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t("balance TMT")}:
                   </label>

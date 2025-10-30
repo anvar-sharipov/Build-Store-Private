@@ -14,14 +14,7 @@ import MyLoading from "../../../UI/MyLoading";
 import { myClass } from "../../../tailwindClasses";
 import MySearchInput from "../../../UI/MySearchInput";
 
-const AgentsPartnersListModal = ({
-  setOpenPartnerListModal,
-  openPartnerListModal,
-  t,
-  partnerList,
-  showNotification,
-  fetchAgents,
-}) => {
+const AgentsPartnersListModal = ({ setOpenPartnerListModal, openPartnerListModal, t, partnerList, showNotification, fetchAgents }) => {
   const [partners, setPartners] = useState(openPartnerListModal.data.partners);
   const [loadingDeleteId, setLoadingDeleteId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -69,10 +62,24 @@ const AgentsPartnersListModal = ({
       threshold: 0.3,
     });
   }, [partnerList]);
+
+  // const filteredPartnersList = useMemo(() => {
+  //   if (!searchQuery2) return partnerList;
+  //   return fuse2.search(searchQuery2).map((result) => result.item);
+  // }, [searchQuery2, fuse2]);
+
+  // Исправляем filteredPartnersList
   const filteredPartnersList = useMemo(() => {
-    if (!searchQuery2) return partnerList;
-    return fuse2.search(searchQuery2).map((result) => result.item);
-  }, [searchQuery2, fuse2]);
+    if (!searchQuery2) return Array.isArray(partnerList) ? partnerList : [];
+
+    try {
+      const searchResults = fuse2.search(searchQuery2);
+      return Array.isArray(searchResults) ? searchResults.map((result) => result.item) : [];
+    } catch (error) {
+      console.error("Fuse search error:", error);
+      return Array.isArray(partnerList) ? partnerList : [];
+    }
+  }, [searchQuery2, fuse2, partnerList]);
 
   // pagination
   const itemsPerPage = 5;
@@ -80,20 +87,37 @@ const AgentsPartnersListModal = ({
   const [hasMore, setHasMore] = useState(false);
   const loadMoreButtonRef = useRef(null);
   const prevHasMoreRef = useRef(true);
+
+  // const visibleItems = useMemo(() => {
+  //   const start = 0;
+  //   const end = currentPage * itemsPerPage;
+  //   return filteredPartnersList.slice(start, end);
+  // }, [filteredPartnersList, currentPage, itemsPerPage]);
+
   const visibleItems = useMemo(() => {
     const start = 0;
     const end = currentPage * itemsPerPage;
+
+    // Добавляем проверку на массив
+    if (!Array.isArray(filteredPartnersList)) {
+      console.warn("filteredPartnersList is not an array:", filteredPartnersList);
+      return [];
+    }
+
     return filteredPartnersList.slice(start, end);
   }, [filteredPartnersList, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    console.log("partnerList:", partnerList);
+    console.log("filteredPartnersList:", filteredPartnersList);
+    console.log("Array.isArray:", Array.isArray(filteredPartnersList));
+  }, [partnerList, filteredPartnersList]);
+
   useEffect(() => {
     setHasMore(visibleItems.length < filteredPartnersList.length);
   }, [visibleItems, filteredPartnersList]);
   useEffect(() => {
-    if (
-      prevHasMoreRef.current &&
-      !hasMore &&
-      !(document.activeElement === searchInputRef.current)
-    ) {
+    if (prevHasMoreRef.current && !hasMore && !(document.activeElement === searchInputRef.current)) {
       // Кнопка исчезла → фокус на последний li
 
       const lastIndex = visibleItems.length - 1;
@@ -173,26 +197,15 @@ const AgentsPartnersListModal = ({
   };
   return (
     <div>
-      <MyModal2
-        onClose={() =>
-          setOpenPartnerListModal({ open: false, data: null, index: null })
-        }
-        isActiveSmallModal={isActiveSmallModal}
-        fullWidth={true}
-      >
+      <MyModal2 onClose={() => setOpenPartnerListModal({ open: false, data: null, index: null })} isActiveSmallModal={isActiveSmallModal} fullWidth={true}>
         {openModalSelectPartner && (
-          <MyModal2
-            onClose={() => setOpenModalSelectPartner(false)}
-            fullWidth={true}
-          >
+          <MyModal2 onClose={() => setOpenModalSelectPartner(false)} fullWidth={true}>
             {loading && (
               <div className="fixed inset-0 flex justify-center items-center z-50">
                 <div className="border-4 border-t-transparent border-blue-500 border-solid rounded-full animate-spin w-12 h-12" />
               </div>
             )}
-            <div className="text-lg font-semibold mb-4 text-center">
-              {t("selectPartners")}
-            </div>
+            <div className="text-lg font-semibold mb-4 text-center">{t("selectPartners")}</div>
             <MySearchInput
               ref={searchInputRef2}
               onChange={(e) => setSearchQuery2(e.target.value)}
@@ -221,10 +234,7 @@ const AgentsPartnersListModal = ({
                   return (
                     <li
                       onKeyDown={(e) => {
-                        if (
-                          e.key === "ArrowDown" &&
-                          index < visibleItems.length - 1
-                        ) {
+                        if (e.key === "ArrowDown" && index < visibleItems.length - 1) {
                           e.preventDefault();
                           listItemAddPartnerRefs.current[index + 1]?.focus();
                         } else if (e.key === "ArrowUp") {
@@ -234,10 +244,7 @@ const AgentsPartnersListModal = ({
                           } else {
                             listItemAddPartnerRefs.current[index - 1]?.focus();
                           }
-                        } else if (
-                          e.key === "ArrowDown" &&
-                          index === visibleItems.length - 1
-                        ) {
+                        } else if (e.key === "ArrowDown" && index === visibleItems.length - 1) {
                           if (hasMore) {
                             e.preventDefault();
                             loadMoreButtonRef.current?.focus();
@@ -277,23 +284,13 @@ const AgentsPartnersListModal = ({
                         type="checkbox"
                         checked={isAlreadyLinked}
                         onChange={() => {
-                          setLinkedIds((prev) =>
-                            prev.includes(partner.id)
-                              ? prev.filter((id) => id !== partner.id)
-                              : [...prev, partner.id]
-                          );
+                          setLinkedIds((prev) => (prev.includes(partner.id) ? prev.filter((id) => id !== partner.id) : [...prev, partner.id]));
                         }}
                       />
                       <div className="flex justify-between w-full">
-                        <span className="font-medium text-gray-800 dark:text-gray-200">
-                          {partner.name}
-                        </span>
+                        <span className="font-medium text-gray-800 dark:text-gray-200">{partner.name}</span>
 
-                        <TypeBadge
-                          typeText={t(partner.type)}
-                          text={partner.type_display}
-                          type={partner.type}
-                        />
+                        <TypeBadge typeText={t(partner.type)} text={partner.type_display} type={partner.type} />
                       </div>
                     </li>
                   );
@@ -314,9 +311,7 @@ const AgentsPartnersListModal = ({
                       // listItemRefs.focus(visibleItems.length);
                     } else if (e.key === "ArrowUp") {
                       e.preventDefault();
-                      listItemAddPartnerRefs.current[
-                        visibleItems.length - 1
-                      ].focus();
+                      listItemAddPartnerRefs.current[visibleItems.length - 1].focus();
                     } else if (e.key === "ArrowDown") {
                       e.preventDefault();
                       saveBtnRef.current?.focus();
@@ -342,9 +337,7 @@ const AgentsPartnersListModal = ({
                     if (hasMore) {
                       loadMoreButtonRef.current?.focus();
                     } else {
-                      listItemAddPartnerRefs.current[
-                        visibleItems.length - 1
-                      ]?.focus();
+                      listItemAddPartnerRefs.current[visibleItems.length - 1]?.focus();
                     }
                   }
                 }}
@@ -356,10 +349,7 @@ const AgentsPartnersListModal = ({
         )}
 
         {openDeleteModal && (
-          <MySmallModal
-            onClose={() => setOpenDeleteModal(false)}
-            loading={loading}
-          >
+          <MySmallModal onClose={() => setOpenDeleteModal(false)} loading={loading}>
             <div>
               {t("confirmUnlinkPartner")} {deletedPartner.name}
             </div>
@@ -391,9 +381,7 @@ const AgentsPartnersListModal = ({
           </MySmallModal>
         )}
 
-        <div className="text-xl text-center">
-          {openPartnerListModal.data.name}
-        </div>
+        <div className="text-xl text-center">{openPartnerListModal.data.name}</div>
         <div className="flex items-center mt-5 gap-3">
           <MySearchInput
             placeholder={t("search")}
@@ -419,17 +407,11 @@ const AgentsPartnersListModal = ({
               tabIndex={0}
               className={myClass.li}
               onKeyDown={(e) => {
-                if (
-                  e.key === "ArrowDown" &&
-                  index < filteredPartners.length - 1
-                ) {
+                if (e.key === "ArrowDown" && index < filteredPartners.length - 1) {
                   e.preventDefault();
                   listItemRefs.current[index + 1]?.focus();
                   setCurrentIndex(index);
-                } else if (
-                  e.key === "ArrowDown" &&
-                  index === filteredPartners.length - 1
-                ) {
+                } else if (e.key === "ArrowDown" && index === filteredPartners.length - 1) {
                   e.preventDefault();
                   addIBtnRef.current?.focus();
                   setCurrentIndex(index);
@@ -450,18 +432,10 @@ const AgentsPartnersListModal = ({
                 }
               }}
             >
-              <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">
-                {index + 1}.
-              </div>
-              <div className="truncate font-medium text-gray-800 dark:text-gray-200">
-                {p.name}
-              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">{index + 1}.</div>
+              <div className="truncate font-medium text-gray-800 dark:text-gray-200">{p.name}</div>
               <div className="flex items-center gap-1 justify-end">
-                <TypeBadge
-                  typeText={t(p.type)}
-                  text={p.type_display}
-                  type={p.type}
-                />
+                <TypeBadge typeText={t(p.type)} text={p.type_display} type={p.type} />
 
                 <button
                   disabled={loadingDeleteId === p.id}
@@ -471,18 +445,10 @@ const AgentsPartnersListModal = ({
                     setIsActiveSmallModal(true);
                   }}
                   className="p-1 text-red-500 hover:text-red-700 hover:bg-red-200 dark:hover:bg-red-400 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors print:hidden"
-                  title={
-                    loadingDeleteId === p.id
-                      ? t("deletingPartner")
-                      : t("deletePartner")
-                  }
+                  title={loadingDeleteId === p.id ? t("deletingPartner") : t("deletePartner")}
                   aria-busy={loadingDeleteId === p.id}
                 >
-                  {loadingDeleteId === p.id ? (
-                    <CiNoWaitingSign className="animate-spin" size={14} />
-                  ) : (
-                    <RiDeleteBin2Fill size={14} />
-                  )}
+                  {loadingDeleteId === p.id ? <CiNoWaitingSign className="animate-spin" size={14} /> : <RiDeleteBin2Fill size={14} />}
                 </button>
               </div>
             </li>

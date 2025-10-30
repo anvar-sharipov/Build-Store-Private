@@ -27,6 +27,7 @@ import { ROUTES } from "../../../routes";
 import InfoAboutInvoice from "./Utils/InfoAboutInvoice";
 import { useNotification } from "../../context/NotificationContext";
 import { AuthContext } from "../../../AuthContext";
+import Saldo2 from "./Utils/Saldo2";
 
 const userVisibleColumns = {
   qr_code: false,
@@ -127,6 +128,7 @@ const MainPage = () => {
   // };
 
   const [saldo, setSaldo] = useState(null);
+  const [saldo2, setSaldo2] = useState(null);
   const [letPrintSaldo, setLetPrintSaldo] = useState(() => {
     const show = localStorage.getItem("letPrintSaldo");
     return show === "true"; // вернёт true только если строка "true"
@@ -270,6 +272,19 @@ const MainPage = () => {
     }
   };
 
+  const getSaldo2 = async (date, partnerId) => {
+    try {
+      const saldo = await myAxios.get("get_saldo_for_partner_for_selected_date2", {
+        params: { date: date, partnerId: partnerId },
+      });
+      // console.log("saldo", saldo.data.saldo);
+      setSaldo2(saldo.data.saldo);
+      // console.log('DADADADAD');
+    } catch (error) {
+      console.log("error get_saldo_for_partner_for_selected_date2 from fetchPartner", error);
+    }
+  };
+
   return (
     <div>
       <Formik
@@ -318,6 +333,7 @@ const MainPage = () => {
             handleOpenInvoice(response.data.id);
             if(values.partner?.id) {
               getSaldo(values.invoice_date2, values.partner?.id);
+              // getSaldo2(values.invoice_date2, values.partner?.id);
             }
             // setSaldo(null)
             // resetForm();
@@ -380,10 +396,11 @@ const MainPage = () => {
                     >
                       <FetchWarehouse />
                       <FetchAwto refs={refs} />
-                      <FetchPartner refs={refs} setSaldo={setSaldo} dateProwodok={dateProwodok} saldo={saldo} getSaldo={getSaldo} />
+                      <FetchPartner refs={refs} setSaldo={setSaldo} dateProwodok={dateProwodok} saldo={saldo} getSaldo={getSaldo} getSaldo2={getSaldo2} setSaldo2={setSaldo2} />
                       <Comment />
                     </div>
-                    <Saldo saldo={saldo} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} />
+                    {/* <Saldo saldo={saldo} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} /> */}
+                    <Saldo2 saldo2={saldo2} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} setSaldo2={setSaldo2} />
 
                     <div className="flex justify-end">
                       {values.products && values.products.length > 0 && <SubmitButton dateProwodok={dateProwodok} fakturaType={fakturaType} fakturaBgDynamic={fakturaBgDynamic} />}
@@ -439,7 +456,8 @@ const MainPage = () => {
 
                 <div className="flex gap-5 items-end print:mt-3">
                   <div className="hidden print:block">
-                    <Saldo saldo={saldo} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} />
+                    {/* <Saldo saldo={saldo} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} /> */}
+                    <Saldo2 saldo2={saldo2} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} setSaldo2={setSaldo2} />
                   </div>
 
                   {/* for print */}

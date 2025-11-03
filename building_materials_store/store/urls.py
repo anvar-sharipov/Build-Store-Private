@@ -10,6 +10,7 @@ from . views.product_views import *
 from . views.register_views import *
 from . views.query_views import *
 from . views.query_views2 import *
+from . views.query_views3 import *
 from . views.sale_invoice_views import *
 from . views.report_views import *
 from . views.utils import *
@@ -116,6 +117,11 @@ urlpatterns = [
     path('upload_sales_excel_for_analis_with_return/', upload_sales_excel_for_analis_with_return, name='upload_sales_excel_for_analis_with_return'),
     
     path("get_transaction_journal/", get_transaction_journal, name="get_transaction_journal"),
+    
+    path("get-invoice-list/", get_invoice_list, name="get-invoice-list"),
+    path("export-invoices-json/", export_invoices_json, name="export-invoices-json"),
+    # path("export-invoices-universal/", export_invoices_universal, name="export-invoices-universal"),
+    
     
     
     

@@ -76,8 +76,8 @@ def save_invoice(request):
         def create_entries(transaction_obj, rule, product_obj, warehouse_obj, amount, warehouse_parent_account, warehouse_account_obj):
             debit_acc = warehouse_account_obj if rule.debit_account == warehouse_parent_account else rule.debit_account
             credit_acc = warehouse_account_obj if rule.credit_account == warehouse_parent_account else rule.credit_account
-            ic(debit_acc)
-            ic(credit_acc)
+            # ic(debit_acc)
+            # ic(credit_acc)
             Entry.objects.create(
                 transaction=transaction_obj,
                 account=debit_acc,
@@ -97,7 +97,7 @@ def save_invoice(request):
     
         try:
             data = json.loads(request.body)
-            ic(data)
+            # ic(data)
             is_entry = data['is_entry']  
             awto = data['awto']
             awto_send = data['awto_send']
@@ -112,9 +112,15 @@ def save_invoice(request):
             warehouse2 = data['warehouse2']
             wozwrat_or_prihod = data['wozwrat_or_prihod']
             comment=data["comment"]
-            invoice_id = data['id']
+            ic(data)
+            # invoice_id = data['id']
+            invoice_id = data.get('id')
             
-            ic(warehouse2)
+            id_test_faktura = data.get('id_test_faktura')
+            
+          
+            
+            # ic(warehouse2)
             
             
             #####################################################################################################################################################################
@@ -508,7 +514,7 @@ def save_invoice(request):
                                         transaction.set_rollback(True)
                                         return JsonResponse({"status": "error", "message": "The warehouse account dont have a parent account"}, status=400)
                                     
-                                    ic(warehouse_obj.currency.code)
+                                    # ic(warehouse_obj.currency.code)
                                     if warehouse_obj.currency.code == "TMT":
                                         partner_obj.balance_tmt -= Decimal(sale_price * quantity)
                                     else:
@@ -796,7 +802,7 @@ def save_invoice(request):
                                         partner_obj.balance_tmt += Decimal(sale_price * quantity)
                                     else:
                                         partner_obj.balance_usd += Decimal(sale_price * quantity)
-                                    ic(rules, len(rules))
+                                    # ic(rules, len(rules))
                                     for rule in rules:
                                         if not rule.amount_type in ['revenue']:
                                             transaction.set_rollback(True)
@@ -852,7 +858,7 @@ def save_invoice(request):
                                         partner_obj.balance_tmt += Decimal(sale_price * quantity)
                                     else:
                                         partner_obj.balance_usd += Decimal(sale_price * quantity)
-                                    ic(rules, len(rules))
+                                    # ic(rules, len(rules))
                                     for rule in rules:
                                         if not rule.amount_type in ['revenue']:
                                             transaction.set_rollback(True)
@@ -914,7 +920,7 @@ def save_invoice(request):
                                         partner_obj.balance_tmt -= Decimal(sale_price * quantity)
                                     else:
                                         partner_obj.balance_usd -= Decimal(sale_price * quantity)
-                                    ic(rules, len(rules))
+                                    # ic(rules, len(rules))
                                     for rule in rules:
                                         if not rule.amount_type in ['revenue', 'profit']:
                                             transaction.set_rollback(True)
@@ -1065,10 +1071,10 @@ def get_invoices(request):
     query = request.GET.get('query')
     selectedEntry = request.GET.get('selectedEntry')
     sortInvoice = request.GET.get('sortInvoice')
-    ic(selectedEntry)
+    # ic(selectedEntry)
     
     
-    ic(partner_id)
+    # ic(partner_id)
 
     if partner_id:
         invoices = invoices.filter(partner__id=partner_id)
@@ -1118,7 +1124,7 @@ def get_invoices(request):
     
     paginator = Paginator(invoices, page_size)
     page_obj = paginator.get_page(page)
-    ic(page_obj)
+    # ic(page_obj)
 
     data = []
     for invoice in page_obj:
@@ -1290,7 +1296,7 @@ def get_invoice_data(request, id):
         if units_json:
             quantity = float(quantity) / float(units_json[0]["conversion_factor"])
             
-        ic(quantity)
+        # ic(quantity)
         
         products.append({
             "base_quantity_in_stock": quantity, # item.base_quantity_in_stock
@@ -1379,7 +1385,7 @@ def get_invoice_data(request, id):
 def delete_invoice(request, id):
     try:
         invoice = Invoice.objects.get(id=id)
-        ic(invoice)
+        # ic(invoice)
         if invoice.is_entry:
             return JsonResponse({"status": "error", "message": "cant delete is entried invoice"}, status=404)
         invoice.delete()
@@ -1393,7 +1399,7 @@ def delete_invoice(request, id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def cancel_entry(request):
-    ic("cancel_entry")
+    # ic("cancel_entry")
     if request.method == "POST":
         if not request.user.groups.filter(name="admin").exists():
             return JsonResponse({"status": "error", "message": "permission denied"}, status=403)
@@ -1402,7 +1408,7 @@ def cancel_entry(request):
             data = json.loads(request.body)
             invoice_id = data.get("id")
             canceled_comment = data.get("comment", "").strip()
-            ic(canceled_comment)
+            # ic(canceled_comment)
             
             if not canceled_comment:
                 return JsonResponse({"status": "error", "message": "enter a reason cancel faktura"}, status=400)

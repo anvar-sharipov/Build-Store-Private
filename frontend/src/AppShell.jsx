@@ -38,6 +38,7 @@ import AnalysSalesWithoutReturn from "./Components/Page/Reports2/SalesAnalys/Ana
 import AccountCards from "./Components/Page/Reports2/AccountCards/AccountCards";
 import AccountCardDetail from "./Components/Page/Reports2/AccountCards/AccountCardDetail";
 import TransactionJournal from "./Components/Page/Prochee/TransactionJournal";
+import ExportFaktura from "./Components/Page/ExportsImports/ExportImportFaktura/ExportFaktura";
 
 function AppShell() {
   const location = useLocation();
@@ -98,6 +99,10 @@ function AppShell() {
                     <Route path={ROUTES.PURCHASEINVOICE} element={<PurchaseInvoice />} />
                     <Route path={ROUTES.PURCHASE_INVOICE_CREATE} element={<MainPagePurchase />} />
                     <Route path={ROUTES.PURCHASE_INVOICE_UPDATE} element={<MainPagePurchase />} />
+
+                    {/* Export import */}
+                    <Route path={PROCHEE.EXPORT_FAKTURA} element={<ExportFaktura />} />
+
 
                     {/* adminPanel */}
                     <Route path={ADMIN_PANEL.IMPORT_PRODUCTS} element={<ImportProducts />} />

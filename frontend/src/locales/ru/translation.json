@@ -540,8 +540,23 @@
   "Yes, cancel entry": "Да, отменить проводку",
   "enter a reason cancel faktura": "Введите причину отмены фактуры",
   "Canceled": "Отменена",
-  "entry canceled successfully": "Проводка успешно отменена"
-
+  "entry canceled successfully": "Проводка успешно отменена",
+  "export_faktura": "Экспорт и импорт фактур",
+  "select_period_to_search": "Выберите период для поиска",
+  "export_error": "Ошибка при экспорте",
+  "export_selected": "Экспорт выбранного",
+  "selected_of": "Выбрано из",
+  "Import invoices from JSON": "Импорт фактур из JSON (сохранение в базу)",
+  "Importing...": "Импортирование...",
+  "Import JSON": "Импорт фактур в базу",
+  "no_invoices_found": "Фактуры не найдены",
+  "select_period_and_search": "Выберите период и выполните поиск",
+  "Invoice imported successfully with new ID: ": "Фактура успешно импортирована с новым №: ",
+  "Save Results to excel file": "Сохранить результаты в файл Excel",
+  "Invoice": "Фактура",
+  "failed": "Ошибка",
+  "successful": "Успешно",
+  "Import Results:": "Результаты импорта:"
 
  
  

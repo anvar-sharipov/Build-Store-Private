@@ -6,6 +6,8 @@ from .models import *
 from django.contrib.contenttypes.admin import GenericTabularInline
 from django.contrib.contenttypes.models import ContentType
 from django import forms
+from django.http import HttpResponse
+import pandas as pd
 
 # Фильтры для админки
 class ActiveFilter(admin.SimpleListFilter):
@@ -815,6 +817,8 @@ class InvoiceAdmin(admin.ModelAdmin):
             )
         }),
     )
+    
+
 
 
 @admin.register(InvoiceItem)

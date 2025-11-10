@@ -549,6 +549,7 @@
   "Import invoices from JSON": "Импорт фактур из JSON (сохранение в базу)",
   "Importing...": "Импортирование...",
   "Import JSON": "Импорт фактур в базу",
+  "Import entries JSON": "Импорт проводок в базу",
   "no_invoices_found": "Фактуры не найдены",
   "select_period_and_search": "Выберите период и выполните поиск",
   "Invoice imported successfully with new ID: ": "Фактура успешно импортирована с новым №: ",
@@ -556,7 +557,51 @@
   "Invoice": "Фактура",
   "failed": "Ошибка",
   "successful": "Успешно",
-  "Import Results:": "Результаты импорта:"
+  "Import Results:": "Результаты импорта:",
+  "transaction": "Транзакция",
+  "select_period_to_search_entries": "Выберите период для поиска проводок",
+  "export_import_entries": "Экспорт и импорт проводок",
+  "search_entries": "Поиск проводок",
+  "Import entries from JSON": "Импорт проводок из JSON",
+  "no_entries_found": "Проводки не найдены",
+  "select_period_and_search_entries": "Выберите период и выполните поиск проводок",
+  "export_import_invoice": "Фактура экспорт/импорт",
+  "export_import_entry": "Проводка экспорт/импорт",
+
+
+  "create_entry": "Создание проводки",
+  "accounting_operation": "Бухгалтерская операция",
+  "details_of_entry": "Детали проводки",
+  "date": "Дата",
+  "debit": "Дебет",
+  "credit": "Кредит",
+  "add_comment": "Добавьте комментарий...",
+  "select_debit_account": "Выберите счёт дебета",
+  "select_credit_account": "Выберите счёт кредита",
+  "save_entry": "Сохранить проводку",
+  "confirmation": "Подтверждение",
+  "are_you_sure": "Вы уверены, что хотите сделать проводку?",
+  "warning": "Внимание!",
+  "cannot_undo": "После подтверждения отмена будет невозможна.",
+  "processing": "Проводка...",
+  "confirm_entry": "Проводка",
+  "entry_completed": "Проводка успешно выполнена",
+  "entry_error": "Ошибка при отправке проводки",
+
+  "recent_entries": "Последние проводки",
+  "confirm_delete": "Подтвердите удаление",
+  "are_you_sure_delete_entry": "Вы уверены что хотите удалить эту проводку?",
+  "entry_updated": "Проводка обновлена",
+  "entry_deleted": "Проводка удалена",
+  "error_updating_entry": "Ошибка обновления проводки",
+  "error_deleting_entry": "Ошибка удаления проводки",
+  "error_fetching_entries": "Ошибка загрузки проводок",
+  "edit_entry": "Редактировать проводку",
+  "editing_entry": "Редактирование проводки", 
+  "save_changes": "Сохранить изменения",
+
+  "no_permission": "Нет прав для этого действия"
+
 
  
  

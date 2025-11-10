@@ -39,6 +39,7 @@ import AccountCards from "./Components/Page/Reports2/AccountCards/AccountCards";
 import AccountCardDetail from "./Components/Page/Reports2/AccountCards/AccountCardDetail";
 import TransactionJournal from "./Components/Page/Prochee/TransactionJournal";
 import ExportFaktura from "./Components/Page/ExportsImports/ExportImportFaktura/ExportFaktura";
+import ExportImportEntries from "./Components/Page/ExportsImports/ExportImportEntries";
 
 function AppShell() {
   const location = useLocation();
@@ -49,7 +50,9 @@ function AppShell() {
     location.pathname.includes("/purchase-invoices/update") ||
     location.pathname.includes("/purchase-invoices/create");
 
-  const hideRightBar = location.pathname === "/prochee/qr-list-print" || location.pathname === "/prochee" || location.pathname === "/reports";
+  const hideRightBar = location.pathname === "/prochee/qr-list-print" || location.pathname === "/prochee" || location.pathname === "/reports" || location.pathname === "/entries2";
+  console.log("hideRightBar", hideRightBar);
+  
   return (
     <>
       <NotificationProvider>
@@ -57,7 +60,7 @@ function AppShell() {
           <AuthProvider>
             <Header />
             <SearchProvider>
-              <main className={`flex flex-grow gap-4 mt-4 ${isFullScreenPage ? "" : "lg:ml-52 lg:mr-72"} print:w-full print:block print:p-0 print:m-0 ${hideRightBar && "lg:mr-0"}`}>
+              <main className={`flex flex-grow gap-4 mt-4 ${isFullScreenPage ? "" : `lg:ml-52 ${hideRightBar ? "" : "lg:mr-72"}`} print:w-full print:block print:p-0 print:m-0 ${hideRightBar && "lg:mr-0"}`}>
                 {!isFullScreenPage && <SidebarLeft />}
 
                 <section className={`flex-grow flex flex-col bg-zinc-50 dark:bg-gray-800 rounded-lg shadow-sm ${isFullScreenPage ? "p-0" : "p-4"}`}>
@@ -102,6 +105,7 @@ function AppShell() {
 
                     {/* Export import */}
                     <Route path={PROCHEE.EXPORT_FAKTURA} element={<ExportFaktura />} />
+                    <Route path={PROCHEE.EXPORT_IMPORT_ENTRIES} element={<ExportImportEntries />} />
 
 
                     {/* adminPanel */}
@@ -112,6 +116,7 @@ function AppShell() {
                 </section>
 
                 {!isFullScreenPage && <SidebarRight />}
+                {/* {!hideRightBar && <SidebarRight />} */}
               </main>
             </SearchProvider>
           </AuthProvider>

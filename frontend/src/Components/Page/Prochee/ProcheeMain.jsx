@@ -25,7 +25,7 @@ const ProcheeMain = () => {
     { id: 3, name: "QR code", icon: QrCode, color: "fuchsia", to: PROCHEE.QR_LIST_PRINT },
     { id: 4, name: "Журнал операций", icon: Users, color: "cyan", to: PROCHEE.TRANSACTION_JOURNAL },
     { id: 5, name: "Export Import Faktura", icon: Bell, color: "yellow", to: PROCHEE.EXPORT_FAKTURA },
-    { id: 6, name: "Безопасность", icon: Shield, color: "green" },
+    { id: 6, name: "Export Import Prowodki", icon: Shield, color: "green", to: PROCHEE.EXPORT_IMPORT_ENTRIES },
     { id: 7, name: "База данных", icon: Database, color: "violet" },
     { id: 8, name: "Интеграции", icon: Globe, color: "orange" },
     { id: 9, name: "Инструменты", icon: Wrench, color: "sky" },

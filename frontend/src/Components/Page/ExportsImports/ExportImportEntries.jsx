@@ -1,18 +1,17 @@
 import { useState, useContext, useCallback, useRef, useEffect } from "react";
 import { Calendar, FileText, Download, Search, CheckSquare, Square, Upload, Import } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { DateContext } from "../../../UI/DateProvider";
+import { DateContext } from "../../UI/DateProvider";
 import { useTranslation } from "react-i18next";
-import myAxios from "../../../axios";
-import { formatNumber } from "../../../UI/formatNumber";
-import MyFormatDate from "../../../UI/MyFormatDate";
+import myAxios from "../../axios";
+import { formatNumber } from "../../UI/formatNumber";
+import MyFormatDate from "../../UI/MyFormatDate";
 
-const ExportFaktura = () => {
+const ExportImportEntries = () => {
   const { t } = useTranslation();
   const { dateFrom, dateTo } = useContext(DateContext);
 
-
-  const [invoices, setInvoices] = useState([]);
+  const [entries, setEntries] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -22,67 +21,66 @@ const ExportFaktura = () => {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    document.title = t("export_import_invoice")
-  }, [t])
+      document.title = t("export_import_entry")
+    }, [t])
+
   // Функция для сохранения результатов в файл
   const saveImportResultsToFile = (results, importData) => {
     if (!results || !importData) return;
 
     try {
-      // Создаем массивы для успешных и неуспешных операций
-      const successfulInvoices = [];
-      const failedInvoices = [];
+      const successfulEntries = [];
+      const failedEntries = [];
 
-      // Сопоставляем результаты с исходными данными
       results.details.forEach((detail, index) => {
-        const originalInvoice = importData.invoices[index];
-        if (!originalInvoice) return;
+        const originalEntry = importData.entries[index];
+        if (!originalEntry) return;
 
-        const invoiceInfo = {
-          invoice_number: originalInvoice.id || "unknown",
-          partner_name: originalInvoice.partner?.name || originalInvoice.partner || "N/A",
-          is_entry: originalInvoice.is_entry ? "Да" : "Нет",
-          date_invoice: originalInvoice.invoice_date || "N/A",
-          total_price: originalInvoice.total_selected_price || originalInvoice.total_price || 0,
+        const entryInfo = {
+          transaction_id: originalEntry.transaction_id || "unknown",
+          description: originalEntry.description || "N/A",
+          date: originalEntry.date || "N/A",
+          debit_account: originalEntry.debit_account?.number || originalEntry.debit_account_number,
+          credit_account: originalEntry.credit_account?.number || originalEntry.credit_account_number,
+          amount: originalEntry.amount || 0,
+          partner: originalEntry.partner?.name || originalEntry.partner_name || "N/A",
           status: detail.status,
           message: detail.message,
         };
 
         if (detail.status === "success") {
-          successfulInvoices.push(invoiceInfo);
+          successfulEntries.push(entryInfo);
         } else {
-          failedInvoices.push(invoiceInfo);
+          failedEntries.push(entryInfo);
         }
       });
 
-      // Создаем содержимое для файла
-      let fileContent = "Импорт фактур - Результаты\n";
+      let fileContent = "Импорт проводок - Результаты\n";
       fileContent += `Дата импорта: ${new Date().toLocaleString()}\n`;
       fileContent += `Успешно: ${results.success}, Ошибки: ${results.errors}\n\n`;
 
-      if (successfulInvoices.length > 0) {
-        fileContent += "=== УСПЕШНО СОХРАНЕННЫЕ ФАКТУРЫ ===\n";
-        fileContent += "№ Фактуры;Партнер;Проведена;Дата;Сумма;Статус\n";
-        successfulInvoices.forEach((inv) => {
-          fileContent += `${inv.invoice_number};"${inv.partner_name}";${inv.is_entry};${inv.date_invoice};${formatNumber(inv.total_price, 3)};${inv.status}\n`;
+      if (successfulEntries.length > 0) {
+        fileContent += "=== УСПЕШНО СОХРАНЕННЫЕ ПРОВОДКИ ===\n";
+        fileContent += "ID;Дата;Описание;Дебет;Кредит;Сумма;Партнер;Статус\n";
+        successfulEntries.forEach((entry) => {
+          fileContent += `${entry.transaction_id};${entry.date};"${entry.description}";${entry.debit_account};${entry.credit_account};${formatNumber(entry.amount, 2)};"${entry.partner}";${entry.status}\n`;
         });
         fileContent += "\n";
       }
 
-      if (failedInvoices.length > 0) {
-        fileContent += "=== НЕСОХРАНЕННЫЕ ФАКТУРЫ ===\n";
-        fileContent += "№ Фактуры;Партнер;Проведена;Дата;Сумма;Статус;Ошибка\n";
-        failedInvoices.forEach((inv) => {
-          fileContent += `${inv.invoice_number};"${inv.partner_name}";${inv.is_entry};${inv.date_invoice};${formatNumber(inv.total_price, 3)};${inv.status};"${inv.message}"\n`;
+      if (failedEntries.length > 0) {
+        fileContent += "=== НЕСОХРАНЕННЫЕ ПРОВОДКИ ===\n";
+        fileContent += "ID;Дата;Описание;Дебет;Кредит;Сумма;Партнер;Статус;Ошибка\n";
+        failedEntries.forEach((entry) => {
+          fileContent += `${entry.transaction_id};${entry.date};"${entry.description}";${entry.debit_account};${entry.credit_account};${formatNumber(entry.amount, 2)};"${entry.partner}";${entry.status};"${entry.message}"\n`;
         });
       }
 
-      // Создаем и скачиваем файл
       const blob = new Blob([fileContent], { type: "text/plain;charset=utf-8" });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `import_results_${new Date().toISOString().slice(0, 10)}.txt`);
+      link.setAttribute("download", `import_entries_results_${new Date().toISOString().slice(0, 10)}.txt`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -93,37 +91,37 @@ const ExportFaktura = () => {
     }
   };
 
-  // Функция для сохранения в Excel формате (CSV)
+  // Функция для сохранения в Excel формате
   const saveImportResultsToExcel = (results, importData) => {
     if (!results || !importData) return;
 
     try {
-      const allInvoices = [];
+      const allEntries = [];
 
-      // Собираем все данные
       results.details.forEach((detail, index) => {
-        const originalInvoice = importData.invoices[index];
-        if (!originalInvoice) return;
+        const originalEntry = importData.entries[index];
+        if (!originalEntry) return;
 
-        allInvoices.push({
-          "Номер фактуры": originalInvoice.id_test_faktura || "unknown",
-          Партнер: originalInvoice.partner?.name || originalInvoice.partner || "N/A",
-          Проведена: originalInvoice.is_entry ? "Да" : "Нет",
-          "Дата фактуры": originalInvoice.invoice_date || "N/A",
-          "Общая сумма": originalInvoice.total_selected_price || originalInvoice.total_price || 0,
+        allEntries.push({
+          "ID транзакции": originalEntry.transaction_id || "unknown",
+          "Дата": originalEntry.date || "N/A",
+          "Описание": originalEntry.description || "N/A",
+          "Дебет счет": originalEntry.debit_account?.number || originalEntry.debit_account_number,
+          "Кредит счет": originalEntry.credit_account?.number || originalEntry.credit_account_number,
+          "Сумма": originalEntry.amount || 0,
+          "Партнер": originalEntry.partner?.name || originalEntry.partner_name || "N/A",
           "Статус импорта": detail.status === "success" ? "Успешно" : "Ошибка",
-          Сообщение: detail.message,
-          "Новый номер фактуры": detail.status === "success" ? detail.id_test_faktura : "N/A",
-          isError: detail.status !== "success", // Флаг для ошибки
+          "Сообщение": detail.message,
+          "Новый ID": detail.status === "success" ? detail.new_transaction_id : "N/A",
+          isError: detail.status !== "success",
         });
       });
 
-      // Создаем CSV содержимое с поддержкой цветов через HTML
       let htmlContent = `
       <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
       <head>
         <meta charset="UTF-8">
-        <title>Import Results</title>
+        <title>Import Results - Entries</title>
         <!--[if gte mso 9]>
         <xml>
           <x:ExcelWorkbook>
@@ -164,39 +162,42 @@ const ExportFaktura = () => {
         </style>
       </head>
       <body>
-        <h2>Результаты импорта фактур</h2>
+        <h2>Результаты импорта проводок</h2>
         <p><strong>Дата импорта:</strong> ${new Date().toLocaleString()}</p>
         <p><strong>Статистика:</strong> Успешно: ${results.success}, Ошибки: ${results.errors}</p>
         <table>
           <thead>
             <tr>
-              <th>Номер фактуры</th>
+              <th>ID транзакции</th>
+              <th>Дата</th>
+              <th>Описание</th>
+              <th>Дебет счет</th>
+              <th>Кредит счет</th>
+              <th>Сумма</th>
               <th>Партнер</th>
-              <th>Проведена</th>
-              <th>Дата фактуры</th>
-              <th>Общая сумма</th>
               <th>Статус импорта</th>
               <th>Сообщение</th>
-              <th>Новый номер фактуры</th>
+              <th>Новый ID</th>
             </tr>
           </thead>
           <tbody>
-    `;
+      `;
 
-      // Добавляем строки таблицы
-      allInvoices.forEach((inv) => {
-        const rowClass = inv.isError ? "error-row" : "success-row";
+      allEntries.forEach((entry) => {
+        const rowClass = entry.isError ? "error-row" : "success-row";
 
         htmlContent += `
         <tr class="${rowClass}">
-          <td>${inv["Номер фактуры"]}</td>
-          <td>${inv["Партнер"]}</td>
-          <td>${inv["Проведена"]}</td>
-          <td>${inv["Дата фактуры"]}</td>
-          <td>${formatNumber(inv["Общая сумма"], 3)}</td>
-          <td>${inv["Статус импорта"]}</td>
-          <td>${inv["Сообщение"]}</td>
-          <td>${inv["Новый номер фактуры"]}</td>
+          <td>${entry["ID транзакции"]}</td>
+          <td>${entry["Дата"]}</td>
+          <td>${entry["Описание"]}</td>
+          <td>${entry["Дебет счет"]}</td>
+          <td>${entry["Кредит счет"]}</td>
+          <td>${formatNumber(entry["Сумма"], 2)}</td>
+          <td>${entry["Партнер"]}</td>
+          <td>${entry["Статус импорта"]}</td>
+          <td>${entry["Сообщение"]}</td>
+          <td>${entry["Новый ID"]}</td>
         </tr>
       `;
       });
@@ -206,16 +207,15 @@ const ExportFaktura = () => {
         </table>
       </body>
       </html>
-    `;
+      `;
 
-      // Создаем и скачиваем файл
       const blob = new Blob(["\uFEFF" + htmlContent], {
         type: "application/vnd.ms-excel",
       });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `import_results_${new Date().toISOString().slice(0, 10)}.xls`);
+      link.setAttribute("download", `import_entries_results_${new Date().toISOString().slice(0, 10)}.xls`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -231,15 +231,15 @@ const ExportFaktura = () => {
     setError("");
 
     try {
-      const res = await myAxios.get("/get-invoice-list", {
+      const res = await myAxios.get("/get-entries-list", {
         params: { dateFrom, dateTo },
       });
-      setInvoices(res.data.data || []);
+      setEntries(res.data.data || []);
       setSelectedIds([]);
     } catch (err) {
-      console.error("Error fetching invoices:", err);
-      setError(t("error_fetching_invoices") || "Failed to fetch invoices");
-      setInvoices([]);
+      console.error("Error fetching entries:", err);
+      setError(t("error_fetching_entries") || "Failed to fetch entries");
+      setEntries([]);
     } finally {
       setIsLoading(false);
     }
@@ -250,8 +250,8 @@ const ExportFaktura = () => {
   };
 
   const toggleSelectAll = useCallback(() => {
-    setSelectedIds((prev) => (prev.length === invoices.length ? [] : invoices.map((inv) => inv.id)));
-  }, [invoices]);
+    setSelectedIds((prev) => (prev.length === entries.length ? [] : entries.map((entry) => entry.transaction_id)));
+  }, [entries]);
 
   const handleExportSelected = async () => {
     if (selectedIds.length === 0) return;
@@ -259,9 +259,9 @@ const ExportFaktura = () => {
     setIsLoading(true);
     try {
       const res = await myAxios.post(
-        "/export-invoices-json/",
+        "/export-entries-json/",
         {
-          invoiceIds: selectedIds,
+          entryIds: selectedIds,
           format: "json",
         },
         {
@@ -272,7 +272,7 @@ const ExportFaktura = () => {
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `invoices_export_${new Date().toISOString().slice(0, 10)}.json`);
+      link.setAttribute("download", `entries_export_${new Date().toISOString().slice(0, 10)}.json`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -321,7 +321,7 @@ const ExportFaktura = () => {
     event.target.value = "";
   };
 
-  // Обработка импортированных данных с сохранением исходного файла
+  // Обработка импортированных данных
   const processImportData = async (importData, fileName) => {
     try {
       const results = {
@@ -332,81 +332,68 @@ const ExportFaktura = () => {
         importTime: new Date().toISOString(),
       };
 
-      if (!importData.invoices || !Array.isArray(importData.invoices)) {
-        setError("Invalid file format: expected 'invoices' array");
+      if (!importData.entries || !Array.isArray(importData.entries)) {
+        setError("Invalid file format: expected 'entries' array");
         setImportLoading(false);
         return;
       }
 
-      // Сохраняем исходные данные для последующего экспорта
       const originalImportData = { ...importData };
 
-      for (const invoiceData of importData.invoices) {
-        // console.log("invoiceData", invoiceData);
+      for (const entryData of importData.entries) {
         try {
-          if (invoiceData.status === "error") {
+          if (entryData.status === "error") {
             results.details.push({
-              id: invoiceData.id || "unknown",
+              transaction_id: entryData.transaction_id || "unknown",
               status: "error",
-              message: invoiceData.message || "Invoice had error during export",
+              message: entryData.message || "Entry had error during export",
             });
             results.errors++;
             continue;
           }
 
           const cleanData = {
-            is_entry: invoiceData.is_entry,
-            id_test_faktura: invoiceData.id_test_faktura,
-            awto: invoiceData.awto,
-            awto_send: invoiceData.awto_send,
-            partner: invoiceData.partner,
-            partner_send: invoiceData.partner_send,
-            send: invoiceData.send,
-            invoice_date: invoiceData.invoice_date,
-            products: invoiceData.products,
-            type_price: invoiceData.type_price,
-            warehouse: invoiceData.warehouse,
-            warehouse2: invoiceData.warehouse2,
-            wozwrat_or_prihod: invoiceData.wozwrat_or_prihod,
-            comment: invoiceData.comment,
+            date: entryData.date,
+            description: entryData.description,
+            debitAccount: entryData.debit_account?.number || entryData.debit_account_number,
+            creditAccount: entryData.credit_account?.number || entryData.credit_account_number,
+            amount: entryData.amount,
+            comment: entryData.description,
+            partnerId: entryData.partner?.id || entryData.partner_id,
           };
-          console.log("invoiceData.id_test_faktura", invoiceData.id_test_faktura);
 
-          console.log("Sending clean data to save-invoice:", cleanData);
+          console.log("Sending clean data to create_entry:", cleanData);
 
-          const response = await myAxios.post("/save-invoice/", cleanData);
+          const response = await myAxios.post("/create_entry/", cleanData);
 
-          if (response.data.status === "ok") {
+          if (response.data.transaction_id) {
             results.details.push({
-              id: response.data.id,
+              transaction_id: entryData.transaction_id,
               status: "success",
-              message: t("Invoice imported successfully with new ID: ") + response.data.id,
-              id_test_faktura: invoiceData.id_test_faktura,
+              message: t("Entry imported successfully with new ID: ") + response.data.transaction_id,
+              new_transaction_id: response.data.transaction_id,
             });
             results.success++;
           } else {
             results.details.push({
-              id: "unknown",
+              transaction_id: entryData.transaction_id || "unknown",
               status: "error",
               message: t(response.data.message) || "Unknown error",
-              id_test_faktura: invoiceData.id_test_faktura,
             });
             results.errors++;
           }
         } catch (err) {
-          console.error("Error importing invoice:", err);
+          console.error("Error importing entry:", err);
           const errorMessage = err.response?.data?.message || err.response?.data?.reason_for_the_error || err.message || "Import failed";
 
           results.details.push({
-            id: invoiceData.id || "unknown",
+            transaction_id: entryData.transaction_id || "unknown",
             status: "error",
             message: t(errorMessage),
-            id_test_faktura: invoiceData.id_test_faktura,
           });
           results.errors++;
         }
       }
-      // console.log("results", results);
 
       setImportResults(results);
 
@@ -428,19 +415,6 @@ const ExportFaktura = () => {
     }
   };
 
-  // Ручное сохранение результатов
-  const handleSaveResults = (format = "excel") => {
-    if (!importResults) return;
-
-    // Нужно переимпортировать исходный файл или хранить его в состоянии
-    // В реальном приложении нужно хранить originalImportData в состоянии
-    setError("Для сохранения результатов перезагрузите исходный JSON файл");
-  };
-
-  const getStatusColor = (type) => {
-    return type === "wozwrat" ? "text-red-500" : "text-green-500";
-  };
-
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
@@ -460,7 +434,7 @@ const ExportFaktura = () => {
               <Calendar className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">{t("export_faktura")}</h2>
+              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">{t("export_import_entries")}</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {MyFormatDate(dateFrom)} - {MyFormatDate(dateTo)}
               </p>
@@ -471,19 +445,19 @@ const ExportFaktura = () => {
         {/* Search and Import Section */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <div className="flex-1">
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{t("select_period_to_search")}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{t("select_period_to_search_entries")}</p>
             <button
               onClick={handleExport}
               disabled={isLoading}
               className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Search className="w-4 h-4" />
-              {isLoading ? t("searching") : t("search2")}
+              {isLoading ? t("searching") : t("search_entries")}
             </button>
           </div>
 
           <div className="flex flex-col gap-2">
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{t("Import invoices from JSON")}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{t("Import entries from JSON")}</p>
             <div className="flex gap-2">
               <input type="file" ref={fileInputRef} onChange={handleImportFile} accept=".json" className="hidden" />
               <button
@@ -492,7 +466,7 @@ const ExportFaktura = () => {
                 className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg shadow-md transition-all duration-200 disabled:opacity-50"
               >
                 <Upload className="w-4 h-4" />
-                {importLoading ? t("Importing...") : t("Import JSON")}
+                {importLoading ? t("Importing...") : t("Import entries JSON")}
               </button>
             </div>
           </div>
@@ -526,7 +500,7 @@ const ExportFaktura = () => {
                   {t("Import Results:")} {importResults.success} {t("successful")}, {importResults.errors} {t("failed")}
                 </h3>
                 <button
-                  onClick={() => saveImportResultsToExcel(importResults, { invoices: [] })}
+                  onClick={() => saveImportResultsToExcel(importResults, { entries: [] })}
                   className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-1 px-3 rounded transition-all duration-200"
                 >
                   <Download className="w-3 h-3" />
@@ -542,7 +516,7 @@ const ExportFaktura = () => {
                     }`}
                   >
                     <span>
-                      {t("Invoice")} № {detail.id_test_faktura}
+                      {t("Transaction")} № {detail.transaction_id}
                     </span>
                     <span className="text-xs">{detail.message}</span>
                   </div>
@@ -552,18 +526,17 @@ const ExportFaktura = () => {
           )}
         </AnimatePresence>
 
-        {/* Остальной код остается без изменений */}
-        {/* Invoices List */}
+        {/* Entries List */}
         <AnimatePresence>
-          {invoices.length > 0 && (
+          {entries.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="mt-6">
               {/* Header with select all */}
               <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <button onClick={toggleSelectAll} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 transition-colors">
-                    {selectedIds.length === invoices.length ? <CheckSquare className="w-5 h-5 text-indigo-500" /> : <Square className="w-5 h-5 text-gray-400" />}
+                    {selectedIds.length === entries.length ? <CheckSquare className="w-5 h-5 text-indigo-500" /> : <Square className="w-5 h-5 text-gray-400" />}
                     <span>
-                      {selectedIds.length} {t("selected_of")} {invoices.length}
+                      {selectedIds.length} {t("selected_of")} {entries.length}
                     </span>
                   </button>
                 </div>
@@ -582,11 +555,11 @@ const ExportFaktura = () => {
                 </div>
               </div>
 
-              {/* Invoices */}
+              {/* Entries */}
               <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
-                {invoices.map((inv, index) => (
+                {entries.map((entry, index) => (
                   <motion.div
-                    key={inv.id}
+                    key={entry.transaction_id}
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: index * 0.05 }}
@@ -595,30 +568,32 @@ const ExportFaktura = () => {
                     <label className="flex items-center gap-4 cursor-pointer flex-1 min-w-0">
                       <input
                         type="checkbox"
-                        checked={selectedIds.includes(inv.id)}
-                        onChange={() => toggleSelect(inv.id)}
+                        checked={selectedIds.includes(entry.transaction_id)}
+                        onChange={() => toggleSelect(entry.transaction_id)}
                         className="w-4 h-4 text-indigo-500 rounded border-gray-300 dark:border-gray-500 focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-500"
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-1">
-                          <span className="font-semibold text-gray-800 dark:text-gray-100">№ {inv.id}</span>
-                          <span className={`text-sm font-medium ${getStatusColor(inv.wozwrat_or_prihod)}`}>{t(inv.wozwrat_or_prihod)}</span>
+                          <span className="font-semibold text-gray-800 dark:text-gray-100">{t("transaction")} № {entry.transaction_id}</span>
+                          <span className="text-sm text-gray-500">{MyFormatDate(entry.date)}</span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <p className="text-sm text-gray-600 dark:text-gray-300 truncate">{inv.partner}</p>
-                          <div
-                            className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium ${
-                              inv.is_entry ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
-                            }`}
-                          >
-                            {inv.is_entry ? "✓ Проведена" : "⏳ Не проведена"}
-                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-300 truncate">{entry.description}</p>
+                          {entry.partner && (
+                            <div className="inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                              {entry.partner}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
+                          <span>Дебет: {entry.debit_account}</span>
+                          <span>Кредит: {entry.credit_account}</span>
                         </div>
                       </div>
                     </label>
 
                     <div className="flex items-center gap-4 ml-4">
-                      <span className="font-bold text-gray-800 dark:text-gray-100">{formatNumber(inv.total_selected_price, 3)}</span>
+                      <span className="font-bold text-gray-800 dark:text-gray-100">{formatNumber(entry.amount, 2)}</span>
                     </div>
                   </motion.div>
                 ))}
@@ -629,11 +604,11 @@ const ExportFaktura = () => {
 
         {/* Empty State */}
         <AnimatePresence>
-          {invoices.length === 0 && !isLoading && !error && (
+          {entries.length === 0 && !isLoading && !error && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-12">
               <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-500 dark:text-gray-400 mb-2">{t("no_invoices_found")}</h3>
-              <p className="text-sm text-gray-400 dark:text-gray-500">{t("select_period_and_search")}</p>
+              <h3 className="text-lg font-medium text-gray-500 dark:text-gray-400 mb-2">{t("no_entries_found")}</h3>
+              <p className="text-sm text-gray-400 dark:text-gray-500">{t("select_period_and_search_entries")}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -642,4 +617,4 @@ const ExportFaktura = () => {
   );
 };
 
-export default ExportFaktura;
+export default ExportImportEntries;

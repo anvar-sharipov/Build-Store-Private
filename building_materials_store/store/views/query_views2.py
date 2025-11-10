@@ -165,8 +165,7 @@ def transaction_detail(request, id):
         invoice = transaction_obj.invoice
         data["invoice_id"] = invoice.id,
         
-        
-    ic(transaction_obj)
+
 
     return Response(data, status=status.HTTP_200_OK)
 
@@ -220,7 +219,7 @@ def set_date_focus(request):
         date_str = today.strftime("%Y-%m-%d")
         DateFocus.objects.all().delete()
         DateFocus.objects.create(dateFocus=today)
-        ic(date_str)
+
         return JsonResponse({"date_focus": str(today)})
     return JsonResponse({"error": "Method not allowed"}, status=405)
 
@@ -314,22 +313,22 @@ def get_account_for_osw2(request):
 
         # Добавляем родителя, если есть
         if a.parent:
-            # ic(a.parent)
+      
             if a.parent.number not in parent_accounts:
                 parent_accounts.append(a.parent.number)
             add_or_update(a.parent.number, a.parent.name)
 
     # Преобразуем словарь в список для ответа
-    # ic(data_dict)
+
     
     for acc, values in data_dict.items():
         if acc in parent_accounts:
-            ic(acc)
+ 
             values["is_parent"] = True
         else:
             values["is_parent"] = False
     data = list(data_dict.values())
-    ic(data)
+
 
     return Response(data, status=200)
 
@@ -416,111 +415,384 @@ def get_detail_account(request):
 
 
 
+# rabotayushiy create entry no deepseek predlojil chutka izmenit chtoby rabotali impoert export entries (ego kod snizu)
+# @csrf_exempt
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def create_entry(request):
+#     if request.method == "POST":
+
+#         try:
+#             with transaction.atomic():
+#                 data = json.loads(request.body)
+
+#                 date = parse_date(data.get("date"))
+#                 if not date:
+#                     return JsonResponse({"status": "error", "message": "Неверная дата"}, status=400)
+
+#                 debit_acc_number = data.get("debitAccount")
+#                 credit_acc_number = data.get("creditAccount")
+#                 amount = Decimal(data.get("amount") or 0)
+#                 if amount <= 0:
+#                     return JsonResponse({"status": "error", "message": "Сумма должна быть больше 0"}, status=400)
+
+#                 comment = data.get("comment", "")
+#                 partner_id = data.get("partnerId")
+#                 partner = Partner.objects.get(id=partner_id) if partner_id else None
+                
+#                 # USD
+#                 if partner:
+#                     rule_usd = CustomePostingRule.objects.filter(operation__code="sale", directory_type=partner.type, amount_type="revenue", currency__code="USD").first()
+#                     rule_tmt = CustomePostingRule.objects.filter(operation__code="sale", directory_type=partner.type, amount_type="revenue", currency__code="TMT").first()
+                    
+#                     if not rule_usd and not rule_tmt:
+#                         return JsonResponse({"status": "error", "message": "No posting rule for this partner type and currency"}, status=400)
+                    
+               
+                
+                
+#                 # Весь процесс в атомарной транзакции
+#                 with db_transaction.atomic():
+#                     transaction_obj = Transaction.objects.create(
+#                         date=date,
+#                         description=comment,
+#                         partner=partner,
+#                         created_by=request.user
+#                     )
+
+#                     debit_account = Account.objects.get(number=debit_acc_number)
+#                     credit_account = Account.objects.get(number=credit_acc_number)
+                    
+              
+                    
+#                     if partner:
+#                 
+#                         if credit_account == rule_tmt.debit_account:
+#                       
+#                             partner.balance_tmt += amount
+#                         elif credit_account == rule_usd.debit_account:
+#                             partner.balance_usd += amount
+#                      
+                            
+#                         if debit_account == rule_tmt.debit_account:
+#                             partner.balance_tmt -= amount
+#               
+#                         elif debit_account == rule_usd.debit_account:
+#                             partner.balance_usd -= amount
+#                       
+                            
+#                         partner.save()
+                        
+                        
+                    
+                    
+                    
+                    
+
+#                     Entry.objects.create(
+#                         transaction=transaction_obj,
+#                         account=debit_account,
+#                         debit=amount,
+#                         credit=Decimal("0.00")
+#                     )
+
+#                     Entry.objects.create(
+#                         transaction=transaction_obj,
+#                         account=credit_account,
+#                         debit=Decimal("0.00"),
+#                         credit=amount
+#                     )
+#                     # 1/0
+#                 return JsonResponse({"message": "success entry", "transaction_id": transaction_obj.id})
+
+#         except Account.DoesNotExist:
+#             return JsonResponse({"status": "error", "message": "Счёт не найден"}, status=400)
+#         except Partner.DoesNotExist:
+#             return JsonResponse({"status": "error", "message": "Партнёр не найден"}, status=400)
+#         except Exception as e:
+#             ic(e)
+#             # create error
+#             return JsonResponse({"status": "error", "message": "transactionChange", "reason_for_the_error": str(e)}, status=400)
+
+
+
+
 
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_entry(request):
+    """Создание проводки с улучшенной обработкой для импорта"""
     if request.method == "POST":
         ic(request.user)
         try:
             with transaction.atomic():
                 data = json.loads(request.body)
 
-                date = parse_date(data.get("date"))
-                if not date:
-                    return JsonResponse({"status": "error", "message": "Неверная дата"}, status=400)
+                # Поддержка разных форматов даты
+                date_str = data.get("date")
+                if not date_str:
+                    return JsonResponse({"status": "error", "message": "Дата обязательна"}, status=400)
+                
+                # Парсим дату в разных форматах
+                try:
+                    if isinstance(date_str, str):
+                        # Сначала пробуем стандартный парсинг
+                        date_obj = parse_date(date_str)
+                        if not date_obj:
+                            # Пробуем другие форматы
+                            try:
+                                date_obj = datetime.strptime(date_str, '%d.%m.%Y').date()
+                            except ValueError:
+                                try:
+                                    date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+                                except ValueError:
+                                    return JsonResponse({"status": "error", "message": "Неверный формат даты"}, status=400)
+                        # Конвертируем в datetime для модели
+                        datetime_obj = datetime.combine(date_obj, datetime.min.time())
+                    else:
+                        return JsonResponse({"status": "error", "message": "Неверный формат даты"}, status=400)
+                except Exception as e:
+                    ic(f"Date parsing error: {e}")
+                    return JsonResponse({"status": "error", "message": "Ошибка парсинга даты"}, status=400)
 
-                debit_acc_number = data.get("debitAccount")
-                credit_acc_number = data.get("creditAccount")
+                # Проверка закрытых дней
+                if DayClosing.objects.filter(date=date_obj).exists():
+                    return JsonResponse({"status": "error", "message": f"День {date_obj.strftime('%d.%m.%Y')} закрыт"}, status=400)
+
+                # Получаем данные счетов
+                debit_acc_number = data.get("debitAccount") or data.get("debit_account_number")
+                credit_acc_number = data.get("creditAccount") or data.get("credit_account_number")
+                
+                if not debit_acc_number or not credit_acc_number:
+                    return JsonResponse({"status": "error", "message": "Не указаны счета дебета или кредита"}, status=400)
+
                 amount = Decimal(data.get("amount") or 0)
                 if amount <= 0:
                     return JsonResponse({"status": "error", "message": "Сумма должна быть больше 0"}, status=400)
 
-                comment = data.get("comment", "")
-                partner_id = data.get("partnerId")
+                comment = data.get("comment", "") or data.get("description", "")
+                partner_id = data.get("partnerId") or data.get("partner_id")
                 partner = Partner.objects.get(id=partner_id) if partner_id else None
                 
-                # USD
-                if partner:
-                    rule_usd = CustomePostingRule.objects.filter(operation__code="sale", directory_type=partner.type, amount_type="revenue", currency__code="USD").first()
-                    rule_tmt = CustomePostingRule.objects.filter(operation__code="sale", directory_type=partner.type, amount_type="revenue", currency__code="TMT").first()
-                    
-                    if not rule_usd and not rule_tmt:
-                        return JsonResponse({"status": "error", "message": "No posting rule for this partner type and currency"}, status=400)
-                    
-                    
-                    ic(rule_usd.debit_account)
-                    ic(rule_usd.credit_account)
-                    ic(rule_tmt.debit_account)
-                    ic(rule_tmt.credit_account)
-                    
+                # Дополнительные поля
+                product_id = data.get("product_id") or data.get("product", {}).get("id")
+                product = Product.objects.get(id=product_id) if product_id else None
                 
-                
+                warehouse_id = data.get("warehouse_id") or data.get("warehouse", {}).get("id")
+                warehouse = Warehouse.objects.get(id=warehouse_id) if warehouse_id else None
+
+                # Валидация счетов
+                try:
+                    debit_account = Account.objects.get(number=debit_acc_number, is_active=True)
+                    credit_account = Account.objects.get(number=credit_acc_number, is_active=True)
+                except Account.DoesNotExist as e:
+                    return JsonResponse({"status": "error", "message": f"Счет не найден или неактивен: {str(e)}"}, status=400)
+
+                # USD/TMT логика для партнеров
+                if partner and warehouse:
+                    # Получаем валюту склада
+                    warehouse_currency_code = warehouse.currency.code if warehouse.currency else None
+                    
+                    if warehouse_currency_code:
+                        rule = CustomePostingRule.objects.filter(
+                            operation__code="sale", 
+                            directory_type=partner.type, 
+                            amount_type="revenue", 
+                            currency__code=warehouse_currency_code
+                        ).first()
+                        
+                        if rule:
+                            ic(f"Found rule for {warehouse_currency_code}:", rule.debit_account, rule.credit_account)
+
                 # Весь процесс в атомарной транзакции
                 with db_transaction.atomic():
                     transaction_obj = Transaction.objects.create(
-                        date=date,
+                        date=datetime_obj,  # Используем datetime объект
                         description=comment,
                         partner=partner,
                         created_by=request.user
                     )
 
-                    debit_account = Account.objects.get(number=debit_acc_number)
-                    credit_account = Account.objects.get(number=credit_acc_number)
-                    
-                    
-                    ic(debit_account)
-                    ic(credit_account)
-                    
-                    if partner:
-                        ic("tut", credit_account, debit_account, rule_tmt.debit_account, rule_usd.debit_account)
-                        if credit_account == rule_tmt.debit_account:
-                            ic("tut1")
-                            partner.balance_tmt += amount
-                        elif credit_account == rule_usd.debit_account:
-                            partner.balance_usd += amount
-                            ic("tut2")
-                            
-                        if debit_account == rule_tmt.debit_account:
-                            partner.balance_tmt -= amount
-                            ic("tut3")
-                        elif debit_account == rule_usd.debit_account:
-                            partner.balance_usd -= amount
-                            ic("tut4")
-                            
-                        partner.save()
-                        
-                        
-                    
-                    
-                    
-                    
+                    # Логика обновления баланса партнера (если нужно)
+                    if partner and warehouse and warehouse.currency:
+                        currency_code = warehouse.currency.code
+                        # Простая логика - можно доработать под конкретные правила
+                        if currency_code == "TMT":
+                            # Логика для TMT
+                            pass
+                        elif currency_code == "USD":
+                            # Логика для USD
+                            pass
 
+                    # Создаем проводки
                     Entry.objects.create(
                         transaction=transaction_obj,
                         account=debit_account,
                         debit=amount,
-                        credit=Decimal("0.00")
+                        credit=Decimal("0.00"),
+                        product=product,
+                        warehouse=warehouse
                     )
 
                     Entry.objects.create(
                         transaction=transaction_obj,
                         account=credit_account,
                         debit=Decimal("0.00"),
-                        credit=amount
+                        credit=amount,
+                        product=product,
+                        warehouse=warehouse
                     )
-                    # 1/0
-                return JsonResponse({"message": "success entry", "transaction_id": transaction_obj.id})
+
+                return JsonResponse({
+                    "message": "success entry", 
+                    "transaction_id": transaction_obj.id
+                })
 
         except Account.DoesNotExist:
             return JsonResponse({"status": "error", "message": "Счёт не найден"}, status=400)
         except Partner.DoesNotExist:
             return JsonResponse({"status": "error", "message": "Партнёр не найден"}, status=400)
+        except Product.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Продукт не найден"}, status=400)
+        except Warehouse.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Склад не найден"}, status=400)
         except Exception as e:
             ic(e)
-            # create error
             return JsonResponse({"status": "error", "message": "transactionChange", "reason_for_the_error": str(e)}, status=400)
+
+
+
+
+@csrf_exempt
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_entry(request, id):
+    """Редактирование существующей проводки"""
+    try:
+        data = json.loads(request.body)
+
+        with transaction.atomic():
+
+            # Находим транзакцию
+            try:
+                transaction_obj = Transaction.objects.get(id=id)
+            except Transaction.DoesNotExist:
+                return JsonResponse({"status": "error", "message": "Транзакция не найдена"}, status=404)
+
+            # Парсинг даты
+            date_str = data.get("date")
+            if not date_str:
+                return JsonResponse({"status": "error", "message": "Дата обязательна"}, status=400)
+
+            date_obj = parse_date(date_str)
+            if not date_obj:
+                try:
+                    date_obj = datetime.strptime(date_str, '%d.%m.%Y').date()
+                except ValueError:
+                    try:
+                        date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        return JsonResponse({"status": "error", "message": "Неверный формат даты"}, status=400)
+
+            # Проверка закрытого дня
+            if DayClosing.objects.filter(date=date_obj).exists():
+                return JsonResponse({"status": "error", "message": f"День {date_obj} закрыт"}, status=400)
+
+            # Счета
+            debit_acc_number = data.get("debitAccount")
+            credit_acc_number = data.get("creditAccount")
+
+            try:
+                debit_account = Account.objects.get(number=debit_acc_number)
+                credit_account = Account.objects.get(number=credit_acc_number)
+            except Account.DoesNotExist:
+                return JsonResponse({"status": "error", "message": "Указан неверный счёт"}, status=400)
+
+            # Сумма
+            amount = Decimal(data.get("amount") or 0)
+            if amount <= 0:
+                return JsonResponse({"status": "error", "message": "Сумма должна быть > 0"}, status=400)
+
+            # Partner / Product / Warehouse
+            partner_id = data.get("partnerId")
+            product_id = data.get("product_id")
+            warehouse_id = data.get("warehouse_id")
+
+            partner = Partner.objects.get(id=partner_id) if partner_id else None
+            product = Product.objects.get(id=product_id) if product_id else None
+            warehouse = Warehouse.objects.get(id=warehouse_id) if warehouse_id else None
+
+            # Обновляем Transaction
+            transaction_obj.date = datetime.combine(date_obj, datetime.min.time())
+            transaction_obj.description = data.get("comment", "")
+            transaction_obj.partner = partner
+            transaction_obj.save()
+
+            # Удаляем старые проводки
+            Entry.objects.filter(transaction=transaction_obj).delete()
+
+            # Создаём новые (дебет)
+            Entry.objects.create(
+                transaction=transaction_obj,
+                account=debit_account,
+                debit=amount,
+                credit=Decimal("0"),
+                product=product,
+                warehouse=warehouse
+            )
+
+            # Кредит
+            Entry.objects.create(
+                transaction=transaction_obj,
+                account=credit_account,
+                debit=Decimal("0"),
+                credit=amount,
+                product=product,
+                warehouse=warehouse
+            )
+
+            return JsonResponse({"status": "success", "message": "Проводка обновлена"})
+
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=400)
+    
+    
+    
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_entry(request, entry_id):
+    try:
+        transaction = Transaction.objects.get(id=entry_id)
+        
+        # Дополнительные проверки перед удалением
+        if transaction.invoice:
+            return JsonResponse({
+                "error": "Нельзя удалить проводку, связанную с фактурой. Сначала удалите фактуру."
+            }, status=400)
+        
+        # Проверяем права пользователя
+        if transaction.created_by and transaction.created_by != request.user:
+            return JsonResponse({
+                "error": "Вы можете удалять только свои проводки"
+            }, status=403)
+        
+        # Логируем удаление
+        print(f"Пользователь {request.user} удалил проводку {entry_id}")
+        
+        transaction_id = transaction.id
+        transaction.delete()
+        
+        return JsonResponse({
+            "message": "Проводка успешно удалена",
+            "deleted_id": transaction_id
+        })
+        
+    except Transaction.DoesNotExist:
+        return JsonResponse({"error": "Проводка не найдена"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": f"Ошибка при удалении: {str(e)}"}, status=500)
+
 
 
 
@@ -1650,7 +1922,7 @@ def get_account_cards(request, id):
         saldo_start = saldo_start_data['debit_sum'] - saldo_start_data['credit_sum']
         current_saldo = saldo_start
         
-        ic(saldo_start_data)
+
 
 
         movements = []

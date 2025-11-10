@@ -11,6 +11,7 @@ from . views.register_views import *
 from . views.query_views import *
 from . views.query_views2 import *
 from . views.query_views3 import *
+from . views import query_views4
 from . views.sale_invoice_views import *
 from . views.report_views import *
 from . views.utils import *
@@ -112,6 +113,9 @@ urlpatterns = [
     
     path('create_entry/', create_entry, name='create_entry'),
     path('cancel_entry/', cancel_entry, name='cancel_entry'),
+    path("update_entry/<int:id>/", update_entry, name="update_entry"), # cancel faktura entry
+    path('delete_entry/<int:entry_id>/', delete_entry, name='delete_entry'),
+    path('get-entries-without-faktura/', query_views4.get_entries_without_faktura, name='get-entries-without-faktura'),
     
     path('upload_sales_excel_for_analis/', upload_sales_excel_for_analis, name='upload_sales_excel_for_analis'),
     path('upload_sales_excel_for_analis_with_return/', upload_sales_excel_for_analis_with_return, name='upload_sales_excel_for_analis_with_return'),
@@ -120,7 +124,13 @@ urlpatterns = [
     
     path("get-invoice-list/", get_invoice_list, name="get-invoice-list"),
     path("export-invoices-json/", export_invoices_json, name="export-invoices-json"),
-    # path("export-invoices-universal/", export_invoices_universal, name="export-invoices-universal"),
+    # path("export-invoices-universal/", export_invoices_universal, name="export-invoices-universal"), (ne nujno)
+    
+    # Эндпоинты для проводок EXPORT IMPORT
+    path('get-entries-list/', get_entries_list, name='get_entries_list'),
+    path('export-entries-json/', export_entries_json, name='export_entries_json'),
+    path('get-accounts-list/', get_accounts_list, name='get_accounts_list'),
+    path('get-partners-list/', get_partners_list, name='get_partners_list'),
     
     
     

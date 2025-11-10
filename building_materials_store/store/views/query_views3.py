@@ -242,7 +242,7 @@ def get_invoice_save_format(invoice):
     return save_format
 
 
-# # Функция для массового экспорта с возможностью выбора формата
+# # Функция для массового экспорта с возможностью выбора формата (ne nujno)
 # @csrf_exempt
 # @api_view(['POST'])
 # @permission_classes([IsAuthenticated])
@@ -319,3 +319,295 @@ def get_invoice_save_format(invoice):
 #             "status": "error",
 #             "message": f"Export failed: {str(e)}"
 #         }, status=500)
+
+
+
+
+# rabotaet no po slowam deepseek est luchshiy waiant kotoryy budet nije, a etot poka zakamentrituyu
+# Добавлен фильтр invoice__isnull=True - это покажет только транзакции, которые НЕ связаны с фактурами
+# Такие транзакции создаются только через create_entry эндпоинт
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def get_entries_list(request):
+#     """Получение списка проводок за период (только созданные через create_entry)"""
+#     dateFrom = request.GET.get('dateFrom')
+#     dateTo = request.GET.get('dateTo')
+    
+#     # Получаем транзакции за период, которые НЕ связаны с фактурами
+#     transactions = Transaction.objects.filter(
+#         date__date__range=[dateFrom, dateTo],
+#         invoice__isnull=True  # Только транзакции без привязки к фактурам
+#     ).order_by("-pk")
+    
+#     data = []
+    
+#     for transaction in transactions:
+#         # Получаем все записи транзакции
+#         entries = Entry.objects.filter(transaction=transaction)
+        
+#         # Группируем по дебету и кредиту
+#         debit_entries = entries.filter(debit__gt=0)
+#         credit_entries = entries.filter(credit__gt=0)
+        
+#         # Для каждой дебетовой записи находим соответствующую кредитовую
+#         for debit_entry in debit_entries:
+#             # Ищем кредитовую запись с той же суммой
+#             credit_entry = credit_entries.filter(
+#                 credit=debit_entry.debit
+#             ).first()
+            
+#             if credit_entry:
+#                 amount = debit_entry.debit
+#                 obj = {
+#                     "transaction_id": transaction.id,
+#                     "date": transaction.date.strftime("%Y-%m-%d"),
+#                     "description": transaction.description,
+#                     "debit_account": debit_entry.account.number,
+#                     "debit_account_name": debit_entry.account.name,
+#                     "credit_account": credit_entry.account.number,
+#                     "credit_account_name": credit_entry.account.name,
+#                     "amount": float(amount),
+#                     "partner": transaction.partner.name if transaction.partner else None,
+#                     "partner_id": transaction.partner.id if transaction.partner else None,
+#                     "created_by": transaction.created_by.username if transaction.created_by else None,
+#                     "product": debit_entry.product.name if debit_entry.product else None,
+#                     "product_id": debit_entry.product.id if debit_entry.product else None,
+#                     "warehouse": debit_entry.warehouse.name if debit_entry.warehouse else None,
+#                     "warehouse_id": debit_entry.warehouse.id if debit_entry.warehouse else None,
+#                     # Добавляем признак, что это ручная проводка
+#                     "is_manual_entry": True
+#                 }
+#                 data.append(obj)
+    
+#     return JsonResponse({
+#         "status": "ok",
+#         "data": data
+#     })
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def export_entries_json(request):
+    """Экспорт проводок в формате JSON для сохранения через create_entry"""
+    try:
+        data = json.loads(request.body)
+        entry_ids = data.get("entryIds", [])
+        
+        if not entry_ids:
+            return JsonResponse({"status": "error", "message": "No entries selected"}, status=400)
+
+        export_data = {
+            "status": "success",
+            "exported_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "total_entries": len(entry_ids),
+            "entries": []
+        }
+        
+        for transaction_id in entry_ids:
+            try:
+                transaction = Transaction.objects.get(id=transaction_id)
+                entry_data = get_entry_save_format(transaction)
+                export_data["entries"].append(entry_data)
+                
+            except Transaction.DoesNotExist:
+                export_data["entries"].append({
+                    "transaction_id": transaction_id,
+                    "status": "error", 
+                    "message": "Transaction not found"
+                })
+            except Exception as e:
+                export_data["entries"].append({
+                    "transaction_id": transaction_id,
+                    "status": "error",
+                    "message": str(e)
+                })
+
+        # Создаем HTTP response с JSON файлом
+        response = HttpResponse(
+            json.dumps(export_data, ensure_ascii=False, indent=2),
+            content_type='application/json'
+        )
+        filename = f"entries_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        return response
+
+    except Exception as e:
+        return JsonResponse({
+            "status": "error", 
+            "message": f"Export failed: {str(e)}"
+        }, status=500)
+        
+        
+# Альтернативный вариант - если хочешь быть абсолютно уверенным, что показываются только проводки созданные через create_entry:
+# Преимущества этого подхода:
+# ✅ Не показывает проводки от фактур
+# ✅ Показывает только ручные проводки через create_entry
+# ✅ Исключает возможные автоматические проводки от других операций
+# ✅ Гарантирует, что экспортируются только те проводки, которые можно будет корректно импортировать
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_entries_list(request):
+    """Получение списка проводок за период (только созданные через create_entry)"""
+    dateFrom = request.GET.get('dateFrom')
+    dateTo = request.GET.get('dateTo')
+    
+    # Получаем транзакции за период, которые НЕ связаны с фактурами И имеют определенный паттерн описания
+    transactions = Transaction.objects.filter(
+        date__date__range=[dateFrom, dateTo],
+        invoice__isnull=True,  # Только транзакции без привязки к фактурам
+        description__isnull=False  # И с описанием (обычно у ручных проводок есть описание)
+    ).exclude(
+        description__startswith="Faktura"  # Исключаем проводки от фактур (на всякий случай)
+    ).order_by("-pk")
+    
+    data = []
+    
+    for transaction in transactions:
+        # Получаем все записи транзакции
+        entries = Entry.objects.filter(transaction=transaction)
+        
+        # Проверяем, что это простая проводка (2 записи: дебет и кредит)
+        if entries.count() == 2:
+            debit_entries = entries.filter(debit__gt=0)
+            credit_entries = entries.filter(credit__gt=0)
+            
+            # Для каждой дебетовой записи находим соответствующую кредитовую
+            for debit_entry in debit_entries:
+                credit_entry = credit_entries.filter(credit=debit_entry.debit).first()
+                
+                if credit_entry:
+                    amount = debit_entry.debit
+                    obj = {
+                        "transaction_id": transaction.id,
+                        "date": transaction.date.strftime("%Y-%m-%d"),
+                        "description": transaction.description,
+                        "debit_account": debit_entry.account.number,
+                        "debit_account_name": debit_entry.account.name,
+                        "credit_account": credit_entry.account.number,
+                        "credit_account_name": credit_entry.account.name,
+                        "amount": float(amount),
+                        "partner": transaction.partner.name if transaction.partner else None,
+                        "partner_id": transaction.partner.id if transaction.partner else None,
+                        "created_by": transaction.created_by.username if transaction.created_by else None,
+                        "product": debit_entry.product.name if debit_entry.product else None,
+                        "product_id": debit_entry.product.id if debit_entry.product else None,
+                        "warehouse": debit_entry.warehouse.name if debit_entry.warehouse else None,
+                        "warehouse_id": debit_entry.warehouse.id if debit_entry.warehouse else None,
+                        "is_manual_entry": True
+                    }
+                    data.append(obj)
+    
+    return JsonResponse({
+        "status": "ok",
+        "data": data
+    })
+    
+    
+    
+
+def get_entry_save_format(transaction):
+    """Получает данные проводки в формате для create_entry"""
+    
+    # Получаем все записи транзакции
+    entries = Entry.objects.filter(transaction=transaction)
+    debit_entries = entries.filter(debit__gt=0)
+    credit_entries = entries.filter(credit__gt=0)
+    
+    # Берем первую пару дебет/кредит
+    debit_entry = debit_entries.first()
+    credit_entry = credit_entries.filter(credit=debit_entry.debit).first() if debit_entry else None
+    
+    if not debit_entry or not credit_entry:
+        return {
+            "transaction_id": transaction.id,
+            "status": "error",
+            "message": "Invalid transaction structure"
+        }
+    
+    # Данные партнера
+    partner_data = None
+    if transaction.partner:
+        partner_data = {
+            "id": transaction.partner.id,
+            "name": transaction.partner.name,
+            "type": transaction.partner.type,
+            "is_active": transaction.partner.is_active,
+        }
+    
+    # Данные дебетового счета
+    debit_account_data = None
+    if debit_entry.account:
+        debit_account_data = {
+            "number": debit_entry.account.number,
+            "name": debit_entry.account.name,
+            "account_type": debit_entry.account.type,  # Исправлено с type на account_type
+        }
+    
+    # Данные кредитового счета
+    credit_account_data = None
+    if credit_entry.account:
+        credit_account_data = {
+            "number": credit_entry.account.number,
+            "name": credit_entry.account.name,
+            "account_type": credit_entry.account.type,  # Исправлено с type на account_type
+        }
+    
+    # Данные продукта
+    product_data = None
+    if debit_entry.product:
+        product_data = {
+            "id": debit_entry.product.id,
+            "name": debit_entry.product.name,
+        }
+    
+    # Данные склада
+    warehouse_data = None
+    if debit_entry.warehouse:
+        warehouse_data = {
+            "id": debit_entry.warehouse.id,
+            "name": debit_entry.warehouse.name,
+        }
+    
+    # Формируем данные в формате для create_entry
+    save_format = {
+        "transaction_id": transaction.id,
+        "date": transaction.date.strftime("%Y-%m-%d") if transaction.date else "",
+        "description": transaction.description,
+        "debit_account": debit_account_data,
+        "debit_account_number": debit_entry.account.number,
+        "credit_account": credit_account_data,
+        "credit_account_number": credit_entry.account.number,
+        "amount": float(debit_entry.debit),
+        "partner": partner_data,
+        "partner_id": transaction.partner.id if transaction.partner else None,
+        "product": product_data,
+        "product_id": debit_entry.product.id if debit_entry.product else None,
+        "warehouse": warehouse_data,
+        "warehouse_id": debit_entry.warehouse.id if debit_entry.warehouse else None,
+        "comment": transaction.description,
+        "created_by": transaction.created_by.username if transaction.created_by else None,
+        "created_at": transaction.created_at.strftime("%Y-%m-%d %H:%M:%S") if transaction.created_at else "",
+    }
+    
+    return save_format
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_accounts_list(request):
+    """Получение списка счетов для валидации при импорте"""
+    accounts = Account.objects.filter(is_active=True).values('id', 'number', 'name', 'type')
+    return JsonResponse({
+        "status": "ok",
+        "data": list(accounts)
+    })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_partners_list(request):
+    """Получение списка партнеров для валидации при импорте"""
+    partners = Partner.objects.filter(is_active=True).values('id', 'name', 'type')
+    return JsonResponse({
+        "status": "ok", 
+        "data": list(partners)
+    })

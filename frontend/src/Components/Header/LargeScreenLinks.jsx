@@ -93,7 +93,7 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
         )}
       </AnimatePresence>
 
-      <div className="flex items-center justify-between px-4 py-3 lg:px-6">
+      <div className="flex items-center justify-between px-4 lg:px-6">
         {/* Logo */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex-shrink-0">
           <img src="/polisem.png" alt="polisem-icon" className="h-12 lg:h-14 w-auto" />
@@ -112,7 +112,7 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
         {/* Desktop Menu */}
         <div className="hidden lg:flex items-center gap-4 xl:gap-6">
           {/* Date Sections */}
-          <div className="flex flex-col items-center gap-3 xl:gap-4">
+          <div className="flex  items-center gap-3 xl:gap-4">
             {/* Дата проводок */}
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -199,7 +199,7 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
           <div className="h-20 w-px bg-gradient-to-b from-transparent via-gray-700 to-transparent" />
 
           {/* Auth Links */}
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="flex flex-col gap-1.5">
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="flex gap-1.5">
             {authGroup === "admin" && (
               <Link to={ROUTES.REGISTER} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-400 hover:text-blue-300 hover:bg-gray-800 rounded-lg transition-all group">
                 <UserPlus className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -221,7 +221,7 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
           <div className="h-20 w-px bg-gradient-to-b from-transparent via-gray-700 to-transparent" />
 
           {/* Language & Theme */}
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="flex flex-col items-center gap-3">
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="flex  items-center gap-3">
             <LanguageSwitcher i18n={i18n} />
 
             <motion.button

@@ -5,11 +5,22 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import myAxios from "../../../axios";
 import Fuse from "fuse.js";
 
-const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo, getSaldo, saldo2, getSaldo2, setSaldo2 }) => {
+const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo, getSaldo, saldo2, getSaldo2, setSaldo2, initialPartner }) => {
   const { t } = useTranslation();
   const { values, setFieldValue, handleBlur } = useFormikContext();
   const [isFocused, setIsFocused] = useState(false);
   const sound = new Audio("/sounds/up_down.mp3");
+
+  // Добавим эффект для установки initialPartner
+  useEffect(() => {
+    if (initialPartner && !values.partner) {
+      setFieldValue("partner", initialPartner, false);
+      if (initialPartner.id && dateProwodok) {
+        getSaldo(dateProwodok, initialPartner.id);
+        getSaldo2(dateProwodok, initialPartner.id);
+      }
+    }
+  }, [initialPartner, dateProwodok]);
 
   useEffect(() => {
     if (values.is_entry && !values.partner) {

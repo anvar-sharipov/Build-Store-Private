@@ -35,6 +35,7 @@ export const PROCHEE = {
   ENTRIES2: "/entries2",
   TRANSACTION_JOURNAL: "/transaction- journal",
   EXPORT_FAKTURA: "/export-import-faktura",
+  EXPORT_IMPORT_ENTRIES: "/export-import-entries",
 };
 
 

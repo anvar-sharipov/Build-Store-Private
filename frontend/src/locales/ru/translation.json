@@ -600,7 +600,14 @@
   "editing_entry": "Редактирование проводки", 
   "save_changes": "Сохранить изменения",
 
-  "no_permission": "Нет прав для этого действия"
+  "no_permission": "Нет прав для этого действия",
+
+  "openingBalance": "Сальдо на начало",
+  "periodTurnover": "Обороты за период", 
+  "endingBalance": "Сальдо на конец",
+  "totalExpanded": "Итого развернутое",
+  "period": "Период",
+  "subconto": "Субконто"
 
 
  

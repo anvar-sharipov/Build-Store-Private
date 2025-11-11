@@ -8,6 +8,7 @@ import { SearchContext } from "../../context/SearchContext";
 import SalesInvoiceFilter from "./filters/SalesInvoiceFilter";
 import CompactAgentFilter from "./filters/CompactAgentFilter";
 import InvoiceFilter from "./filters/InvoiceFilter/InvoiceFilter";
+import DetailReport6062Filter from "./filters/DetailReport6062Filter/DetailReport6062Filter";
 
 // настройки для разных страниц
 const FILTER_CONFIG = {
@@ -125,7 +126,9 @@ export default function SidebarRight() {
   // ########################################################################################################################################################################## END filter po /product
 
   //   Если текущая страница не найдена в FILTER_CONFIG — не показываем сайдбар
-  if (!(currentPath in FILTER_CONFIG) && currentPath !== "/products" && currentPath !== "/main" && currentPath !== "/purchase_invoice") return null;
+  console.log("currentPath ===== ", currentPath);
+  
+  if (!(currentPath in FILTER_CONFIG) && currentPath !== "/products" && currentPath !== "/main" && currentPath !== "/purchase_invoice" && currentPath !== "/detail-account-report-60-62") return null;
 
   const typeOptions = config.type || [];
   const sortTmtOptions = config.sort_tmt || [];
@@ -328,6 +331,10 @@ export default function SidebarRight() {
       )}
 
       {currentPath === "/main" && <SalesInvoiceFilter searchParams={searchParams} setSearchParams={setSearchParams} t={t} />}
+
+      {console.log("currentPath", currentPath)}
+      
+      {currentPath === "/detail-account-report-60-62" && <DetailReport6062Filter searchParams={searchParams} setSearchParams={setSearchParams} t={t} />}
 
       {currentPath === "/purchase_invoice" && <InvoiceFilter />}
     </aside>

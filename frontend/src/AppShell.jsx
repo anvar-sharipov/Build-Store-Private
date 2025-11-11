@@ -40,6 +40,7 @@ import AccountCardDetail from "./Components/Page/Reports2/AccountCards/AccountCa
 import TransactionJournal from "./Components/Page/Prochee/TransactionJournal";
 import ExportFaktura from "./Components/Page/ExportsImports/ExportImportFaktura/ExportFaktura";
 import ExportImportEntries from "./Components/Page/ExportsImports/ExportImportEntries";
+import DetailReport6062 from "./Components/Page/OSW2/DetailReport6062";
 
 function AppShell() {
   const location = useLocation();
@@ -63,7 +64,7 @@ function AppShell() {
               <main className={`flex flex-grow gap-4 mt-4 ${isFullScreenPage ? "" : `lg:ml-52 ${hideRightBar ? "" : "lg:mr-72"}`} print:w-full print:block print:p-0 print:m-0 ${hideRightBar && "lg:mr-0"}`}>
                 {!isFullScreenPage && <SidebarLeft />}
 
-                <section className={`flex-grow flex flex-col bg-zinc-50 dark:bg-gray-800 rounded-lg shadow-sm ${isFullScreenPage ? "p-0" : "p-4"}`}>
+                <section className={`flex-grow flex flex-col bg-zinc-50 dark:bg-gray-800 rounded-lg shadow-sm ${isFullScreenPage ? "p-0" : "p-4 print:p-0"}`}>
                   <Routes>
                     <Route path={ROUTES.MAIN} element={<ProductList />} />
                     {/* <Route path="/sale-invoices/new" element={<AddSaleInvoicePage />} />
@@ -94,6 +95,7 @@ function AppShell() {
                     <Route path={ROUTES_RAPORT.ACCOUNT_CARDS_DETAIL} element={<AccountCardDetail />} />
 
                     <Route path={ROUTES_RAPORT.DETAIL_REPORT_1} element={<DetailReport1 />} />
+                    <Route path={ROUTES_RAPORT.DETAIL_ACCOUNT_REPORT_60_62} element={<DetailReport6062 />} />
                     <Route path={PROCHEE.QR_LIST_PRINT} element={<QrListPrint />} />
                     <Route path={PROCHEE.TRANSACTION_JOURNAL} element={<TransactionJournal />} />
       

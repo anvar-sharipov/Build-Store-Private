@@ -7,6 +7,7 @@ import { DateContext } from "../../UI/DateProvider";
 import { useNavigate } from "react-router-dom";
 import { ROUTES_RAPORT } from "../../../routes";
 
+
 const OSW2 = () => {
   const { t } = useTranslation();
   const { dateFrom, dateTo } = useContext(DateContext);
@@ -50,9 +51,13 @@ const OSW2 = () => {
   };
 
   const handleRowClick = (accountNumber) => {
-    navigate(ROUTES_RAPORT.DETAIL_REPORT_1, {
-      state: { accountNumber, dateFrom, dateTo },
-    });
+    if (accountNumber !== "60" && accountNumber !== "62") {
+      navigate(ROUTES_RAPORT.DETAIL_REPORT_1, {
+        state: { accountNumber, dateFrom, dateTo },
+      });
+    } else {
+      navigate(`/detail-account-report-60-62?accountNumber=${accountNumber}`);
+    }
   };
 
   const handlePrint = () => window.print();

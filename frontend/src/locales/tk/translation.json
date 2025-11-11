@@ -570,7 +570,14 @@
   "editing_entry": "Ýazgyny üýtgetmek",
   "save_changes": "Üýtgeşmeleri ýazdyr",
 
-  "no_permission": "Bu amal üçin ygtyýar ýok"
+  "no_permission": "Bu amal üçin ygtyýar ýok",
+
+  "openingBalance": "Başdaky balans",
+  "periodTurnover": "Döwürdäki dönüşlikler", 
+  "endingBalance": "Ahyrky balans",
+  "totalExpanded": "Jemi açylan",
+  "period": "Döwür",
+  "subconto": "Subkonto"
 
 
 

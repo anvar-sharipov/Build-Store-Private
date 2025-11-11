@@ -17,6 +17,12 @@ const DetailReport1 = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  if (accountNumber === "60" || accountNumber === "62") {
+    console.log("accountNumber", accountNumber);
+    
+  }
+  
+
   useEffect(() => {
     if (!accountNumber) return;
 

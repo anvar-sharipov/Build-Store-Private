@@ -559,7 +559,7 @@ const Agent = () => {
                   }}
                   className={myClass.li}
                 >
-                  <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">{index + 1}.</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">id {item.id}.</div>
                   <div className="font-medium text-gray-800 dark:text-gray-200 truncate">{item.name}</div>
                   <div className="flex gap-1 justify-end">
                     <button

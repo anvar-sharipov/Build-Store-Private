@@ -41,6 +41,7 @@ import TransactionJournal from "./Components/Page/Prochee/TransactionJournal";
 import ExportFaktura from "./Components/Page/ExportsImports/ExportImportFaktura/ExportFaktura";
 import ExportImportEntries from "./Components/Page/ExportsImports/ExportImportEntries";
 import DetailReport6062 from "./Components/Page/OSW2/DetailReport6062";
+import DetailReport6062Partner from "./Components/Page/OSW2/DetailReport6062Partner";
 
 function AppShell() {
   const location = useLocation();
@@ -52,7 +53,7 @@ function AppShell() {
     location.pathname.includes("/purchase-invoices/create");
 
   const hideRightBar = location.pathname === "/prochee/qr-list-print" || location.pathname === "/prochee" || location.pathname === "/reports" || location.pathname === "/entries2";
-  console.log("hideRightBar", hideRightBar);
+  // console.log("hideRightBar", hideRightBar);
   
   return (
     <>
@@ -96,6 +97,7 @@ function AppShell() {
 
                     <Route path={ROUTES_RAPORT.DETAIL_REPORT_1} element={<DetailReport1 />} />
                     <Route path={ROUTES_RAPORT.DETAIL_ACCOUNT_REPORT_60_62} element={<DetailReport6062 />} />
+                    <Route path={ROUTES_RAPORT.DETAIL_ACCOUNT_REPORT_60_62_PARTNER} element={<DetailReport6062Partner />} />
                     <Route path={PROCHEE.QR_LIST_PRINT} element={<QrListPrint />} />
                     <Route path={PROCHEE.TRANSACTION_JOURNAL} element={<TransactionJournal />} />
       

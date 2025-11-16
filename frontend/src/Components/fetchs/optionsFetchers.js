@@ -108,3 +108,14 @@ export const fetchAccounts = async () => {
     return e;
   }
 };
+
+
+export const fetchAgents = async () => {
+  try {
+    const res = await myAxios.get("/agents");
+    return res.data;
+  } catch (e) {
+    console.error("Ошибка при загрузке agents:", e);
+    return e;
+  }
+};

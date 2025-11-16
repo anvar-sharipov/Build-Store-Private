@@ -69,7 +69,7 @@ const TFoot = ({ printVisibleColumns, visibleColumns }) => {
         <th className={`px-1 text-left font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black w-24 dark:border-gray-400 print:!border-black`}></th>
         <th className={`px-1 text-left font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black`}></th>
         <th className={`px-1 text-left font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black`}></th>
-        <th className={`px-1 text-left font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black`}>{formatNumber(total_selected_price, 3)}</th>
+        <th className={`px-1 text-left font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black`}>{formatNumber(total_selected_price, 2)}</th>
         <th
           className={`px-1 text-left font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black ${!visibleColumns.purchase ? "hidden" : "table-cell"} ${
             !printVisibleColumns.purchase ? "print:hidden" : "print:table-cell"

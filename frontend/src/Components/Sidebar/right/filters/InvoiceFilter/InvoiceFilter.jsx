@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, useContext } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Filter, X, CheckCircle, XCircle, ArrowUpDown, User } from "lucide-react";
@@ -7,9 +7,11 @@ import myAxios from "../../../../axios";
 import SelectPartner from "./SelectPartner";
 import SelectEnryBoolen from "./SelectEnryBoolen";
 import InvoiceSort from "./InvoiceSort";
+import { DateContext } from "../../../../UI/DateProvider";
 
 const InvoiceFilter = () => {
   const { t } = useTranslation();
+  const { dateFrom, dateTo } = useContext(DateContext);
   const [searchParams, setSearchParams] = useSearchParams();
   const [wozwratOrPrihod, setWozwratOrPrihod] = useState(searchParams.get("wozwrat_or_prihod") || "");
   const [allPartners, setAllPartners] = useState([]);
@@ -58,8 +60,22 @@ const InvoiceFilter = () => {
     } else {
       params.delete("sortInvoice");
     }
+
+    // Добавляем даты в URL
+    if (dateFrom) {
+      params.set("dateFrom", dateFrom);
+    } else {
+      params.delete("dateFrom");
+    }
+
+    if (dateTo) {
+      params.set("dateTo", dateTo);
+    } else {
+      params.delete("dateTo");
+    }
+
     setSearchParams(params);
-  }, [wozwratOrPrihod, selectedPartner, selectedEntry, sortInvoice]);
+  }, [wozwratOrPrihod, selectedPartner, selectedEntry, sortInvoice, dateFrom, dateTo]);
 
   const typeOptions = [
     { value: "", label: t("all"), color: "from-gray-500 to-gray-600", icon: "📄" },

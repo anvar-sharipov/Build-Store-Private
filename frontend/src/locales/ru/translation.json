@@ -607,7 +607,12 @@
   "endingBalance": "Сальдо на конец",
   "totalExpanded": "Итого развернутое",
   "period": "Период",
-  "subconto": "Субконто"
+  "subconto": "Субконто",
+
+  "filters": "Фильтры",
+  "search agents...": "Поиск агентов...",
+  "choosed": "Выбран",
+  "noAgent": "Нет агента"
 
 
  

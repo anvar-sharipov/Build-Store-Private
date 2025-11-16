@@ -255,7 +255,7 @@ const OSW2 = () => {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.03 }}
-                        onClick={() => handleRowClick(o.number)}
+                        onDoubleClick={() => handleRowClick(o.number)}
                         onMouseEnter={() => setHoveredRow(o.number)}
                         onMouseLeave={() => setHoveredRow(null)}
                         className="border-b border-gray-200 dark:border-gray-700 cursor-pointer transition-all duration-200 hover:bg-blue-50 dark:hover:bg-gray-700"

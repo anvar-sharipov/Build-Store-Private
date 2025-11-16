@@ -1,21 +1,29 @@
 import { useSearchParams } from "react-router-dom";
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import myAxios from "../../axios";
 import { DateContext } from "../../UI/DateProvider";
 import { formatNumber2 } from "../../UI/formatNumber2";
 import MyFormatDate from "../../UI/MyFormatDate";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { ROUTES_RAPORT } from "../../../routes";
 
 const DetailReport6062 = () => {
   const { dateFrom, dateTo } = useContext(DateContext);
+
   const [searchParams] = useSearchParams();
   const accountNumber = searchParams.get("accountNumber");
+  const agent = searchParams.get("agent");
+  const sortByAgent = searchParams.get("sortByAgent");
+
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   const [data, setData] = useState([]);
   const [totals, setTotals] = useState({});
   const [loading, setLoading] = useState(true);
+  const [sortConfig, setSortConfig] = useState({ key: "agentId", direction: "asc" });
 
   useEffect(() => {
     if (!accountNumber) return;
@@ -24,11 +32,20 @@ const DetailReport6062 = () => {
       try {
         setLoading(true);
         const res = await myAxios.get("get_detail_account_60_62", {
-          params: { account: accountNumber, dateFrom, dateTo },
+          params: { account: accountNumber, dateFrom, dateTo, agent, sortByAgent },
         });
-        console.log("data = = ", res.data);
-        setData(res.data.items || []);
-        setTotals(res.data.totals || {});
+
+        console.log("API Response:", res.data);
+
+        if (sortByAgent === "true") {
+          // Данные с группировкой по агентам
+          setData(res.data.items || {});
+          setTotals(res.data.totals || {});
+        } else {
+          // Обычные данные (массив)
+          setData(res.data.items || []);
+          setTotals(res.data.totals || {});
+        }
       } catch (error) {
         console.error("getDetail error:", error);
       } finally {
@@ -39,9 +56,78 @@ const DetailReport6062 = () => {
     if (accountNumber && dateFrom && dateTo) {
       getDetail();
     } else {
-      setData(null);
+      setData([]);
     }
-  }, [accountNumber, dateFrom, dateTo]);
+  }, [accountNumber, dateFrom, dateTo, agent, sortByAgent]);
+
+  const handleRowClick = (partner_id, account_id) => {
+    navigate(ROUTES_RAPORT.DETAIL_ACCOUNT_REPORT_60_62_PARTNER, {
+      state: { partner_id, account_id },
+    });
+  };
+
+  const handleSort = (key) => {
+    setSortConfig((current) => ({
+      key,
+      direction: current.key === key && current.direction === "asc" ? "desc" : "asc",
+    }));
+  };
+
+  const sortedData = useMemo(() => {
+    if (sortByAgent === "true" || !Array.isArray(data) || !data.length) return [];
+
+    const sorted = [...data].sort((a, b) => {
+      let aValue, bValue;
+
+      switch (sortConfig.key) {
+        case "agentId":
+          aValue = a.agent?.id || 0;
+          bValue = b.agent?.id || 0;
+          break;
+        case "partnerName":
+          aValue = a.partner_name?.toLowerCase() || "";
+          bValue = b.partner_name?.toLowerCase() || "";
+          break;
+        case "debitBefore":
+          aValue = a.debit_before || 0;
+          bValue = b.debit_before || 0;
+          break;
+        case "creditBefore":
+          aValue = a.credit_before || 0;
+          bValue = b.credit_before || 0;
+          break;
+        case "debitOborot":
+          aValue = a.debit_oborot || 0;
+          bValue = b.debit_oborot || 0;
+          break;
+        case "creditOborot":
+          aValue = a.credit_oborot || 0;
+          bValue = b.credit_oborot || 0;
+          break;
+        case "saldoEndDebit":
+          aValue = a.saldo_end_debit || 0;
+          bValue = b.saldo_end_debit || 0;
+          break;
+        case "saldoEndCredit":
+          aValue = a.saldo_end_credit || 0;
+          bValue = b.saldo_end_credit || 0;
+          break;
+        default:
+          aValue = 0;
+          bValue = 0;
+      }
+
+      if (aValue < bValue) {
+        return sortConfig.direction === "asc" ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+
+    return sorted;
+  }, [data, sortConfig, sortByAgent]);
 
   const tableRowVariants = {
     hidden: { opacity: 0, y: 10 },
@@ -52,6 +138,57 @@ const DetailReport6062 = () => {
     },
   };
 
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return "↕️";
+    return sortConfig.direction === "asc" ? "↑" : "↓";
+  };
+
+  // Функция для расчета общих итогов при группировке по агентам
+  const calculateGrandTotals = () => {
+    if (sortByAgent !== "true" || typeof totals !== "object") return null;
+
+    let grandTotals = {
+      debit_before_total: 0,
+      credit_before_total: 0,
+      debit_oborot_total: 0,
+      credit_oborot_total: 0,
+      saldo_end_debit_total: 0,
+      saldo_end_credit_total: 0,
+    };
+
+    Object.values(totals).forEach((agentTotalArray) => {
+      if (Array.isArray(agentTotalArray) && agentTotalArray[0]) {
+        const agentTotals = agentTotalArray[0];
+        grandTotals.debit_before_total += agentTotals.debit_before_total || 0;
+        grandTotals.credit_before_total += agentTotals.credit_before_total || 0;
+        grandTotals.debit_oborot_total += agentTotals.debit_oborot_total || 0;
+        grandTotals.credit_oborot_total += agentTotals.credit_oborot_total || 0;
+        grandTotals.saldo_end_debit_total += agentTotals.saldo_end_debit_total || 0;
+        grandTotals.saldo_end_credit_total += agentTotals.saldo_end_credit_total || 0;
+      }
+    });
+
+    // Расчет сальдо
+    const saldo_summ_before_debit = grandTotals.debit_before_total - grandTotals.credit_before_total > 0 ? Math.abs(grandTotals.debit_before_total - grandTotals.credit_before_total) : 0;
+    const saldo_summ_before_credit = grandTotals.debit_before_total - grandTotals.credit_before_total <= 0 ? Math.abs(grandTotals.debit_before_total - grandTotals.credit_before_total) : 0;
+
+    const saldo_summ_oborot_debit = grandTotals.debit_oborot_total - grandTotals.credit_oborot_total > 0 ? Math.abs(grandTotals.debit_oborot_total - grandTotals.credit_oborot_total) : 0;
+    const saldo_summ_oborot_credit = grandTotals.debit_oborot_total - grandTotals.credit_oborot_total <= 0 ? Math.abs(grandTotals.debit_oborot_total - grandTotals.credit_oborot_total) : 0;
+
+    const saldo_summ_end_debit = grandTotals.saldo_end_debit_total - grandTotals.saldo_end_credit_total > 0 ? Math.abs(grandTotals.saldo_end_debit_total - grandTotals.saldo_end_credit_total) : 0;
+    const saldo_summ_end_credit = grandTotals.saldo_end_debit_total - grandTotals.saldo_end_credit_total <= 0 ? Math.abs(grandTotals.saldo_end_debit_total - grandTotals.saldo_end_credit_total) : 0;
+
+    return {
+      ...grandTotals,
+      saldo_summ_before_debit,
+      saldo_summ_before_credit,
+      saldo_summ_oborot_debit,
+      saldo_summ_oborot_credit,
+      saldo_summ_end_debit,
+      saldo_summ_end_credit,
+    };
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-8">
@@ -60,10 +197,319 @@ const DetailReport6062 = () => {
     );
   }
 
+  // Рендер для sortByAgent=true (группировка по агентам)
+  if (sortByAgent === "true") {
+    const grandTotals = calculateGrandTotals();
+    const hasData = Object.keys(data).length > 0;
+
+    return (
+      <div className="print:bg-white print:p-0 print:m-0 flex justify-center">
+        <AnimatePresence>
+          {hasData && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="w-full max-w-full">
+              {/* Заголовок отчета */}
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="px-4 py-3 bg-blue-50 border-b border-gray-200 
+                           dark:bg-blue-900/20 dark:border-gray-700
+                           print:bg-white print:border-b print:border-gray-300 print:px-2 print:py-1
+                           print:dark:!text-black mb-4"
+              >
+                <div className="text-sm text-gray-700 dark:text-gray-300 print:text-xs print:text-gray-800 print:font-medium print:dark:!text-black">
+                  {t("period")}: {MyFormatDate(dateFrom)} - {MyFormatDate(dateTo)} | Счет: {accountNumber} | Группировка по агентам
+                </div>
+              </motion.div>
+
+              {/* Таблицы по агентам */}
+              {Object.entries(data).map(([agentName, partners]) => {
+                const agentTotalsData = totals[agentName]?.[0];
+                if (!partners || !Array.isArray(partners) || partners.length === 0) return null;
+
+                return (
+                  <div
+                    key={agentName}
+                    className="mb-6 overflow-auto rounded-md border border-gray-200 bg-white shadow-sm 
+                         dark:border-gray-700 dark:bg-gray-800
+                         print:border-0 print:shadow-none print:overflow-visible print:w-full print:max-w-full
+                         print:!bg-white"
+                  >
+                    {/* Заголовок агента */}
+                    <div className="px-4 py-2 bg-green-50 dark:bg-green-900/30 font-semibold text-gray-800 dark:text-gray-200 print:bg-green-50 print:dark:!text-black">
+                      {agentName === "no_agent" ? t("noAgent") || "Без агента" : agentName}
+                    </div>
+
+                    <table
+                      className="border-collapse text-sm w-full
+                        print:text-xs 
+                        print:[&_th]:py-1 print:[&_td]:py-1
+                        print:[&_th]:px-0.5 print:[&_td]:px-0.5
+                        print:dark:[&_th]:!text-black print:dark:[&_td]:!text-black"
+                    >
+                      <thead className="bg-gray-50 dark:bg-gray-700 print:bg-white print:dark:!bg-white">
+                        <tr>
+                          <th
+                            rowSpan={2}
+                            className="px-1 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:border print:border-gray-300 print:font-medium print:px-0.5 print:py-1 print:text-xs w-12 print:dark:!text-black"
+                          >
+                            №
+                          </th>
+                          <th
+                            rowSpan={2}
+                            className="px-2 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:border print:border-gray-300 print:font-medium print:px-1 print:py-1 print:text-xs min-w-48 print:dark:!text-black"
+                          >
+                            {t("subconto")}
+                          </th>
+                          <th
+                            colSpan={2}
+                            className="px-1 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:border print:border-gray-300 print:font-medium print:px-0.5 print:py-1 print:text-xs print:dark:!text-black"
+                          >
+                            {t("openingBalance")}
+                          </th>
+                          <th
+                            colSpan={2}
+                            className="px-1 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:border print:border-gray-300 print:font-medium print:px-0.5 print:py-1 print:text-xs print:dark:!text-black"
+                          >
+                            {t("periodTurnover")}
+                          </th>
+                          <th
+                            colSpan={2}
+                            className="px-1 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:border print:border-gray-300 print:font-medium print:px-0.5 print:py-1 print:text-xs print:dark:!text-black"
+                          >
+                            {t("endingBalance")}
+                          </th>
+                        </tr>
+                        <tr>
+                          <th className="px-3 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:border print:border-gray-300 print:font-normal print:px-0.5 print:py-1 print:text-xs w-28 print:w-20 print:dark:!text-black">
+                            DT
+                          </th>
+                          <th className="px-3 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:border print:border-gray-300 print:font-normal print:px-0.5 print:py-1 print:text-xs w-28 print:w-20 print:dark:!text-black">
+                            KT
+                          </th>
+                          <th className="px-3 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:border print:border-gray-300 print:font-normal print:px-0.5 print:py-1 print:text-xs w-28 print:w-20 print:dark:!text-black">
+                            DT
+                          </th>
+                          <th className="px-3 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:border print:border-gray-300 print:font-normal print:px-0.5 print:py-1 print:text-xs w-28 print:w-20 print:dark:!text-black">
+                            KT
+                          </th>
+                          <th className="px-3 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:border print:border-gray-300 print:font-normal print:px-0.5 print:py-1 print:text-xs w-28 print:w-20 print:dark:!text-black">
+                            DT
+                          </th>
+                          <th className="px-3 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:border print:border-gray-300 print:font-normal print:px-0.5 print:py-1 print:text-xs w-28 print:w-20 print:dark:!text-black">
+                            KT
+                          </th>
+                        </tr>
+                      </thead>
+
+                      <tbody className="print:dark:[&_td]:!text-black">
+                        <AnimatePresence>
+                          {partners.map((row, index) => (
+                            <motion.tr
+                              key={`${agentName}-${row.partner_id}`}
+                              variants={tableRowVariants}
+                              initial="hidden"
+                              animate="visible"
+                              exit="hidden"
+                              onDoubleClick={() => handleRowClick(row.partner_id, row.account_id)}
+                              className="hover:bg-gray-100 dark:hover:bg-gray-700/50 print:hover:bg-transparent print:break-inside-avoid print:dark:!bg-white"
+                            >
+                              <td className="px-1 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-center dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                                {index + 1}
+                              </td>
+                              <td className="px-2 py-2 text-gray-800 border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-1 print:py-1 print:text-xs print:dark:!text-black">
+                                {row.partner_name}
+                              </td>
+                              <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                                {formatNumber2(row.debit_before)}
+                              </td>
+                              <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                                {formatNumber2(row.credit_before)}
+                              </td>
+                              <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                                {formatNumber2(row.debit_oborot)}
+                              </td>
+                              <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                                {formatNumber2(row.credit_oborot)}
+                              </td>
+                              <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                                {formatNumber2(row.saldo_end_debit)}
+                              </td>
+                              <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                                {formatNumber2(row.saldo_end_credit)}
+                              </td>
+                            </motion.tr>
+                          ))}
+                        </AnimatePresence>
+                      </tbody>
+
+                      {/* Итоги по агенту */}
+                      {agentTotalsData && (
+                        <tfoot className="bg-gray-50 dark:bg-gray-700 print:bg-gray-100 print:dark:!bg-gray-100 print:dark:[&_td]:!text-black">
+                          <tr className="print:break-inside-avoid print:dark:!bg-gray-100">
+                            <td
+                              colSpan={2}
+                              className="px-2 py-2 font-medium border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-1 print:py-1 print:text-xs print:font-medium print:dark:!text-black"
+                            >
+                              {t("totalExpanded")} {agentName === "no_agent" ? t("noAgent") : agentName}:
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                              {formatNumber2(agentTotalsData.debit_before_total)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                              {formatNumber2(agentTotalsData.credit_before_total)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                              {formatNumber2(agentTotalsData.debit_oborot_total)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                              {formatNumber2(agentTotalsData.credit_oborot_total)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                              {formatNumber2(agentTotalsData.saldo_end_debit_total)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                              {formatNumber2(agentTotalsData.saldo_end_credit_total)}
+                            </td>
+                          </tr>
+                          <tr className="print:break-inside-avoid print:dark:!bg-gray-100">
+                            <td
+                              colSpan={2}
+                              className="px-2 py-2 font-medium border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-1 print:py-1 print:text-xs print:font-medium print:dark:!text-black"
+                            >
+                              {t("total")} {agentName === "no_agent" ? t("noAgent") : agentName}:
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                              {formatNumber2(agentTotalsData.saldo_summ_before_debit)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                              {formatNumber2(agentTotalsData.saldo_summ_before_credit)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                              {formatNumber2(agentTotalsData.saldo_summ_oborot_debit)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                              {formatNumber2(agentTotalsData.saldo_summ_oborot_credit)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                              {formatNumber2(agentTotalsData.saldo_summ_end_debit)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                              {formatNumber2(agentTotalsData.saldo_summ_end_credit)}
+                            </td>
+                    
+                          </tr>
+                        </tfoot>
+                      )}
+                    </table>
+                  </div>
+                );
+              })}
+
+              {/* Общие итоги */}
+              {grandTotals && (
+                <div
+                  className="mt-6 overflow-auto rounded-md border border-gray-200 bg-white shadow-sm 
+                         dark:border-gray-700 dark:bg-gray-800
+                         print:border-0 print:shadow-none print:overflow-visible print:w-full print:max-w-full
+                         print:!bg-white"
+                >
+                  <div className="px-4 py-2 bg-yellow-50 dark:bg-yellow-900/30 font-bold text-gray-800 dark:text-gray-200 print:bg-yellow-50 print:dark:!text-black">
+                    {t("grandTotal") || "ОБЩИЙ ИТОГ"}
+                  </div>
+                  <table className="border-collapse text-sm w-full print:text-xs">
+                    <thead className="bg-gray-50 dark:bg-gray-700 print:bg-white print:dark:!bg-white">
+                      <tr>
+                        <th colSpan={2} className="px-1 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:dark:!text-black"></th>
+                        <th colSpan={2} className="px-1 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:dark:!text-black">
+                          {t("openingBalance")}
+                        </th>
+                        <th colSpan={2} className="px-1 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:dark:!text-black">
+                          {t("periodTurnover")}
+                        </th>
+                        <th colSpan={2} className="px-1 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:dark:!text-black">
+                          {t("endingBalance")}
+                        </th>
+                      </tr>
+                      <tr>
+                        <th colSpan={2} className="px-1 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:dark:!text-black"></th>
+                        <th className="px-3 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:dark:!text-black">DT</th>
+                        <th className="px-3 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:dark:!text-black">KT</th>
+                        <th className="px-3 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:dark:!text-black">DT</th>
+                        <th className="px-3 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:dark:!text-black">KT</th>
+                        <th className="px-3 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:dark:!text-black">DT</th>
+                        <th className="px-3 py-2 text-center font-medium text-gray-600 border border-gray-300 dark:text-gray-300 dark:border-gray-600 print:dark:!text-black">KT</th>
+                      </tr>
+                    </thead>
+                    <tbody className="print:dark:[&_td]:!text-black">
+                      <tr className="bg-yellow-50 dark:bg-yellow-900/30 print:bg-yellow-50 print:break-inside-avoid">
+                        <td
+                          colSpan={2}
+                          className="px-2 py-2 font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-1 print:py-1 print:text-xs print:font-bold print:dark:!text-black"
+                        >
+                          {t("totalExpanded")}:
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                          {formatNumber2(grandTotals.debit_before_total)}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                          {formatNumber2(grandTotals.credit_before_total)}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                          {formatNumber2(grandTotals.debit_oborot_total)}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                          {formatNumber2(grandTotals.credit_oborot_total)}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                          {formatNumber2(grandTotals.saldo_end_debit_total)}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                          {formatNumber2(grandTotals.saldo_end_credit_total)}
+                        </td>
+                      </tr>
+                      <tr className="bg-yellow-100 dark:bg-yellow-900/50 print:bg-yellow-100 print:break-inside-avoid print:dark:!bg-yellow-100">
+                        <td
+                          colSpan={2}
+                          className="px-2 py-2 font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-1 print:py-1 print:text-xs print:font-bold print:dark:!text-black"
+                        >
+                          {t("total")}:
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                          {formatNumber2(grandTotals.saldo_summ_before_debit)}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                          {formatNumber2(grandTotals.saldo_summ_before_credit)}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                          {formatNumber2(grandTotals.saldo_summ_oborot_debit)}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                          {formatNumber2(grandTotals.saldo_summ_oborot_credit)}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                          {formatNumber2(grandTotals.saldo_summ_end_debit)}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                          {formatNumber2(grandTotals.saldo_summ_end_credit)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  // Рендер для sortByAgent=false (оригинальная таблица)
   return (
     <div className="print:bg-white print:p-0 print:m-0 flex justify-center">
       <AnimatePresence>
-        {data.length > 0 && (
+        {Array.isArray(data) && data.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -73,7 +519,6 @@ const DetailReport6062 = () => {
                        print:border-0 print:shadow-none print:overflow-visible print:w-full print:max-w-full
                        print:!bg-white"
           >
-            {/* Заголовок с информацией о периоде и счете */}
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -111,9 +556,13 @@ const DetailReport6062 = () => {
                     className="px-1 py-2 text-center font-medium text-gray-600 border border-gray-300
                                            dark:text-gray-300 dark:border-gray-600
                                            print:border print:border-gray-300 print:font-medium print:px-0.5 print:py-1 print:text-xs w-12
-                                           print:dark:!text-black"
+                                           print:dark:!text-black cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort("agentId")}
                   >
-                    №/agent
+                    <div className="flex items-center justify-center gap-1">
+                      №/agent
+                      <span className="text-xs">{getSortIcon("agentId")}</span>
+                    </div>
                   </th>
                   <th
                     rowSpan={2}
@@ -154,27 +603,92 @@ const DetailReport6062 = () => {
                 </tr>
 
                 <tr>
-                  {[...Array(6)].map((_, index) => (
-                    <th
-                      key={index}
-                      className="px-3 py-2 text-center font-medium text-gray-600 border border-gray-300
+                  {/* DT Opening Balance */}
+                  <th
+                    className="px-3 py-2 text-center font-medium text-gray-600 border border-gray-300
                                             dark:text-gray-300 dark:border-gray-600
                                             print:border print:border-gray-300 print:font-normal print:px-0.5 print:py-1 print:text-xs w-28 print:w-20
-                                            print:dark:!text-black"
-                    >
-                      {index % 2 === 0 ? "DT" : "KT"}
-                    </th>
-                  ))}
+                                            print:dark:!text-black cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort("debitBefore")}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      DT
+                      <span className="text-xs">{getSortIcon("debitBefore")}</span>
+                    </div>
+                  </th>
+                  {/* KT Opening Balance */}
+                  <th
+                    className="px-3 py-2 text-center font-medium text-gray-600 border border-gray-300
+                                            dark:text-gray-300 dark:border-gray-600
+                                            print:border print:border-gray-300 print:font-normal print:px-0.5 print:py-1 print:text-xs w-28 print:w-20
+                                            print:dark:!text-black cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort("creditBefore")}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      KT
+                      <span className="text-xs">{getSortIcon("creditBefore")}</span>
+                    </div>
+                  </th>
+                  {/* DT Period Turnover */}
+                  <th
+                    className="px-3 py-2 text-center font-medium text-gray-600 border border-gray-300
+                                            dark:text-gray-300 dark:border-gray-600
+                                            print:border print:border-gray-300 print:font-normal print:px-0.5 print:py-1 print:text-xs w-28 print:w-20
+                                            print:dark:!text-black cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort("debitOborot")}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      DT
+                      <span className="text-xs">{getSortIcon("debitOborot")}</span>
+                    </div>
+                  </th>
+                  {/* KT Period Turnover */}
+                  <th
+                    className="px-3 py-2 text-center font-medium text-gray-600 border border-gray-300
+                                            dark:text-gray-300 dark:border-gray-600
+                                            print:border print:border-gray-300 print:font-normal print:px-0.5 print:py-1 print:text-xs w-28 print:w-20
+                                            print:dark:!text-black cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort("creditOborot")}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      KT
+                      <span className="text-xs">{getSortIcon("creditOborot")}</span>
+                    </div>
+                  </th>
+                  {/* DT Ending Balance */}
+                  <th
+                    className="px-3 py-2 text-center font-medium text-gray-600 border border-gray-300
+                                            dark:text-gray-300 dark:border-gray-600
+                                            print:border print:border-gray-300 print:font-normal print:px-0.5 print:py-1 print:text-xs w-28 print:w-20
+                                            print:dark:!text-black cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort("saldoEndDebit")}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      DT
+                      <span className="text-xs">{getSortIcon("saldoEndDebit")}</span>
+                    </div>
+                  </th>
+                  {/* KT Ending Balance */}
+                  <th
+                    className="px-3 py-2 text-center font-medium text-gray-600 border border-gray-300
+                                            dark:text-gray-300 dark:border-gray-600
+                                            print:border print:border-gray-300 print:font-normal print:px-0.5 print:py-1 print:text-xs w-28 print:w-20
+                                            print:dark:!text-black cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort("saldoEndCredit")}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      KT
+                      <span className="text-xs">{getSortIcon("saldoEndCredit")}</span>
+                    </div>
+                  </th>
                 </tr>
               </thead>
 
-              <tbody
-                className="print:dark:[&_td]:!text-black"
-              >
+              <tbody className="print:dark:[&_td]:!text-black">
                 <AnimatePresence>
-                  {data.map((row, index) => {
-                    console.log("agent", row.agent?.id);
-                    
+                  {sortedData.map((row, index) => {
+                    // console.log("agent", row.agent?.id);
+
                     return (
                       <motion.tr
                         key={index}
@@ -182,17 +696,21 @@ const DetailReport6062 = () => {
                         initial="hidden"
                         animate="visible"
                         exit="hidden"
+                        onDoubleClick={() => {
+                          // console.log("klicked partner", row.partner_name, row.partner_id, row.account_id);
+                          handleRowClick(row.partner_id, row.account_id);
+                        }}
                         className="hover:bg-gray-100 dark:hover:bg-gray-700/50
                                 print:hover:bg-transparent print:break-inside-avoid
                                 print:dark:!bg-white"
                       >
                         <td
-                          className="px-1 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-center
+                          className="px-1 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-start
                                    dark:text-gray-200 dark:border-gray-600
                                    print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                    print:dark:!text-black"
                         >
-                          {index + 1}{row.agent?.id && `-${row.agent.id}`}
+                          {index + 1} {row.agent?.id && <span className="text-gray-500 dark:text-gray-400">{`- ${row.agent.id}`}</span>}
                         </td>
                         <td
                           className="px-2 py-2 text-gray-800 border border-gray-300
@@ -264,14 +782,15 @@ const DetailReport6062 = () => {
                               print:bg-gray-100
                               print:dark:!bg-gray-100 print:dark:[&_td]:!text-black"
               >
-                <motion.tr 
-                  initial={{ opacity: 0 }} 
-                  animate={{ opacity: 1 }} 
-                  transition={{ delay: 0.2 }} 
+                <motion.tr
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
                   className="print:break-inside-avoid
                             print:dark:!bg-gray-100"
                 >
-                  <td colSpan={2}
+                  <td
+                    colSpan={2}
                     className="px-2 py-2 font-medium border border-gray-300
                                dark:text-gray-200 dark:border-gray-600
                                print:border print:border-gray-300 print:px-1 print:py-1 print:text-xs print:font-medium
@@ -338,7 +857,8 @@ const DetailReport6062 = () => {
                            print:bg-gray-200 print:break-inside-avoid
                            print:dark:!bg-gray-200"
                 >
-                  <td colSpan={2}
+                  <td
+                    colSpan={2}
                     className="px-2 py-2 font-medium border border-gray-300
                                dark:text-gray-200 dark:border-gray-600
                                print:border print:border-gray-300 print:px-1 print:py-1 print:text-xs print:font-medium
@@ -402,8 +922,6 @@ const DetailReport6062 = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-
     </div>
   );
 };

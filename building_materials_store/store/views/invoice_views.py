@@ -112,7 +112,7 @@ def save_invoice(request):
             warehouse2 = data['warehouse2']
             wozwrat_or_prihod = data['wozwrat_or_prihod']
             comment=data["comment"]
-            ic(data)
+            # ic(data)
             # invoice_id = data['id']
             invoice_id = data.get('id')
             
@@ -637,6 +637,7 @@ def save_invoice(request):
             #####################################################################################################################################################################        
             # update invoice    
             else:
+                ic("update invoice")
                 if not invoice_date2:
                     return JsonResponse({"status": "error", "message": "choose date prowodok"}, status=400)
                 try:
@@ -715,6 +716,7 @@ def save_invoice(request):
                         # return JsonResponse({"status": "ok", "message": f"{wozwrat_or_prihod} invoice updated without entry", "id": invoice.id})
                     
                         if is_entry:
+                            ic(wozwrat_or_prihod)
                             partner_obj = Partner.objects.select_for_update().get(id=partner["id"])
                             if invoice.entry_created_at:
                                 return JsonResponse({"status": "error", "message": "Invoice already posted"}, status=400)
@@ -733,11 +735,13 @@ def save_invoice(request):
                                 elif wozwrat_or_prihod == "prihod":
                                     operation = Operation.objects.filter(code="purchase")
                                 elif wozwrat_or_prihod == "wozwrat":
-                                    operation = Operation.objects.filter(code="wozwrat")
+                                    operation = Operation.objects.filter(code="return")
                                     
                                 if not operation.exists():
+                                    ic("tut")
                                     transaction.set_rollback(True)
                                     return JsonResponse({"status": "error", "message": f"u dont have a rule for {wozwrat_or_prihod}"}, status=400)
+                                
                                 
                                 if len(operation) != 1:
                                     transaction.set_rollback(True)
@@ -750,6 +754,7 @@ def save_invoice(request):
                                 rules = CustomePostingRule.objects.filter(operation=operation[0], directory_type=partner_obj.type, currency=warehouse_obj.currency)
                                 
                                 if not rules.exists():
+                                    
                                     transaction.set_rollback(True)
                                     return JsonResponse({"status": "error", "message": f"u dont have a rule for {wozwrat_or_prihod}"}, status=400)
                                 
@@ -763,6 +768,7 @@ def save_invoice(request):
                             # #######################################################################################################################################
                             # wozwrat
                             if wozwrat_or_prihod == "wozwrat":
+                                ic("wozwrat")
                                 for product in products:
                                     
                                     product_obj = product_map[product['id']]
@@ -1059,7 +1065,7 @@ def save_invoice(request):
 def get_invoices(request):
     # query params будут в request.GET, например ?partner=1&wozwrat_or_prihod=prihod
     invoices = Invoice.objects.all().order_by("-pk")
-    ic("tut get_invoices +++++", request)
+    # ic("tut get_invoices +++++", request)
     
     # DayClosing.objects.all().delete()
     # DayClosingLog.objects.all().delete()
@@ -1071,6 +1077,14 @@ def get_invoices(request):
     query = request.GET.get('query')
     selectedEntry = request.GET.get('selectedEntry')
     sortInvoice = request.GET.get('sortInvoice')
+    
+    
+    dateFrom = request.GET.get('dateFrom')
+    dateTo = request.GET.get('dateTo')
+    
+    ic(dateFrom)
+    ic(dateTo)
+    
     # ic(selectedEntry)
     
     
@@ -1111,6 +1125,9 @@ def get_invoices(request):
             invoices = invoices.filter(is_entry=False, canceled_at__isnull=True)
         elif selectedEntry == "canceled":
             invoices = invoices.filter(canceled_at__isnull=False)
+            
+    if dateFrom and dateTo:
+        invoices = invoices.filter(created_at_handle__range=[dateFrom, dateTo])
             
 
     

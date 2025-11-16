@@ -116,7 +116,7 @@ def search_products(request):
             # dlya list product w sale invoice
             results = Product.objects.annotate(
                 similarity=TrigramSimilarity("name", query)
-            ).filter(similarity__gt=0.1)
+            ).filter(similarity__gt=0.2)
         else:
             not_qr_code = True
             
@@ -148,6 +148,7 @@ def search_products(request):
                     break
 
             serialized = ProductSerializer(product).data
+            ic(serialized)
             serialized.update({
                 'quantity_on_selected_warehouses': quantity,
                 'unit_name_on_selected_warehouses': unit_name,

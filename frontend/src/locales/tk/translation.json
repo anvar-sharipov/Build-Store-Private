@@ -577,7 +577,12 @@
   "endingBalance": "Ahyrky balans",
   "totalExpanded": "Jemi açylan",
   "period": "Döwür",
-  "subconto": "Subkonto"
+  "subconto": "Subkonto",
+
+  "filters": "Filtr",
+  "search agents...": "Agentleri gözle...",
+  "choosed": "Saýlanan",
+  "noAgent": "Agent ýok"
 
 
 

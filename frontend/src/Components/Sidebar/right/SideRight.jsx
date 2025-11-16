@@ -126,7 +126,7 @@ export default function SidebarRight() {
   // ########################################################################################################################################################################## END filter po /product
 
   //   Если текущая страница не найдена в FILTER_CONFIG — не показываем сайдбар
-  console.log("currentPath ===== ", currentPath);
+
   
   if (!(currentPath in FILTER_CONFIG) && currentPath !== "/products" && currentPath !== "/main" && currentPath !== "/purchase_invoice" && currentPath !== "/detail-account-report-60-62") return null;
 
@@ -144,8 +144,8 @@ export default function SidebarRight() {
 
   //   Когда пользователь кликает на фильтр, Мы добавляем (или убираем) ?type=something в адрес страницы.
   const handleChange = (paramName, value) => {
-    console.log("handleChange called:", paramName, value);
-    console.log("Before:", searchParams.toString());
+    // console.log("handleChange called:", paramName, value);
+    // console.log("Before:", searchParams.toString());
 
     if (value === "all") {
       searchParams.delete(paramName);
@@ -153,7 +153,7 @@ export default function SidebarRight() {
       searchParams.set(paramName, value);
     }
 
-    console.log("After:", searchParams.toString());
+    // console.log("After:", searchParams.toString());
     setSearchParams(searchParams);
   };
 
@@ -210,7 +210,7 @@ export default function SidebarRight() {
                   name="filter-sort"
                   checked={isChecked}
                   onChange={() => {
-                    console.log("Changing sort to:", option.key);
+                    // console.log("Changing sort to:", option.key);
                     handleChange("sort", option.key);
                   }}
                   className="mr-2 accent-blue-600"
@@ -235,7 +235,7 @@ export default function SidebarRight() {
                   name="filter-sort"
                   checked={isChecked}
                   onChange={() => {
-                    console.log("Changing sort to:", option.key);
+                    // console.log("Changing sort to:", option.key);
                     handleChange("sort", option.key);
                   }}
                   className="mr-2 accent-blue-600"
@@ -295,7 +295,7 @@ export default function SidebarRight() {
           <h3 className="font-semibold mb-2 mt-4 text-gray-400">{t("balance")}</h3>
           {sortOptions.map((option) => {
             const isChecked = selectedSort === option.key;
-            console.log("Sort option:", option.key, "Selected:", selectedSort, "Checked:", isChecked); // ✅ Добавьте для отладки
+            // console.log("Sort option:", option.key, "Selected:", selectedSort, "Checked:", isChecked); // ✅ Добавьте для отладки
             return (
               <label key={option.key} className={`flex items-center py-1 cursor-pointer ${isChecked ? "text-blue-700 font-semibold" : "text-gray-700"}`}>
                 <input
@@ -303,7 +303,7 @@ export default function SidebarRight() {
                   name="filter-sort"
                   checked={isChecked}
                   onChange={() => {
-                    console.log("Changing sort to:", option.key); // ✅ Добавьте для отладки
+                    // console.log("Changing sort to:", option.key); // ✅ Добавьте для отладки
                     handleChange("sort", option.key);
                   }}
                   className="mr-2 accent-blue-600"
@@ -332,7 +332,6 @@ export default function SidebarRight() {
 
       {currentPath === "/main" && <SalesInvoiceFilter searchParams={searchParams} setSearchParams={setSearchParams} t={t} />}
 
-      {console.log("currentPath", currentPath)}
       
       {currentPath === "/detail-account-report-60-62" && <DetailReport6062Filter searchParams={searchParams} setSearchParams={setSearchParams} t={t} />}
 

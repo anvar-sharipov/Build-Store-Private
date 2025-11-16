@@ -1,3 +1,4 @@
+// isklyuchitelno dlya OSW gde 0 eto - i 2 sifry posle tochki
 export function formatNumber2(value, fixed = 2) {
   if (value === null || value === undefined || value === "") return "";
 

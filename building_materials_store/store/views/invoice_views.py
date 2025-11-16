@@ -49,17 +49,19 @@ def normalize_date(date_str: str) -> str:
 def save_invoice(request):
     if request.method == "POST":
         
-        # ic('save_invoice', request.user)
         if not request.user.groups.filter(name="admin").exists():
             return JsonResponse({"status": "error", "message": "permission denied"}, status=403)
                 
                 
         
+
         
-        # def create_entries(transaction_obj, rule, product_obj, warehouse_obj, amount):
+        # def create_entries(transaction_obj, rule, product_obj, warehouse_obj, amount, warehouse_parent_account, warehouse_account_obj):
+        #     debit_acc = warehouse_account_obj if rule.debit_account == warehouse_parent_account else rule.debit_account
+        #     credit_acc = warehouse_account_obj if rule.credit_account == warehouse_parent_account else rule.credit_account
         #     Entry.objects.create(
         #         transaction=transaction_obj,
-        #         account=rule.debit_account,
+        #         account=debit_acc,
         #         product=product_obj,
         #         warehouse=warehouse_obj,
         #         debit=amount,
@@ -67,22 +69,26 @@ def save_invoice(request):
             
         #     Entry.objects.create(
         #         transaction=transaction_obj,
-        #         account=rule.credit_account,
+        #         account=credit_acc,
         #         product=product_obj,
         #         warehouse=warehouse_obj,
         #         credit=amount
         #     )
         
-        def create_entries(transaction_obj, rule, product_obj, warehouse_obj, amount, warehouse_parent_account, warehouse_account_obj):
+        def create_entries(transaction_obj, rule, product_obj, warehouse_obj, amount, warehouse_parent_account, warehouse_account_obj, partner_obj):
             debit_acc = warehouse_account_obj if rule.debit_account == warehouse_parent_account else rule.debit_account
             credit_acc = warehouse_account_obj if rule.credit_account == warehouse_parent_account else rule.credit_account
-            # ic(debit_acc)
-            # ic(credit_acc)
+            
+            # Умная логика: определяем нужен ли partner для каждого счета
+            def needs_partner(account):
+                return account.number in ["60", "62", "75", "76"]
+            
             Entry.objects.create(
                 transaction=transaction_obj,
                 account=debit_acc,
                 product=product_obj,
                 warehouse=warehouse_obj,
+                partner=partner_obj if needs_partner(debit_acc) else None,  # ⭐ УМНО
                 debit=amount,
             )
             
@@ -91,13 +97,13 @@ def save_invoice(request):
                 account=credit_acc,
                 product=product_obj,
                 warehouse=warehouse_obj,
+                partner=partner_obj if needs_partner(credit_acc) else None,  # ⭐ УМНО
                 credit=amount
             )
                                     
     
         try:
             data = json.loads(request.body)
-            # ic(data)
             is_entry = data['is_entry']  
             awto = data['awto']
             awto_send = data['awto_send']
@@ -112,7 +118,6 @@ def save_invoice(request):
             warehouse2 = data['warehouse2']
             wozwrat_or_prihod = data['wozwrat_or_prihod']
             comment=data["comment"]
-            # ic(data)
             # invoice_id = data['id']
             invoice_id = data.get('id')
             
@@ -120,7 +125,6 @@ def save_invoice(request):
             
           
             
-            # ic(warehouse2)
             
             
             #####################################################################################################################################################################
@@ -264,7 +268,6 @@ def save_invoice(request):
                                 return JsonResponse({"status": "error", "message": "product is not fined", "not_fined_product_name": product['name']}, status=400)
                             
                             base_unit_obj = product["base_unit_obj"]
-                            # ic(base_unit_obj)
                             try:
                                 base_unit_obj_obj = UnitOfMeasurement.objects.get(id=base_unit_obj["id"])
                             except UnitOfMeasurement.DoesNotExist:
@@ -408,7 +411,7 @@ def save_invoice(request):
                                             return JsonResponse({"status": "error", "message": "rule must have revenue"}, status=400)
                                         if rule.amount_type == 'revenue': # продажа
                                             revenue_price = Decimal(Decimal(sale_price) * Decimal(quantity))
-                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, -revenue_price, warehouse_parent_account, warehouse_account_obj)                                              
+                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, -revenue_price, warehouse_parent_account, warehouse_account_obj, partner_obj)                                            
                                 invoice.entry_created_at = invoice_date
                                 invoice.entry_created_at_handle = invoice_date
                                 invoice.entry_created_by = request.user
@@ -464,7 +467,7 @@ def save_invoice(request):
                                             return JsonResponse({"status": "error", "message": "rule must have revenue"}, status=400)
                                         if rule.amount_type == 'revenue': # продажа
                                             revenue_price = Decimal(sale_price * quantity)
-                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, revenue_price, warehouse_parent_account, warehouse_account_obj)                                              
+                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, revenue_price, warehouse_parent_account, warehouse_account_obj, partner_obj)                                           
                                 invoice.entry_created_at = invoice_date
                                 invoice.entry_created_at_handle = invoice_date
                                 invoice.entry_created_by = request.user
@@ -514,7 +517,6 @@ def save_invoice(request):
                                         transaction.set_rollback(True)
                                         return JsonResponse({"status": "error", "message": "The warehouse account dont have a parent account"}, status=400)
                                     
-                                    # ic(warehouse_obj.currency.code)
                                     if warehouse_obj.currency.code == "TMT":
                                         partner_obj.balance_tmt -= Decimal(sale_price * quantity)
                                     else:
@@ -525,11 +527,11 @@ def save_invoice(request):
                                             return JsonResponse({"status": "error", "message": "rule must have revenue or profit"}, status=400)
                                         if rule.amount_type == 'revenue': # продажа
                                             revenue_price = Decimal(sale_price * quantity)
-                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, revenue_price, warehouse_parent_account, warehouse_account_obj)
+                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, revenue_price, warehouse_parent_account, warehouse_account_obj, partner_obj)
                                             
                                         elif rule.amount_type == 'profit':
                                             profit_price = Decimal((sale_price - purchase_price) * quantity)
-                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, profit_price, warehouse_parent_account, warehouse_account_obj)
+                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, revenue_price, warehouse_parent_account, warehouse_account_obj, partner_obj)
                                             
                                 invoice.entry_created_at = invoice_date
                                 invoice.entry_created_at_handle = invoice_date
@@ -609,14 +611,16 @@ def save_invoice(request):
                                         account=debit_acc,
                                         product=product_obj,
                                         warehouse=warehouse_obj2,
+                                        partner=partner_obj,  # ← ДОБАВИЛИ
                                         debit=amount,
                                     )
-                                    
+
                                     Entry.objects.create(
                                         transaction=transaction_obj,
                                         account=credit_acc,
                                         product=product_obj,
                                         warehouse=warehouse_obj,
+                                        partner=partner_obj,  # ← ДОБАВИЛИ
                                         credit=amount
                                     )
                                 invoice.entry_created_at = invoice_date
@@ -637,7 +641,6 @@ def save_invoice(request):
             #####################################################################################################################################################################        
             # update invoice    
             else:
-                ic("update invoice")
                 if not invoice_date2:
                     return JsonResponse({"status": "error", "message": "choose date prowodok"}, status=400)
                 try:
@@ -716,7 +719,6 @@ def save_invoice(request):
                         # return JsonResponse({"status": "ok", "message": f"{wozwrat_or_prihod} invoice updated without entry", "id": invoice.id})
                     
                         if is_entry:
-                            ic(wozwrat_or_prihod)
                             partner_obj = Partner.objects.select_for_update().get(id=partner["id"])
                             if invoice.entry_created_at:
                                 return JsonResponse({"status": "error", "message": "Invoice already posted"}, status=400)
@@ -738,7 +740,6 @@ def save_invoice(request):
                                     operation = Operation.objects.filter(code="return")
                                     
                                 if not operation.exists():
-                                    ic("tut")
                                     transaction.set_rollback(True)
                                     return JsonResponse({"status": "error", "message": f"u dont have a rule for {wozwrat_or_prihod}"}, status=400)
                                 
@@ -768,7 +769,6 @@ def save_invoice(request):
                             # #######################################################################################################################################
                             # wozwrat
                             if wozwrat_or_prihod == "wozwrat":
-                                ic("wozwrat")
                                 for product in products:
                                     
                                     product_obj = product_map[product['id']]
@@ -808,14 +808,13 @@ def save_invoice(request):
                                         partner_obj.balance_tmt += Decimal(sale_price * quantity)
                                     else:
                                         partner_obj.balance_usd += Decimal(sale_price * quantity)
-                                    # ic(rules, len(rules))
                                     for rule in rules:
                                         if not rule.amount_type in ['revenue']:
                                             transaction.set_rollback(True)
                                             return JsonResponse({"status": "error", "message": "rule must have revenue"}, status=400)
                                         if rule.amount_type == 'revenue': # продажа
                                             revenue_price = Decimal(Decimal(sale_price) * Decimal(quantity))
-                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, -revenue_price, warehouse_parent_account, warehouse_account_obj)
+                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, -revenue_price, warehouse_parent_account, warehouse_account_obj, partner_obj)
                                             
                                         
                                 invoice.entry_created_at = invoice_date2
@@ -864,14 +863,13 @@ def save_invoice(request):
                                         partner_obj.balance_tmt += Decimal(sale_price * quantity)
                                     else:
                                         partner_obj.balance_usd += Decimal(sale_price * quantity)
-                                    # ic(rules, len(rules))
                                     for rule in rules:
                                         if not rule.amount_type in ['revenue']:
                                             transaction.set_rollback(True)
                                             return JsonResponse({"status": "error", "message": "rule must have revenue"}, status=400)
                                         if rule.amount_type == 'revenue': # продажа
                                             revenue_price = Decimal(sale_price * quantity)
-                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, revenue_price, warehouse_parent_account, warehouse_account_obj)
+                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, revenue_price, warehouse_parent_account, warehouse_account_obj, partner_obj)
                                             
                                         
                                 invoice.entry_created_at = invoice_date2
@@ -926,18 +924,17 @@ def save_invoice(request):
                                         partner_obj.balance_tmt -= Decimal(sale_price * quantity)
                                     else:
                                         partner_obj.balance_usd -= Decimal(sale_price * quantity)
-                                    # ic(rules, len(rules))
                                     for rule in rules:
                                         if not rule.amount_type in ['revenue', 'profit']:
                                             transaction.set_rollback(True)
                                             return JsonResponse({"status": "error", "message": "rule must have revenue or profit"}, status=400)
                                         if rule.amount_type == 'revenue': # продажа
                                             revenue_price = Decimal(sale_price * quantity)
-                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, revenue_price, warehouse_parent_account, warehouse_account_obj)
+                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, revenue_price, warehouse_parent_account, warehouse_account_obj, partner_obj)
                                             
                                         elif rule.amount_type == 'profit':
                                             profit_price = Decimal((sale_price - purchase_price) * quantity)
-                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, profit_price, warehouse_parent_account, warehouse_account_obj)
+                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, revenue_price, warehouse_parent_account, warehouse_account_obj, partner_obj)
                                         
                                 invoice.entry_created_at = invoice_date2
                                 invoice.entry_created_at_handle = invoice_date2
@@ -1016,14 +1013,16 @@ def save_invoice(request):
                                         account=debit_acc,
                                         product=product_obj,
                                         warehouse=warehouse_obj2,
+                                        partner=partner_obj,  # ← ДОБАВИЛИ
                                         debit=amount,
                                     )
-                                    
+
                                     Entry.objects.create(
                                         transaction=transaction_obj,
                                         account=credit_acc,
                                         product=product_obj,
                                         warehouse=warehouse_obj,
+                                        partner=partner_obj,  # ← ДОБАВИЛИ
                                         credit=amount
                                     )
                                 invoice.entry_created_at = invoice_date
@@ -1065,7 +1064,6 @@ def save_invoice(request):
 def get_invoices(request):
     # query params будут в request.GET, например ?partner=1&wozwrat_or_prihod=prihod
     invoices = Invoice.objects.all().order_by("-pk")
-    # ic("tut get_invoices +++++", request)
     
     # DayClosing.objects.all().delete()
     # DayClosingLog.objects.all().delete()
@@ -1082,13 +1080,6 @@ def get_invoices(request):
     dateFrom = request.GET.get('dateFrom')
     dateTo = request.GET.get('dateTo')
     
-    ic(dateFrom)
-    ic(dateTo)
-    
-    # ic(selectedEntry)
-    
-    
-    # ic(partner_id)
 
     if partner_id:
         invoices = invoices.filter(partner__id=partner_id)
@@ -1109,8 +1100,6 @@ def get_invoices(request):
         elif sortInvoice == 'desc':
             invoices = invoices.order_by("-pk")
                         
-        
-    # ic(sortInvoice)
     
     # if selectedEntry:
     #     if selectedEntry == "entried":
@@ -1127,7 +1116,7 @@ def get_invoices(request):
             invoices = invoices.filter(canceled_at__isnull=False)
             
     if dateFrom and dateTo:
-        invoices = invoices.filter(created_at_handle__range=[dateFrom, dateTo])
+        invoices = invoices.filter(entry_created_at_handle__range=[dateFrom, dateTo])
             
 
     
@@ -1141,7 +1130,6 @@ def get_invoices(request):
     
     paginator = Paginator(invoices, page_size)
     page_obj = paginator.get_page(page)
-    # ic(page_obj)
 
     data = []
     for invoice in page_obj:
@@ -1175,7 +1163,6 @@ def get_invoices(request):
         
         # total_income_price = total_selected_price - total_purchase_price
         
-        # ic(total_selected_price)
         data.append({
             "id": invoice.id,
             "invoice_date": invoice.invoice_date,
@@ -1207,10 +1194,8 @@ def get_invoices(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_invoice_data(request, id):
-    # ic(id)
     try:
         invoice = Invoice.objects.get(pk=id)
-        # ic(invoice.awto)
     except Invoice.DoesNotExist:
         return Response(
             {"status": "error", "message": "Invoice not found"},
@@ -1246,7 +1231,6 @@ def get_invoice_data(request, id):
     else:
         warehouse_json2 = None
         
-    # ic(invoice.created_by.username)
     
     if invoice.created_by:
         created_by_json_name = invoice.created_by.username
@@ -1313,7 +1297,6 @@ def get_invoice_data(request, id):
         if units_json:
             quantity = float(quantity) / float(units_json[0]["conversion_factor"])
             
-        # ic(quantity)
         
         products.append({
             "base_quantity_in_stock": quantity, # item.base_quantity_in_stock
@@ -1354,10 +1337,7 @@ def get_invoice_data(request, id):
         })
         
     
-        
-    # ic(awto_json)
-    # ic(partner_json)
-    
+
         
     data = {
         "awto":awto_json,
@@ -1392,7 +1372,6 @@ def get_invoice_data(request, id):
         "date": invoice.invoice_date.strftime("%Y.%m.%d") if invoice.invoice_date else None,
         # добавь что нужно ещё
     }
-    # ic(data)
     return Response(data, status=status.HTTP_200_OK)
 
 
@@ -1402,7 +1381,6 @@ def get_invoice_data(request, id):
 def delete_invoice(request, id):
     try:
         invoice = Invoice.objects.get(id=id)
-        # ic(invoice)
         if invoice.is_entry:
             return JsonResponse({"status": "error", "message": "cant delete is entried invoice"}, status=404)
         invoice.delete()
@@ -1416,7 +1394,6 @@ def delete_invoice(request, id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def cancel_entry(request):
-    # ic("cancel_entry")
     if request.method == "POST":
         if not request.user.groups.filter(name="admin").exists():
             return JsonResponse({"status": "error", "message": "permission denied"}, status=403)
@@ -1425,7 +1402,6 @@ def cancel_entry(request):
             data = json.loads(request.body)
             invoice_id = data.get("id")
             canceled_comment = data.get("comment", "").strip()
-            # ic(canceled_comment)
             
             if not canceled_comment:
                 return JsonResponse({"status": "error", "message": "enter a reason cancel faktura"}, status=400)

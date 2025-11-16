@@ -42,6 +42,7 @@ import ExportFaktura from "./Components/Page/ExportsImports/ExportImportFaktura/
 import ExportImportEntries from "./Components/Page/ExportsImports/ExportImportEntries";
 import DetailReport6062 from "./Components/Page/OSW2/DetailReport6062";
 import DetailReport6062Partner from "./Components/Page/OSW2/DetailReport6062Partner";
+import SetPartnerInEntry from "./Components/Page/Admin/SetPartnerInEntry";
 
 function AppShell() {
   const location = useLocation();
@@ -116,6 +117,7 @@ function AppShell() {
                     <Route path={ADMIN_PANEL.IMPORT_PRODUCTS} element={<ImportProducts />} />
                     <Route path={ADMIN_PANEL.IMPORT_PARTNERS} element={<ImportPartners />} />
                     <Route path={ADMIN_PANEL.DELETE_MODELS} element={<DeleteData />} />
+                    <Route path={ADMIN_PANEL.SET_PARTNER_TO_ENTRY} element={<SetPartnerInEntry />} />
                   </Routes>
                 </section>
 

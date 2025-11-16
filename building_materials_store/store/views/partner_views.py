@@ -91,7 +91,6 @@ from . base_views import IsInAdminOrWarehouseGroup, CustomPageNumberPagination
         
 #         # Затем применяем сортировку
 #         sort_value = self.request.query_params.get('sort', 'desc')
-#         ic(self.request.query_params)
         
 #         sort_map = {
 #             'asc': 'pk',
@@ -285,7 +284,6 @@ class PartnerViewSet(viewsets.ModelViewSet):
         
         # Затем применяем сортировку
         sort_value = self.request.query_params.get('sort', 'desc')
-        ic("Sort value:", sort_value)
         
         # Обновляем карту сортировки для вычисляемых полей
         sort_map = {

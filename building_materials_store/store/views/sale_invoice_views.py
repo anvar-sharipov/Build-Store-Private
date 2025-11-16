@@ -204,12 +204,10 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     product_obj = Product.objects.get(pk=product_id)
                     quantity = Decimal(product['selected_quantity'])
                     sale_price = Decimal(product['selected_price'])
-                    ic(quantity)
                      
                     purchase_price = Decimal(product['purchase_price'])
                     retail_price = Decimal(product['retail_price'])
                     wholesale_price = Decimal(product['wholesale_price'])
-                    # ic('tut')
                     profit = (Decimal(sale_price) - Decimal(purchase_price)) * Decimal(quantity)
                     
                     conversion_factor = 1
@@ -219,7 +217,6 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                             conversion_factor = Decimal(u['conversion_factor'])
                             
                     minus_to_stock = conversion_factor * Decimal(quantity)
-                    ic(minus_to_stock)
                     wp = WarehouseProduct.objects.get(warehouse=warehouse, product=product_obj)
                     wp.quantity -= Decimal(minus_to_stock)
                     wp.save()
@@ -292,7 +289,6 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                             conversion_factor = Decimal(u['conversion_factor'])
                             
                     minus_to_stock = conversion_factor * quantity
-                    ic(minus_to_stock)
                     wp = WarehouseProduct.objects.get(warehouse=warehouse, product=product_obj)
                     wp.quantity -= Decimal(minus_to_stock)
                     wp.save()
@@ -348,14 +344,7 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                     retail_price_last = i.retail_price
                     wholesale_price_last = i.wholesale_price
                     
-                    ic(product_last_obj)
-                    ic(quantity_last)
-                    ic(sale_price_last)
-                    ic(is_gift_last)
-                    ic(purchase_price_last)
-                    ic(retail_price_last)
-                    ic(wholesale_price_last)
-                    
+
                     
                     units_last = ProductUnit.objects.filter(product=product_last_obj)
                     conversion_factor_last = 1
@@ -394,7 +383,6 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                 
                 invoice.invoice_date = invoice_date
                 
-                ic(data['partner']['id'])
                 try:
                     partner = Partner.objects.get(pk=data['partner']['id'])
                     
@@ -416,7 +404,6 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                 except:
                     invoice.buyer = None
                     if withPosting:
-                        ic('tut')
                         return Response({'detail': 'chooseClient'}, status=status.HTTP_400_BAD_REQUEST)
                     
                     
@@ -483,7 +470,6 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                             conversion_factor = Decimal(u['conversion_factor'])
                             
                     minus_to_stock = conversion_factor * Decimal(quantity)
-                    ic(minus_to_stock)
                     wp = WarehouseProduct.objects.get(warehouse=warehouse, product=product_obj)
                     wp.quantity -= Decimal(minus_to_stock)
                     wp.save()
@@ -552,7 +538,6 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
                             conversion_factor = Decimal(u['conversion_factor'])
                             
                     minus_to_stock = conversion_factor * quantity
-                    ic(minus_to_stock)
                     wp = WarehouseProduct.objects.get(warehouse=warehouse, product=product_obj)
                     wp.quantity -= Decimal(minus_to_stock)
                     wp.save()
@@ -577,7 +562,6 @@ class SalesInvoiceViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         invoice_id = self.kwargs.get('pk')
         invoice = SalesInvoice.objects.get(pk=invoice_id)
-        ic(invoice)
         if invoice.isEntry:
             return Response({'detail': 'cantDeleteIsEtriedInvoice'}, status=status.HTTP_400_BAD_REQUEST)
             

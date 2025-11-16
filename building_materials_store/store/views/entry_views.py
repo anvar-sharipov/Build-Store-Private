@@ -99,7 +99,6 @@ def partner_transaction(request):
     amount = data.get('amount')
     comment = data.get('comment')
     entry_date = data.get('entry_date')
-    ic("entry_date", entry_date)
     
     if entry_date:
         try:
@@ -144,7 +143,6 @@ def partner_transaction(request):
     
     try:
         with transaction.atomic():
-            ic("da income GGGGG", data)
 
             trasnaction_obj = Transaction.objects.create(description=f'Toleg: {data["comment"]}', partner=partner_obj, date=entry_date)
             for rule in rules:

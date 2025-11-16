@@ -12,6 +12,7 @@ from . views.query_views import *
 from . views.query_views2 import *
 from . views.query_views3 import *
 from . views import query_views4
+from . views import admin_views
 from . views.sale_invoice_views import *
 from . views.report_views import *
 from . views.utils import *
@@ -93,6 +94,7 @@ urlpatterns = [
     path("admin-import-products/", import_products, name="admin-import-products"),
     path("admin-import-partners/", import_partners, name="admin-import-partners"),
     path("delete_data/", delete_data, name="delete_data"),
+    path("set_partner_to_entry/", admin_views.set_partner_to_entry, name="set_partner_to_entry"),
     
     # save universal invoice
     path("save-invoice/", save_invoice, name="save_invoice"),

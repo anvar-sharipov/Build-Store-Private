@@ -45,4 +45,5 @@ export const ADMIN_PANEL = {
   IMPORT_PRODUCTS: "/import_products",
   IMPORT_PARTNERS: "/import_partners",
   DELETE_MODELS: "/delete_models",
+  SET_PARTNER_TO_ENTRY: "/set_partner_to_entry",
 };

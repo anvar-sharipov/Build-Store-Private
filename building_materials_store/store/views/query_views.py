@@ -18,7 +18,6 @@ import json
 @require_GET
 def search_agents_view(request):
     query = request.GET.get('q', '')
-    # ic(query)
     agents = (
         Agent.objects.annotate(similarity=TrigramSimilarity('name', query))
         .filter(similarity__gt=0.1)
@@ -43,7 +42,6 @@ def search_accounts_view(request):
 # poisk partnera po imeni (get)
 @require_GET
 def get_partner_by_name_view(request):
-    # ic('tut')
     name = request.GET.get('name', '').strip()
 
     if not name:
@@ -67,7 +65,6 @@ def get_partner_by_name_view(request):
 @require_GET
 def search_partners_view(request):
     query = request.GET.get('q', '')
-    # ic(query)
     partners = (
         Partner.objects.annotate(similarity=TrigramSimilarity('name', query))
         .filter(similarity__gt=0.1, is_active=True)
@@ -83,7 +80,6 @@ def search_partners_view(request):
 
 def get_trial_balance(date_from, date_to):
     accounts = Account.objects.all().order_by("number")
-    # ic("this is get_trial_balance")
     ACCOUNT_FOR_START_NEW_PROJECT = CustomePostingRule.objects.filter(operation__code="ACCOUNT_FOR_START_NEW_PROJECT").first()
 
     report = []
@@ -281,14 +277,12 @@ def get_trial_balance(date_from, date_to):
         }
         
         
-    ic(saldo_total)
     return {"report":report, "detail_report":detail_report, "detail_report_total":detail_report_total, "saldo_total":saldo_total}
 # OSW
 @require_GET
 def get_osw(request):
     date_from = request.GET.get("date_from")
     date_to = request.GET.get("date_to")
-    # ic(date_from, date_to)
 
     reports = get_trial_balance(date_from, date_to)  # твоя функция
     report = reports['report']
@@ -306,32 +300,22 @@ def get_saldo(partner_obj, getDate):
     # USD
     rule = CustomePostingRule.objects.filter(operation__code="sale", directory_type=partner_obj.type, amount_type="revenue", currency__code="USD").first()
     
-    # Partner.objects.all().update(balance_tmt = 0, balance_usd = 0)
-    # Transaction.objects.all().delete()
-    # Entry.objects.all().delete()
-    # Invoice.objects.all().delete()
-    
-    # DayClosing.objects.all().delete()
-    # DayClosingLog.objects.all().delete()
-    # PartnerBalanceSnapshot.objects.all().delete()
-    # StockSnapshot.objects.all().delete()
-    
     if not rule:
         value = [Decimal('0.00'), Decimal('0.00')]
         return {"start": value, "oborot": value, "final": value, "saldo": value}
+    
     account = rule.debit_account
-    ic(account)
-    entries_start = Entry.objects.filter(transaction__partner=partner_obj, transaction__date__lt=getDate).filter(account=account)
+    
+    # ⭐ ИЗМЕНЕНИЕ: используем partner из Entry вместо transaction__partner
+    entries_start = Entry.objects.filter(partner=partner_obj, transaction__date__lt=getDate).filter(account=account)
     debit_start = entries_start.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
     credit_start = entries_start.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
     
-    entries_oborot = Entry.objects.filter(transaction__partner=partner_obj, transaction__date__date=getDate).filter(account=account)
-    # ic(partner_obj)
-    # ic("GGGGGGGGGGGGGGGGGGGGGGGGGG 192", Entry.objects.filter(transaction__partner=partner_obj))
-    ic("EEEEEEEEEEEEEEEEEEEEE 192", entries_oborot)
+    entries_oborot = Entry.objects.filter(partner=partner_obj, transaction__date__date=getDate).filter(account=account)
     today_entries = []
     desc = ''
     already_have_pks = []
+    
     if entries_oborot:
         count = 0
         for e in entries_oborot:
@@ -347,12 +331,9 @@ def get_saldo(partner_obj, getDate):
             count += 1
             desc += f"{count}) {e.transaction.description}"
             desc += "\n"
-    
 
     debit_oborot = entries_oborot.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
     credit_oborot = entries_oborot.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
-    # ic(today_entries)
-  
     
     debit_end = debit_start + debit_oborot
     credit_end = credit_start + credit_oborot
@@ -367,19 +348,19 @@ def get_saldo(partner_obj, getDate):
     if not rule:
         value = [Decimal('0.00'), Decimal('0.00')]
         return {"start": value, "oborot": value, "final": value, "saldo": value}
+    
     account = rule.debit_account
-    ic(account)
-    entries_start = Entry.objects.filter(transaction__partner=partner_obj, transaction__date__lt=getDate).filter(account=account)
+    
+    # ⭐ ИЗМЕНЕНИЕ: используем partner из Entry вместо transaction__partner
+    entries_start = Entry.objects.filter(partner=partner_obj, transaction__date__lt=getDate).filter(account=account)
     debit_start_tmt = entries_start.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
     credit_start_tmt = entries_start.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
     
-    entries_oborot = Entry.objects.filter(transaction__partner=partner_obj, transaction__date__date=getDate).filter(account=account)
-    # ic(partner_obj)
-    # ic("GGGGGGGGGGGGGGGGGGGGGGGGGG 192", Entry.objects.filter(transaction__partner=partner_obj))
-    ic("EEEEEEEEEEEEEEEEEEEEE 192", entries_oborot)
+    entries_oborot = Entry.objects.filter(partner=partner_obj, transaction__date__date=getDate).filter(account=account)
     today_entries_tmt = []
     desc_tmt = ''
     already_have_pks = []
+    
     if entries_oborot:
         count = 0
         for e in entries_oborot:
@@ -395,12 +376,9 @@ def get_saldo(partner_obj, getDate):
             count += 1
             desc_tmt += f"{count}) {e.transaction.description}"
             desc_tmt += "\n"
-    
 
     debit_oborot_tmt = entries_oborot.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
     credit_oborot_tmt = entries_oborot.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
-    # ic(today_entries)
-  
     
     debit_end_tmt = debit_start_tmt + debit_oborot_tmt
     credit_end_tmt = credit_start_tmt + credit_oborot_tmt
@@ -409,14 +387,14 @@ def get_saldo(partner_obj, getDate):
     saldo_debit_tmt = abs(saldo) if saldo > 0 else 0
     saldo_credit_tmt = abs(saldo) if saldo < 0 else 0
     
-
     return {
-        "start": [debit_start, credit_start], "oborot": [debit_oborot, credit_oborot, desc], "final": [debit_end, credit_end], "saldo": [saldo_debit, saldo_credit], "today_entries":today_entries,
-        "start_tmt": [debit_start_tmt, credit_start_tmt], "oborot_tmt": [debit_oborot_tmt, credit_oborot_tmt, desc_tmt], "final_tmt": [debit_end_tmt, credit_end_tmt], "saldo_tmt": [saldo_debit_tmt, saldo_credit_tmt], "today_entries_tmt":today_entries_tmt,
-        } 
+        "start": [debit_start, credit_start], "oborot": [debit_oborot, credit_oborot, desc], "final": [debit_end, credit_end], "saldo": [saldo_debit, saldo_credit], "today_entries": today_entries,
+        "start_tmt": [debit_start_tmt, credit_start_tmt], "oborot_tmt": [debit_oborot_tmt, credit_oborot_tmt, desc_tmt], "final_tmt": [debit_end_tmt, credit_end_tmt], "saldo_tmt": [saldo_debit_tmt, saldo_credit_tmt], "today_entries_tmt": today_entries_tmt,
+    }
 
 
 def get_saldo2(partner_obj, getDate):
+    ic("tut saldo2")
     results = {}
     
     # Для каждого счета отдельно
@@ -430,9 +408,10 @@ def get_saldo2(partner_obj, getDate):
     for account_number, currency in accounts_to_check:
         account = Account.objects.get(number=account_number)
         
+        # ⭐ ИЗМЕНЕНИЕ: используем partner из Entry вместо transaction__partner
         # Начальное сальдо (до выбранной даты)
         entries_start = Entry.objects.filter(
-            transaction__partner=partner_obj,
+            partner=partner_obj,  # ← ИЗМЕНИЛИ
             transaction__date__lt=getDate
         ).filter(account=account)
         
@@ -441,7 +420,7 @@ def get_saldo2(partner_obj, getDate):
         
         # Обороты за выбранную дату
         entries_oborot = Entry.objects.filter(
-            transaction__partner=partner_obj,
+            partner=partner_obj,  # ← ИЗМЕНИЛИ
             transaction__date__date=getDate  
         ).filter(account=account)
         
@@ -485,7 +464,6 @@ def get_saldo2(partner_obj, getDate):
             "today_entries": today_entries
         }
     
-    ic(results)
     return results
 
 @require_GET
@@ -502,7 +480,6 @@ def get_saldo_for_partner_for_selected_date(request):
     getDate = request.GET.get('date')
     partnerId = request.GET.get('partnerId')
     partner_obj = Partner.objects.get(pk=partnerId)
-    # ic(get_balance_on_date(partner_obj, getDate))
     saldo = get_saldo(partner_obj, getDate)
     return JsonResponse({"saldo": saldo}, safe=False)
 # get saldo
@@ -531,7 +508,6 @@ def delete_data(request):
     # Логика удаления
     
     if models_name == "delete_agents":
-        ic("agents_deleted")
         return JsonResponse({"success": True, "models_name": models_name, "date_focus": True})
         
     return JsonResponse({"success": True, "models_name": models_name})
@@ -560,15 +536,12 @@ def check_day_closed(request):
     prev_date = chosen_date - timedelta(days=1)
     prev_day = DayClosing.objects.filter(date=prev_date).first()
     prev_closed = bool(prev_day and getattr(prev_day, "is_closed", True))
-    # ic(prev_closed)
     
     # если предыдущий день не закрыт → сразу вернуть False
     
     if DayClosing.objects.all().exists():
-        ic("tutEEEEEEEE")
         return JsonResponse({"success": True, "is_closed": is_closed, "last_day_not_closed": not prev_closed})
     else:
-        ic("tutGGGGGGGGG")
         return JsonResponse({"success": True, "is_closed": False, "last_day_not_closed": False})
 
     

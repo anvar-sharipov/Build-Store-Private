@@ -305,6 +305,14 @@ def get_account_for_osw2(request):
         period_credit = entries_period.aggregate(total=Sum('credit'))['total'] or 0
 
         final_balance = initial_balance + period_debit - period_credit
+        
+        if a.number == "40.1":
+            ic(initial_debit)
+            ic(initial_credit)
+            ic(period_debit)
+            ic(period_credit)
+            
+            ic(final_balance)
 
         
 
@@ -522,9 +530,8 @@ def get_detail_account(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_entry(request):
-    """Создание проводки с улучшенной обработкой для импорта"""
+    """Создание проводки с поддержкой двух партнеров"""
     if request.method == "POST":
-        ic(request.user)
         try:
             with transaction.atomic():
                 data = json.loads(request.body)
@@ -568,13 +575,18 @@ def create_entry(request):
                     return JsonResponse({"status": "error", "message": "Не указаны счета дебета или кредита"}, status=400)
 
                 amount = Decimal(data.get("amount") or 0)
-                if amount <= 0:
+                if amount == 0:
                     return JsonResponse({"status": "error", "message": "Сумма должна быть больше 0"}, status=400)
 
                 comment = data.get("comment", "") or data.get("description", "")
-                partner_id = data.get("partnerId") or data.get("partner_id")
-                partner = Partner.objects.get(id=partner_id) if partner_id else None
                 
+                # Получаем партнеров для дебета и кредита
+                debit_partner_id = data.get("debitPartnerId")
+                credit_partner_id = data.get("creditPartnerId")
+                
+                debit_partner = Partner.objects.get(id=debit_partner_id) if debit_partner_id else None
+                credit_partner = Partner.objects.get(id=credit_partner_id) if credit_partner_id else None
+
                 # Дополнительные поля
                 product_id = data.get("product_id") or data.get("product", {}).get("id")
                 product = Product.objects.get(id=product_id) if product_id else None
@@ -589,55 +601,43 @@ def create_entry(request):
                 except Account.DoesNotExist as e:
                     return JsonResponse({"status": "error", "message": f"Счет не найден или неактивен: {str(e)}"}, status=400)
 
-                # USD/TMT логика для партнеров
-                if partner and warehouse:
-                    # Получаем валюту склада
-                    warehouse_currency_code = warehouse.currency.code if warehouse.currency else None
-                    
-                    if warehouse_currency_code:
-                        rule = CustomePostingRule.objects.filter(
-                            operation__code="sale", 
-                            directory_type=partner.type, 
-                            amount_type="revenue", 
-                            currency__code=warehouse_currency_code
-                        ).first()
-                        
-                        if rule:
-                            ic(f"Found rule for {warehouse_currency_code}:", rule.debit_account, rule.credit_account)
+                # Проверяем, нужны ли партнеры для счетов
+                debit_needs_partner = debit_acc_number in ["60", "62", "75", "76"]
+                credit_needs_partner = credit_acc_number in ["60", "62", "75", "76"]
+
+                # Валидация партнеров
+                if debit_needs_partner and not debit_partner:
+                    return JsonResponse({"status": "error", "message": "Для дебетового счета требуется партнер"}, status=400)
+                
+                if credit_needs_partner and not credit_partner:
+                    return JsonResponse({"status": "error", "message": "Для кредитового счета требуется партнер"}, status=400)
 
                 # Весь процесс в атомарной транзакции
                 with db_transaction.atomic():
+                    # Создаем транзакцию (уже без партнера)
                     transaction_obj = Transaction.objects.create(
-                        date=datetime_obj,  # Используем datetime объект
+                        date=datetime_obj,
                         description=comment,
-                        partner=partner,
+                        partner=None,  # Теперь партнер в Entry, а не в Transaction
                         created_by=request.user
                     )
 
-                    # Логика обновления баланса партнера (если нужно)
-                    if partner and warehouse and warehouse.currency:
-                        currency_code = warehouse.currency.code
-                        # Простая логика - можно доработать под конкретные правила
-                        if currency_code == "TMT":
-                            # Логика для TMT
-                            pass
-                        elif currency_code == "USD":
-                            # Логика для USD
-                            pass
-
-                    # Создаем проводки
+                    # Создаем дебетовую проводку с партнером
                     Entry.objects.create(
                         transaction=transaction_obj,
                         account=debit_account,
+                        partner=debit_partner,  # Партнер для дебета
                         debit=amount,
                         credit=Decimal("0.00"),
                         product=product,
                         warehouse=warehouse
                     )
 
+                    # Создаем кредитовую проводку с партнером
                     Entry.objects.create(
                         transaction=transaction_obj,
                         account=credit_account,
+                        partner=credit_partner,  # Партнер для кредита
                         debit=Decimal("0.00"),
                         credit=amount,
                         product=product,
@@ -662,103 +662,100 @@ def create_entry(request):
             return JsonResponse({"status": "error", "message": "transactionChange", "reason_for_the_error": str(e)}, status=400)
 
 
-
-
 @csrf_exempt
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
-def update_entry(request, id):
-    """Редактирование существующей проводки"""
-    try:
-        data = json.loads(request.body)
-
-        with transaction.atomic():
-
-            # Находим транзакцию
-            try:
-                transaction_obj = Transaction.objects.get(id=id)
-            except Transaction.DoesNotExist:
-                return JsonResponse({"status": "error", "message": "Транзакция не найдена"}, status=404)
-
-            # Парсинг даты
-            date_str = data.get("date")
-            if not date_str:
-                return JsonResponse({"status": "error", "message": "Дата обязательна"}, status=400)
-
-            date_obj = parse_date(date_str)
-            if not date_obj:
+def update_entry(request, id):  # Здесь id - это ID транзакции (Transaction)
+    """Обновление проводки с поддержкой двух партнеров"""
+    if request.method == "PUT":
+        try:
+            with transaction.atomic():
+                data = json.loads(request.body)
+                
+                # Находим транзакцию по ID
                 try:
-                    date_obj = datetime.strptime(date_str, '%d.%m.%Y').date()
-                except ValueError:
-                    try:
-                        date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
-                    except ValueError:
-                        return JsonResponse({"status": "error", "message": "Неверный формат даты"}, status=400)
+                    transaction_obj = Transaction.objects.get(id=id)  # Ищем Transaction по ID
+                except Transaction.DoesNotExist:
+                    return JsonResponse({"status": "error", "message": "Транзакция не найдена"}, status=404)
 
-            # Проверка закрытого дня
-            if DayClosing.objects.filter(date=date_obj).exists():
-                return JsonResponse({"status": "error", "message": f"День {date_obj} закрыт"}, status=400)
+                # Проверка закрытых дней
+                if DayClosing.objects.filter(date=transaction_obj.date.date()).exists():
+                    return JsonResponse({"status": "error", "message": f"День {transaction_obj.date.strftime('%d.%m.%Y')} закрыт"}, status=400)
 
-            # Счета
-            debit_acc_number = data.get("debitAccount")
-            credit_acc_number = data.get("creditAccount")
+                # Получаем данные
+                debit_acc_number = data.get("debitAccount")
+                credit_acc_number = data.get("creditAccount")
+                
+                if not debit_acc_number or not credit_acc_number:
+                    return JsonResponse({"status": "error", "message": "Не указаны счета дебета или кредита"}, status=400)
 
-            try:
-                debit_account = Account.objects.get(number=debit_acc_number)
-                credit_account = Account.objects.get(number=credit_acc_number)
-            except Account.DoesNotExist:
-                return JsonResponse({"status": "error", "message": "Указан неверный счёт"}, status=400)
+                amount = Decimal(data.get("amount") or 0)
+                if amount <= 0:
+                    return JsonResponse({"status": "error", "message": "Сумма должна быть больше 0"}, status=400)
 
-            # Сумма
-            amount = Decimal(data.get("amount") or 0)
-            if amount <= 0:
-                return JsonResponse({"status": "error", "message": "Сумма должна быть > 0"}, status=400)
+                comment = data.get("comment", "")
+                
+                # Получаем партнеров
+                debit_partner_id = data.get("debitPartnerId")
+                credit_partner_id = data.get("creditPartnerId")
+                
+                debit_partner = Partner.objects.get(id=debit_partner_id) if debit_partner_id else None
+                credit_partner = Partner.objects.get(id=credit_partner_id) if credit_partner_id else None
 
-            # Partner / Product / Warehouse
-            partner_id = data.get("partnerId")
-            product_id = data.get("product_id")
-            warehouse_id = data.get("warehouse_id")
+                # Валидация счетов
+                try:
+                    debit_account = Account.objects.get(number=debit_acc_number, is_active=True)
+                    credit_account = Account.objects.get(number=credit_acc_number, is_active=True)
+                except Account.DoesNotExist:
+                    return JsonResponse({"status": "error", "message": "Счет не найден или неактивен"}, status=400)
 
-            partner = Partner.objects.get(id=partner_id) if partner_id else None
-            product = Product.objects.get(id=product_id) if product_id else None
-            warehouse = Warehouse.objects.get(id=warehouse_id) if warehouse_id else None
+                # Проверяем, нужны ли партнеры для счетов
+                debit_needs_partner = debit_acc_number in ["60", "62", "75", "76"]
+                credit_needs_partner = credit_acc_number in ["60", "62", "75", "76"]
 
-            # Обновляем Transaction
-            transaction_obj.date = datetime.combine(date_obj, datetime.min.time())
-            transaction_obj.description = data.get("comment", "")
-            transaction_obj.partner = partner
-            transaction_obj.save()
+                # Валидация партнеров
+                if debit_needs_partner and not debit_partner:
+                    return JsonResponse({"status": "error", "message": "Для дебетового счета требуется партнер"}, status=400)
+                
+                if credit_needs_partner and not credit_partner:
+                    return JsonResponse({"status": "error", "message": "Для кредитового счета требуется партнер"}, status=400)
 
-            # Удаляем старые проводки
-            Entry.objects.filter(transaction=transaction_obj).delete()
+                # Обновляем транзакцию
+                transaction_obj.description = comment
+                transaction_obj.save()
 
-            # Создаём новые (дебет)
-            Entry.objects.create(
-                transaction=transaction_obj,
-                account=debit_account,
-                debit=amount,
-                credit=Decimal("0"),
-                product=product,
-                warehouse=warehouse
-            )
+                # Получаем все проводки этой транзакции
+                entries = transaction_obj.entries.all()
+                debit_entry = entries.filter(debit__gt=0).first()
+                credit_entry = entries.filter(credit__gt=0).first()
 
-            # Кредит
-            Entry.objects.create(
-                transaction=transaction_obj,
-                account=credit_account,
-                debit=Decimal("0"),
-                credit=amount,
-                product=product,
-                warehouse=warehouse
-            )
+                # Обновляем проводки
+                if debit_entry:
+                    debit_entry.account = debit_account
+                    debit_entry.partner = debit_partner
+                    debit_entry.debit = amount
+                    debit_entry.save()
 
-            return JsonResponse({"status": "success", "message": "Проводка обновлена"})
+                if credit_entry:
+                    credit_entry.account = credit_account
+                    credit_entry.partner = credit_partner
+                    credit_entry.credit = amount
+                    credit_entry.save()
 
-    except Exception as e:
-        return JsonResponse({"status": "error", "message": str(e)}, status=400)
-    
-    
-    
+                return JsonResponse({
+                    "message": "entry_updated", 
+                    "transaction_id": transaction_obj.id
+                })
+
+        except Account.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Счёт не найден"}, status=400)
+        except Partner.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Партнёр не найден"}, status=400)
+        except Exception as e:
+            ic(e)
+            return JsonResponse({"status": "error", "message": "Ошибка обновления проводки", "reason_for_the_error": str(e)}, status=400)  
+
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_entry(request, entry_id):
@@ -1859,15 +1856,6 @@ def get_account_cards(request, id):
 
     account = Account.objects.get(id=id)
     
-    
-    
-    # my_transactions = Transaction.objects.filter(date__range=[date_from, date_to],)
-    
-    
-    
-    
-    
-
     # Собираем все дочерние счета рекурсивно
     def get_all_children(acc):
         children = list(acc.children.all())
@@ -1876,44 +1864,29 @@ def get_account_cards(request, id):
             all_accs.extend(get_all_children(c))
         return all_accs
     
-
-
     all_accounts = get_all_children(account)
     account_ids = [a.id for a in all_accounts]
     
+    # ⭐ ИЗМЕНЕНИЕ: Получаем Entry напрямую (группировка по partner из Entry)
+    entries_period = Entry.objects.filter(
+        account__in=account_ids,
+        transaction__date__range=[date_from, date_to]
+    ).select_related('transaction', 'partner').order_by('transaction__date')
 
-    # выбираем все транзакции за период, где есть проводки по account_ids
-    transactions = (
-        Transaction.objects.filter(
-            date__range=[date_from, date_to],
-            entries__account__in=account_ids
-        )
-        .distinct()
-        .select_related('partner')
-        .prefetch_related('entries')
-        .order_by('date', 'id')
-    )
-    
-
-    # группируем по партнёрам
+    # Группируем по партнёрам из Entry
     partner_groups = defaultdict(list)
-    for tr in transactions:
-        partner_id = tr.partner_id or 0
-        partner_groups[partner_id].append(tr)
-        
-
+    for entry in entries_period:
+        partner_id = entry.partner_id or 0  # ⭐ ИСПОЛЬЗУЕМ partner из Entry
+        partner_groups[partner_id].append(entry)
 
     cards = []
-    for partner_id, trans in partner_groups.items():
-        partner_name = trans[0].partner.name if partner_id else ""
-        saldo_start = Decimal(0)
-        debit_turnover = Decimal(0)
-        credit_turnover = Decimal(0)
-        current_saldo = Decimal(saldo_start)
+    for partner_id, entries in partner_groups.items():
+        partner_name = entries[0].partner.name if entries[0].partner else ""
         
+        # ⭐ ИЗМЕНЕНИЕ: Начальное сальдо через partner в Entry
         saldo_start_data = Entry.objects.filter(
             account__in=account_ids,
-            transaction__partner_id=partner_id,
+            partner_id=partner_id,  # ⭐ ИСПОЛЬЗУЕМ partner из Entry
             transaction__date__lt=date_from
         ).aggregate(
             debit_sum=Sum('debit', default=Decimal(0)),
@@ -1922,24 +1895,23 @@ def get_account_cards(request, id):
         saldo_start = saldo_start_data['debit_sum'] - saldo_start_data['credit_sum']
         current_saldo = saldo_start
         
-
-
-
+        debit_turnover = Decimal(0)
+        credit_turnover = Decimal(0)
+        
         movements = []
-        seen = set()
-        for tr in trans:
-            if tr.id in seen:
+        seen_transactions = set()
+        
+        for entry in entries:
+            tr = entry.transaction
+            if tr.id in seen_transactions:
                 continue
-            seen.add(tr.id)
-
-            # суммируем дебет/кредит по всем выбранным счетам
-            sums = tr.entries.filter(account__in=account_ids).aggregate(
-                debit_sum=Sum('debit', default=Decimal(0)),
-                credit_sum=Sum('credit', default=Decimal(0))
-            )
-            debit = sums['debit_sum'] or Decimal(0)
-            credit = sums['credit_sum'] or Decimal(0)
-
+            seen_transactions.add(tr.id)
+            
+            # Суммируем все Entry этой транзакции для данного партнера и счетов
+            transaction_entries = [e for e in entries if e.transaction_id == tr.id]
+            debit = sum(e.debit for e in transaction_entries)
+            credit = sum(e.credit for e in transaction_entries)
+            
             current_saldo += debit - credit
             debit_turnover += debit
             credit_turnover += credit
@@ -1966,6 +1938,7 @@ def get_account_cards(request, id):
         cards.append(card)
 
     return Response(cards)
+
 
 # @api_view(['GET'])
 # @permission_classes([IsAuthenticated])

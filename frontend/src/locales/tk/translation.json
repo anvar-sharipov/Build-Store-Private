@@ -582,7 +582,9 @@
   "filters": "Filtr",
   "search agents...": "Agentleri gözle...",
   "choosed": "Saýlanan",
-  "noAgent": "Agent ýok"
+  "noAgent": "Agent ýok",
+  "error password": "Nädogry parol",
+  "success set partner from Transaction to Entry": "Partner Tranzaksiýadan Entryga üstünlikli geçirildi"
 
 
 

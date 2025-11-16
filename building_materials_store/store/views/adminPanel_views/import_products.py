@@ -74,7 +74,6 @@ def import_products(request):
                     # total_price = row[6]
                     # test_total_price += price
                     # test_total_price2 += total_price
-                    # ic(unit)
                     if unit in units_obj_dict:
                         unit_obj = units_obj_dict[unit]
                     else:
@@ -105,8 +104,6 @@ def import_products(request):
         # Здесь можно сразу сохранить в БД, например:
         # for item in imported:
         #     Product.objects.update_or_create(name=item["name"], defaults={"price": item["price"], "qty": item["qty"]})
-        # ic(test_total_price)
-        # ic(test_total_price2)
         return Response(
             {
                 "detail": f"Импортировано {len(imported)} строк.",

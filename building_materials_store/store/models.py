@@ -689,7 +689,7 @@ class Transaction(models.Model):
 class Entry(models.Model):
     transaction = models.ForeignKey(Transaction, related_name='entries', on_delete=models.CASCADE, verbose_name='Операция')
     account = models.ForeignKey(Account, on_delete=models.PROTECT, verbose_name='Счет')
-    # partner = models.ForeignKey(Partner, null=True, blank=True, on_delete=models.SET_NULL, verbose_name='Партнер (субконто)')
+    partner = models.ForeignKey(Partner, null=True, blank=True, on_delete=models.SET_NULL, verbose_name='Партнер (субконто)')
     product = models.ForeignKey('Product', null=True, blank=True, on_delete=models.SET_NULL)
     warehouse = models.ForeignKey('Warehouse', null=True, blank=True, on_delete=models.SET_NULL)
     debit = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), verbose_name='Дебет')

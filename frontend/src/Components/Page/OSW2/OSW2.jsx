@@ -273,8 +273,14 @@ const OSW2 = () => {
                           {formatNumber(o.debit)}
                         </td>
                         <td className="px-4 py-4 text-right font-mono text-sm font-semibold text-red-600 dark:text-red-400">{formatNumber(o.credit)}</td>
-                        <td className="px-4 py-4 text-right font-mono text-sm text-gray-600 dark:text-gray-400 border-l border-gray-200 dark:border-gray-700">{formatNumber(o.final_debit)}</td>
-                        <td className="px-4 py-4 text-right font-mono text-sm text-gray-600 dark:text-gray-400">{formatNumber(o.final_credit)}</td>
+                        <td className="px-4 py-4 text-right font-mono text-sm text-gray-600 dark:text-gray-400 border-l border-gray-200 dark:border-gray-700">
+                          {parseFloat(o.final_balance) > 0 ? formatNumber(o.final_balance) : '—' }
+                          {/* {formatNumber(o.final_debit)} */}
+                          </td>
+                        <td className="px-4 py-4 text-right font-mono text-sm text-gray-600 dark:text-gray-400">
+                          {parseFloat(o.final_balance) < 0 ? formatNumber(Math.abs(o.final_balance)) : '—' }
+                          {/* {formatNumber(o.final_credit)} */}
+                          </td>
                       </motion.tr>
                     ))}
                   </AnimatePresence>

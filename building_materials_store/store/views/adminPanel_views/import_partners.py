@@ -34,7 +34,6 @@ def import_partners(request):
                     type_ = row[3]
                     is_active = row[4]
                     balance = row[5]
-                    ic(row)
 
                     # --- ВАЛИДАЦИЯ ---
                     if not name or str(name).strip() == "":

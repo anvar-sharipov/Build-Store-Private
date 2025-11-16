@@ -612,7 +612,9 @@
   "filters": "Фильтры",
   "search agents...": "Поиск агентов...",
   "choosed": "Выбран",
-  "noAgent": "Нет агента"
+  "noAgent": "Нет агента",
+  "error password": "Неверный пароль",
+  "success set partner from Transaction to Entry": "Партнёр успешно установлен из Transaction в Entry"
 
 
  

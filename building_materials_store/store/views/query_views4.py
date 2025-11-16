@@ -23,55 +23,59 @@ def get_entries_without_faktura(request):
     transactions = Transaction.objects.filter(
         date__range=[dateFrom, dateTo], 
         invoice__isnull=True
-    ).prefetch_related('entries__account', 'partner').order_by("-pk")
+    ).prefetch_related(
+        'entries__account', 
+        'entries__partner'
+    ).order_by("-pk")
     
     data = []
     
     for transaction in transactions:
-        # Ищем первую дебетовую проводку
-        debit_entry = None
-        # Ищем первую кредитовую проводку
-        credit_entry = None
+        debit_entry_obj = None
+        credit_entry_obj = None
         
+        # Ищем дебетовую и кредитовую проводки
         for entry in transaction.entries.all():
-            # Пропускаем полностью нулевые проводки
-            if entry.debit == 0 and entry.credit == 0:
-                continue
-                
-            if entry.debit != 0 and not debit_entry:
-                debit_entry = {
-                    "account": entry.account.number,
-                    "account_name": entry.account.name,
-                    "amount": float(entry.debit)
-                }
-            elif entry.credit != 0 and not credit_entry:
-                credit_entry = {
-                    "account": entry.account.number,
-                    "account_name": entry.account.name,
-                    "amount": float(entry.credit)
-                }
-            
-            # Если нашли обе проводки, можно выйти из цикла
-            if debit_entry and credit_entry:
-                break
+            if entry.debit != 0:
+                debit_entry_obj = entry
+            elif entry.credit != 0:
+                credit_entry_obj = entry
         
-        # Если не нашли ни одной проводки, пропускаем транзакцию
-        if not debit_entry and not credit_entry:
+        # Если не нашли обе проводки, пропускаем
+        if not debit_entry_obj or not credit_entry_obj:
             continue
             
-        partner = {}
-        if transaction.partner:
-            partner = {
-                "id": transaction.partner.id,
-                "name": transaction.partner.name
-            }
+        # Формируем данные с партнерами
+        debit_data = {
+            "account": debit_entry_obj.account.number,
+            "account_name": debit_entry_obj.account.name,
+            "amount": float(debit_entry_obj.debit),
+            "partner": {
+                "id": debit_entry_obj.partner.id,
+                "name": debit_entry_obj.partner.name,
+                "type": debit_entry_obj.partner.type
+            } if debit_entry_obj.partner else None
+        }
+        
+        credit_data = {
+            "account": credit_entry_obj.account.number,
+            "account_name": credit_entry_obj.account.name,
+            "amount": float(credit_entry_obj.credit),
+            "partner": {
+                "id": credit_entry_obj.partner.id,
+                "name": credit_entry_obj.partner.name,
+                "type": credit_entry_obj.partner.type
+            } if credit_entry_obj.partner else None
+        }
+            
         data.append({
             "id": transaction.id,
             "date": transaction.date.strftime('%Y-%m-%d'),
             "comment": transaction.description,
-            "partner": partner,
-            "debit": debit_entry,  # Одна дебетовая проводка
-            "credit": credit_entry,  # Одна кредитовая проводка
+            "debit": debit_data,
+            "credit": credit_data,
+            "debitPartner": debit_data["partner"],  # Отдельное поле для удобства
+            "creditPartner": credit_data["partner"], # Отдельное поле для удобства
         })
     
     return JsonResponse({
@@ -79,7 +83,6 @@ def get_entries_without_faktura(request):
         "count": len(data),
         "message": f"Найдено {len(data)} операций без фактур"
     })
-    
     
     
 
@@ -500,15 +503,9 @@ def get_detail_account_60_62(request):
     # 1-й запрос: все партнеры с их транзакциями и записями для данного счета
     partners_prefetch = Partner.objects.prefetch_related(
         Prefetch(
-            'transaction_set',
-            queryset=Transaction.objects.prefetch_related(
-                Prefetch(
-                    'entries',
-                    queryset=Entry.objects.filter(account__number=account_number),
-                    to_attr='filtered_entries'
-                )
-            ),
-            to_attr='prefetched_transactions'
+            'entry_set',  # ⭐ ИЗМЕНИЛИ: используем связь Partner → Entry
+            queryset=Entry.objects.filter(account__number=account_number),
+            to_attr='filtered_entries'
         )
     ).select_related('agent')
 
@@ -569,20 +566,20 @@ def get_detail_account_60_62(request):
             debit_oborot = 0
             credit_oborot = 0
             
-            # Обрабатываем все транзакции партнера
-            for transaction in partner.prefetched_transactions:
+            # ⭐ ИЗМЕНЕНИЕ: Используем prefetched entries
+            for entry in partner.filtered_entries:
                 # ИСПРАВЛЕНИЕ: Получаем нормализованную дату транзакции
-                trans_date = get_transaction_date(transaction.date)
+                trans_date = get_transaction_date(entry.transaction.date)
                 
-                for entry in transaction.filtered_entries:
-                    # ИСПРАВЛЕНИЕ: Сравниваем нормализованные даты
-                    if trans_date < date_from:
-                        debit_before += float(entry.debit)
-                        credit_before += float(entry.credit)
-                    elif date_from <= trans_date <= date_to:
-                        debit_oborot += float(entry.debit)
-                        credit_oborot += float(entry.credit)
+                # ИСПРАВЛЕНИЕ: Сравниваем нормализованные даты
+                if trans_date < date_from:
+                    debit_before += float(entry.debit)
+                    credit_before += float(entry.credit)
+                elif date_from <= trans_date <= date_to:
+                    debit_oborot += float(entry.debit)
+                    credit_oborot += float(entry.credit)
             
+            # Остальной код без изменений...
             debit_end = debit_before + debit_oborot
             credit_end = credit_before + credit_oborot
             
@@ -615,7 +612,7 @@ def get_detail_account_60_62(request):
             }
             
             return partner_data
-        
+
         # Обработка агентов
         for agent_name, agent_info in agents_data.items():
             data["data"][agent_name] = []
@@ -737,19 +734,18 @@ def get_detail_account_60_62(request):
             debit_oborot = 0
             credit_oborot = 0
             
-            # Обрабатываем все транзакции партнера
-            for transaction in partner.prefetched_transactions:
+            # ⭐ ИЗМЕНЕНИЕ: Используем prefetched entries вместо prefetched_transactions
+            for entry in partner.filtered_entries:  # ← ИСПРАВИТЬ ЗДЕСЬ!
                 # ИСПРАВЛЕНИЕ: Получаем нормализованную дату транзакции
-                trans_date = get_transaction_date(transaction.date)
+                trans_date = get_transaction_date(entry.transaction.date)
                 
-                for entry in transaction.filtered_entries:
-                    # ИСПРАВЛЕНИЕ: Сравниваем нормализованные даты
-                    if trans_date < date_from:
-                        debit_before += float(entry.debit)
-                        credit_before += float(entry.credit)
-                    elif date_from <= trans_date <= date_to:
-                        debit_oborot += float(entry.debit)
-                        credit_oborot += float(entry.credit)
+                # ИСПРАВЛЕНИЕ: Сравниваем нормализованные даты
+                if trans_date < date_from:
+                    debit_before += float(entry.debit)
+                    credit_before += float(entry.credit)
+                elif date_from <= trans_date <= date_to:
+                    debit_oborot += float(entry.debit)
+                    credit_oborot += float(entry.credit)
             
             debit_end = debit_before + debit_oborot
             credit_end = credit_before + credit_oborot

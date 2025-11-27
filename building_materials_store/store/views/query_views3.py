@@ -47,7 +47,9 @@ def get_invoice_list(request):
                 "comment": invoice.comment,
                 "partner": invoice.partner.name,
                 "is_entry": invoice.is_entry,
-                "total_selected_price": total_selected_price
+                "total_selected_price": total_selected_price,
+                "created_at_handle": invoice.created_at_handle,
+                "entry_created_at_handle": invoice.entry_created_at_handle,
             }
             
             data.append(obj)
@@ -452,14 +454,12 @@ def get_entries_list(request):
     dateFrom = request.GET.get('dateFrom')
     dateTo = request.GET.get('dateTo')
     
-    # Получаем транзакции за период, которые НЕ связаны с фактурами И имеют определенный паттерн описания
+    # Получаем транзакции за период, которые НЕ связаны с фактурами
     transactions = Transaction.objects.filter(
         date__date__range=[dateFrom, dateTo],
         invoice__isnull=True,  # Только транзакции без привязки к фактурам
-        description__isnull=False  # И с описанием (обычно у ручных проводок есть описание)
-    ).exclude(
-        description__startswith="Faktura"  # Исключаем проводки от фактур (на всякий случай)
-    ).order_by("-pk")
+        description__isnull=False  # И с описанием
+    ).order_by("-date")
     
     data = []
     
@@ -469,104 +469,101 @@ def get_entries_list(request):
         
         # Проверяем, что это простая проводка (2 записи: дебет и кредит)
         if entries.count() == 2:
-            debit_entries = entries.filter(debit__gt=0)
-            credit_entries = entries.filter(credit__gt=0)
+            # Ищем дебетовую запись (дебет > 0, кредит = 0)
+            debit_entry = entries.filter(debit__gt=0, credit=0).first()
+            # Ищем кредитовую запись (кредит > 0, дебет = 0)  
+            credit_entry = entries.filter(credit__gt=0, debit=0).first()
             
-            # Для каждой дебетовой записи находим соответствующую кредитовую
-            for debit_entry in debit_entries:
-                credit_entry = credit_entries.filter(credit=debit_entry.debit).first()
+            # Если не нашли в строгом формате, пробуем найти любые ненулевые
+            if not debit_entry or not credit_entry:
+                debit_entry = entries.exclude(debit=0).first()
+                credit_entry = entries.exclude(credit=0).first()
+            
+            if debit_entry and credit_entry:
+                # Получаем сумму из дебета или кредита (берем максимальную ненулевую)
+                amount = debit_entry.debit if debit_entry.debit > 0 else credit_entry.credit
                 
-                if credit_entry:
-                    amount = debit_entry.debit
-                    obj = {
-                        "transaction_id": transaction.id,
-                        "date": transaction.date.strftime("%Y-%m-%d"),
-                        "description": transaction.description,
-                        "debit_account": debit_entry.account.number,
-                        "debit_account_name": debit_entry.account.name,
-                        "credit_account": credit_entry.account.number,
-                        "credit_account_name": credit_entry.account.name,
-                        "amount": float(amount),
-                        "partner": transaction.partner.name if transaction.partner else None,
-                        "partner_id": transaction.partner.id if transaction.partner else None,
-                        "created_by": transaction.created_by.username if transaction.created_by else None,
-                        "product": debit_entry.product.name if debit_entry.product else None,
-                        "product_id": debit_entry.product.id if debit_entry.product else None,
-                        "warehouse": debit_entry.warehouse.name if debit_entry.warehouse else None,
-                        "warehouse_id": debit_entry.warehouse.id if debit_entry.warehouse else None,
-                        "is_manual_entry": True
-                    }
-                    data.append(obj)
+                # Получаем партнеров из Entry, а не из Transaction
+                debit_partner = debit_entry.partner
+                credit_partner = credit_entry.partner
+                
+                # Основной партнер для отображения (берем из дебета или кредита)
+                display_partner = debit_partner or credit_partner
+                
+                obj = {
+                    "transaction_id": transaction.id,
+                    "date": transaction.date.strftime("%Y-%m-%d"),
+                    "description": transaction.description,
+                    "debit_account": debit_entry.account.number,
+                    "debit_account_name": debit_entry.account.name,
+                    "credit_account": credit_entry.account.number,
+                    "credit_account_name": credit_entry.account.name,
+                    "amount": float(amount),
+                    # Партнеры из Entry
+                    "partner": display_partner.name if display_partner else None,
+                    "partner_id": display_partner.id if display_partner else None,
+                    "debit_partner": debit_partner.name if debit_partner else None,
+                    "debit_partner_id": debit_partner.id if debit_partner else None,
+                    "credit_partner": credit_partner.name if credit_partner else None,
+                    "credit_partner_id": credit_partner.id if credit_partner else None,
+                    "created_by": transaction.created_by.username if transaction.created_by else None,
+                    "product": debit_entry.product.name if debit_entry.product else None,
+                    "product_id": debit_entry.product.id if debit_entry.product else None,
+                    "warehouse": debit_entry.warehouse.name if debit_entry.warehouse else None,
+                    "warehouse_id": debit_entry.warehouse.id if debit_entry.warehouse else None,
+                    "is_manual_entry": True
+                }
+                data.append(obj)
     
     return JsonResponse({
         "status": "ok",
         "data": data
     })
-    
-    
-    
+
+
 
 def get_entry_save_format(transaction):
-    """Получает данные проводки в формате для create_entry"""
+    """Получает данные проводки в формате для create_entry с поддержкой партнеров в Entry"""
     
     # Получаем все записи транзакции
     entries = Entry.objects.filter(transaction=transaction)
-    debit_entries = entries.filter(debit__gt=0)
-    credit_entries = entries.filter(credit__gt=0)
     
-    # Берем первую пару дебет/кредит
-    debit_entry = debit_entries.first()
-    credit_entry = credit_entries.filter(credit=debit_entry.debit).first() if debit_entry else None
+    # Ищем дебетовую и кредитовую записи
+    debit_entry = entries.filter(debit__gt=0, credit=0).first()
+    credit_entry = entries.filter(credit__gt=0, debit=0).first()
+    
+    # Если не нашли в строгом формате, пробуем найти любые ненулевые
+    if not debit_entry or not credit_entry:
+        debit_entry = entries.exclude(debit=0).first()
+        credit_entry = entries.exclude(credit=0).first()
     
     if not debit_entry or not credit_entry:
         return {
             "transaction_id": transaction.id,
-            "status": "error",
+            "status": "error", 
             "message": "Invalid transaction structure"
         }
     
-    # Данные партнера
-    partner_data = None
-    if transaction.partner:
-        partner_data = {
-            "id": transaction.partner.id,
-            "name": transaction.partner.name,
-            "type": transaction.partner.type,
-            "is_active": transaction.partner.is_active,
+    # Определяем сумму (берем ненулевую)
+    amount = debit_entry.debit if debit_entry.debit > 0 else credit_entry.credit
+    
+    # Данные партнеров из Entry
+    debit_partner_data = None
+    if debit_entry.partner:
+        debit_partner_data = {
+            "id": debit_entry.partner.id,
+            "name": debit_entry.partner.name,
+            "type": debit_entry.partner.type,
+            "is_active": debit_entry.partner.is_active,
         }
     
-    # Данные дебетового счета
-    debit_account_data = None
-    if debit_entry.account:
-        debit_account_data = {
-            "number": debit_entry.account.number,
-            "name": debit_entry.account.name,
-            "account_type": debit_entry.account.type,  # Исправлено с type на account_type
-        }
-    
-    # Данные кредитового счета
-    credit_account_data = None
-    if credit_entry.account:
-        credit_account_data = {
-            "number": credit_entry.account.number,
-            "name": credit_entry.account.name,
-            "account_type": credit_entry.account.type,  # Исправлено с type на account_type
-        }
-    
-    # Данные продукта
-    product_data = None
-    if debit_entry.product:
-        product_data = {
-            "id": debit_entry.product.id,
-            "name": debit_entry.product.name,
-        }
-    
-    # Данные склада
-    warehouse_data = None
-    if debit_entry.warehouse:
-        warehouse_data = {
-            "id": debit_entry.warehouse.id,
-            "name": debit_entry.warehouse.name,
+    credit_partner_data = None
+    if credit_entry.partner:
+        credit_partner_data = {
+            "id": credit_entry.partner.id,
+            "name": credit_entry.partner.name,
+            "type": credit_entry.partner.type,
+            "is_active": credit_entry.partner.is_active,
         }
     
     # Формируем данные в формате для create_entry
@@ -574,20 +571,18 @@ def get_entry_save_format(transaction):
         "transaction_id": transaction.id,
         "date": transaction.date.strftime("%Y-%m-%d") if transaction.date else "",
         "description": transaction.description,
-        "debit_account": debit_account_data,
         "debit_account_number": debit_entry.account.number,
-        "credit_account": credit_account_data,
         "credit_account_number": credit_entry.account.number,
-        "amount": float(debit_entry.debit),
-        "partner": partner_data,
-        "partner_id": transaction.partner.id if transaction.partner else None,
-        "product": product_data,
+        "amount": float(amount),
+        # Партнеры для дебета и кредита
+        "debit_partner_id": debit_entry.partner.id if debit_entry.partner else None,
+        "credit_partner_id": credit_entry.partner.id if credit_entry.partner else None,
+        # Для обратной совместимости
+        "partner_id": debit_entry.partner.id if debit_entry.partner else (credit_entry.partner.id if credit_entry.partner else None),
+        # Дополнительные поля
         "product_id": debit_entry.product.id if debit_entry.product else None,
-        "warehouse": warehouse_data,
         "warehouse_id": debit_entry.warehouse.id if debit_entry.warehouse else None,
         "comment": transaction.description,
-        "created_by": transaction.created_by.username if transaction.created_by else None,
-        "created_at": transaction.created_at.strftime("%Y-%m-%d %H:%M:%S") if transaction.created_at else "",
     }
     
     return save_format

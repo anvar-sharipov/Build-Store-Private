@@ -21,8 +21,8 @@ const ExportImportEntries = () => {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-      document.title = t("export_import_entry")
-    }, [t])
+    document.title = t("export_import_entry");
+  }, [t]);
 
   // Функция для сохранения результатов в файл
   const saveImportResultsToFile = (results, importData) => {
@@ -63,7 +63,9 @@ const ExportImportEntries = () => {
         fileContent += "=== УСПЕШНО СОХРАНЕННЫЕ ПРОВОДКИ ===\n";
         fileContent += "ID;Дата;Описание;Дебет;Кредит;Сумма;Партнер;Статус\n";
         successfulEntries.forEach((entry) => {
-          fileContent += `${entry.transaction_id};${entry.date};"${entry.description}";${entry.debit_account};${entry.credit_account};${formatNumber(entry.amount, 2)};"${entry.partner}";${entry.status}\n`;
+          fileContent += `${entry.transaction_id};${entry.date};"${entry.description}";${entry.debit_account};${entry.credit_account};${formatNumber(entry.amount, 2)};"${entry.partner}";${
+            entry.status
+          }\n`;
         });
         fileContent += "\n";
       }
@@ -72,7 +74,9 @@ const ExportImportEntries = () => {
         fileContent += "=== НЕСОХРАНЕННЫЕ ПРОВОДКИ ===\n";
         fileContent += "ID;Дата;Описание;Дебет;Кредит;Сумма;Партнер;Статус;Ошибка\n";
         failedEntries.forEach((entry) => {
-          fileContent += `${entry.transaction_id};${entry.date};"${entry.description}";${entry.debit_account};${entry.credit_account};${formatNumber(entry.amount, 2)};"${entry.partner}";${entry.status};"${entry.message}"\n`;
+          fileContent += `${entry.transaction_id};${entry.date};"${entry.description}";${entry.debit_account};${entry.credit_account};${formatNumber(entry.amount, 2)};"${entry.partner}";${
+            entry.status
+          };"${entry.message}"\n`;
         });
       }
 
@@ -104,14 +108,14 @@ const ExportImportEntries = () => {
 
         allEntries.push({
           "ID транзакции": originalEntry.transaction_id || "unknown",
-          "Дата": originalEntry.date || "N/A",
-          "Описание": originalEntry.description || "N/A",
+          Дата: originalEntry.date || "N/A",
+          Описание: originalEntry.description || "N/A",
           "Дебет счет": originalEntry.debit_account?.number || originalEntry.debit_account_number,
           "Кредит счет": originalEntry.credit_account?.number || originalEntry.credit_account_number,
-          "Сумма": originalEntry.amount || 0,
-          "Партнер": originalEntry.partner?.name || originalEntry.partner_name || "N/A",
+          Сумма: originalEntry.amount || 0,
+          Партнер: originalEntry.partner?.name || originalEntry.partner_name || "N/A",
           "Статус импорта": detail.status === "success" ? "Успешно" : "Ошибка",
-          "Сообщение": detail.message,
+          Сообщение: detail.message,
           "Новый ID": detail.status === "success" ? detail.new_transaction_id : "N/A",
           isError: detail.status !== "success",
         });
@@ -359,6 +363,10 @@ const ExportImportEntries = () => {
             creditAccount: entryData.credit_account?.number || entryData.credit_account_number,
             amount: entryData.amount,
             comment: entryData.description,
+            // Партнеры для дебета и кредита
+            debitPartnerId: entryData.debit_partner?.id || entryData.debit_partner_id,
+            creditPartnerId: entryData.credit_partner?.id || entryData.credit_partner_id,
+            // Для обратной совместимости со старыми экспортами
             partnerId: entryData.partner?.id || entryData.partner_id,
           };
 
@@ -574,13 +582,26 @@ const ExportImportEntries = () => {
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-1">
-                          <span className="font-semibold text-gray-800 dark:text-gray-100">{t("transaction")} № {entry.transaction_id}</span>
+                          <span className="font-semibold text-gray-800 dark:text-gray-100">
+                            {t("transaction")} № {entry.transaction_id}
+                          </span>
                           <span className="text-sm text-gray-500">{MyFormatDate(entry.date)}</span>
                         </div>
                         <div className="flex items-center gap-3">
                           <p className="text-sm text-gray-600 dark:text-gray-300 truncate">{entry.description}</p>
-                          {entry.partner && (
+                          {entry.debit_partner && (
                             <div className="inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                              Дебет: {entry.debit_partner}
+                            </div>
+                          )}
+                          {entry.credit_partner && (
+                            <div className="inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                              Кредит: {entry.credit_partner}
+                            </div>
+                          )}
+                          {/* Для обратной совместимости */}
+                          {!entry.debit_partner && !entry.credit_partner && entry.partner && (
+                            <div className="inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
                               {entry.partner}
                             </div>
                           )}

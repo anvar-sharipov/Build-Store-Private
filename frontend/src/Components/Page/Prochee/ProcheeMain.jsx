@@ -2,13 +2,14 @@ import { useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ROUTES, ROUTES_RAPORT, PROCHEE, ADMIN_PANEL } from "../../../routes";
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useSearchParams } from "react-router-dom";
-import { Settings, Users, Bell, Shield, Database, Globe, Wrench, Package, Zap, Star, QrCode  } from "lucide-react";
+import { Settings, Users, Bell, Shield, Database, Globe, Wrench, Package, Zap, Star, QrCode, Car } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import QrListPrint from "./QrListPrint/QrListPrint";
 
 const ProcheeMain = () => {
   const listRefs = useRef({});
   const sound = new Audio("/sounds/up_down.mp3");
+  const change_type = new Audio("/sounds/change_type.mp3");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,7 +27,7 @@ const ProcheeMain = () => {
     { id: 4, name: "Журнал операций", icon: Users, color: "cyan", to: PROCHEE.TRANSACTION_JOURNAL },
     { id: 5, name: "Export Import Faktura", icon: Bell, color: "yellow", to: PROCHEE.EXPORT_FAKTURA },
     { id: 6, name: "Export Import Prowodki", icon: Shield, color: "green", to: PROCHEE.EXPORT_IMPORT_ENTRIES },
-    { id: 7, name: "База данных", icon: Database, color: "violet" },
+    { id: 7, name: "Рейс", icon: Car, color: "violet", to: PROCHEE.TRIP },
     { id: 8, name: "Интеграции", icon: Globe, color: "orange" },
     { id: 9, name: "Инструменты", icon: Wrench, color: "sky" },
     { id: 10, name: "Модули", icon: Package, color: "fuchsia" },
@@ -165,12 +166,16 @@ const ProcheeMain = () => {
                   //   onClick={() => console.log(`Выбрано: ${item.name}`)}
                   onClick={() => {
                     if (to) {
+                      change_type.currentTime = 0;
+                      change_type.play().catch(() => {});
                       navigate(to);
                     }
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
+                      change_type.currentTime = 0;
+                      change_type.play().catch(() => {});
                       navigate(to);
                       //   console.log(`Выбрано: ${item.name}`);
                       //   listRefs.current[id].querySelector("a")?.click();

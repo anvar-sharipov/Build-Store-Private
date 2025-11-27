@@ -614,7 +614,15 @@
   "choosed": "Выбран",
   "noAgent": "Нет агента",
   "error password": "Неверный пароль",
-  "success set partner from Transaction to Entry": "Партнёр успешно установлен из Transaction в Entry"
+  "success set partner from Transaction to Entry": "Партнёр успешно установлен из Transaction в Entry",
+  "partners found": "Найдено партнеров",
+  "Sort po agentam": "Сортировка по агентам",
+  "trips": "Рейсы",
+  "driver": "Водитель",
+  "warehouseWorker": "Грузчик",
+  "employeeType": "Тип работника",
+  "activeEmployee": "Активен",
+  "employeeName": "Имя работника"
 
 
  

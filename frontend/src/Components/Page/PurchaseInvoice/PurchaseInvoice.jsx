@@ -10,7 +10,7 @@ import { ROUTES } from "../../../routes";
 import { DateContext } from "../../UI/DateProvider";
 import { useNotification } from "../../context/NotificationContext";
 import { AuthContext } from "../../../AuthContext";
-
+ 
 const PurchaseInvoice = () => {
   const { t } = useTranslation();
   const { showNotification } = useNotification();

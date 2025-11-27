@@ -3,7 +3,6 @@ import { AuthContext } from "../../../AuthContext";
 import { useTranslation } from "react-i18next";
 import Fuse from "fuse.js";
 import myAxios from "../../axios";
-import Notification from "../../Notification";
 import MyLoading from "../../UI/MyLoading";
 import EmployeeDeleteModal from "./modals/EmployeeDeleteModal";
 import EmployeeAddModal from "./modals/EmployeeAddModal";
@@ -12,19 +11,16 @@ import EmployeeSearchAndAddSection from "./EmployeeSearchAndAddSection";
 import EmployeeList from "./EmployeeList";
 import { empDownloadExcel } from "./EmpDownloadExcel";
 import { RiFileExcel2Fill } from "react-icons/ri";
+import { useNotification } from "../../context/NotificationContext";
 
 const Employee = () => {
   const { t } = useTranslation();
-  const [notification, setNotification] = useState({ message: "", type: "" });
+  const { showNotification } = useNotification();
 
   const sound_up_down = new Audio("/sounds/up_down.mp3");
 
   const { authUser, authGroup } = useContext(AuthContext);
 
-  const showNotification = (message, type) => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification({ message: "", type: "" }), 3000);
-  };
 
   const [employeesRaw, setEmployeesRaw] = useState([]);
   const [newEmployee, setNewEmployee] = useState("");
@@ -67,6 +63,10 @@ const Employee = () => {
   });
 
   const [isAnimating, setIsAnimating] = useState(false);
+
+  // В начале компонента добавьте состояния:
+  const [newEmployeeType, setNewEmployeeType] = useState("driver");
+  const [newEmployeeIsActive, setNewEmployeeIsActive] = useState(true);
 
   // focus na search input posle smeny dark, light
   useEffect(() => {
@@ -134,11 +134,17 @@ const Employee = () => {
 
     setLoadingAdd(true);
     try {
-      const res = await myAxios.post("employeers/", { name: newEmployee });
+      const res = await myAxios.post("employeers/", {
+        name: newEmployee,
+        type: newEmployeeType,
+        is_active: newEmployeeIsActive,
+      });
       setEmployeesRaw((prev) => [res.data.employee || res.data, ...prev]);
-      showNotification("newEmployeeAdded", "success");
+      showNotification(t("newEmployeeAdded"), "success");
       setNewEmployee("");
-      setCurrentPage(1); // Reset to first page to show new employee
+      setNewEmployeeType("driver");
+      setNewEmployeeIsActive(true);
+      setCurrentPage(1);
     } catch (error) {
       if (error.response && error.response.status === 403) {
         // Показываем уведомление пользователю
@@ -179,7 +185,7 @@ const Employee = () => {
 
     try {
       await myAxios.delete(`employeers/${id}/`);
-      showNotification("employeeDeleted", "success");
+      showNotification(t("employeeDeleted"), "success");
       setEmployeesRaw((prev) => prev.filter((employee) => employee.id !== id));
       setCurrentPage(1); // Reset pagination after delete
     } catch (error) {
@@ -196,6 +202,7 @@ const Employee = () => {
     }
   };
 
+  // В функции updateEmployee обновите данные:
   const updateEmployee = async () => {
     if (!editName.trim()) {
       showNotification("employeeNameRequired", "error");
@@ -206,8 +213,10 @@ const Employee = () => {
     try {
       const res = await myAxios.put(`employeers/${editId}/`, {
         name: editName,
+        type: editType,
+        is_active: editIsActive,
       });
-      showNotification("employeeUpdated", "success");
+      showNotification(t("employeeUpdated"), "success");
       setEmployeesRaw((prev) => prev.map((s) => (s.id === editId ? res.data : s)));
       setOpenModal(false);
       listItemRefs.current[selectedListItemRef]?.focus();
@@ -223,6 +232,8 @@ const Employee = () => {
     }
   };
 
+  const [editType, setEditType] = useState("");
+  const [editIsActive, setEditIsActive] = useState(true);
   useEffect(() => {
     if (openModal) {
       setTimeout(() => {
@@ -243,8 +254,7 @@ const Employee = () => {
   const handleListKeyDown = (e, i, s) => {
     if (e.key === "Delete") {
       e.preventDefault();
-      setOpenDeleteModal({ open: true, data: s, index: i });
-      // if (!loadingDeleteId) deleteEmployee(s.id, s.name);
+      // setOpenDeleteModal({ open: true, data: s, index: i });
     }
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -253,6 +263,8 @@ const Employee = () => {
       setSelectedListItemRef(i);
       setEditName(s.name);
       setEditId(s.id);
+      setEditType(s.type || "driver"); // ДОБАВЬТЕ ЭТУ СТРОКУ
+      setEditIsActive(s.is_active !== false); // ДОБАВЬТЕ ЭТУ СТРОКУ
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
       sound_up_down.currentTime = 0;
@@ -368,6 +380,10 @@ const Employee = () => {
           newEmployee={newEmployee}
           setNewEmployee={setNewEmployee}
           handleAddKeyDown={handleAddKeyDown}
+          newEmployeeType={newEmployeeType}
+          setNewEmployeeType={setNewEmployeeType}
+          newEmployeeIsActive={newEmployeeIsActive}
+          setNewEmployeeIsActive={setNewEmployeeIsActive}
         />
       )}
 
@@ -399,10 +415,14 @@ const Employee = () => {
           refUpdateButton={refUpdateButton}
           updateEmployee={updateEmployee}
           loadingEdit={loadingEdit}
+          editType={editType}
+          setEditType={setEditType}
+          editIsActive={editIsActive}
+          setEditIsActive={setEditIsActive}
+          selectedListItemRef={selectedListItemRef}
         />
       )}
 
-      <Notification message={t(notification.message)} type={notification.type} onClose={() => setNotification({ message: "", type: "" })} />
 
       <div className="lg:hidden text-center">
         <div className="flex justify-between items-center">
@@ -464,6 +484,8 @@ const Employee = () => {
         loadingDeleteId={loadingDeleteId}
         setOpenDeleteModal={setOpenDeleteModal}
         loadMoreButtonRef={loadMoreButtonRef}
+        setEditType={setEditType}
+        setEditIsActive={setEditIsActive }
       />
 
       {loading && <MyLoading />}

@@ -333,43 +333,22 @@ class Partner(models.Model):
         return f'{self.name} ({self.get_type_display()})'
     
    
-    # @property
-    # def current_balance(self):
-    #     # Считаем обороты по дебету и кредиту партнёра до даты накладной (включительно)
-    #     entries = Entry.objects.filter(transaction__partner=self, transaction__date__lte=timezone.now())
-
-    #     debit_sum = entries.aggregate(total_debit=Sum('debit'))['total_debit'] or Decimal('0')
-    #     credit_sum = entries.aggregate(total_credit=Sum('credit'))['total_credit'] or Decimal('0')
-
-    #     balance = debit_sum - credit_sum
-    #     return balance
-
 
     class Meta:
         verbose_name = 'Partner'
         verbose_name_plural = 'Partnerler'
 
 
-# class PartnerAccount(models.Model):
-#     partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='partner_accounts')
-#     account = models.ForeignKey('Account', on_delete=models.PROTECT)
-    
-#     ROLE_CHOICES = [
-#         ('klient', 'Покупатель'),
-#         ('supplier', 'Поставщик'),
-#         ('both', 'Покупатель и поставщик'),
-#         ('founder', 'Учредитель'),
-#     ]
-#     role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=False, blank=False)
-
-#     class Meta:
-#         unique_together = ('partner', 'account', 'role')
-
-#     def __str__(self):
-#         return f"{self.partner.name} - {self.account.number} ({self.get_role_display()})"
 
 class Employee(models.Model):
+    EMPLOYEE_TYPE = [
+        ('driver', 'Водитель'),
+        ('warehouse_worker', 'Грузчик'),
+    ]
+
     name = models.CharField(verbose_name='Işgär', max_length=2000)
+    is_active = models.BooleanField(default=True, verbose_name='Активен')
+    type = models.CharField(max_length=50, choices=EMPLOYEE_TYPE, verbose_name='Тип работника', default='driver')
 
     def __str__(self):
         return self.name
@@ -381,6 +360,7 @@ class Employee(models.Model):
 
 ########################################################################################################################################################################################################################
 ######################################################################## Расходная накладная (faktura) START
+# ERROR ne ispolzuetsya
 class SalesInvoice(models.Model):  # накладная по продаже
     TYPE_PRICE_CHOICES = [
         ('wholesale', 'Опт'),
@@ -552,6 +532,8 @@ class Invoice(models.Model):
     canceled_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="invoices_calnceled", null=True, blank=True, verbose_name="Отменил проводку")
     canceled_at = models.DateTimeField(verbose_name="Дата Отмены проводки", null=True, blank=True)
     canceled_comment = models.TextField(null=True, blank=True, verbose_name="Причина отмены")
+    
+    trip = models.ForeignKey("Trip", null=True, blank=True, on_delete=models.SET_NULL, related_name="invoices", verbose_name="Рейс")
 
 
     class Meta:
@@ -765,37 +747,6 @@ class WarehouseAccount(models.Model):
     
     
     
-    
-# class PostingRule(models.Model):
-#     operation = models.ForeignKey(Operation, on_delete=models.PROTECT)
-    
-#     partner_type = models.CharField(
-#         max_length=20,
-#         choices=Partner.PARTNER_TYPE_CHOICES,
-#         blank=True,
-#         null=True,
-#         verbose_name="Тип партнёра"
-#     )
-    
-#     content_type = models.ForeignKey(ContentType, null=True, blank=True, on_delete=models.PROTECT)
-#     object_id = models.PositiveIntegerField(null=True, blank=True)
-#     content_object = GenericForeignKey('content_type', 'object_id')
-
-#     debit_account = models.ForeignKey('Account', on_delete=models.PROTECT, related_name='postingrule_debit')
-#     credit_account = models.ForeignKey('Account', on_delete=models.PROTECT, related_name='postingrule_credit')
-#     description = models.CharField(max_length=255, blank=True, null=True)
-    
-#     AMOUNT_TYPE_CHOICES = [
-#         ('revenue', 'Выручка'),
-#         ('cogs', 'Себестоимость'),
-#         ('profit', 'Прибыль'),
-#     ]
-#     amount_type = models.CharField(max_length=20, choices=AMOUNT_TYPE_CHOICES, default='revenue')
-        
-        
-    
-
-
 
 ########################################################################################################################################################################################################################
 ######################################################################## close day START
@@ -906,3 +857,47 @@ class Currency(models.Model):
 
     def __str__(self):
         return self.code
+    
+    
+
+
+# Trip START ###############################################################################################################################################################################
+class Trip(models.Model):
+    driver = models.ForeignKey(Employee, on_delete=models.PROTECT, verbose_name="Водитель")
+    comment = models.TextField(null=True, blank=True, verbose_name="Комментарий")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    @property
+    def invoices_list(self):
+        return self.invoices.all()
+    
+    class Meta:
+        verbose_name = "Рейс"
+        verbose_name_plural = "Рейсы"
+
+    def __str__(self):
+        return f"Рейс #{self.id} — {self.driver.name}"
+    
+    
+class TripInvoiceHistory(models.Model):
+    ACTION_CHOICES = [
+        ("added", "Добавил в рейс"),
+        ("removed", "Удалил из рейса"),
+    ]
+
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="history")
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="trip_history")
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    performed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Кто сделал действие")
+    performed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "История накладной в рейсе"
+        verbose_name_plural = "История накладных в рейсе"
+        ordering = ["-performed_at"]
+
+    def __str__(self):
+        return f"{self.invoice} — {self.get_action_display()} ({self.performed_by})"
+    
+# Trip END ###############################################################################################################################################################################

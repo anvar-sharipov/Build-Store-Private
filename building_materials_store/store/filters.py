@@ -1,8 +1,9 @@
-from django.db.models import Q, Func, F, Value
+from django.db.models import Case, When, Value, IntegerField, Q
 from django.contrib.postgres.search import TrigramSimilarity
 import django_filters
 from .models import *
 from icecream import ic
+
 
 # Для фильтрации по списку значений (например, ?categories=1,2)
 class NumberInFilter(django_filters.BaseInFilter, django_filters.NumberFilter):
@@ -46,13 +47,32 @@ class ProductFilter(django_filters.FilterSet):
     # 🔍 Добавляем общий search
     search = django_filters.CharFilter(method='filter_search')
 
+    # def filter_search(self, queryset, name, value):
+    #     if not value:
+    #         return queryset
+
+    #     return queryset.annotate(
+    #         similarity=TrigramSimilarity('name', Func(Value(value), function='CAST', template='%(function)s(%(expressions)s AS TEXT)'))
+    #     ).filter(similarity__gt=0.1).order_by('-similarity')
+    
     def filter_search(self, queryset, name, value):
         if not value:
             return queryset
 
+        value = value.strip()
+
         return queryset.annotate(
-            similarity=TrigramSimilarity('name', Func(Value(value), function='CAST', template='%(function)s(%(expressions)s AS TEXT)'))
-        ).filter(similarity__gt=0.1).order_by('-similarity')
+            rank=Case(
+                When(name__iexact=value, then=Value(1)),      # точное совпадение
+                When(name__istartswith=value, then=Value(2)), # начинается с value
+                When(name__icontains=value, then=Value(3)),   # содержит value
+                default=Value(4),
+                output_field=IntegerField()
+            ),
+            similarity=TrigramSimilarity('name', value)
+        ).filter(
+            Q(name__icontains=value) | Q(similarity__gt=0.1)
+        ).order_by('rank', '-similarity')
 
     class Meta:
         model = Product
@@ -97,7 +117,7 @@ class PartnerFilter(django_filters.FilterSet):
     class Meta:
         model = Partner
         fields = ['is_active', 'type', 'agent']
-
+    
     def filter_search(self, queryset, name, value):
         return queryset.annotate(similarity=TrigramSimilarity('name', value)) \
             .filter(similarity__gt=0.1)

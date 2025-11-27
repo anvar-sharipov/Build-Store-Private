@@ -245,6 +245,8 @@ const Harytlar = () => {
       // если это первая страница — заменяем
       if (!url) {
         listItemRefs.current = []; // очищаем ссылки при смене фильтра
+        console.log("res.data.results", res.data.results);
+        
         setProducts(res.data.results);
         setTotalCount(res.data.count);
         // console.log(res.data.results);

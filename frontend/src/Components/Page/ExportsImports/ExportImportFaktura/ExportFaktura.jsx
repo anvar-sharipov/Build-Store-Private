@@ -11,7 +11,6 @@ const ExportFaktura = () => {
   const { t } = useTranslation();
   const { dateFrom, dateTo } = useContext(DateContext);
 
-
   const [invoices, setInvoices] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -22,8 +21,8 @@ const ExportFaktura = () => {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    document.title = t("export_import_invoice")
-  }, [t])
+    document.title = t("export_import_invoice");
+  }, [t]);
   // Функция для сохранения результатов в файл
   const saveImportResultsToFile = (results, importData) => {
     if (!results || !importData) return;
@@ -235,6 +234,8 @@ const ExportFaktura = () => {
         params: { dateFrom, dateTo },
       });
       setInvoices(res.data.data || []);
+      console.log("res.data.data", res.data.data);
+
       setSelectedIds([]);
     } catch (err) {
       console.error("Error fetching invoices:", err);
@@ -604,6 +605,21 @@ const ExportFaktura = () => {
                           <span className="font-semibold text-gray-800 dark:text-gray-100">№ {inv.id}</span>
                           <span className={`text-sm font-medium ${getStatusColor(inv.wozwrat_or_prihod)}`}>{t(inv.wozwrat_or_prihod)}</span>
                         </div>
+
+                        {/* Даты создания и проводки */}
+                        <div className="flex items-center gap-4 mb-1 text-xs text-gray-500 dark:text-gray-400">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            <span>Создана: {MyFormatDate(inv.created_at_handle)}</span>
+                          </div>
+                          {inv.entry_created_at_handle && (
+                            <div className="flex items-center gap-1">
+                              <FileText className="w-3 h-3" />
+                              <span>Проведена: {MyFormatDate(inv.entry_created_at_handle)}</span>
+                            </div>
+                          )}
+                        </div>
+
                         <div className="flex items-center gap-3">
                           <p className="text-sm text-gray-600 dark:text-gray-300 truncate">{inv.partner}</p>
                           <div

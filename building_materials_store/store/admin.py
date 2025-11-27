@@ -278,7 +278,8 @@ class PartnerAdmin(admin.ModelAdmin):
 # Сотрудники
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'delivered_invoices')
+    list_display = ('name', 'type', 'is_active', 'delivered_invoices')
+    list_filter = ('type', 'is_active')  # фильтры по типу и активности
     search_fields = ('name',)
     
     def delivered_invoices(self, obj):
@@ -704,7 +705,31 @@ class StockSnapshotAdmin(admin.ModelAdmin):
 ########################################################################################################################################################################################################################
 
 
+# Trip START ###############################################################################################################################################################################
+@admin.register(Trip)
+class TripAdmin(admin.ModelAdmin):
+    list_display = ("id", "driver", "comment", "created_at")
+    search_fields = ("driver__name", "comment")
+    autocomplete_fields = ("driver",)
+    readonly_fields = ("created_at", "updated_at")
+    
+    fieldsets = (
+        ("Основная информация", {
+            "fields": ("driver", "comment")
+        }),
+        ("Служебное", {
+            "fields": ("created_at", "updated_at")
+        }),
+    )
+    
+@admin.register(TripInvoiceHistory)
+class TripInvoiceHistoryAdmin(admin.ModelAdmin):
+    list_display = ("trip", "invoice", "action", "performed_by", "performed_at")
+    list_filter = ("action", "performed_by", "trip")
+    search_fields = ("invoice__id", "trip__driver__name", "performed_by__username")
+    readonly_fields = ("trip", "invoice", "action", "performed_by", "performed_at")
 
+# Trip END ###############################################################################################################################################################################
 
 ########################################################################################################################################################################################################################
 ########################################################################################################################################################################################################################
@@ -747,6 +772,8 @@ class InvoiceItemInline(admin.TabularInline):
     show_change_link = True
 
 
+    
+    
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
     list_display = (
@@ -769,6 +796,7 @@ class InvoiceAdmin(admin.ModelAdmin):
         "type_price",
         "warehouse",
         "partner",
+        "trip",
         "send",
         "is_entry",
         "canceled_by",
@@ -776,7 +804,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     )
     search_fields = ("id", "partner__name", "warehouse__name", "created_by__username", "canceled_by__username")
     date_hierarchy = "created_at"
-    autocomplete_fields = ("partner", "warehouse", "awto", "created_by", "entry_created_by", "canceled_by")
+    autocomplete_fields = ("partner", "warehouse", "awto", "created_by", "entry_created_by", "canceled_by", "trip")
     inlines = [InvoiceItemInline]
     readonly_fields = ("created_at", "updated_at", "entry_created_at", "canceled_at")
 
@@ -789,6 +817,7 @@ class InvoiceAdmin(admin.ModelAdmin):
                 "partner",
                 "awto",
                 "comment",
+                "trip",
             )
         }),
         ("Техническая информация", {

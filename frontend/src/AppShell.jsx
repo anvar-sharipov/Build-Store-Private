@@ -43,6 +43,7 @@ import ExportImportEntries from "./Components/Page/ExportsImports/ExportImportEn
 import DetailReport6062 from "./Components/Page/OSW2/DetailReport6062";
 import DetailReport6062Partner from "./Components/Page/OSW2/DetailReport6062Partner";
 import SetPartnerInEntry from "./Components/Page/Admin/SetPartnerInEntry";
+import Trip from "./Components/Page/Trip/Trip";
 
 function AppShell() {
   const location = useLocation();
@@ -101,6 +102,7 @@ function AppShell() {
                     <Route path={ROUTES_RAPORT.DETAIL_ACCOUNT_REPORT_60_62_PARTNER} element={<DetailReport6062Partner />} />
                     <Route path={PROCHEE.QR_LIST_PRINT} element={<QrListPrint />} />
                     <Route path={PROCHEE.TRANSACTION_JOURNAL} element={<TransactionJournal />} />
+                    <Route path={PROCHEE.TRIP} element={<Trip />} />
       
 
                     {/* PurchaseInvoice */}

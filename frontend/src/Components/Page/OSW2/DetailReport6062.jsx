@@ -8,6 +8,8 @@ import MyFormatDate from "../../UI/MyFormatDate";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { ROUTES_RAPORT } from "../../../routes";
+import { Download, FileSpreadsheet } from "lucide-react";
+import * as XLSX from "xlsx";
 
 const DetailReport6062 = () => {
   const { dateFrom, dateTo } = useContext(DateContext);
@@ -24,6 +26,195 @@ const DetailReport6062 = () => {
   const [totals, setTotals] = useState({});
   const [loading, setLoading] = useState(true);
   const [sortConfig, setSortConfig] = useState({ key: "agentId", direction: "asc" });
+
+  // ################################################################################################################################
+  // ################################################################################################################################
+  // ######################## download excel
+
+  const exportToExcel = () => {
+    // Создаем рабочую книгу
+    const workbook = XLSX.utils.book_new();
+
+    // Функция для подготовки данных
+    const prepareDataForExport = () => {
+      if (sortByAgent === "true") {
+        // Данные с группировкой по агентам
+        const allData = [];
+
+        Object.entries(data).forEach(([agentName, partners]) => {
+          // Добавляем заголовок агента
+          allData.push([`Агент: ${agentName === "no_agent" ? "Без агента" : agentName}`]);
+          allData.push([]);
+
+          // Заголовки таблицы
+          allData.push(["№", "Контрагент", "Начальное сальдо ДТ", "Начальное сальдо КТ", "Обороты за период ДТ", "Обороты за период КТ", "Конечное сальдо ДТ", "Конечное сальдо КТ"]);
+
+          // Данные партнеров
+          partners.forEach((row, index) => {
+            allData.push([
+              index + 1,
+              row.partner_name,
+              row.debit_before || 0,
+              row.credit_before || 0,
+              row.debit_oborot || 0,
+              row.credit_oborot || 0,
+              row.saldo_end_debit || 0,
+              row.saldo_end_credit || 0,
+            ]);
+          });
+
+          // Итоги по агенту
+          const agentTotals = totals[agentName]?.[0];
+          if (agentTotals) {
+            allData.push([]);
+            allData.push([
+              "ИТОГИ РАЗВЕРНУТЫЕ:",
+              "",
+              agentTotals.debit_before_total,
+              agentTotals.credit_before_total,
+              agentTotals.debit_oborot_total,
+              agentTotals.credit_oborot_total,
+              agentTotals.saldo_end_debit_total,
+              agentTotals.saldo_end_credit_total,
+            ]);
+            allData.push([
+              "ИТОГИ:",
+              "",
+              agentTotals.saldo_summ_before_debit,
+              agentTotals.saldo_summ_before_credit,
+              agentTotals.saldo_summ_oborot_debit,
+              agentTotals.saldo_summ_oborot_credit,
+              agentTotals.saldo_summ_end_debit,
+              agentTotals.saldo_summ_end_credit,
+            ]);
+          }
+
+          allData.push([]);
+          allData.push([]);
+        });
+
+        // Общие итоги
+        const grandTotals = calculateGrandTotals();
+        if (grandTotals) {
+          allData.push([
+            "ОБЩИЕ ИТОГИ РАЗВЕРНУТЫЕ:",
+            "",
+            grandTotals.debit_before_total,
+            grandTotals.credit_before_total,
+            grandTotals.debit_oborot_total,
+            grandTotals.credit_oborot_total,
+            grandTotals.saldo_end_debit_total,
+            grandTotals.saldo_end_credit_total,
+          ]);
+          allData.push([
+            "ОБЩИЕ ИТОГИ:",
+            "",
+            grandTotals.saldo_summ_before_debit,
+            grandTotals.saldo_summ_before_credit,
+            grandTotals.saldo_summ_oborot_debit,
+            grandTotals.saldo_summ_oborot_credit,
+            grandTotals.saldo_summ_end_debit,
+            grandTotals.saldo_summ_end_credit,
+          ]);
+        }
+
+        return allData;
+      } else {
+        // Обычные данные (массив)
+        const allData = [["№", "Контрагент", "Агент", "Начальное сальдо ДТ", "Начальное сальдо КТ", "Обороты за период ДТ", "Обороты за период КТ", "Конечное сальдо ДТ", "Конечное сальдо КТ"]];
+
+        const dataToExport = sortedData.length > 0 ? sortedData : data;
+
+        dataToExport.forEach((row, index) => {
+          allData.push([
+            index + 1,
+            row.partner_name,
+            row.agent?.name || row.agent?.id || "",
+            row.debit_before || 0,
+            row.credit_before || 0,
+            row.debit_oborot || 0,
+            row.credit_oborot || 0,
+            row.saldo_end_debit || 0,
+            row.saldo_end_credit || 0,
+          ]);
+        });
+
+        // Итоги
+        allData.push([]);
+        allData.push([
+          "ИТОГИ РАЗВЕРНУТЫЕ:",
+          "",
+          "",
+          totals.debit_before_total,
+          totals.credit_before_total,
+          totals.debit_oborot_total,
+          totals.credit_oborot_total,
+          totals.saldo_end_debit_total,
+          totals.saldo_end_credit_total,
+        ]);
+        allData.push([
+          "ИТОГИ:",
+          "",
+          "",
+          totals.saldo_summ_before_debit,
+          totals.saldo_summ_before_credit,
+          totals.saldo_summ_oborot_debit,
+          totals.saldo_summ_oborot_credit,
+          totals.saldo_summ_end_debit,
+          totals.saldo_summ_end_credit,
+        ]);
+
+        return allData;
+      }
+    };
+
+    // Подготавливаем данные
+    const excelData = prepareDataForExport();
+
+    // Создаем worksheet
+    const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+
+    // Настраиваем ширину колонок
+    const colWidths = [
+      { wch: 8 }, // №
+      { wch: 40 }, // Контрагент
+      { wch: 20 }, // Агент
+      { wch: 15 }, // Начальное сальдо ДТ
+      { wch: 15 }, // Начальное сальдо КТ
+      { wch: 15 }, // Обороты ДТ
+      { wch: 15 }, // Обороты КТ
+      { wch: 15 }, // Конечное сальдо ДТ
+      { wch: 15 }, // Конечное сальдо КТ
+    ];
+    worksheet["!cols"] = colWidths;
+
+    // Добавляем worksheet в workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Отчет 60-62");
+
+    // Генерируем имя файла
+    const fileName = `Отчет_60-62_${accountNumber}_${MyFormatDate(dateFrom)}_${MyFormatDate(dateTo)}.xlsx`;
+
+    // Скачиваем файл
+    XLSX.writeFile(workbook, fileName);
+  };
+
+  // Компонент кнопки для экспорта
+  const ExportButton = () => (
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={exportToExcel}
+      disabled={loading || !data || (Array.isArray(data) && data.length === 0) || (typeof data === "object" && Object.keys(data).length === 0)}
+      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-lg"
+    >
+      <FileSpreadsheet className="w-4 h-4" />
+      <span>Excel</span>
+    </motion.button>
+  );
+
+  // ######################## download excel
+  // ################################################################################################################################
+  // ################################################################################################################################
 
   useEffect(() => {
     if (!accountNumber) return;
@@ -213,12 +404,15 @@ const DetailReport6062 = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
                 className="px-4 py-3 bg-blue-50 border-b border-gray-200 
-                           dark:bg-blue-900/20 dark:border-gray-700
-                           print:bg-white print:border-b print:border-gray-300 print:px-2 print:py-1
-                           print:dark:!text-black mb-4"
+             dark:bg-blue-900/20 dark:border-gray-700
+             print:bg-white print:border-b print:border-gray-300 print:px-2 print:py-1
+             print:dark:!text-black mb-4 flex justify-between items-center"
               >
                 <div className="text-sm text-gray-700 dark:text-gray-300 print:text-xs print:text-gray-800 print:font-medium print:dark:!text-black">
                   {t("period")}: {MyFormatDate(dateFrom)} - {MyFormatDate(dateTo)} | Счет: {accountNumber} | Группировка по агентам
+                </div>
+                <div className="print:hidden">
+                  <ExportButton />
                 </div>
               </motion.div>
 
@@ -397,7 +591,6 @@ const DetailReport6062 = () => {
                             <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                               {formatNumber2(agentTotalsData.saldo_summ_end_credit)}
                             </td>
-                    
                           </tr>
                         </tfoot>
                       )}
@@ -534,6 +727,9 @@ const DetailReport6062 = () => {
                             print:dark:!text-black"
               >
                 {t("period")}: {MyFormatDate(dateFrom)} - {MyFormatDate(dateTo)} | Счет: {accountNumber}
+              </div>
+              <div className="print:hidden">
+                <ExportButton />
               </div>
             </motion.div>
 

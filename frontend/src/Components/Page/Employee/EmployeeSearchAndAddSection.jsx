@@ -120,6 +120,7 @@ const EmployeeSearchAndAddSection = ({
       <div className="flex items-end gap-3">
         <MySearchInput
           ref={searchInputRef}
+          autoComplete="off"
           name="search_employee"
           type="text"
           value={search}

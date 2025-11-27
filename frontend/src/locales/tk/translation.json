@@ -584,7 +584,15 @@
   "choosed": "Saýlanan",
   "noAgent": "Agent ýok",
   "error password": "Nädogry parol",
-  "success set partner from Transaction to Entry": "Partner Tranzaksiýadan Entryga üstünlikli geçirildi"
+  "success set partner from Transaction to Entry": "Partner Tranzaksiýadan Entryga üstünlikli geçirildi",
+  "partners found": "Partnerler tapyldy",
+  "Sort po agentam": "Agentler boýunça tertiplemek",
+  "trips": "Reýsler",
+  "driver": "Sürüji",
+  "warehouseWorker": "Ýükçi",
+  "employeeType": "Işgär görnüşi",
+  "activeEmployee": "Işgär işjeň",
+  "employeeName": "Işgäriň ady"
 
 
 

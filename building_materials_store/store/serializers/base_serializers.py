@@ -97,10 +97,15 @@ class AgentSerializer(serializers.ModelSerializer):
         return PartnerSerializer(partners, many=True).data
     
 
+# class EmployeeSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Employee
+#         fields = ['id', 'name']
+
 class EmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'type', 'is_active']
 
 
 

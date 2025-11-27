@@ -1114,9 +1114,9 @@ def get_invoices(request):
             invoices = invoices.filter(is_entry=False, canceled_at__isnull=True)
         elif selectedEntry == "canceled":
             invoices = invoices.filter(canceled_at__isnull=False)
-            
+    ic(dateFrom, dateTo)        
     if dateFrom and dateTo:
-        invoices = invoices.filter(entry_created_at_handle__range=[dateFrom, dateTo])
+        invoices = invoices.filter(invoice_date__range=[dateFrom, dateTo])
             
 
     

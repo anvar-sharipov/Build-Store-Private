@@ -99,6 +99,10 @@ urlpatterns = [
     # save universal invoice
     path("save-invoice/", save_invoice, name="save_invoice"),
     path('get-invoices/', get_invoices, name='get-invoices'),
+    
+    path('get_invoices_for_trip/', query_views4.get_invoices_for_trip, name='get_invoices_for_trip'),
+    path('get_partner_list/', query_views4.get_partner_list, name='get_partner_list'),
+    
     path("get-invoice-data/<int:id>/", get_invoice_data, name="get_invoice_data"),
     path("delete_invoice/<int:id>/", delete_invoice, name="delete_invoice"),
     

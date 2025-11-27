@@ -1,6 +1,6 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from ..models import Transaction, Account, Entry, Partner, Agent
+from ..models import Transaction, Account, Entry, Partner, Agent, Invoice, InvoiceItem, Employee
 from django.http import JsonResponse
 from icecream import ic
 from django.utils.dateparse import parse_date
@@ -9,6 +9,7 @@ from datetime import datetime, date, time
 from decimal import Decimal
 from collections import defaultdict
 from django.db.models import Sum, F, Q
+
 
 
 
@@ -951,3 +952,68 @@ def get_detail_account_60_62(request):
 #         cards.append(card)
 
 #     return Response(cards)
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_invoices_for_trip(request):
+    date_from = request.GET.get('dateFrom')
+    date_to = request.GET.get('dateTo')
+
+    if not date_from or not date_to:
+        return JsonResponse({"status": "error", "message": "dateFrom и dateTo обязательны"}, status=400)
+
+    invoices = Invoice.objects.filter(invoice_date__range=[date_from, date_to], trip__isnull=True).order_by("-pk")
+
+    data = []
+    for invoice in invoices:
+        total_selected_price = (InvoiceItem.objects.filter(invoice=invoice)
+                                .aggregate(total=Sum(F("selected_price") * F("selected_quantity")))["total"] or 0)
+        total_purchase_price = (InvoiceItem.objects.filter(invoice=invoice)
+                                .aggregate(total=Sum(F("purchase_price") * F("selected_quantity")))["total"] or 0)
+        total_wholesale_price = (InvoiceItem.objects.filter(invoice=invoice)
+                                 .aggregate(total=Sum(F("wholesale_price") * F("selected_quantity")))["total"] or 0)
+        total_income_price = total_selected_price - total_purchase_price
+        total_discount_price = total_selected_price - total_wholesale_price
+
+        data.append({
+            "id": invoice.id,
+            "invoice_date": invoice.invoice_date,
+            "partner": invoice.partner.name if invoice.partner else None,
+            "type_price": invoice.type_price,
+            "wozwrat_or_prihod": invoice.wozwrat_or_prihod,
+            "send": invoice.send,
+            "is_entry": invoice.is_entry,
+            "total_selected_price": str(total_selected_price),
+            "total_income_price": str(total_income_price),
+            "total_discount_price": str(total_discount_price),
+            "canceled_at": invoice.canceled_at,
+        })
+
+    return JsonResponse({"status": "ok", "invoices": data})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_partner_list(request):
+    query = request.GET.get('query')
+    drivers = Employee.objects.filter(name__icontains=query)
+    
+    data = []
+    
+    for d in drivers:
+        d = {
+            "name": d.name
+        }
+        data.append(d)
+    
+    
+        
+    
+
+    return JsonResponse({
+        "data": data
+    })
+    
+

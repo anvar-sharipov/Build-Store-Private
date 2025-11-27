@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import MyModal from "../../UI/MyModal";
 import GenericList from "../../common/GenericList";
 import AgentAddModal from "./modals/AgentAddModal";
-import Notification from "../../Notification";
+// import Notification from "../../Notification";
 import { IoIosAddCircleOutline } from "react-icons/io";
 import Tooltip from "../../ToolTip";
 import MyInput from "../../UI/MyInput";
@@ -24,6 +24,10 @@ import { CiSearch } from "react-icons/ci";
 import PartnerList from "../Partner/PartnerList";
 import MySearchInput from "../../UI/MySearchInput";
 import { myClass } from "../../tailwindClasses";
+import { motion, AnimatePresence } from "framer-motion";
+import { Edit2, Trash2, ClipboardList, Plus } from "lucide-react";
+import { useNotification } from "../../context/NotificationContext";
+
 
 const Agent = () => {
   const { t } = useTranslation();
@@ -31,6 +35,8 @@ const Agent = () => {
   const [partnerList, setPartnerList] = useState([]);
   // const [filteredList, setFilteredList] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const { showNotification } = useNotification();
+  
 
   const sound_up_down = new Audio("/sounds/up_down.mp3");
 
@@ -53,7 +59,7 @@ const Agent = () => {
   const deleteIconRefs = useRef([]);
   const [hoveredDeleteIndex, setHoveredDeleteIndex] = useState(null);
 
-  const [notification, setNotification] = useState({ message: "", type: "" });
+  // const [notification, setNotification] = useState({ message: "", type: "" });
 
   const hoverTimeoutRef = useRef(null);
 
@@ -209,10 +215,10 @@ const Agent = () => {
   }, [excelIconIsAnimating]);
 
   // notification
-  const showNotification = (message, type) => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification({ message: "", type: "" }), 3000);
-  };
+  // const showNotification = (message, type) => {
+  //   setNotification({ message, type });
+  //   setTimeout(() => setNotification({ message: "", type: "" }), 3000);
+  // };
 
   // window events
   useEffect(() => {
@@ -345,7 +351,7 @@ const Agent = () => {
 
   return (
     <div className="p-2">
-      <Notification message={t(notification.message)} type={notification.type} onClose={() => setNotification({ message: "", type: "" })} />
+      {/* <Notification message={t(notification.message)} type={notification.type} onClose={() => setNotification({ message: "", type: "" })} /> */}
 
       <div className="lg:hidden text-center">
         <div className="flex justify-between items-center">
@@ -509,6 +515,200 @@ const Agent = () => {
       {loading ? (
         <MyLoading />
       ) : visibleItems.length > 0 ? (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+          <div className="overflow-hidden">
+            <ul className="divide-y divide-gray-200 dark:divide-gray-800">
+              <AnimatePresence>
+                {visibleItems.map((item, index) => (
+                  <motion.li
+                    key={item.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.2, delay: index * 0.03 }}
+                    ref={(el) => (listItemRefs.current[index] = el)}
+                    tabIndex={0}
+                    onClick={() => setFocusedIndex(index)}
+                    onDoubleClick={() => {
+                      setOpenEditModal({ open: true, data: item, index });
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Delete") {
+                        e.preventDefault();
+                        // setOpenDeleteModal({ open: true, data: item, index });
+                      } else if (e.ctrlKey && e.key === "Enter") {
+                        e.preventDefault();
+                        setOpenPartnerListModal({
+                          open: true,
+                          data: item,
+                          index,
+                        });
+                      } else if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setOpenEditModal({ open: true, data: item, index });
+                      } else if (e.key === "ArrowDown" && index + 1 < visibleItems.length) {
+                        e.preventDefault();
+                        sound_up_down.currentTime = 0;
+                        sound_up_down.play();
+                        listItemRefs.current[index + 1]?.focus();
+                      } else if (e.key === "ArrowUp" && index !== 0) {
+                        e.preventDefault();
+                        sound_up_down.currentTime = 0;
+                        sound_up_down.play();
+                        listItemRefs.current[index - 1]?.focus();
+                      } else if (e.key === "ArrowUp" && index === 0) {
+                        e.preventDefault();
+                        sound_up_down.currentTime = 0;
+                        sound_up_down.play();
+                        searchInputRef.current?.focus();
+                      } else if (e.key === "ArrowDown" && index + 1 === visibleItems.length) {
+                        e.preventDefault();
+                        sound_up_down.currentTime = 0;
+                        sound_up_down.play();
+                        loadMoreButtonRef.current?.focus();
+                      }
+                    }}
+                    className="p-3 transition-all duration-150 cursor-pointer group bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-gray-900 focus:bg-blue-50 dark:focus:bg-blue-900/20"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {/* ID */}
+                        <div className="flex-shrink-0 w-6 h-6 bg-gray-100 dark:bg-gray-800 rounded-md flex items-center justify-center">
+                          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">id {item.id}</span>
+                        </div>
+
+                        {/* Name */}
+                        <div className="flex-1 min-w-0">
+                          <span className="font-medium text-sm text-gray-900 dark:text-white truncate">{item.name}</span>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity">
+                        {/* Partners Button */}
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          ref={(el) => (partnerListIconRefs.current[index] = el)}
+                          onMouseEnter={() => {
+                            hoverTimeoutRef.current = setTimeout(() => {
+                              setHoveredPartnerIndex(index);
+                            }, 500);
+                          }}
+                          onMouseLeave={() => {
+                            clearTimeout(hoverTimeoutRef.current);
+                            setHoveredPartnerIndex(null);
+                          }}
+                          className={`p-1.5 rounded transition-colors ${
+                            item.partners.length === 0
+                              ? "text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                              : "text-gray-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+                          }`}
+                          onClick={() =>
+                            setOpenPartnerListModal({
+                              open: true,
+                              data: item,
+                              index,
+                            })
+                          }
+                        >
+                          <div className="flex items-center gap-1">
+                            <ClipboardList size={16} />
+                            <span className="text-xs font-medium">{item.partners.length}</span>
+                          </div>
+                        </motion.button>
+
+                        {/* Edit Button */}
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          ref={(el) => (editIconRefs.current[index] = el)}
+                          onMouseEnter={() => {
+                            hoverTimeoutRef.current = setTimeout(() => {
+                              setHoveredEditIndex(index);
+                            }, 500);
+                          }}
+                          onMouseLeave={() => {
+                            clearTimeout(hoverTimeoutRef.current);
+                            setHoveredEditIndex(null);
+                          }}
+                          className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors"
+                          onClick={() => setOpenEditModal({ open: true, data: item, index })}
+                        >
+                          <Edit2 size={16} />
+                        </motion.button>
+
+                        {/* Delete Button */}
+                        {/* <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          ref={(el) => (deleteIconRefs.current[index] = el)}
+                          onMouseEnter={() => {
+                            hoverTimeoutRef.current = setTimeout(() => {
+                              setHoveredDeleteIndex(index);
+                            }, 500);
+                          }}
+                          onMouseLeave={() => {
+                            clearTimeout(hoverTimeoutRef.current);
+                            setHoveredDeleteIndex(null);
+                          }}
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                          onClick={() => setOpenDeleteModal({ open: true, data: item, index })}
+                        >
+                          <Trash2 size={16} />
+                        </motion.button> */}
+                      </div>
+                    </div>
+                  </motion.li>
+                ))}
+              </AnimatePresence>
+            </ul>
+          </div>
+
+          {hasMore && (
+            <div className="p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 text-center">
+              <button
+                ref={loadMoreButtonRef}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-gray-900"
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setCurrentPage((prev) => prev + 1);
+                  } else if (e.key === "ArrowUp") {
+                    listItemRefs.current[visibleItems.length - 1].focus();
+                  }
+                }}
+              >
+                <span className="flex items-center gap-2">
+                  <Plus size={16} />
+                  <span>{t("loadMore")}</span>
+                </span>
+              </button>
+            </div>
+          )}
+        </motion.div>
+      ) : (
+        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6 text-center">
+          <div className="text-gray-400 text-4xl mb-3">👥</div>
+          <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">{searchQuery ? t("noSearchResults") : t("empty")}</h3>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">{searchQuery ? t("tryDifferentSearch") : t("addFirstAgent")}</p>
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                searchInputRef.current?.focus();
+              }}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              {t("clearSearch")}
+            </button>
+          )}
+        </div>
+      )}
+      {/* List */}
+      {/* {loading ? (
+        <MyLoading />
+      ) : visibleItems.length > 0 ? (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
           <div className="border border-gray-300 dark:border-gray-600 rounded-sm overflow-hidden">
             <ul className={myClass.ul}>
@@ -565,7 +765,7 @@ const Agent = () => {
                     <button
                       ref={(el) => (partnerListIconRefs.current[index] = el)}
                       onMouseEnter={() => {
-                        hoverTimeoutRef.current = setTimeout(() => {
+                        hoverTimeoutRef.current = setTimeout(() => { 
                           setHoveredPartnerIndex(index);
                         }, 500);
                       }}
@@ -667,7 +867,7 @@ const Agent = () => {
             </button>
           )}
         </div>
-      )}
+      )} */}
       <Tooltip
         visible={hoveredPartnerIndex !== null}
         targetRef={{

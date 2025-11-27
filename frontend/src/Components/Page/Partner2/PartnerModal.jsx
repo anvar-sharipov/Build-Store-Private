@@ -208,57 +208,9 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                       <span className="text-gray-700 dark:text-gray-300">{t("klient")}</span>
                     </label>
 
-                    {/* <label className="inline-flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        name="type"
-                        value="supplier"
-                        className="text-blue-600 dark:text-blue-400 focus:ring-blue-500"
-                        ref={supplierRef}
-                        onKeyDown={(e) => {
-                          if (e.key === "ArrowDown" || e.key === "ArrowRight") {
-                            e.preventDefault();
-                            client_and_supplierRef.current?.focus();
-                          } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
-                            e.preventDefault();
-                            clientRef.current?.focus();
-                          } else if (e.key === "Enter") {
-                            e.preventDefault();
-                          }
-                        }}
-                        onChange={(e) => {
-                          setFieldValue("type", e.target.value);
-                        }}
-                        checked={values.type === "supplier"}
-                      />
-                      <span className="text-gray-700 dark:text-gray-300">{t("supplier")}</span>
-                    </label> */}
+ 
 
-                    {/* <label className="inline-flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        name="type"
-                        value="both"
-                        className="text-blue-600 dark:text-blue-400 focus:ring-blue-500"
-                        ref={client_and_supplierRef}
-                        onKeyDown={(e) => {
-                          if (e.key === "ArrowDown" || e.key === "ArrowRight") {
-                            e.preventDefault();
-                            founderRef.current?.focus();
-                          } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
-                            e.preventDefault();
-                            supplierRef.current?.focus();
-                          } else if (e.key === "Enter") {
-                            e.preventDefault();
-                          }
-                        }}
-                        onChange={(e) => {
-                          setFieldValue("type", e.target.value);
-                        }}
-                        checked={values.type === "both"}
-                      />
-                      <span className="text-gray-700 dark:text-gray-300">{t("both2")}</span>
-                    </label> */}
+ 
 
                     <label className="inline-flex items-center space-x-2">
                       <input
@@ -337,39 +289,6 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                   {touched.name && errors.name && <div className="text-sm text-red-500 mt-1">{errors.name}</div>}
                 </div>
 
-                {/* Name balance */}
-                {/* <div className={myClass.border}>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    {t("balance")}
-                  </label>
-                  <span>{values.balance}</span>
-                  <Field
-                    onKeyDown={(e) => {
-                      if (e.key === "ArrowUp") {
-                        e.preventDefault();
-                        nameRef.current?.focus();
-                      } else if (e.key === "ArrowDown") {
-                        e.preventDefault();
-                        if (values.agent) {
-                          X_btn_agentRef.current?.focus();
-                        } else {
-                          agentRef.current?.focus();
-                        }
-                      } else if (e.key === "Enter") {
-                        e.preventDefault();
-                      }
-                    }}
-                    id="balanceRef"
-                    name="balance"
-                    type="number"
-                    onBlur={handleBlur}
-                    ref={balanceRef}
-                    className={`w-full p-2 rounded border ${
-                      touched.balance && errors.balance ? "border-red-500" : "border-gray-300 dark:border-gray-700"
-                    } bg-gray-100 dark:bg-gray-800 text-black dark:text-white`}
-                  />
-                  {touched.balance && errors.balance && <div className="text-sm text-red-500 mt-1">{errors.balance}</div>}
-                </div> */}
 
                 {/* Name agent */}
                 <div className={myClass.border}>

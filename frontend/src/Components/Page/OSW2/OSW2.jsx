@@ -7,7 +7,6 @@ import { DateContext } from "../../UI/DateProvider";
 import { useNavigate } from "react-router-dom";
 import { ROUTES_RAPORT } from "../../../routes";
 
-
 const OSW2 = () => {
   const { t } = useTranslation();
   const { dateFrom, dateTo } = useContext(DateContext);
@@ -131,8 +130,10 @@ const OSW2 = () => {
                   <td className="border border-black px-3 py-2 text-right font-mono text-sm">{formatNumber(o.initial_credit)}</td>
                   <td className="border border-black px-3 py-2 text-right font-mono text-sm font-semibold">{formatNumber(o.debit)}</td>
                   <td className="border border-black px-3 py-2 text-right font-mono text-sm font-semibold">{formatNumber(o.credit)}</td>
-                  <td className="border border-black px-3 py-2 text-right font-mono text-sm">{formatNumber(o.final_debit)}</td>
-                  <td className="border border-black px-3 py-2 text-right font-mono text-sm">{formatNumber(o.final_credit)}</td>
+                  <td className="border border-black px-3 py-2 text-right font-mono text-sm">{parseFloat(o.final_balance) > 0 ? formatNumber(o.final_balance) : "—"}</td>
+                  <td className="border border-black px-3 py-2 text-right font-mono text-sm">{parseFloat(o.final_balance) < 0 ? formatNumber(Math.abs(o.final_balance)) : "—"}</td>
+                  {/* <td className="border border-black px-3 py-2 text-right font-mono text-sm">{formatNumber(o.final_debit)}</td>
+                  <td className="border border-black px-3 py-2 text-right font-mono text-sm">{formatNumber(o.final_credit)}</td> */}
                 </tr>
               ))}
             </tbody>
@@ -274,13 +275,13 @@ const OSW2 = () => {
                         </td>
                         <td className="px-4 py-4 text-right font-mono text-sm font-semibold text-red-600 dark:text-red-400">{formatNumber(o.credit)}</td>
                         <td className="px-4 py-4 text-right font-mono text-sm text-gray-600 dark:text-gray-400 border-l border-gray-200 dark:border-gray-700">
-                          {parseFloat(o.final_balance) > 0 ? formatNumber(o.final_balance) : '—' }
+                          {parseFloat(o.final_balance) > 0 ? formatNumber(o.final_balance) : "—"}
                           {/* {formatNumber(o.final_debit)} */}
-                          </td>
+                        </td>
                         <td className="px-4 py-4 text-right font-mono text-sm text-gray-600 dark:text-gray-400">
-                          {parseFloat(o.final_balance) < 0 ? formatNumber(Math.abs(o.final_balance)) : '—' }
+                          {parseFloat(o.final_balance) < 0 ? formatNumber(Math.abs(o.final_balance)) : "—"}
                           {/* {formatNumber(o.final_credit)} */}
-                          </td>
+                        </td>
                       </motion.tr>
                     ))}
                   </AnimatePresence>
@@ -453,8 +454,14 @@ const OSW2 = () => {
                     <td className="border border-black dark:border-gray-400 px-3 py-2 text-right font-mono dark:text-gray-300">{formatNumber(o.initial_credit)}</td>
                     <td className="border border-black dark:border-gray-400 px-3 py-2 text-right font-mono font-semibold dark:text-gray-300">{formatNumber(o.debit)}</td>
                     <td className="border border-black dark:border-gray-400 px-3 py-2 text-right font-mono font-semibold dark:text-gray-300">{formatNumber(o.credit)}</td>
-                    <td className="border border-black dark:border-gray-400 px-3 py-2 text-right font-mono dark:text-gray-300">{formatNumber(o.final_debit)}</td>
-                    <td className="border border-black dark:border-gray-400 px-3 py-2 text-right font-mono dark:text-gray-300">{formatNumber(o.final_credit)}</td>
+                    <td className="border border-black dark:border-gray-400 px-3 py-2 text-right font-mono dark:text-gray-300">
+                      {parseFloat(o.final_balance) > 0 ? formatNumber(o.final_balance) : "—"}
+                    </td>
+                    <td className="border border-black dark:border-gray-400 px-3 py-2 text-right font-mono dark:text-gray-300">
+                      {parseFloat(o.final_balance) < 0 ? formatNumber(Math.abs(o.final_balance)) : "—"}
+                    </td>
+                    {/* <td className="border border-black dark:border-gray-400 px-3 py-2 text-right font-mono dark:text-gray-300">{formatNumber(o.final_debit)}</td>
+                    <td className="border border-black dark:border-gray-400 px-3 py-2 text-right font-mono dark:text-gray-300">{formatNumber(o.final_credit)}</td> */}
                   </tr>
                 ))}
               </tbody>

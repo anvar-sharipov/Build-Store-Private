@@ -24,7 +24,7 @@ const CompactAgentFilter = ({ agents, selectedAgent, handleChange, t }) => {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-left text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex justify-between items-center"
+        className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-left text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex justify-between items-center"
       >
         <span className="truncate">{selectedAgentName}</span>
         <svg className={`w-5 h-5 transform transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -34,16 +34,16 @@ const CompactAgentFilter = ({ agents, selectedAgent, handleChange, t }) => {
 
       {/* Dropdown menu */}
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-hidden">
+        <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-md shadow-lg max-h-60 overflow-hidden">
           {/* Search input */}
           {agents.length > 5 && (
-            <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+            <div className="p-2 border-b border-gray-700">
               <input
                 type="text"
                 placeholder={t("search")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                className="w-full p-1 text-sm border border-gray-600 rounded bg-gray-700 text-gray-300"
               />
             </div>
           )}
@@ -57,7 +57,7 @@ const CompactAgentFilter = ({ agents, selectedAgent, handleChange, t }) => {
                 setSearchTerm("");
               }}
               className={`px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                selectedAgent === "all" ? "bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300" : "text-gray-700 dark:text-gray-300"
+                selectedAgent === "all" ? "bg-blue-900 text-blue-300" : "text-gray-300"
               }`}
             >
               {t("all")}
@@ -71,10 +71,10 @@ const CompactAgentFilter = ({ agents, selectedAgent, handleChange, t }) => {
                   setIsOpen(false);
                   setSearchTerm("");
                 }}
-                className={`px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                className={`px-3 py-2 cursor-pointer hover:bg-gray-700 ${
                   selectedAgent === agent.id.toString() 
-                    ? "bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300" 
-                    : "text-gray-700 dark:text-gray-300"
+                    ? "bg-blue-900 text-blue-300" 
+                    : "text-gray-300"
                 }`}
               >
                 {agent.name || agent.first_name || `Agent ${agent.id}`}
@@ -82,7 +82,7 @@ const CompactAgentFilter = ({ agents, selectedAgent, handleChange, t }) => {
             ))}
             
             {filteredAgents.length === 0 && searchTerm && (
-              <div className="px-3 py-2 text-gray-500 dark:text-gray-400">
+              <div className="px-3 py-2 text-gray-400">
                 {t("no_results")}
               </div>
             )}

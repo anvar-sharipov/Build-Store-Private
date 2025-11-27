@@ -250,13 +250,33 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         self.perform_destroy(instance)
         return Response(status=status.HTTP_200_OK)
     
+    # def update(self, request, *args, **kwargs):
+    #     # time.sleep(2)
+    #     partial = kwargs.pop('partial', False)
+    #     instance = self.get_object()
+    #     serializer = self.get_serializer(instance, data=request.data, partial=partial)
+    #     serializer.is_valid(raise_exception=True)
+    #     self.perform_update(serializer)
+    #     return Response(serializer.data)
+    
     def update(self, request, *args, **kwargs):
-        # time.sleep(2)
-        partial = kwargs.pop('partial', False)
+        print("=== UPDATE EMPLOYEE DEBUG ===")
+        print("Request data:", request.data)
+        print("URL kwargs:", kwargs)
+        
         instance = self.get_object()
+        print("Current instance:", instance.name, instance.type, instance.is_active)
+        
+        partial = kwargs.pop('partial', False)
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
+        
+        print("Serializer is valid:", serializer.is_valid())
+        if not serializer.is_valid():
+            print("Validation errors:", serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
         self.perform_update(serializer)
+        print("Update successful")
         return Response(serializer.data)
     
 

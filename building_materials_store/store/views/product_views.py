@@ -38,7 +38,7 @@ from .. filters import ProductFilter
 # from django.views.decorators.http import require_GET
 # from django.http import JsonResponse
 from django.contrib.postgres.search import TrigramSimilarity
-from django.db.models import Q
+from django.db.models import Case, When, Value, IntegerField, Q
 # from django.utils.dateparse import parse_datetime, parse_date
 # from django.db.models import Sum, F, Count
 from django.db.models import F, Count
@@ -106,29 +106,110 @@ def search_products(request):
     
     if query:
         
-        # 🔹 1. Сначала ищем по qr_code
-        results = Product.objects.filter(qr_code=query)
-        not_qr_code = False
         
-        # 🔹 2. Если по qr_code пусто → ищем по имени
-        if not results.exists():
-            # dlya list product w sale invoice
-            results = Product.objects.annotate(
-                similarity=TrigramSimilarity("name", query)
-            ).filter(similarity__gt=0.2)
-        else:
-            not_qr_code = True
+        # # 🔹 1. Сначала ищем по qr_code
+        # results = Product.objects.filter(qr_code=query)
+        # not_qr_code = False
+        # ic("wqwqwq")
+        
+        # # 🔹 2. Если по qr_code пусто → ищем по имени
+        # if not results.exists():
+        #     # dlya list product w sale invoice
+        #     results = Product.objects.annotate(
+        #         similarity=TrigramSimilarity("name", query)
+        #     ).filter(similarity__gt=0.2)
+        # else:
+        #     not_qr_code = True
             
         
 
-        if warehouse:
-            results = results.filter(warehouse_products__warehouse_id=warehouse)
+        # if warehouse:
+        #     results = results.filter(warehouse_products__warehouse_id=warehouse)
 
-        if not not_qr_code:
-            results = results.order_by("-similarity")[:10]
+        # if not not_qr_code:
+        #     results = results.order_by("-similarity")[:10]
 
+        # data = []
+        # for product in results:
+        #     if warehouse:
+        #         quantity = product.warehouse_products.filter(
+        #             warehouse_id=warehouse
+        #         ).aggregate(total=models.Sum('quantity'))['total'] or 0
+        #         base_quantity_in_stock = quantity
+        #     else:
+        #         quantity = product.get_total_quantity()
+
+        #     unit_name = product.base_unit.name if product.base_unit else ""
+        #     for unit in product.units.all():
+        #         if unit.is_default_for_sale and unit.conversion_factor:
+        #             # print('quantity', quantity)
+        #             # print('unit.conversion_factor', unit.conversion_factor)
+        #             quantity = float(quantity) / float(unit.conversion_factor)
+        #             unit_name = unit.unit.name
+        #             break
+
+        #     serialized = ProductSerializer(product).data
+        #     serialized.update({
+        #         'quantity_on_selected_warehouses': quantity,
+        #         'unit_name_on_selected_warehouses': unit_name,
+        #         'base_quantity_in_stock': base_quantity_in_stock,
+        #         'selected_quantity': 1,
+        #         'selected_price': 1,
+        #         "finded_from_QR": not_qr_code
+        #     })
+        #     data.append(serialized)
+        #     # print(product, unit_name, quantity)
+        
+        
+        query = query.strip()
+        finded_from_qr = False
+
+        # --- 1) Поиск по QR-коду ---
+        results = Product.objects.filter(qr_code=query)
+        finded_from_qr = results.exists()
+
+        # --- 2) Если по QR ничего не найдено — ищем по имени ---
+        if not finded_from_qr:
+
+            # Создаём базовый queryset без slice
+            tmp_results = Product.objects.annotate(
+                rank=Case(
+                    # 1: Полное совпадение
+                    When(name__iexact=query, then=Value(1)),
+                    # 2: Начинается с query
+                    When(name__istartswith=query, then=Value(2)),
+                    # 3: Содержит query
+                    When(name__icontains=query, then=Value(3)),
+                    # 4: всё остальное — триграммы
+                    default=Value(4),
+                    output_field=IntegerField()
+                ),
+                similarity=TrigramSimilarity("name", query)
+            ).filter(
+                Q(name__icontains=query) | Q(similarity__gt=0.1)
+            ).order_by("rank", "-similarity")
+
+            # --- Фильтрация по складу ---
+            if warehouse:
+                tmp_results = tmp_results.filter(
+                    warehouse_products__warehouse_id=warehouse
+                )
+
+            # --- Slice применяем только в самом конце ---
+            results = tmp_results[:10]
+
+        else:
+            # Если qr найден — то можно применить фильтрацию по складу сразу
+            if warehouse:
+                results = results.filter(
+                    warehouse_products__warehouse_id=warehouse
+                )
+
+        # --- Формируем ответ ---
         data = []
         for product in results:
+
+            # Подсчёт количества
             if warehouse:
                 quantity = product.warehouse_products.filter(
                     warehouse_id=warehouse
@@ -136,16 +217,17 @@ def search_products(request):
                 base_quantity_in_stock = quantity
             else:
                 quantity = product.get_total_quantity()
+                base_quantity_in_stock = quantity
 
+            # Конвертация по юнитам
             unit_name = product.base_unit.name if product.base_unit else ""
             for unit in product.units.all():
                 if unit.is_default_for_sale and unit.conversion_factor:
-                    # print('quantity', quantity)
-                    # print('unit.conversion_factor', unit.conversion_factor)
                     quantity = float(quantity) / float(unit.conversion_factor)
                     unit_name = unit.unit.name
                     break
 
+            # Сериализация
             serialized = ProductSerializer(product).data
             serialized.update({
                 'quantity_on_selected_warehouses': quantity,
@@ -153,13 +235,16 @@ def search_products(request):
                 'base_quantity_in_stock': base_quantity_in_stock,
                 'selected_quantity': 1,
                 'selected_price': 1,
-                "finded_from_QR": not_qr_code
+                "finded_from_QR": finded_from_qr
             })
+
             data.append(serialized)
-            # print(product, unit_name, quantity)
 
     # esli poisk produkta s sales invoice (esli najal na enter wybor producta)
+    
+    
     elif search_in_invoice:
+        
         product_id = request.GET.get("id", "")
         warehouse = request.GET.get("warehouse", "")
         
@@ -217,6 +302,7 @@ def search_products(request):
         #     data.append(serialized)
 
     elif product_id:
+        
  
         results = Product.objects.filter(id=product_id)
         data = []
@@ -244,6 +330,7 @@ def search_products(request):
             })
             data.append(serialized)
     elif search_free:
+        
         warehouse_ids = request.GET.getlist("warehouses")
         if warehouse_ids:
             warehouse_ids = [int(w) for w in warehouse_ids if w.isdigit()]

@@ -9,7 +9,8 @@ import {
   Eye,
   Edit3,
   MoreHorizontal,
-  Search
+  Search,
+  User
 } from "lucide-react";
 import { formatNumber } from "../../UI/formatNumber";
 
@@ -204,7 +205,7 @@ const List = ({
                     whileHover={{ scale: 1.1 }}
                     className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 rounded-xl flex items-center justify-center"
                   >
-                    <Building2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                    <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                   </motion.div>
                   
                   <div className="flex-1 min-w-0">

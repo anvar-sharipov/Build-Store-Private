@@ -866,6 +866,7 @@ class Trip(models.Model):
     driver = models.ForeignKey(Employee, on_delete=models.PROTECT, verbose_name="Водитель")
     comment = models.TextField(null=True, blank=True, verbose_name="Комментарий")
     created_at = models.DateTimeField(auto_now_add=True)
+    created_handle = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     @property

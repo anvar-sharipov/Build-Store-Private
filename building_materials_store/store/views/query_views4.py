@@ -1,6 +1,6 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from ..models import Transaction, Account, Entry, Partner, Agent, Invoice, InvoiceItem, Employee
+from ..models import Transaction, Account, Entry, Partner, Agent, Invoice, InvoiceItem, Employee, Trip, TripInvoiceHistory
 from django.http import JsonResponse
 from icecream import ic
 from django.utils.dateparse import parse_date
@@ -9,6 +9,10 @@ from datetime import datetime, date, time
 from decimal import Decimal
 from collections import defaultdict
 from django.db.models import Sum, F, Q
+from django.views.decorators.csrf import csrf_exempt
+import json
+from django.db import transaction as db_transaction
+
 
 
 
@@ -960,13 +964,23 @@ def get_detail_account_60_62(request):
 def get_invoices_for_trip(request):
     date_from = request.GET.get('dateFrom')
     date_to = request.GET.get('dateTo')
+    driverId = request.GET.get('driverId')
+    
+    ic(driverId)
 
     if not date_from or not date_to:
         return JsonResponse({"status": "error", "message": "dateFrom и dateTo обязательны"}, status=400)
 
-    invoices = Invoice.objects.filter(invoice_date__range=[date_from, date_to], trip__isnull=True).order_by("-pk")
+    invoices = Invoice.objects.filter(invoice_date__range=[date_from, date_to], trip__isnull=True, awto__id=driverId).order_by("-pk")
 
     data = []
+    total_volume = 0
+    total_weight = 0
+    total_length = 0
+    total_width = 0
+    total_height = 0
+    total_price = 0
+    
     for invoice in invoices:
         total_selected_price = (InvoiceItem.objects.filter(invoice=invoice)
                                 .aggregate(total=Sum(F("selected_price") * F("selected_quantity")))["total"] or 0)
@@ -976,7 +990,20 @@ def get_invoices_for_trip(request):
                                  .aggregate(total=Sum(F("wholesale_price") * F("selected_quantity")))["total"] or 0)
         total_income_price = total_selected_price - total_purchase_price
         total_discount_price = total_selected_price - total_wholesale_price
+        
+        volume = (InvoiceItem.objects.filter(invoice=invoice)
+                                 .aggregate(total=Sum(F("product__volume") * F("selected_quantity")))["total"] or 0)
+        weight = (InvoiceItem.objects.filter(invoice=invoice)
+                                 .aggregate(total=Sum(F("product__weight") * F("selected_quantity")))["total"] or 0)
+        length = (InvoiceItem.objects.filter(invoice=invoice)
+                                 .aggregate(total=Sum(F("product__length") * F("selected_quantity")))["total"] or 0)
+        width = (InvoiceItem.objects.filter(invoice=invoice)
+                                 .aggregate(total=Sum(F("product__width") * F("selected_quantity")))["total"] or 0)
+        height = (InvoiceItem.objects.filter(invoice=invoice)
+                                 .aggregate(total=Sum(F("product__height") * F("selected_quantity")))["total"] or 0)
+        
 
+        
         data.append({
             "id": invoice.id,
             "invoice_date": invoice.invoice_date,
@@ -989,22 +1016,125 @@ def get_invoices_for_trip(request):
             "total_income_price": str(total_income_price),
             "total_discount_price": str(total_discount_price),
             "canceled_at": invoice.canceled_at,
+            "volume": volume,
+            "weight": weight,
+            "length": length,
+            "width": width,
+            "height": height
+            
         })
 
-    return JsonResponse({"status": "ok", "invoices": data})
+    return JsonResponse({ "invoices": data })
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_partner_list(request):
+def get_driver_list(request):
     query = request.GET.get('query')
-    drivers = Employee.objects.filter(name__icontains=query)
+    drivers = Employee.objects.filter(name__icontains=query, type="driver", is_active=True)
     
     data = []
     
-    for d in drivers:
+    for driver in drivers:
         d = {
-            "name": d.name
+            "id": driver.id,
+            "name": driver.name
+        }
+        data.append(d)
+    
+    
+        
+    
+
+    return JsonResponse({
+        "data": data
+    })
+    
+    
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_trips(request):
+    ic("get_trips")
+    date_from = request.GET.get('dateFrom')
+    date_to = request.GET.get('dateTo')
+    trips = Trip.objects.filter(created_handle__range=[date_from, date_to]).order_by('pk')
+    
+    data = []
+    
+    for trip in trips:
+        invoices = trip.invoices.all()
+        
+        total_volume = 0
+        total_weight = 0
+        total_length = 0
+        total_width = 0
+        total_height = 0
+        total_price = 0
+        invoices_json = []
+        for invoice in invoices:
+            total_selected_price = (InvoiceItem.objects.filter(invoice=invoice)
+                                    .aggregate(total=Sum(F("selected_price") * F("selected_quantity")))["total"] or 0)
+            total_purchase_price = (InvoiceItem.objects.filter(invoice=invoice)
+                                    .aggregate(total=Sum(F("purchase_price") * F("selected_quantity")))["total"] or 0)
+            total_wholesale_price = (InvoiceItem.objects.filter(invoice=invoice)
+                                    .aggregate(total=Sum(F("wholesale_price") * F("selected_quantity")))["total"] or 0)
+            total_income_price = total_selected_price - total_purchase_price
+            total_discount_price = total_selected_price - total_wholesale_price
+            
+            volume = (InvoiceItem.objects.filter(invoice=invoice)
+                                    .aggregate(total=Sum(F("product__volume") * F("selected_quantity")))["total"] or 0)
+            weight = (InvoiceItem.objects.filter(invoice=invoice)
+                                    .aggregate(total=Sum(F("product__weight") * F("selected_quantity")))["total"] or 0)
+            length = (InvoiceItem.objects.filter(invoice=invoice)
+                                    .aggregate(total=Sum(F("product__length") * F("selected_quantity")))["total"] or 0)
+            width = (InvoiceItem.objects.filter(invoice=invoice)
+                                    .aggregate(total=Sum(F("product__width") * F("selected_quantity")))["total"] or 0)
+            height = (InvoiceItem.objects.filter(invoice=invoice)
+                                    .aggregate(total=Sum(F("product__height") * F("selected_quantity")))["total"] or 0)
+            
+            total_volume += volume
+            total_weight += weight
+            total_length += length
+            total_width += width
+            total_height += height
+            total_price += total_selected_price
+            invoices_json.append({
+                "id": invoice.id,
+                "invoice_date": invoice.invoice_date,
+                "partner": invoice.partner.name if invoice.partner else None,
+                "type_price": invoice.type_price,
+                "wozwrat_or_prihod": invoice.wozwrat_or_prihod,
+                "send": invoice.send,
+                "is_entry": invoice.is_entry,
+                "total_selected_price": str(total_selected_price),
+                "total_income_price": str(total_income_price),
+                "total_discount_price": str(total_discount_price),
+                "canceled_at": invoice.canceled_at,
+                "volume": volume,
+                "weight": weight,
+                "length": length,
+                "width": width,
+                "height": height
+                
+            })
+        
+        d = {
+            "id": trip.id,
+            "comment": trip.comment,
+            "created_at": trip.created_at,
+            "created_handle": trip.created_handle,
+            "updated_at": trip.updated_at,
+            "driver_id": trip.driver.id,
+            "driver_name": trip.driver.name,
+            "invoices_json": invoices_json,
+            
+            "total_volume": total_volume,
+            "total_weight": total_weight,
+            "total_length": total_length,
+            "total_width": total_width,
+            "total_height": total_height,
+            "total_price": total_price,
         }
         data.append(d)
     
@@ -1017,3 +1147,109 @@ def get_partner_list(request):
     })
     
 
+# @csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def save_trip(request):
+    data = request.data
+    
+    comment = data.get("comment")
+    driver = data.get("driver")
+    invoice_ids = data.get("invoice_ids")
+    created_handle = data.get("dateProwodok")
+    
+
+    
+    update_id = data.get("update_id")
+    
+
+    
+    
+    if not driver:
+        return JsonResponse({"status": "error", "message": "driver required"}, status=400)
+    
+    if not isinstance(invoice_ids, list):
+        return JsonResponse({"status": "error", "message": "invoice_ids must be a list"}, status=400)
+    
+    if not invoice_ids:
+        return JsonResponse({"status": "error", "message": "invoices required"}, status=400)
+    
+    try:
+        driver_obj = Employee.objects.get(pk=driver)
+    except Employee.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Cant find driver in database"}, status=400)
+    
+    
+    # invoices = Invoice.objects.filter(pk__in=invoice_ids)
+    invoices = list(Invoice.objects.filter(pk__in=invoice_ids).order_by('id'))
+    if len(invoices) != len(invoice_ids):
+        missing = set(invoice_ids) - set(inv.id for inv in invoices)
+        return JsonResponse({"status": "error", "message": "Cant find invoice", "missing": list(missing)}, status=400)
+            
+    
+    try:
+        with db_transaction.atomic():
+
+            if update_id:
+                ic("update")
+                try:
+                    trip = Trip.objects.get(pk=update_id)
+                except Trip.DoesNotExist:
+                    return JsonResponse({"status": "error", "message": "Trip not found"}, status=400)
+                
+                # 1. Очистить старые инвойсы
+                Invoice.objects.filter(trip=trip).update(trip=None)
+                
+                # 2. Назначить новые инвойсы
+                for inv in invoices:
+                    inv.trip = trip
+                Invoice.objects.bulk_update(invoices, ['trip'])
+                
+                # 3. Обновить поля trip
+                trip.driver = driver_obj
+                trip.comment = comment
+                trip.created_handle = created_handle
+                trip.save()
+                
+                return JsonResponse({
+                    "status": "success",
+                    "message": "trip updated",
+                    "trip_id": trip.id,
+                    "invoices_count": len(invoices)
+                })
+                
+            else:     
+                1/0
+                trip = Trip.objects.create(driver=driver_obj, comment=comment, created_handle=created_handle)
+                
+                for inv in invoices:
+                    inv.trip = trip
+                Invoice.objects.bulk_update(invoices, ['trip'])
+                
+                history_objs = [
+                    TripInvoiceHistory(
+                        trip=trip,
+                        invoice=inv,
+                        action="added",
+                        performed_by=request.user
+                    ) for inv in invoices
+                ]
+                TripInvoiceHistory.objects.bulk_create(history_objs)
+                
+                
+                return JsonResponse({
+                    "status": "success",
+                    "message": "trip saved",
+                    "trip_id": trip.id,
+                    "invoices_count": len(invoices)
+                })
+        
+        
+            
+    except Exception as e:
+        ic(e)
+        # create error
+        return JsonResponse({"status": "error", "message": "transactionChange", "reason_for_the_error": str(e)}, status=400)
+
+    
+    # return JsonResponse({"message": f"trip saved"})

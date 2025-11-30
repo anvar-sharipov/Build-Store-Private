@@ -101,7 +101,9 @@ urlpatterns = [
     path('get-invoices/', get_invoices, name='get-invoices'),
     
     path('get_invoices_for_trip/', query_views4.get_invoices_for_trip, name='get_invoices_for_trip'),
-    path('get_partner_list/', query_views4.get_partner_list, name='get_partner_list'),
+    path('get_driver_list/', query_views4.get_driver_list, name='get_driver_list'),
+    path('save_trip/', query_views4.save_trip, name='save_trip'),
+    path('get_trips/', query_views4.get_trips, name='get_trips'),
     
     path("get-invoice-data/<int:id>/", get_invoice_data, name="get_invoice_data"),
     path("delete_invoice/<int:id>/", delete_invoice, name="delete_invoice"),

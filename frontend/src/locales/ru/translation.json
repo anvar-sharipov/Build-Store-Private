@@ -289,6 +289,16 @@
   "widthLabel": "Ширина (см)",
   "heightLabel": "Высота (см)",
 
+  "weightLabel2": "Вес",
+  "volumeLabel2": "Объём",
+  "lengthLabel2": "Длина",
+  "widthLabel2": "Ширина",
+  "heightLabel2": "Высота",
+
+  "kg": "кг",
+  "m3": "м³",
+  "sm": "см",
+
   "qrCodeLabel": "QR код",
   "qrCodePlaceholder": "QR code продукта",
 
@@ -618,11 +628,23 @@
   "partners found": "Найдено партнеров",
   "Sort po agentam": "Сортировка по агентам",
   "trips": "Рейсы",
+  "trip": "Рейс",
   "driver": "Водитель",
   "warehouseWorker": "Грузчик",
   "employeeType": "Тип работника",
   "activeEmployee": "Активен",
-  "employeeName": "Имя работника"
+  "employeeName": "Имя работника",
+
+  "Selected invoices": "Выбранные накладные",
+  "Available invoices": "Доступные накладные",
+  "pcs": "штук",
+
+  "driver required": "Требуется водитель",
+  "invoices required": "Требуются накладные",
+  "trip saved": "Рейс сохранён",
+  "Cant find driver in database": "Не удалось найти водителя в базе данных",
+  "Cant find invoice": "Не удалось найти накладные № ",
+  "trip updated": "Рейс обновлён"
 
 
  

@@ -708,7 +708,7 @@ class StockSnapshotAdmin(admin.ModelAdmin):
 # Trip START ###############################################################################################################################################################################
 @admin.register(Trip)
 class TripAdmin(admin.ModelAdmin):
-    list_display = ("id", "driver", "comment", "created_at")
+    list_display = ("id", "driver", "comment", "created_at", "created_handle")
     search_fields = ("driver__name", "comment")
     autocomplete_fields = ("driver",)
     readonly_fields = ("created_at", "updated_at")
@@ -718,7 +718,7 @@ class TripAdmin(admin.ModelAdmin):
             "fields": ("driver", "comment")
         }),
         ("Служебное", {
-            "fields": ("created_at", "updated_at")
+            "fields": ("created_at", "updated_at", "created_handle")
         }),
     )
     

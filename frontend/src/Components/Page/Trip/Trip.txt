@@ -1,0 +1,338 @@
+
+// import myAxios from "../../axios";
+// import { useTranslation } from "react-i18next";
+// import { Formik, Form, Field } from "formik";
+// import { DateContext } from "../../UI/DateProvider";
+// import { useContext, useEffect, useState, useRef } from "react";
+// import useDebounce from "../../../hooks/useDebounce";
+// import { Spin } from "antd";
+// import { Coins } from "lucide-react";
+
+// const Trip = () => {
+//   const { t } = useTranslation();
+//   const { dateFrom, dateTo } = useContext(DateContext);
+//   const [invoices, setInvoices] = useState([]);
+//   const [query, setQuery] = useState("");
+//   const [drivers, setDrivers] = useState([]);
+//   const [selectedDriver, setSelectedDriver] = useState(null);
+//   const [queryLoading, setQueryLoading] = useState(false);
+//   const [invoicesLoading, setInvoicesLoading] = useState(false);
+//   const [activeIndex, setActiveIndex] = useState(-1); // -1 = ничего не выбрано
+//   const [activeInvoiceId, setActiveInvoiceId] = useState(null); // для навигации по накладным
+//   const [selectedInvoices, setSelectedInvoices] = useState([]);
+
+//   const queryInput = useRef(null);
+//   const driverRefs = useRef([]);
+//   const invoiceRefs = useRef([]);
+//   const XDriverButton = useRef(null);
+//   const commentRef = useRef(null);
+
+//   const debouncedQuery = useDebounce(query, 400);
+
+//   useEffect(() => {
+//     document.title = t("trips");
+//   }, [t]);
+
+//   useEffect(() => {
+//     queryInput.current?.focus();
+//   }, []);
+
+//   const handleSelectDriver = (driver, setFieldValue) => {
+//     setFieldValue("driver", driver.id);
+//     setSelectedDriver(driver);
+//     setDrivers([]);
+//     setQuery("");
+//     setActiveInvoiceId(null); // сброс
+//     const getInvoices = async () => {
+//       if (!dateFrom || !dateTo) return;
+//       setInvoicesLoading(true);
+//       try {
+//         const res = await myAxios.get(`get_invoices_for_trip/`, {
+//           params: { dateFrom, dateTo, driverId: driver.id },
+//         });
+//         setInvoices(res.data.invoices);
+//         console.log("res.data", res.data.invoices);
+//         if (res.data.invoices.length > 0) {
+//           setActiveInvoiceId(res.data.invoices[0]?.id || null);
+//         }
+//       } catch (error) {
+//         console.error("Ошибка при получении накладных:", error);
+//       } finally {
+//         setInvoicesLoading(false);
+//       }
+//     };
+//     getInvoices();
+//   };
+
+//   useEffect(() => {
+//     const getInvoices = async () => {
+//       if (!selectedDriver || !dateFrom || !dateTo) return;
+//       setInvoicesLoading(true);
+//       try {
+//         const res = await myAxios.get(`get_invoices_for_trip/`, {
+//           params: { dateFrom, dateTo, driverId: selectedDriver.id },
+//         });
+//         setInvoices(res.data.invoices);
+//         if (res.data.invoices.length > 0) {
+//           setActiveInvoiceId(res.data.invoices[0].id);
+//         } else {
+//           setActiveInvoiceId(null);
+//         }
+//       } catch (error) {
+//         console.error("Ошибка при получении накладных:", error);
+//       } finally {
+//         setInvoicesLoading(false);
+//       }
+//     };
+
+//     getInvoices();
+//   }, [dateFrom, dateTo, selectedDriver]);
+
+//   const driverInputKeyDown = (e, setFieldValue) => {
+//     if (drivers.length === 0) {
+//       if (e.key === "Enter") {
+//         e.preventDefault();
+//       }
+//       return;
+//     }
+//     if (e.key === "ArrowDown") {
+//       e.preventDefault();
+//       setActiveIndex((prev) => (prev < drivers.length - 1 ? prev + 1 : 0));
+//     } else if (e.key === "ArrowUp") {
+//       e.preventDefault();
+//       setActiveIndex((prev) => (prev > 0 ? prev - 1 : drivers.length - 1));
+//     } else if (e.key === "Enter") {
+//       e.preventDefault();
+//       if (activeIndex >= 0) {
+//         handleSelectDriver(drivers[activeIndex], setFieldValue);
+//       }
+//     }
+//   };
+
+//   // Автоскролл для активного элемента
+//   // Если список длинный, полезно прокручивать <ul>, чтобы активный элемент всегда был видимым:
+//   useEffect(() => {
+//     if (activeIndex >= 0 && driverRefs.current[activeIndex]) {
+//       driverRefs.current[activeIndex].scrollIntoView({ block: "nearest" });
+//     }
+//   }, [activeIndex]);
+
+//   useEffect(() => {
+//     if (!debouncedQuery) {
+//       setDrivers([]);
+//       setQueryLoading(false);
+//       return;
+//     }
+//     const getDrivers = async () => {
+//       try {
+//         const res = await myAxios.get("get_driver_list/", {
+//           params: {
+//             query: debouncedQuery,
+//           },
+//         });
+//         setDrivers(res.data.data);
+//       } catch (err) {
+//         console.log("cant get_driver_list = ", err);
+//       } finally {
+//         setQueryLoading(false);
+//       }
+//     };
+//     getDrivers();
+//   }, [debouncedQuery]);
+
+//   // обработка клавиш для навигации по накладным
+//   const invoicesKeyDown = (e) => {
+//     const ids = invoices.map((i) => i.id);
+
+//     let currentIndex = ids.indexOf(activeInvoiceId);
+//     if (currentIndex === -1) currentIndex = 0;
+
+//     if (e.key === "ArrowDown") {
+//       const nextId = ids[(currentIndex + 1) % ids.length];
+//       setActiveInvoiceId(nextId);
+//       invoiceRefs.current[nextId]?.focus();
+//     }
+//     if (e.key === "ArrowUp") {
+//       const prevId = ids[(currentIndex - 1 + ids.length) % ids.length];
+//       setActiveInvoiceId(prevId);
+//       invoiceRefs.current[prevId]?.focus();
+//     }
+//   };
+
+//   useEffect(() => {
+//     if (activeInvoiceId) {
+//       invoiceRefs.current[activeInvoiceId]?.focus();
+//     }
+//   }, [invoices, activeInvoiceId]);
+
+//   // Добавляем функцию для выбора накладной
+//   // Функция для выбора накладной и переноса вправо
+//   const handleSelectInvoice = (inv, setFieldValue, values) => {
+//     // Если уже в выбранных, не добавляем
+//     if (!selectedInvoices.find((i) => i.id === inv.id)) {
+//       setSelectedInvoices((prev) => [...prev, inv]);
+//       setInvoices((prev) => prev.filter((i) => i.id !== inv.id)); // удаляем из левого списка
+//       setFieldValue("invoice_ids", [...values.invoice_ids, inv.id]);
+//     }
+//   };
+
+//   // Функция для удаления накладной из выбранных (возвращаем в левый список)
+//   const handleRemoveSelectedInvoice = (inv, setFieldValue, values) => {
+//     setSelectedInvoices((prev) => prev.filter((i) => i.id !== inv.id));
+//     setInvoices((prev) => [...prev, inv].sort((a, b) => b.id - a.id)); // возвращаем в левый, сортируем по убыванию id
+//     setFieldValue(
+//       "invoice_ids",
+//       values.invoice_ids.filter((id) => id !== inv.id)
+//     );
+//   };
+
+//   return (
+//     <div>
+//       <Formik
+//         initialValues={{
+//           driver: null,
+//           comment: "",
+//           invoice_ids: [],
+//         }}
+//         onSubmit={(values) => {
+//           console.log("values", values);
+//         }}
+//       >
+//         {({ setFieldValue, values }) => (
+//           <Form>
+//             <label htmlFor="driver">
+//               {t("driver")} {queryLoading && <Spin size="small" />}
+//             </label>
+//             {selectedDriver?.id ? (
+//               <div>
+//                 {selectedDriver.name}
+//                 <button
+//                   type="button"
+//                   onClick={() => {
+//                     console.log("query", query);
+//                     setSelectedDriver(null);
+//                     setTimeout(() => {
+//                       queryInput.current?.focus();
+//                       queryInput.current?.select();
+//                     }, 0);
+//                     setFieldValue("driver", null);
+//                     setInvoices([]);
+//                   }}
+//                   ref={XDriverButton}
+//                 >
+//                   x
+//                 </button>
+//               </div>
+//             ) : (
+//               <div>
+//                 <input
+//                   autoComplete="off"
+//                   type="text"
+//                   id="driver"
+//                   ref={queryInput}
+//                   onChange={(e) => {
+//                     const value = e.target.value;
+//                     setQuery(value);
+//                     setActiveIndex(-1);
+
+//                     if (value === "") {
+//                       setDrivers([]);
+//                       setQueryLoading(false);
+//                     } else {
+//                       setQueryLoading(true);
+//                     }
+//                   }}
+//                   onKeyDown={(e) => driverInputKeyDown(e, setFieldValue)}
+//                   className="border p-2 w-full rounded"
+//                 />
+//                 {drivers.length > 0 && (
+//                   <ul className="border mt-1 rounded max-h-60 overflow-auto bg-white shadow">
+//                     {drivers.map((driver, index) => (
+//                       <li
+//                         key={driver.id}
+//                         onClick={() => handleSelectDriver(driver, setFieldValue)}
+//                         ref={(el) => (driverRefs.current[index] = el)}
+//                         className={`p-2 cursor-pointer hover:bg-gray-100 ${activeIndex === index ? "bg-blue-100" : ""}`}
+//                       >
+//                         {index + 1}. {driver.name}
+//                       </li>
+//                     ))}
+//                   </ul>
+//                 )}
+//               </div>
+//             )}
+
+//             <Field as="textarea" name="comment" placeholder={t("comment")} className="border p-2 w-full rounded mt-2" innerRef={commentRef} />
+
+//             <button type="submit" className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+//               Отправить
+//             </button>
+
+//             <div className="flex justify-between gap-4">
+//               <div className="w-1/2">
+//                 {invoicesLoading ? (
+//                   <div className="mt-2">
+//                     <Spin /> Загрузка накладных...
+//                   </div>
+//                 ) : (
+//                   invoices.length > 0 && (
+//                     <ul className="mt-2 border rounded p-2 max-h-96 overflow-auto">
+//                       {invoices.map((inv, index) => (
+//                         <li
+//                           key={inv.id}
+//                           tabIndex={0}
+//                           ref={(el) => {
+//                             if (el) invoiceRefs.current[inv.id] = el;
+//                             else delete invoiceRefs.current[inv.id];
+//                           }}
+//                           onKeyDown={invoicesKeyDown}
+//                           className={`p-2 cursor-pointer hover:bg-gray-100 flex justify-between items-center ${activeInvoiceId === inv.id ? "bg-blue-100" : ""}`}
+//                         >
+//                           <div
+//                             onClick={() => {
+//                               setActiveInvoiceId(inv.id);
+//                               setTimeout(() => invoiceRefs.current[inv.id]?.focus(), 0);
+//                             }}
+//                           >
+//                             №{inv.id} {inv.partner ? inv.partner : "—"} {inv.total_selected_price} {inv.wozwrat_or_prihod}
+//                           </div>
+//                           <button type="button" className="ml-2 px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600" onClick={() => handleSelectInvoice(inv, setFieldValue, values)}>
+//                             Добавить
+//                           </button>
+//                         </li>
+//                       ))}
+//                     </ul>
+//                   )
+//                 )}
+//               </div>
+//               <div className="w-1/2">
+//                 <h3>Выбранные накладные</h3>
+//                 {selectedInvoices.length === 0 ? (
+//                   <p>Пока нет выбранных накладных</p>
+//                 ) : (
+//                   <ul className="border rounded p-2">
+//                     {selectedInvoices.map((inv) => (
+//                       <li key={inv.id} className="p-2 border-b flex justify-between items-center">
+//                         <span>
+//                           №{inv.id} {inv.partner ? inv.partner : "—"} {inv.total_selected_price} {inv.wozwrat_or_prihod}
+//                         </span>
+//                         <button
+//                           className="text-red-500"
+//                           onClick={() => handleRemoveSelectedInvoice(inv, setFieldValue, values)} // возвращаем в левый список
+//                         >
+//                           ×
+//                         </button>
+//                       </li>
+//                     ))}
+//                   </ul>
+//                 )}
+//               </div>
+//             </div>
+//           </Form>
+//         )}
+//       </Formik>
+//     </div>
+//   );
+// };
+
+// export default Trip;

@@ -267,6 +267,16 @@
   "widthLabel": "Keni (sm)",
   "heightLabel": "Baly (sm)",
 
+  "weightLabel2": "Agram",
+  "volumeLabel2": "Göwrümi",
+  "lengthLabel2": "Uzynlygy",
+  "widthLabel2": "Keni",
+  "heightLabel2": "Baly",
+
+  "kg": "kg",
+  "m3": "m³",
+  "sm": "sm",
+
   "qrCodeLabel": "QR kody",
   "qrCodePlaceholder": "Önümiň QR kody",
 
@@ -588,11 +598,23 @@
   "partners found": "Partnerler tapyldy",
   "Sort po agentam": "Agentler boýunça tertiplemek",
   "trips": "Reýsler",
+  "trip": "Reýs",
   "driver": "Sürüji",
   "warehouseWorker": "Ýükçi",
   "employeeType": "Işgär görnüşi",
   "activeEmployee": "Işgär işjeň",
-  "employeeName": "Işgäriň ady"
+  "employeeName": "Işgäriň ady",
+
+  "Selected invoices": "Saýlanan fakturalar",
+  "Available invoices": "Elýeterli fakturalar",
+  "pcs": "sany",
+
+  "driver required": "Sürüji zerur",
+  "invoices required": "Fakturalar zerur",
+  "trip saved": "Reýs ýazgy edildi",
+  "Cant find driver in database": "Sürüjini maglumat bazasynda tapyp bolmady",
+  "Cant find invoice": "tapylmadyk fakturalar № ",
+  "trip updated": "Reýs täzelendi"
 
 
 

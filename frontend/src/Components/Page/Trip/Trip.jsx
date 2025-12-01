@@ -10,10 +10,13 @@ import { Coins, Search, X, Plus, Trash2, User, Send, FileText, ArrowRight, Arrow
 import { formatNumber2 } from "../../UI/formatNumber2";
 import { useNotification } from "../../context/NotificationContext";
 import MyFormatDate from "../../UI/MyFormatDate";
+import { useNavigate } from "react-router-dom";
+import { PROCHEE } from "../../../routes";
 
 const Trip = () => {
   const { t } = useTranslation();
   const { showNotification } = useNotification();
+  const navigate = useNavigate();
   // , setDateProwodok, setDateFrom, setDateTo
   const { dateFrom, dateTo, dateProwodok } = useContext(DateContext);
   const [invoices, setInvoices] = useState([]);
@@ -254,10 +257,10 @@ const Trip = () => {
   };
 
   const saveTrip = async (values) => {
-    // console.log("values", values);
+    console.log("values", values);
     try {
       const res = await myAxios.post(`/save_trip/`, values);
-      console.log("res", res);
+      // console.log("res", res);
 
       showNotification(t(res.data.message), "success");
       getTrips();
@@ -275,6 +278,7 @@ const Trip = () => {
   const handleViewTrip = (tripId) => {
     // Логика просмотра поездки
     console.log("View trip:", tripId);
+    navigate(`/trip/${tripId}`)
   };
 
   const handleUpdateTrip = (trip, setFieldValue) => {

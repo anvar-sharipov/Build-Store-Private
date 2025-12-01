@@ -39,6 +39,7 @@ export const PROCHEE = {
   EXPORT_FAKTURA: "/export-import-faktura",
   EXPORT_IMPORT_ENTRIES: "/export-import-entries",
   TRIP: "/trip",
+  VIEW_TRIP: "/trip/:id",
 };
 
 

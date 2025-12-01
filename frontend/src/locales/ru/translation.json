@@ -644,7 +644,9 @@
   "trip saved": "Рейс сохранён",
   "Cant find driver in database": "Не удалось найти водителя в базе данных",
   "Cant find invoice": "Не удалось найти накладные № ",
-  "trip updated": "Рейс обновлён"
+  "trip updated": "Рейс обновлён",
+  "invoice count": "Количество фактур",
+  "Print date": "Дата печати"
 
 
  

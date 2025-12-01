@@ -1146,11 +1146,320 @@ def get_trips(request):
         "data": data
     })
     
+    
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def get_trip(request):
+#     # ic("get_trip")
+#     id = request.GET.get('id')
+    
+#     try:
+#         trip = Trip.objects.get(pk=id)
+#     except Trip.DoesNotExist:
+#         return JsonResponse({"status": "error", "message": "Cant find trip"}, status=400)
+#     invoices = trip.invoices.all()
+#     invoices_json = []
+#     total_volume = 0
+#     total_weight = 0
+#     total_length = 0
+#     total_width = 0
+#     total_height = 0
+#     total_price = 0
+#     for invoice in invoices:
+#         total_selected_price = (InvoiceItem.objects.filter(invoice=invoice)
+#                                 .aggregate(total=Sum(F("selected_price") * F("selected_quantity")))["total"] or 0)
+#         total_purchase_price = (InvoiceItem.objects.filter(invoice=invoice)
+#                                 .aggregate(total=Sum(F("purchase_price") * F("selected_quantity")))["total"] or 0)
+#         total_wholesale_price = (InvoiceItem.objects.filter(invoice=invoice)
+#                                 .aggregate(total=Sum(F("wholesale_price") * F("selected_quantity")))["total"] or 0)
+#         total_income_price = total_selected_price - total_purchase_price
+#         total_discount_price = total_selected_price - total_wholesale_price
+        
+#         volume = (InvoiceItem.objects.filter(invoice=invoice)
+#                                 .aggregate(total=Sum(F("product__volume") * F("selected_quantity")))["total"] or 0)
+#         weight = (InvoiceItem.objects.filter(invoice=invoice)
+#                                 .aggregate(total=Sum(F("product__weight") * F("selected_quantity")))["total"] or 0)
+#         length = (InvoiceItem.objects.filter(invoice=invoice)
+#                                 .aggregate(total=Sum(F("product__length") * F("selected_quantity")))["total"] or 0)
+#         width = (InvoiceItem.objects.filter(invoice=invoice)
+#                                 .aggregate(total=Sum(F("product__width") * F("selected_quantity")))["total"] or 0)
+#         height = (InvoiceItem.objects.filter(invoice=invoice)
+#                                 .aggregate(total=Sum(F("product__height") * F("selected_quantity")))["total"] or 0)
+        
+        
+#         items = InvoiceItem.objects.filter(invoice=invoice)
+#         products = []
+#         products_dict = {}
+#         for item in items:
+#             product = item.product
+#             images = []
+#             # if product.images.exists():
+#             #     for image in product.images.all():
+#             #         images.append({
+#             #             "image": image.image.url,
+#             #         })
+                    
+            
+   
+#             # ic(item.base_unit_obj)       
+#             if product.name not in products_dict:
+#                 products_dict[product.name] = {
+#                     "images": images,
+#                     "unit": item.unit_name_on_selected_warehouses,
+#                     "selected_quantity": item.selected_quantity,
+#                     "total_price": total_price,
+#                     "volume": (item.product.volume or 0) * item.selected_quantity,
+#                     "weight": (item.product.weight or 0) * item.selected_quantity,
+#                     "length": (item.product.length or 0) * item.selected_quantity,
+#                     "width":  (item.product.width  or 0) * item.selected_quantity,
+#                     "height": (item.product.height or 0) * item.selected_quantity,
+#                 }
+#             else:
+#                 products_dict[product.name]['selected_quantity'] += item.selected_quantity
+#                 products_dict[product.name]['total_price'] += item.total_price
+#                 products_dict[product.name]['volume'] += (item.product.volume or 0) * item.selected_quantity
+#                 products_dict[product.name]['weight'] += (item.product.weight or 0) * item.selected_quantity
+#                 products_dict[product.name]['length'] += (item.product.length or 0) * item.selected_quantity
+#                 products_dict[product.name]['width']  += (item.product.width  or 0) * item.selected_quantity
+#                 products_dict[product.name]['height'] += (item.product.height or 0) * item.selected_quantity
+                
+#             total_price = item.selected_quantity * item.selected_price
+#             ic(item.product.volume) 
+#             products.append({
+#                 "name": product.name,
+#                 "images": images,
+#                 "unit": item.unit_name_on_selected_warehouses,
+#                 "selected_price": item.selected_price,
+#                 "selected_quantity": item.selected_quantity,
+#                 "total_price": total_price,
+#                 "volume": item.product.volume,
+#                 "weight": item.product.weight,
+#                 "length": item.product.length,
+#                 "width": item.product.width,
+#                 "height": item.product.height,
+#                 "is_gift": item.is_gift
+#             })
+            
+            
+        
+#         total_volume += volume
+#         total_weight += weight
+#         total_length += length
+#         total_width += width
+#         total_height += height
+#         total_price += total_selected_price
+#         invoices_json.append({
+#             "id": invoice.id,
+#             "invoice_date": invoice.invoice_date,
+#             "partner": invoice.partner.name if invoice.partner else None,
+#             "type_price": invoice.type_price,
+#             "wozwrat_or_prihod": invoice.wozwrat_or_prihod,
+#             "send": invoice.send,
+#             "is_entry": invoice.is_entry,
+#             "total_selected_price": str(total_selected_price),
+#             "total_income_price": str(total_income_price),
+#             "total_discount_price": str(total_discount_price),
+#             "canceled_at": invoice.canceled_at,
+#             "volume": volume,
+#             "weight": weight,
+#             "length": length,
+#             "width": width,
+#             "height": height,
+#             "products": products
+            
+#         })
+
+#     data = {
+#         "id": trip.id,
+#         "comment": trip.comment,
+#         "created_at": trip.created_at,
+#         "created_handle": trip.created_handle,
+#         "updated_at": trip.updated_at,
+#         "driver_id": trip.driver.id,
+#         "driver_name": trip.driver.name,
+#         "invoices_json": invoices_json,
+        
+#         "total_volume": total_volume,
+#         "total_weight": total_weight,
+#         "total_length": total_length,
+#         "total_width": total_width,
+#         "total_height": total_height,
+#         "total_price": total_price,
+#     }
+
+    
+
+#     return JsonResponse({
+#         "data": data
+#     })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_trip(request):
+    id = request.GET.get('id')
+    
+    try:
+        trip = Trip.objects.get(pk=id)
+    except Trip.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Cant find trip"}, status=400)
+    
+    # Оптимизированный запрос
+    items = InvoiceItem.objects.filter(invoice__trip=trip).select_related(
+        'product', 'invoice', 'invoice__partner'
+    )
+    
+    invoices_json = {}
+    grouped_products = {}  # Группировка продуктов по всему рейсу
+    total_volume = Decimal('0')
+    total_weight = Decimal('0')
+    total_length = Decimal('0')
+    total_width = Decimal('0')
+    total_height = Decimal('0')
+    total_price = Decimal('0')
+    
+    for item in items:
+        invoice = item.invoice
+        
+        # Сохраняем информацию о накладных
+        if invoice.id not in invoices_json:
+            invoices_json[invoice.id] = {
+                "id": invoice.id,
+                "invoice_date": invoice.invoice_date,
+                "partner": invoice.partner.name if invoice.partner else None,
+                "type_price": invoice.type_price,
+                "wozwrat_or_prihod": invoice.wozwrat_or_prihod,
+                "send": invoice.send,
+                "is_entry": invoice.is_entry,
+                "canceled_at": invoice.canceled_at,
+                "total_selected_price": Decimal('0'),
+                "volume": Decimal('0'),
+                "weight": Decimal('0'),
+                "length": Decimal('0'),
+                "width": Decimal('0'),
+                "height": Decimal('0'),
+            }
+        
+        # Расчеты для продукта
+        product_volume = (item.product.volume or Decimal('0')) * item.selected_quantity
+        product_weight = (item.product.weight or Decimal('0')) * item.selected_quantity
+        product_length = (item.product.length or Decimal('0')) * item.selected_quantity
+        product_width = (item.product.width or Decimal('0')) * item.selected_quantity
+        product_height = (item.product.height or Decimal('0')) * item.selected_quantity
+        product_total_price = item.selected_price * item.selected_quantity
+        
+        # Обновление тоталов накладной
+        invoices_json[invoice.id]['total_selected_price'] += product_total_price
+        invoices_json[invoice.id]['volume'] += product_volume
+        invoices_json[invoice.id]['weight'] += product_weight
+        invoices_json[invoice.id]['length'] += product_length
+        invoices_json[invoice.id]['width'] += product_width
+        invoices_json[invoice.id]['height'] += product_height
+        
+        # Обновление общих тоталов
+        total_volume += product_volume
+        total_weight += product_weight
+        total_length += product_length
+        total_width += product_width
+        total_height += product_height
+        total_price += product_total_price
+        
+        # Группировка продуктов по всему рейсу
+        # Ключ для группировки: product_id + цена + единица измерения + подарок
+        product_key = f"{item.product.id}_{item.selected_price}_{item.unit_name_on_selected_warehouses}_{item.is_gift}"
+        
+        if product_key not in grouped_products:
+            images = []
+            # if item.product.images.exists():
+            #     images = [{"image": img.image.url} for img in item.product.images.all()]
+            
+            grouped_products[product_key] = {
+                "name": item.product.name,
+                "images": images,
+                "unit": item.unit_name_on_selected_warehouses,
+                "selected_price": item.selected_price,
+                "selected_quantity": item.selected_quantity,
+                "total_price": product_total_price,
+                "unit_volume": item.product.volume or Decimal('0'),
+                "unit_weight": item.product.weight or Decimal('0'),
+                "unit_length": item.product.length or Decimal('0'),
+                "unit_width": item.product.width or Decimal('0'),
+                "unit_height": item.product.height or Decimal('0'),
+                "is_gift": item.is_gift,
+                # Накопительные значения
+                "cumulative_volume": product_volume,
+                "cumulative_weight": product_weight,
+                "cumulative_length": product_length,
+                "cumulative_width": product_width,
+                "cumulative_height": product_height,
+                # Список накладных, в которых встречается этот продукт
+                "invoices": [invoice.id]
+            }
+        else:
+            # Объединяем одинаковые продукты
+            grouped_products[product_key]['selected_quantity'] += item.selected_quantity
+            grouped_products[product_key]['total_price'] += product_total_price
+            grouped_products[product_key]['cumulative_volume'] += product_volume
+            grouped_products[product_key]['cumulative_weight'] += product_weight
+            grouped_products[product_key]['cumulative_length'] += product_length
+            grouped_products[product_key]['cumulative_width'] += product_width
+            grouped_products[product_key]['cumulative_height'] += product_height
+            
+            # Добавляем накладную в список, если еще не добавлена
+            if invoice.id not in grouped_products[product_key]['invoices']:
+                grouped_products[product_key]['invoices'].append(invoice.id)
+    
+    # Преобразуем grouped_products в список для фронтенда
+    aggregated_products = []
+    for product_key, product_data in grouped_products.items():
+        aggregated_products.append({
+            "name": product_data["name"],
+            "images": product_data["images"],
+            "unit": product_data["unit"],
+            "selected_price": product_data["selected_price"],
+            "selected_quantity": product_data["selected_quantity"],
+            "total_price": product_data["total_price"],
+            "is_gift": product_data["is_gift"],
+            # Используем накопительные значения для отображения
+            "volume": product_data["cumulative_volume"],
+            "weight": product_data["cumulative_weight"],
+            "length": product_data["cumulative_length"],
+            "width": product_data["cumulative_width"],
+            "height": product_data["cumulative_height"],
+            # Можно также добавить единичные значения для информации
+            "unit_volume": product_data["unit_volume"],
+            "unit_weight": product_data["unit_weight"],
+            "unit_length": product_data["unit_length"],
+            "unit_width": product_data["unit_width"],
+            "unit_height": product_data["unit_height"],
+            # Информация о накладных
+            "invoice_count": len(product_data["invoices"])
+        })
+    
+    data = {
+        "id": trip.id,
+        "comment": trip.comment,
+        "created_at": trip.created_at,
+        "created_handle": trip.created_handle,
+        "updated_at": trip.updated_at,
+        "driver_id": trip.driver.id,
+        "driver_name": trip.driver.name,
+        "invoices_json": list(invoices_json.values()),  # Информация о накладных
+        "aggregated_products": aggregated_products,     # Группированные продукты по рейсу
+        "total_volume": total_volume,
+        "total_weight": total_weight,
+        "total_length": total_length,
+        "total_width": total_width,
+        "total_height": total_height,
+        "total_price": total_price,
+    }
+    
+    return JsonResponse({"data": data})   
 
 # @csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def save_trip(request):
+    ic("tut save_trip")
     data = request.data
     
     comment = data.get("comment")
@@ -1197,15 +1506,39 @@ def save_trip(request):
                 except Trip.DoesNotExist:
                     return JsonResponse({"status": "error", "message": "Trip not found"}, status=400)
                 
-                # 1. Очистить старые инвойсы
+                # 1. Старые накладные, которые нужно удалить из рейса
+                old_invoices = list(Invoice.objects.filter(trip=trip))
+                
+                # 2. Создаём истории для удалённых накладных
+                history_remove = [
+                    TripInvoiceHistory(
+                        trip=trip,
+                        invoice=inv,
+                        action="removed",
+                        performed_by=request.user
+                    ) for inv in old_invoices
+                ]
+                TripInvoiceHistory.objects.bulk_create(history_remove)
+                
+                # 3. Обнуляем trip у старых инвойсов
                 Invoice.objects.filter(trip=trip).update(trip=None)
                 
-                # 2. Назначить новые инвойсы
+                # 4. Назначаем новые накладные и создаём истории added
                 for inv in invoices:
                     inv.trip = trip
                 Invoice.objects.bulk_update(invoices, ['trip'])
                 
-                # 3. Обновить поля trip
+                history_add = [
+                    TripInvoiceHistory(
+                        trip=trip,
+                        invoice=inv,
+                        action="added",
+                        performed_by=request.user
+                    ) for inv in invoices
+                ]
+                TripInvoiceHistory.objects.bulk_create(history_add)
+                
+                # 5. Обновляем поля Trip
                 trip.driver = driver_obj
                 trip.comment = comment
                 trip.created_handle = created_handle
@@ -1219,7 +1552,6 @@ def save_trip(request):
                 })
                 
             else:     
-                1/0
                 trip = Trip.objects.create(driver=driver_obj, comment=comment, created_handle=created_handle)
                 
                 for inv in invoices:

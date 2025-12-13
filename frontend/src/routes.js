@@ -27,6 +27,7 @@ export const ROUTES_RAPORT = {
   SALES_ANALIS_WITHOUT_RETURN: "/sales-analis-without-return",
   ACCOUNT_CARDS_DETAIL: "/account-cards/:id",
   ACOOUNT_CARDS: "/account-cards",
+  PRODUCTS_BUH_OBOROT: "/products-buh-oborot",
 };
 
 
@@ -48,4 +49,5 @@ export const ADMIN_PANEL = {
   IMPORT_PARTNERS: "/import_partners",
   DELETE_MODELS: "/delete_models",
   SET_PARTNER_TO_ENTRY: "/set_partner_to_entry",
+  FIRST_PRIHOD: "/first-prihod",
 };

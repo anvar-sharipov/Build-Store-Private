@@ -615,7 +615,19 @@
   "Cant find driver in database": "Sürüjini maglumat bazasynda tapyp bolmady",
   "Cant find invoice": "tapylmadyk fakturalar № ",
   "trip updated": "Reýs täzelendi",
-  "Print date": "Print edilen senesi"
+  "Print date": "Print edilen senesi",
+  "Empty": "Boşlary görkez",
+  "choose date prowodka": "Prowodka senesini saýlaň",
+  "buh oborot towar": "Harytlaryň buhgalter dolaşygı",
+  "choose_warehouse": "Sklady saýlaň",
+  "choosed_warehouse": "Saýlanan sklad",
+  "buh oborot towar2": "HARYT DOLANŞYK WEDOMOSTY",
+  "Including the return": "Gaýtaryşy hasaba almak bilen",
+  "Including": "Hasaba alnan",
+  "Excluding": "Hasaba alynmadyk",
+  "no products found": "Haryt tapylmady",
+  "Search categories": "Kategoriýalary gözle...",
+  "search products": "Harytlar gözlemek..."
 
 
 

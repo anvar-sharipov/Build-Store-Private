@@ -395,6 +395,7 @@ def get_saldo(partner_obj, getDate):
 
 def get_saldo2(partner_obj, getDate):
     ic("tut saldo2")
+    # WarehouseProduct.objects.all().update(quantity=0)
     results = {}
     
     # Для каждого счета отдельно

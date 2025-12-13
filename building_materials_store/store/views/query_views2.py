@@ -27,6 +27,7 @@ from django.db import transaction as db_transaction
 
 
 
+
 # поиск продукта по id и складу
 def get_product_by_id_and_warehouse(request):
     product_id = request.GET.get('product_id')
@@ -380,17 +381,47 @@ def get_detail_account(request):
         entries = entries.filter(transaction__date__gte=date_from)
     elif date_to:
         entries = entries.filter(transaction__date__lte=date_to)
+        
+        
+    
+    grouped = defaultdict(lambda: {
+        "transaction_id": None,
+        "date": None,
+        "description": None,
+        "debit": 0.0,
+        "credit": 0.0,
+        "created_by": None,
+    })
 
-    transactions = []
+    # transactions = []
+    # for e in entries.select_related('transaction'):
+    #     transactions.append({
+    #         "transaction_id": e.transaction.id,
+    #         "date": e.transaction.date.strftime("%Y-%m-%d"),
+    #         "description": e.transaction.description,
+    #         "debit": float(e.debit),
+    #         "credit": float(e.credit),
+    #         "created_by": e.transaction.created_by.username if e.transaction.created_by else None,
+    #     })
+        
+    
     for e in entries.select_related('transaction'):
-        transactions.append({
-            "transaction_id": e.transaction.id,
-            "date": e.transaction.date.strftime("%Y-%m-%d"),
-            "description": e.transaction.description,
-            "debit": float(e.debit),
-            "credit": float(e.credit),
-            "created_by": e.transaction.created_by.username if e.transaction.created_by else None,
-        })
+        tid = e.transaction.id
+
+        grouped[tid]["transaction_id"] = tid
+        grouped[tid]["date"] = e.transaction.date.strftime("%Y-%m-%d")
+        grouped[tid]["description"] = e.transaction.description
+        grouped[tid]["created_by"] = (
+            e.transaction.created_by.username if e.transaction.created_by else None
+        )
+        
+        grouped[tid]["debit"] += float(e.debit)
+        grouped[tid]["credit"] += float(e.credit)
+
+    # Итоговый список
+    transactions = list(grouped.values())
+    ic(transactions)
+
 
     # Итоги по оборотам и конечное сальдо
     period_debit = sum([t['debit'] for t in transactions])

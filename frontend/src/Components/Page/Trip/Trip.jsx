@@ -278,7 +278,7 @@ const Trip = () => {
   const handleViewTrip = (tripId) => {
     // Логика просмотра поездки
     console.log("View trip:", tripId);
-    navigate(`/trip/${tripId}`)
+    navigate(`/trip/${tripId}`);
   };
 
   const handleUpdateTrip = (trip, setFieldValue) => {
@@ -630,16 +630,15 @@ const Trip = () => {
                             { key: "width", label: t("widthLabel2"), unit: t("sm") },
                             { key: "height", label: t("heightLabel2"), unit: t("sm") },
                             { key: "price", label: t("Price"), unit: "" },
-                          ].map(
-                            ({ key, label, unit }) =>
-                              totalVolume[key] > 0 && (
-                                <div key={key} className="flex items-center space-x-1 bg-white dark:bg-gray-600 px-3 py-1.5 rounded-lg shadow-sm">
-                                  <span className="font-medium text-gray-700 dark:text-gray-300">{label}:</span>
-                                  <span className="font-semibold text-blue-600 dark:text-blue-400">{formatNumber2(totalVolume[key])}</span>
-                                  <span className="text-gray-500 dark:text-gray-400 text-xs">{unit}</span>
-                                </div>
-                              )
-                          )}
+                          ]
+                            .filter(({ key }) => totalVolume?.[key] > 0) // Фильтруем только те поля, которые есть и > 0
+                            .map(({ key, label, unit }) => (
+                              <div key={key} className="flex items-center space-x-1 bg-white dark:bg-gray-600 px-3 py-1.5 rounded-lg shadow-sm">
+                                <span className="font-medium text-gray-700 dark:text-gray-300">{label}:</span>
+                                <span className="font-semibold text-blue-600 dark:text-blue-400">{formatNumber2(totalVolume[key])}</span>
+                                <span className="text-gray-500 dark:text-gray-400 text-xs">{unit}</span>
+                              </div>
+                            ))}
                         </motion.div>
                       )}
                     </div>

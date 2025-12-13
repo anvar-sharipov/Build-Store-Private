@@ -22,6 +22,7 @@ const DetailReport1 = () => {
     
   }
   
+  
 
   useEffect(() => {
     if (!accountNumber) return;

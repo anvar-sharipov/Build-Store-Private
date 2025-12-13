@@ -10,6 +10,8 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES_RAPORT } from "../../../routes";
 import { Download, FileSpreadsheet } from "lucide-react";
 import * as XLSX from "xlsx";
+import AgentReport2Excel from "./AgentReport2Excel";
+import OriginalReport2Excel from "./OriginalReport2Excel";
 
 const DetailReport6062 = () => {
   const { dateFrom, dateTo } = useContext(DateContext);
@@ -26,6 +28,9 @@ const DetailReport6062 = () => {
   const [totals, setTotals] = useState({});
   const [loading, setLoading] = useState(true);
   const [sortConfig, setSortConfig] = useState({ key: "agentId", direction: "asc" });
+
+  const [show0, setShow0] = useState(true);
+  const [hyphenOr0, setHyphenOr0] = useState(false);
 
   // ################################################################################################################################
   // ################################################################################################################################
@@ -199,18 +204,65 @@ const DetailReport6062 = () => {
   };
 
   // Компонент кнопки для экспорта
-  const ExportButton = () => (
-    <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={exportToExcel}
-      disabled={loading || !data || (Array.isArray(data) && data.length === 0) || (typeof data === "object" && Object.keys(data).length === 0)}
-      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-lg"
-    >
-      <FileSpreadsheet className="w-4 h-4" />
-      <span>Excel</span>
-    </motion.button>
-  );
+  // const ExportButton = () => (
+  //   <motion.button
+  //     whileHover={{ scale: 1.05 }}
+  //     whileTap={{ scale: 0.95 }}
+  //     onClick={exportToExcel}
+  //     disabled={loading || !data || (Array.isArray(data) && data.length === 0) || (typeof data === "object" && Object.keys(data).length === 0)}
+  //     className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-lg"
+  //   >
+  //     <FileSpreadsheet className="w-4 h-4" />
+  //     <span>Excel</span>
+  //   </motion.button>
+  // );
+
+  // const ExportButton = () => {
+  //   const handleExport = async () => {
+  //     try {
+  //       await AgentReport2Excel(data, totals, calculateGrandTotals(), dateFrom, dateTo, accountNumber, sortByAgent, t, hyphenOr0);
+  //     } catch (error) {
+  //       console.error("Ошибка при экспорте в Excel:", error);
+  //     }
+  //   };
+
+  //   return (
+  //     <button onClick={handleExport} className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm flex items-center gap-1">
+  //       <span>📊 Excel</span>
+  //     </button>
+  //   );
+  // };
+
+  // В компоненте Reports.jsx
+  const ExportButton = () => {
+    const handleExport = async () => {
+      try {
+        if (sortByAgent === "true") {
+          // Экспорт для группировки по агентам
+          await AgentReport2Excel(data, totals, calculateGrandTotals(), dateFrom, dateTo, accountNumber, sortByAgent, t, hyphenOr0);
+        } else {
+          // Экспорт для оригинальной таблицы
+          await OriginalReport2Excel(
+            sortedData, // или data, если sortedData - это отсортированный массив
+            totals,
+            dateFrom,
+            dateTo,
+            accountNumber,
+            t,
+            hyphenOr0
+          );
+        }
+      } catch (error) {
+        console.error("Ошибка при экспорте в Excel:", error);
+      }
+    };
+
+    return (
+      <button onClick={handleExport} className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm flex items-center gap-1">
+        <span>📊 Excel</span>
+      </button>
+    );
+  };
 
   // ######################## download excel
   // ################################################################################################################################
@@ -223,7 +275,7 @@ const DetailReport6062 = () => {
       try {
         setLoading(true);
         const res = await myAxios.get("get_detail_account_60_62", {
-          params: { account: accountNumber, dateFrom, dateTo, agent, sortByAgent },
+          params: { account: accountNumber, dateFrom, dateTo, agent, sortByAgent, show0, hyphenOr0 },
         });
 
         console.log("API Response:", res.data);
@@ -249,7 +301,7 @@ const DetailReport6062 = () => {
     } else {
       setData([]);
     }
-  }, [accountNumber, dateFrom, dateTo, agent, sortByAgent]);
+  }, [accountNumber, dateFrom, dateTo, agent, sortByAgent, show0]);
 
   const handleRowClick = (partner_id, account_id) => {
     navigate(ROUTES_RAPORT.DETAIL_ACCOUNT_REPORT_60_62_PARTNER, {
@@ -411,6 +463,30 @@ const DetailReport6062 = () => {
                 <div className="text-sm text-gray-700 dark:text-gray-300 print:text-xs print:text-gray-800 print:font-medium print:dark:!text-black">
                   {t("period")}: {MyFormatDate(dateFrom)} - {MyFormatDate(dateTo)} | Счет: {accountNumber} | Группировка по агентам
                 </div>
+
+                <div className="flex items-center gap-6">
+                  {/* Checkbox 1 */}
+                  <div className="flex items-center gap-4">
+                    {/* Минус */}
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="hyphenOr0" value="hyphen" checked={hyphenOr0 === false} onChange={() => setHyphenOr0(false)} className="h-4 w-4 text-blue-600 border-gray-300" />
+                      <span className="text-sm select-none">0</span>
+                    </label>
+
+                    {/* Ноль */}
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="hyphenOr0" value="zero" checked={hyphenOr0 === true} onChange={() => setHyphenOr0(true)} className="h-4 w-4 text-blue-600 border-gray-300" />
+                      <span className="text-sm select-none">-</span>
+                    </label>
+                  </div>
+
+                  {/* Checkbox 2 */}
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" className="h-4 w-4 text-blue-600 border-gray-300 rounded" onChange={() => setShow0((prev) => !prev)} checked={show0} />
+                    <span className="text-sm select-none">{t("Empty")}</span>
+                  </label>
+                </div>
+
                 <div className="print:hidden">
                   <ExportButton />
                 </div>
@@ -515,22 +591,22 @@ const DetailReport6062 = () => {
                                 {row.partner_name}
                               </td>
                               <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                                {formatNumber2(row.debit_before)}
+                                {formatNumber2(row.debit_before, 2, hyphenOr0)}
                               </td>
                               <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                                {formatNumber2(row.credit_before)}
+                                {formatNumber2(row.credit_before, 2, hyphenOr0)}
                               </td>
                               <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                                {formatNumber2(row.debit_oborot)}
+                                {formatNumber2(row.debit_oborot, 2, hyphenOr0)}
                               </td>
                               <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                                {formatNumber2(row.credit_oborot)}
+                                {formatNumber2(row.credit_oborot, 2, hyphenOr0)}
                               </td>
                               <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                                {formatNumber2(row.saldo_end_debit)}
+                                {formatNumber2(row.saldo_end_debit, 2, hyphenOr0)}
                               </td>
                               <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                                {formatNumber2(row.saldo_end_credit)}
+                                {formatNumber2(row.saldo_end_credit, 2, hyphenOr0)}
                               </td>
                             </motion.tr>
                           ))}
@@ -548,22 +624,22 @@ const DetailReport6062 = () => {
                               {t("totalExpanded")} {agentName === "no_agent" ? t("noAgent") : agentName}:
                             </td>
                             <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                              {formatNumber2(agentTotalsData.debit_before_total)}
+                              {formatNumber2(agentTotalsData.debit_before_total, 2, hyphenOr0)}
                             </td>
                             <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                              {formatNumber2(agentTotalsData.credit_before_total)}
+                              {formatNumber2(agentTotalsData.credit_before_total, 2, hyphenOr0)}
                             </td>
                             <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                              {formatNumber2(agentTotalsData.debit_oborot_total)}
+                              {formatNumber2(agentTotalsData.debit_oborot_total, 2, hyphenOr0)}
                             </td>
                             <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                              {formatNumber2(agentTotalsData.credit_oborot_total)}
+                              {formatNumber2(agentTotalsData.credit_oborot_total, 2, hyphenOr0)}
                             </td>
                             <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                              {formatNumber2(agentTotalsData.saldo_end_debit_total)}
+                              {formatNumber2(agentTotalsData.saldo_end_debit_total, 2, hyphenOr0)}
                             </td>
                             <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                              {formatNumber2(agentTotalsData.saldo_end_credit_total)}
+                              {formatNumber2(agentTotalsData.saldo_end_credit_total, 2, hyphenOr0)}
                             </td>
                           </tr>
                           <tr className="print:break-inside-avoid print:dark:!bg-gray-100">
@@ -574,22 +650,22 @@ const DetailReport6062 = () => {
                               {t("total")} {agentName === "no_agent" ? t("noAgent") : agentName}:
                             </td>
                             <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                              {formatNumber2(agentTotalsData.saldo_summ_before_debit)}
+                              {formatNumber2(agentTotalsData.saldo_summ_before_debit, 2, hyphenOr0)}
                             </td>
                             <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                              {formatNumber2(agentTotalsData.saldo_summ_before_credit)}
+                              {formatNumber2(agentTotalsData.saldo_summ_before_credit, 2, hyphenOr0)}
                             </td>
                             <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                              {formatNumber2(agentTotalsData.saldo_summ_oborot_debit)}
+                              {formatNumber2(agentTotalsData.saldo_summ_oborot_debit, 2, hyphenOr0)}
                             </td>
                             <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                              {formatNumber2(agentTotalsData.saldo_summ_oborot_credit)}
+                              {formatNumber2(agentTotalsData.saldo_summ_oborot_credit, 2, hyphenOr0)}
                             </td>
                             <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                              {formatNumber2(agentTotalsData.saldo_summ_end_debit)}
+                              {formatNumber2(agentTotalsData.saldo_summ_end_debit, 2, hyphenOr0)}
                             </td>
                             <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                              {formatNumber2(agentTotalsData.saldo_summ_end_credit)}
+                              {formatNumber2(agentTotalsData.saldo_summ_end_credit, 2, hyphenOr0)}
                             </td>
                           </tr>
                         </tfoot>
@@ -643,22 +719,22 @@ const DetailReport6062 = () => {
                           {t("totalExpanded")}:
                         </td>
                         <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                          {formatNumber2(grandTotals.debit_before_total)}
+                          {formatNumber2(grandTotals.debit_before_total, 2, hyphenOr0)}
                         </td>
                         <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                          {formatNumber2(grandTotals.credit_before_total)}
+                          {formatNumber2(grandTotals.credit_before_total, 2, hyphenOr0)}
                         </td>
                         <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                          {formatNumber2(grandTotals.debit_oborot_total)}
+                          {formatNumber2(grandTotals.debit_oborot_total, 2, hyphenOr0)}
                         </td>
                         <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                          {formatNumber2(grandTotals.credit_oborot_total)}
+                          {formatNumber2(grandTotals.credit_oborot_total, 2, hyphenOr0)}
                         </td>
                         <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                          {formatNumber2(grandTotals.saldo_end_debit_total)}
+                          {formatNumber2(grandTotals.saldo_end_debit_total, 2, hyphenOr0)}
                         </td>
                         <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                          {formatNumber2(grandTotals.saldo_end_credit_total)}
+                          {formatNumber2(grandTotals.saldo_end_credit_total, 2, hyphenOr0)}
                         </td>
                       </tr>
                       <tr className="bg-yellow-100 dark:bg-yellow-900/50 print:bg-yellow-100 print:break-inside-avoid print:dark:!bg-yellow-100">
@@ -669,22 +745,22 @@ const DetailReport6062 = () => {
                           {t("total")}:
                         </td>
                         <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                          {formatNumber2(grandTotals.saldo_summ_before_debit)}
+                          {formatNumber2(grandTotals.saldo_summ_before_debit, 2, hyphenOr0)}
                         </td>
                         <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                          {formatNumber2(grandTotals.saldo_summ_before_credit)}
+                          {formatNumber2(grandTotals.saldo_summ_before_credit, 2, hyphenOr0)}
                         </td>
                         <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                          {formatNumber2(grandTotals.saldo_summ_oborot_debit)}
+                          {formatNumber2(grandTotals.saldo_summ_oborot_debit, 2, hyphenOr0)}
                         </td>
                         <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                          {formatNumber2(grandTotals.saldo_summ_oborot_credit)}
+                          {formatNumber2(grandTotals.saldo_summ_oborot_credit, 2, hyphenOr0)}
                         </td>
                         <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                          {formatNumber2(grandTotals.saldo_summ_end_debit)}
+                          {formatNumber2(grandTotals.saldo_summ_end_debit, 2, hyphenOr0)}
                         </td>
                         <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                          {formatNumber2(grandTotals.saldo_summ_end_credit)}
+                          {formatNumber2(grandTotals.saldo_summ_end_credit, 2, hyphenOr0)}
                         </td>
                       </tr>
                     </tbody>
@@ -719,7 +795,7 @@ const DetailReport6062 = () => {
               className="px-4 py-3 bg-blue-50 border-b border-gray-200 
                          dark:bg-blue-900/20 dark:border-gray-700
                          print:bg-white print:border-b print:border-gray-300 print:px-2 print:py-1
-                         print:dark:!text-black"
+                         print:dark:!text-black flex justify-between"
             >
               <div
                 className="text-sm text-gray-700 dark:text-gray-300
@@ -727,6 +803,29 @@ const DetailReport6062 = () => {
                             print:dark:!text-black"
               >
                 {t("period")}: {MyFormatDate(dateFrom)} - {MyFormatDate(dateTo)} | Счет: {accountNumber}
+              </div>
+
+              <div className="flex items-center gap-6">
+                {/* Checkbox 1 */}
+                <div className="flex items-center gap-4">
+                  {/* Минус */}
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="hyphenOr0" value="hyphen" checked={hyphenOr0 === false} onChange={() => setHyphenOr0(false)} className="h-4 w-4 text-blue-600 border-gray-300" />
+                    <span className="text-sm select-none">0</span>
+                  </label>
+
+                  {/* Ноль */}
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="hyphenOr0" value="zero" checked={hyphenOr0 === true} onChange={() => setHyphenOr0(true)} className="h-4 w-4 text-blue-600 border-gray-300" />
+                    <span className="text-sm select-none">-</span>
+                  </label>
+                </div>
+
+                {/* Checkbox 2 */}
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" className="h-4 w-4 text-blue-600 border-gray-300 rounded" onChange={() => setShow0((prev) => !prev)} checked={show0} />
+                  <span className="text-sm select-none">{t("Empty")}</span>
+                </label>
               </div>
               <div className="print:hidden">
                 <ExportButton />
@@ -923,7 +1022,7 @@ const DetailReport6062 = () => {
                                    print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                    print:dark:!text-black"
                         >
-                          {formatNumber2(row.debit_before)}
+                          {formatNumber2(row.debit_before, 2, hyphenOr0)}
                         </td>
                         <td
                           className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right
@@ -931,24 +1030,7 @@ const DetailReport6062 = () => {
                                    print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                    print:dark:!text-black"
                         >
-                          {formatNumber2(row.credit_before)}
-                        </td>
-
-                        <td
-                          className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right
-                                   dark:text-gray-200 dark:border-gray-600
-                                   print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
-                                   print:dark:!text-black"
-                        >
-                          {formatNumber2(row.debit_oborot)}
-                        </td>
-                        <td
-                          className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right
-                                   dark:text-gray-200 dark:border-gray-600
-                                   print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
-                                   print:dark:!text-black"
-                        >
-                          {formatNumber2(row.credit_oborot)}
+                          {formatNumber2(row.credit_before, 2, hyphenOr0)}
                         </td>
 
                         <td
@@ -957,7 +1039,7 @@ const DetailReport6062 = () => {
                                    print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                    print:dark:!text-black"
                         >
-                          {formatNumber2(row.saldo_end_debit)}
+                          {formatNumber2(row.debit_oborot, 2, hyphenOr0)}
                         </td>
                         <td
                           className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right
@@ -965,7 +1047,24 @@ const DetailReport6062 = () => {
                                    print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                    print:dark:!text-black"
                         >
-                          {formatNumber2(row.saldo_end_credit)}
+                          {formatNumber2(row.credit_oborot, 2, hyphenOr0)}
+                        </td>
+
+                        <td
+                          className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right
+                                   dark:text-gray-200 dark:border-gray-600
+                                   print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
+                                   print:dark:!text-black"
+                        >
+                          {formatNumber2(row.saldo_end_debit, 2, hyphenOr0)}
+                        </td>
+                        <td
+                          className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right
+                                   dark:text-gray-200 dark:border-gray-600
+                                   print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
+                                   print:dark:!text-black"
+                        >
+                          {formatNumber2(row.saldo_end_credit, 2, hyphenOr0)}
                         </td>
                       </motion.tr>
                     );
@@ -1000,7 +1099,7 @@ const DetailReport6062 = () => {
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"
                   >
-                    {formatNumber2(totals.debit_before_total)}
+                    {formatNumber2(totals.debit_before_total, 2, hyphenOr0)}
                   </td>
                   <td
                     className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
@@ -1008,24 +1107,7 @@ const DetailReport6062 = () => {
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"
                   >
-                    {formatNumber2(totals.credit_before_total)}
-                  </td>
-
-                  <td
-                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
-                               dark:text-gray-200 dark:border-gray-600
-                               print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
-                               print:dark:!text-black"
-                  >
-                    {formatNumber2(totals.debit_oborot_total)}
-                  </td>
-                  <td
-                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
-                               dark:text-gray-200 dark:border-gray-600
-                               print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
-                               print:dark:!text-black"
-                  >
-                    {formatNumber2(totals.credit_oborot_total)}
+                    {formatNumber2(totals.credit_before_total, 2, hyphenOr0)}
                   </td>
 
                   <td
@@ -1034,7 +1116,7 @@ const DetailReport6062 = () => {
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"
                   >
-                    {formatNumber2(totals.saldo_end_debit_total)}
+                    {formatNumber2(totals.debit_oborot_total, 2, hyphenOr0)}
                   </td>
                   <td
                     className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
@@ -1042,7 +1124,24 @@ const DetailReport6062 = () => {
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"
                   >
-                    {formatNumber2(totals.saldo_end_credit_total)}
+                    {formatNumber2(totals.credit_oborot_total, 2, hyphenOr0)}
+                  </td>
+
+                  <td
+                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
+                               dark:text-gray-200 dark:border-gray-600
+                               print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
+                               print:dark:!text-black"
+                  >
+                    {formatNumber2(totals.saldo_end_debit_total, 2, hyphenOr0)}
+                  </td>
+                  <td
+                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
+                               dark:text-gray-200 dark:border-gray-600
+                               print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
+                               print:dark:!text-black"
+                  >
+                    {formatNumber2(totals.saldo_end_credit_total, 2, hyphenOr0)}
                   </td>
                 </motion.tr>
                 <motion.tr
@@ -1068,7 +1167,7 @@ const DetailReport6062 = () => {
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"
                   >
-                    {formatNumber2(totals.saldo_summ_before_debit)}
+                    {formatNumber2(totals.saldo_summ_before_debit, 2, hyphenOr0)}
                   </td>
                   <td
                     className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
@@ -1076,24 +1175,7 @@ const DetailReport6062 = () => {
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"
                   >
-                    {formatNumber2(totals.saldo_summ_before_credit)}
-                  </td>
-
-                  <td
-                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
-                               dark:text-gray-200 dark:border-gray-600
-                               print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
-                               print:dark:!text-black"
-                  >
-                    {formatNumber2(totals.saldo_summ_oborot_debit)}
-                  </td>
-                  <td
-                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
-                               dark:text-gray-200 dark:border-gray-600
-                               print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
-                               print:dark:!text-black"
-                  >
-                    {formatNumber2(totals.saldo_summ_oborot_credit)}
+                    {formatNumber2(totals.saldo_summ_before_credit, 2, hyphenOr0)}
                   </td>
 
                   <td
@@ -1102,7 +1184,7 @@ const DetailReport6062 = () => {
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"
                   >
-                    {formatNumber2(totals.saldo_summ_end_debit)}
+                    {formatNumber2(totals.saldo_summ_oborot_debit, 2, hyphenOr0)}
                   </td>
                   <td
                     className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
@@ -1110,7 +1192,24 @@ const DetailReport6062 = () => {
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"
                   >
-                    {formatNumber2(totals.saldo_summ_end_credit)}
+                    {formatNumber2(totals.saldo_summ_oborot_credit, 2, hyphenOr0)}
+                  </td>
+
+                  <td
+                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
+                               dark:text-gray-200 dark:border-gray-600
+                               print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
+                               print:dark:!text-black"
+                  >
+                    {formatNumber2(totals.saldo_summ_end_debit, 2, hyphenOr0)}
+                  </td>
+                  <td
+                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
+                               dark:text-gray-200 dark:border-gray-600
+                               print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
+                               print:dark:!text-black"
+                  >
+                    {formatNumber2(totals.saldo_summ_end_credit, 2, hyphenOr0)}
                   </td>
                 </motion.tr>
               </tfoot>

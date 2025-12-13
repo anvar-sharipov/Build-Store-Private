@@ -646,7 +646,19 @@
   "Cant find invoice": "Не удалось найти накладные № ",
   "trip updated": "Рейс обновлён",
   "invoice count": "Количество фактур",
-  "Print date": "Дата печати"
+  "Print date": "Дата печати",
+  "Empty": "Показать пустые",
+  "choose date prowodka": "Выберите дату проводки",
+  "buh oborot towar": "Бух. оборот товаров",
+  "choose_warehouse": "Выберите склад",
+  "choosed_warehouse": "Выберанный склад",
+  "buh oborot towar2": "ВЕДОМОСТЬ ОБОРОТА ТОВАРОВ",
+  "Including the return": "С учётом возврата",
+  "Including": "С учетом",
+  "Excluding": "Без учета",
+  "no products found": "Товары не найдены",
+  "Search categories": "Поиск категорий...",
+  "search products": "Поиск продуктов..."
 
 
  

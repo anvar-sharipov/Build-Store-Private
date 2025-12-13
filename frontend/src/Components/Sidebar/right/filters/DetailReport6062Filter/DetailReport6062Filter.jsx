@@ -76,7 +76,7 @@ const DetailReport6062Filter = () => {
       />
 
       <br />
-      <MyButton variant="blue" onClick={() => setSortByAgentClicked((prev) => !prev)} >{t("Sort po agentam")}</MyButton>
+      <MyButton className="text-gray-300 gap-1 border-2 border-blue-500 rounded-md px-3 py-1 hover:bg-blue-500 hover:text-white transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" onClick={() => setSortByAgentClicked((prev) => !prev)} >{t("Sort po agentam")}</MyButton>
 
     </div>
   );

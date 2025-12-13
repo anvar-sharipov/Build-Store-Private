@@ -21,7 +21,7 @@ const ReportsMain = () => {
     { id: 3, name: "Анализ движения товаров v1", icon: BarChart3, color: "purple", to: ROUTES_RAPORT.SALES_ANALIS },
     { id: 4, name: "Анализ движения товаров v2", icon: PieChart, color: "amber", to: ROUTES_RAPORT.SALES_ANALIS_WITHOUT_RETURN },
     { id: 5, name: "Список карточек", icon: Activity, color: "rose", to: ROUTES_RAPORT.ACOOUNT_CARDS },
-    { id: 6, name: "Календарь событий", icon: Calendar, color: "indigo" },
+    { id: 6, name: t("buh oborot towar"), icon: Calendar, color: "indigo", to: ROUTES_RAPORT.PRODUCTS_BUH_OBOROT },
     { id: 7, name: "Отчет по расходам", icon: DollarSign, color: "red" },
     { id: 8, name: "Складская аналитика", icon: BarChart3, color: "teal" },
   ];

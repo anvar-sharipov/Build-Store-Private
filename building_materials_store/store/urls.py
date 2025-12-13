@@ -12,6 +12,7 @@ from . views.query_views import *
 from . views.query_views2 import *
 from . views.query_views3 import *
 from . views import query_views4
+from . views import query_views5
 from . views import admin_views
 from . views.sale_invoice_views import *
 from . views.report_views import *
@@ -144,6 +145,12 @@ urlpatterns = [
     path('get-accounts-list/', get_accounts_list, name='get_accounts_list'),
     path('get-partners-list/', get_partners_list, name='get_partners_list'),
     
+    
+    # query_views5
+    path('BuhOborotTowarow/', query_views5.BuhOborotTowarow, name='BuhOborotTowarow'),
+    path('get_active_warehouses/', query_views5.get_active_warehouses, name='get_active_warehouses'),
+    path('upload_initial_stock', query_views5.upload_initial_stock, name='upload_initial_stock'),
+    path('get_all_products_id_and_name', query_views5.get_all_products_id_and_name, name='get_all_products_id_and_name'),
     
     
     

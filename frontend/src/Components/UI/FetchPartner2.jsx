@@ -4,14 +4,15 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import myAxios from "../axios";
 import Fuse from "fuse.js";
 
-const FetchPartner2 = ({ 
-  refs, 
-  dateProwodok, 
-  getSaldo, 
+const FetchPartner2 = ({
+  refs,
+  dateProwodok,
+  getSaldo,
   getSaldo2,
   currentPartner, // текущий выбранный партнер
   onPartnerSelect, // callback для выбора партнера
   fieldName, // "debitPartner" или "creditPartner"
+  accountNumber = false,
 }) => {
   const { t } = useTranslation();
   const [isFocused, setIsFocused] = useState(false);
@@ -22,6 +23,7 @@ const FetchPartner2 = ({
   const wrapperRef = useRef(null);
   const searchInputRef = useRef(null);
   const listRefs = useRef([]);
+  // console.log("accountNumber", accountNumber);
 
   // Устанавливаем начального партнера при монтировании или изменении currentPartner
   useEffect(() => {
@@ -37,7 +39,19 @@ const FetchPartner2 = ({
     try {
       const res = await myAxios.get("/partners/?no_pagination=1");
       const activePartners = res.data.filter((partner) => partner.is_active);
-      setAllPartners(activePartners);
+
+      // console.log("activePartners", activePartners);
+      if (accountNumber === "60" || accountNumber === "62") {
+        const klientActivePartner = res.data.filter((partner) => partner.type === "klient")
+        setAllPartners(klientActivePartner);
+        // console.log("da account ", activePartners);
+      } else if (accountNumber === "75" || accountNumber === "76") {
+        const founderActivePartner = res.data.filter((partner) => partner.type === "founder")
+        setAllPartners(founderActivePartner);
+      } else {
+        setAllPartners(activePartners);
+      }
+      // setAllPartners(activePartners);
     } catch (error) {
       console.log("Ошибка при загрузке Partners", error);
     }
@@ -74,13 +88,13 @@ const FetchPartner2 = ({
   const handleSearch = (e) => {
     const value = e.target.value;
     setSearchValue(value);
-    
+
     if (!value) {
       setFilteredPartners([]);
       listRefs.current = [];
       return;
     }
-    
+
     const results = fuse
       .search(value)
       .slice(0, 20)
@@ -120,11 +134,7 @@ const FetchPartner2 = ({
         >
           <span className="text-gray-600 dark:text-gray-400 text-sm">{t("partner")}:</span>
           <span className="text-gray-800 dark:text-gray-100 font-medium">{currentPartner.name}</span>
-          {currentPartner.type && (
-            <span className="text-xs bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
-              {currentPartner.type}
-            </span>
-          )}
+          {currentPartner.type && <span className="text-xs bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">{currentPartner.type}</span>}
         </div>
         <button
           type="button"
@@ -216,11 +226,7 @@ const FetchPartner2 = ({
             >
               <div className="flex justify-between items-center">
                 <span>{partner.name}</span>
-                {partner.type && (
-                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                    {partner.type}
-                  </span>
-                )}
+                {partner.type && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">{partner.type}</span>}
               </div>
             </li>
           ))}

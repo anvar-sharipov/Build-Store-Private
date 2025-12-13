@@ -671,24 +671,32 @@ class Transaction(models.Model):
 class Entry(models.Model):
     transaction = models.ForeignKey(Transaction, related_name='entries', on_delete=models.CASCADE, verbose_name='Операция')
     account = models.ForeignKey(Account, on_delete=models.PROTECT, verbose_name='Счет')
-    partner = models.ForeignKey(Partner, null=True, blank=True, on_delete=models.SET_NULL, verbose_name='Партнер (субконто)')
+    partner = models.ForeignKey(Partner, null=True, blank=True, on_delete=models.SET_NULL, verbose_name='Партнер (субконто)', related_name='entry_set')
     product = models.ForeignKey('Product', null=True, blank=True, on_delete=models.SET_NULL)
     warehouse = models.ForeignKey('Warehouse', null=True, blank=True, on_delete=models.SET_NULL)
     debit = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), verbose_name='Дебет')
     credit = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), verbose_name='Кредит')
     
-    class Meta:
+    # class Meta:
+    #     indexes = [
+    #         models.Index(fields=["account"]),
+    #         models.Index(fields=["transaction"]),
+    #     ]
+    
+    class Meta:  # ← ТОЛЬКО ОДИН Meta!
         indexes = [
             models.Index(fields=["account"]),
             models.Index(fields=["transaction"]),
         ]
+        verbose_name = 'Проводка'
+        verbose_name_plural = 'Проводки'
 
     def __str__(self):
         return f"{self.account.number} | Дебет: {self.debit} | Кредит: {self.credit}"
 
-    class Meta:
-        verbose_name = 'Проводка'
-        verbose_name_plural = 'Проводки'
+    # class Meta:
+    #     verbose_name = 'Проводка'
+    #     verbose_name_plural = 'Проводки'
 
 
 
@@ -902,3 +910,5 @@ class TripInvoiceHistory(models.Model):
         return f"{self.invoice} — {self.get_action_display()} ({self.performed_by})"
     
 # Trip END ###############################################################################################################################################################################
+
+

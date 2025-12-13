@@ -30,7 +30,7 @@ const PartnerField = ({
   return (
     <div className="pt-2 w-full">
       <div className="w-full">
-        <FetchPartner2 refs={refs} dateProwodok={dateProwodok} getSaldo={getSaldo} getSaldo2={getSaldo2} currentPartner={currentPartner} onPartnerSelect={onPartnerSelect} fieldName={fieldName} />
+        <FetchPartner2 refs={refs} dateProwodok={dateProwodok} getSaldo={getSaldo} getSaldo2={getSaldo2} currentPartner={currentPartner} onPartnerSelect={onPartnerSelect} fieldName={fieldName} accountNumber={accountNumber} />
       </div>
     </div>
   );

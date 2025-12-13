@@ -45,6 +45,8 @@ import DetailReport6062Partner from "./Components/Page/OSW2/DetailReport6062Part
 import SetPartnerInEntry from "./Components/Page/Admin/SetPartnerInEntry";
 import Trip from "./Components/Page/Trip/Trip";
 import ViewTrip from "./Components/Page/Trip/ViewTrip";
+import { BuhOborotTowarow } from "./Components/Page/Reports2/BuhOborotTowarow/BuhOborotTowarow";
+import FirstPrihod from "./Components/Page/Admin/FirstPrihod";
 
 function AppShell() {
   const location = useLocation();
@@ -101,6 +103,7 @@ function AppShell() {
                     <Route path={ROUTES_RAPORT.DETAIL_REPORT_1} element={<DetailReport1 />} />
                     <Route path={ROUTES_RAPORT.DETAIL_ACCOUNT_REPORT_60_62} element={<DetailReport6062 />} />
                     <Route path={ROUTES_RAPORT.DETAIL_ACCOUNT_REPORT_60_62_PARTNER} element={<DetailReport6062Partner />} />
+                    <Route path={ROUTES_RAPORT.PRODUCTS_BUH_OBOROT} element={<BuhOborotTowarow />} />
                     <Route path={PROCHEE.QR_LIST_PRINT} element={<QrListPrint />} />
                     <Route path={PROCHEE.TRANSACTION_JOURNAL} element={<TransactionJournal />} />
                     <Route path={PROCHEE.TRIP} element={<Trip />} />
@@ -122,6 +125,7 @@ function AppShell() {
                     <Route path={ADMIN_PANEL.IMPORT_PARTNERS} element={<ImportPartners />} />
                     <Route path={ADMIN_PANEL.DELETE_MODELS} element={<DeleteData />} />
                     <Route path={ADMIN_PANEL.SET_PARTNER_TO_ENTRY} element={<SetPartnerInEntry />} />
+                    <Route path={ADMIN_PANEL.FIRST_PRIHOD} element={<FirstPrihod />} />
                   </Routes>
                 </section>
 

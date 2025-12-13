@@ -68,13 +68,13 @@ class PartnerSerializer(serializers.ModelSerializer):
         """Используем аннотированное поле или вычисляем"""
         if hasattr(obj, 'computed_balance_usd'):
             return obj.computed_balance_usd
-        return self._calculate_balance(obj, ['60', '75'])
+        return self._calculate_balance(obj, ['60'])
 
     def get_balance_tmt(self, obj):
         """Используем аннотированное поле или вычисляем"""
         if hasattr(obj, 'computed_balance_tmt'):
             return obj.computed_balance_tmt
-        return self._calculate_balance(obj, ['62', '76'])
+        return self._calculate_balance(obj, ['62'])
 
     def _calculate_balance(self, partner, account_numbers):
         from django.db.models import Sum

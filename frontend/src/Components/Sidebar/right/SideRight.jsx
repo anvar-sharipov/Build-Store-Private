@@ -21,6 +21,7 @@ import SalesInvoiceFilter from "./filters/SalesInvoiceFilter";
 import CompactAgentFilter from "./filters/CompactAgentFilter";
 import InvoiceFilter from "./filters/InvoiceFilter/InvoiceFilter";
 import DetailReport6062Filter from "./filters/DetailReport6062Filter/DetailReport6062Filter";
+import BuhOborotTowarowFilter from "./filters/BuhOborotTowarowFilter/BuhOborotTowarowFilter";
 
 // настройки для разных страниц
 const FILTER_CONFIG = {
@@ -201,7 +202,7 @@ export default function SidebarRight() {
     }
   }, [currentPath]);
 
-  if (!(currentPath in FILTER_CONFIG) && currentPath !== "/products" && currentPath !== "/main" && currentPath !== "/purchase_invoice" && currentPath !== "/detail-account-report-60-62") return null;
+  if (!(currentPath in FILTER_CONFIG) && currentPath !== "/products" && currentPath !== "/main" && currentPath !== "/purchase_invoice" && currentPath !== "/detail-account-report-60-62" && currentPath !== "/products-buh-oborot") return null;
 
   const typeOptions = config.type || [];
   const sortTmtOptions = config.sort_tmt || [];
@@ -399,6 +400,16 @@ export default function SidebarRight() {
               exit={{ opacity: 0, height: 0 }}
             >
               <InvoiceFilter />
+            </motion.div>
+          )}
+          
+          {currentPath === "/products-buh-oborot" && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+            >
+              <BuhOborotTowarowFilter />
             </motion.div>
           )}
         </AnimatePresence>

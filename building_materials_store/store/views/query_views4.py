@@ -480,6 +480,12 @@ def get_detail_account_60_62(request):
     date_to = request.GET.get('dateTo')
     agent_id = request.GET.get('agent')
     sortByAgent = request.GET.get('sortByAgent')
+    
+    show0 = request.GET.get('show0')
+    hyphenOr0 = request.GET.get('hyphenOr0')
+    
+    ic(show0)
+    ic(hyphenOr0)
 
     account = Account.objects.get(number=account_number)
 
@@ -707,12 +713,96 @@ def get_detail_account_60_62(request):
             "saldo_summ_end_debit": saldo_summ_end_debit,
             "saldo_summ_end_credit": saldo_summ_end_credit,
         }]
+        
+        if show0 == "false":
+            # Удаляем партнеров с нулевыми значениями
+            for agent_name in list(data["data"].keys()):
+                # Фильтруем партнеров, у которых не все значения равны 0
+                filtered_partners = []
+                for partner in data["data"][agent_name]:
+                    # Проверяем, что хотя бы одно значение не равно 0
+                    if (partner["debit_before"] != 0 or 
+                        partner["credit_before"] != 0 or
+                        partner["debit_oborot"] != 0 or 
+                        partner["credit_oborot"] != 0 or
+                        partner["saldo_end_debit"] != 0 or 
+                        partner["saldo_end_credit"] != 0):
+                        filtered_partners.append(partner)
+                
+                # Если после фильтрации остались партнеры - обновляем список
+                if filtered_partners:
+                    data["data"][agent_name] = filtered_partners
+                else:
+                    # Если все партнеры удалены, удаляем агента полностью
+                    del data["data"][agent_name]
+                    if agent_name in data["total_prices"]:
+                        del data["total_prices"][agent_name]
+            
+            # После удаления партнеров пересчитываем итоги для оставшихся агентов
+            for agent_name, partners in data["data"].items():
+                if agent_name in data["total_prices"]:
+                    # Сбрасываем итоги
+                    totals = {
+                        'debit_before': 0, 'credit_before': 0,
+                        'debit_oborot': 0, 'credit_oborot': 0,
+                        'saldo_end_debit': 0, 'saldo_end_credit': 0
+                    }
+                    
+                    # Пересчитываем итоги из оставшихся партнеров
+                    for partner in partners:
+                        totals['debit_before'] += partner["debit_before"]
+                        totals['credit_before'] += partner["credit_before"]
+                        totals['debit_oborot'] += partner["debit_oborot"]
+                        totals['credit_oborot'] += partner["credit_oborot"]
+                        totals['saldo_end_debit'] += partner["saldo_end_debit"]
+                        totals['saldo_end_credit'] += partner["saldo_end_credit"]
+                    
+                    # Пересчитываем сальдо
+                    if (totals['debit_before'] - totals['credit_before']) > 0:
+                        saldo_summ_before_debit = abs(totals['debit_before'] - totals['credit_before'])
+                        saldo_summ_before_credit = 0
+                    else:
+                        saldo_summ_before_debit = 0
+                        saldo_summ_before_credit = abs(totals['debit_before'] - totals['credit_before'])
+                        
+                    if (totals['debit_oborot'] - totals['credit_oborot']) > 0:
+                        saldo_summ_oborot_debit = abs(totals['debit_oborot'] - totals['credit_oborot'])
+                        saldo_summ_oborot_credit = 0
+                    else:
+                        saldo_summ_oborot_debit = 0
+                        saldo_summ_oborot_credit = abs(totals['debit_oborot'] - totals['credit_oborot'])
+                        
+                    if (totals['saldo_end_debit'] - totals['saldo_end_credit']) > 0:
+                        saldo_summ_end_debit = abs(totals['saldo_end_debit'] - totals['saldo_end_credit'])
+                        saldo_summ_end_credit = 0
+                    else:
+                        saldo_summ_end_debit = 0
+                        saldo_summ_end_credit = abs(totals['saldo_end_debit'] - totals['saldo_end_credit'])
+                    
+                    # Обновляем итоги в data["total_prices"]
+                    data["total_prices"][agent_name] = [{
+                        "debit_before_total": totals['debit_before'],
+                        "credit_before_total": totals['credit_before'],
+                        "debit_oborot_total": totals['debit_oborot'],
+                        "credit_oborot_total": totals['credit_oborot'],
+                        "saldo_end_debit_total": totals['saldo_end_debit'],
+                        "saldo_end_credit_total": totals['saldo_end_credit'],
+                        "saldo_summ_before_debit": saldo_summ_before_debit,
+                        "saldo_summ_before_credit": saldo_summ_before_credit,
+                        "saldo_summ_oborot_debit": saldo_summ_oborot_debit,
+                        "saldo_summ_oborot_credit": saldo_summ_oborot_credit,
+                        "saldo_summ_end_debit": saldo_summ_end_debit,
+                        "saldo_summ_end_credit": saldo_summ_end_credit,
+                    }]
+
+            ic(data)
+
 
         return Response({
             "items": data["data"],
             "totals": data["total_prices"]
         })
-                
+        
     else:
         # Обычный режим (sortByAgent=false)
         data = {"data": []}
@@ -727,6 +817,9 @@ def get_detail_account_60_62(request):
         
         # 2-й запрос: получаем всех партнеров с предзагруженными данными
         all_partners = list(partners_prefetch.all())
+        
+        # Временный список для хранения партнеров перед фильтрацией
+        all_partners_data = []
         
         for partner in all_partners:
             # Фильтрация по агенту если указан
@@ -762,14 +855,6 @@ def get_detail_account_60_62(request):
                 saldo_end_credit = abs(debit_end - credit_end)
                 saldo_end_debit = 0
                 
-            # Обновляем общие итоги
-            debit_before_total += debit_before
-            credit_before_total += credit_before
-            debit_oborot_total += debit_oborot
-            credit_oborot_total += credit_oborot
-            saldo_end_debit_total += saldo_end_debit
-            saldo_end_credit_total += saldo_end_credit
-            
             partner_data = {
                 "partner_id": partner.id,
                 "account_id": account.id,
@@ -783,7 +868,41 @@ def get_detail_account_60_62(request):
                 "agent": {"id": partner.agent.id, "name": partner.agent.name} if partner.agent else {},
             }
             
-            data["data"].append(partner_data)
+            all_partners_data.append(partner_data)
+        
+        # Фильтрация нулевых партнеров если show0 = false
+        if show0 == "false" or show0 == False or show0 == "False":
+            # Фильтруем партнеров, у которых не все значения равны 0
+            filtered_partners = []
+            for partner in all_partners_data:
+                # Проверяем, что хотя бы одно значение не равно 0
+                if (partner["debit_before"] != 0 or 
+                    partner["credit_before"] != 0 or
+                    partner["debit_oborot"] != 0 or 
+                    partner["credit_oborot"] != 0 or
+                    partner["saldo_end_debit"] != 0 or 
+                    partner["saldo_end_credit"] != 0):
+                    filtered_partners.append(partner)
+            
+            data["data"] = filtered_partners
+        else:
+            data["data"] = all_partners_data
+        
+        # Пересчитываем итоги на основе отфильтрованных данных
+        debit_before_total = 0
+        credit_before_total = 0
+        debit_oborot_total = 0
+        credit_oborot_total = 0
+        saldo_end_debit_total = 0
+        saldo_end_credit_total = 0
+        
+        for partner in data["data"]:
+            debit_before_total += partner["debit_before"]
+            credit_before_total += partner["credit_before"]
+            debit_oborot_total += partner["debit_oborot"]
+            credit_oborot_total += partner["credit_oborot"]
+            saldo_end_debit_total += partner["saldo_end_debit"]
+            saldo_end_credit_total += partner["saldo_end_credit"]
         
         # Расчет сальдо для обычного режима
         if (debit_before_total - credit_before_total) > 0:
@@ -822,10 +941,126 @@ def get_detail_account_60_62(request):
             "saldo_summ_end_credit": saldo_summ_end_credit,
         }
 
+        ic(data)
+
         return Response({
             "items": data["data"],
             "totals": data["total_prices"]
         })
+                
+    # else:
+    #     # Обычный режим (sortByAgent=false)
+    #     data = {"data": []}
+        
+    #     # Инициализация итогов
+    #     debit_before_total = 0
+    #     credit_before_total = 0
+    #     debit_oborot_total = 0
+    #     credit_oborot_total = 0
+    #     saldo_end_debit_total = 0
+    #     saldo_end_credit_total = 0
+        
+    #     # 2-й запрос: получаем всех партнеров с предзагруженными данными
+    #     all_partners = list(partners_prefetch.all())
+        
+    #     for partner in all_partners:
+    #         # Фильтрация по агенту если указан
+    #         if agent_id:
+    #             if not partner.agent or str(partner.agent.id) != str(agent_id):
+    #                 continue
+            
+    #         debit_before = 0
+    #         credit_before = 0
+    #         debit_oborot = 0
+    #         credit_oborot = 0
+            
+    #         # ⭐ ИЗМЕНЕНИЕ: Используем prefetched entries вместо prefetched_transactions
+    #         for entry in partner.filtered_entries:  # ← ИСПРАВИТЬ ЗДЕСЬ!
+    #             # ИСПРАВЛЕНИЕ: Получаем нормализованную дату транзакции
+    #             trans_date = get_transaction_date(entry.transaction.date)
+                
+    #             # ИСПРАВЛЕНИЕ: Сравниваем нормализованные даты
+    #             if trans_date < date_from:
+    #                 debit_before += float(entry.debit)
+    #                 credit_before += float(entry.credit)
+    #             elif date_from <= trans_date <= date_to:
+    #                 debit_oborot += float(entry.debit)
+    #                 credit_oborot += float(entry.credit)
+            
+    #         debit_end = debit_before + debit_oborot
+    #         credit_end = credit_before + credit_oborot
+            
+    #         if (debit_end - credit_end) > 0:
+    #             saldo_end_debit = debit_end - credit_end
+    #             saldo_end_credit = 0
+    #         else:
+    #             saldo_end_credit = abs(debit_end - credit_end)
+    #             saldo_end_debit = 0
+                
+    #         # Обновляем общие итоги
+    #         debit_before_total += debit_before
+    #         credit_before_total += credit_before
+    #         debit_oborot_total += debit_oborot
+    #         credit_oborot_total += credit_oborot
+    #         saldo_end_debit_total += saldo_end_debit
+    #         saldo_end_credit_total += saldo_end_credit
+            
+    #         partner_data = {
+    #             "partner_id": partner.id,
+    #             "account_id": account.id,
+    #             "partner_name": partner.name,
+    #             "debit_before": debit_before,
+    #             "credit_before": credit_before,
+    #             "debit_oborot": debit_oborot,
+    #             "credit_oborot": credit_oborot,
+    #             "saldo_end_debit": saldo_end_debit,
+    #             "saldo_end_credit": saldo_end_credit,
+    #             "agent": {"id": partner.agent.id, "name": partner.agent.name} if partner.agent else {},
+    #         }
+            
+    #         data["data"].append(partner_data)
+        
+    #     # Расчет сальдо для обычного режима
+    #     if (debit_before_total - credit_before_total) > 0:
+    #         saldo_summ_before_debit = abs(debit_before_total - credit_before_total) 
+    #         saldo_summ_before_credit = 0
+    #     else:
+    #         saldo_summ_before_debit = 0
+    #         saldo_summ_before_credit = abs(debit_before_total - credit_before_total)
+            
+    #     if (debit_oborot_total - credit_oborot_total) > 0:
+    #         saldo_summ_oborot_debit = abs(debit_oborot_total - credit_oborot_total) 
+    #         saldo_summ_oborot_credit = 0
+    #     else:
+    #         saldo_summ_oborot_debit = 0
+    #         saldo_summ_oborot_credit = abs(debit_oborot_total - credit_oborot_total)
+            
+    #     if (saldo_end_debit_total - saldo_end_credit_total) > 0:
+    #         saldo_summ_end_debit = abs(saldo_end_debit_total - saldo_end_credit_total) 
+    #         saldo_summ_end_credit = 0
+    #     else:
+    #         saldo_summ_end_debit = 0
+    #         saldo_summ_end_credit = abs(saldo_end_debit_total - saldo_end_credit_total)
+            
+    #     data["total_prices"] = {
+    #         "debit_before_total": debit_before_total,
+    #         "credit_before_total": credit_before_total,
+    #         "debit_oborot_total": debit_oborot_total,
+    #         "credit_oborot_total": credit_oborot_total,
+    #         "saldo_end_debit_total": saldo_end_debit_total,
+    #         "saldo_end_credit_total": saldo_end_credit_total,
+    #         "saldo_summ_before_debit": saldo_summ_before_debit,
+    #         "saldo_summ_before_credit": saldo_summ_before_credit,
+    #         "saldo_summ_oborot_debit": saldo_summ_oborot_debit,
+    #         "saldo_summ_oborot_credit": saldo_summ_oborot_credit,
+    #         "saldo_summ_end_debit": saldo_summ_end_debit,
+    #         "saldo_summ_end_credit": saldo_summ_end_credit,
+    #     }
+
+    #     return Response({
+    #         "items": data["data"],
+    #         "totals": data["total_prices"]
+    #     })
         
         
         

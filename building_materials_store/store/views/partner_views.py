@@ -242,51 +242,55 @@ class PartnerViewSet(viewsets.ModelViewSet):
             return None
         return super().paginate_queryset(queryset)
     
+    
+    
     # def get_queryset(self):
     #     """
     #     Применяем фильтрацию и сортировку с аннотацией вычисляемых балансов
     #     """
-    #     queryset = super().get_queryset().order_by("-name")
+    #     # 1. Базовый queryset без order_by
+    #     queryset = super().get_queryset()
         
-    #     # Сначала применяем фильтры через DjangoFilterBackend
-    #     queryset = self.filter_queryset(queryset)
         
-    #     # ВСЕГДА добавляем аннотации балансов (для сортировки и сериализатора)
+
+    #     # 2. Добавляем аннотации балансов
     #     queryset = queryset.annotate(
     #         computed_balance_usd=Coalesce(
     #             Sum(
     #                 Case(
     #                     When(
-    #                         transaction__entries__account__number__in=['60', '75'],
+    #                         transaction__entries__account__number__in=['60'],
     #                         then=F('transaction__entries__debit') - F('transaction__entries__credit')
     #                     ),
     #                     default=Value(0),
-    #                     output_field=DecimalField(max_digits=12, decimal_places=2)  # ← ДОБАВЛЕНО
+    #                     output_field=DecimalField(max_digits=12, decimal_places=2)
     #                 ),
-    #                 output_field=DecimalField(max_digits=12, decimal_places=2)  # ← ДОБАВЛЕНО
+    #                 output_field=DecimalField(max_digits=12, decimal_places=2)
     #             ),
-    #             Value(0, output_field=DecimalField(max_digits=12, decimal_places=2))  # ← ДОБАВЛЕНО
+    #             Value(0, output_field=DecimalField(max_digits=12, decimal_places=2))
     #         ),
     #         computed_balance_tmt=Coalesce(
     #             Sum(
     #                 Case(
     #                     When(
-    #                         transaction__entries__account__number__in=['62', '76'],
+    #                         transaction__entries__account__number__in=['62'],
     #                         then=F('transaction__entries__debit') - F('transaction__entries__credit')
     #                     ),
     #                     default=Value(0),
-    #                     output_field=DecimalField(max_digits=12, decimal_places=2)  # ← ДОБАВЛЕНО
+    #                     output_field=DecimalField(max_digits=12, decimal_places=2)
     #                 ),
-    #                 output_field=DecimalField(max_digits=12, decimal_places=2)  # ← ДОБАВЛЕНО
+    #                 output_field=DecimalField(max_digits=12, decimal_places=2)
     #             ),
-    #             Value(0, output_field=DecimalField(max_digits=12, decimal_places=2))  # ← ДОБАВЛЕНО
+    #             Value(0, output_field=DecimalField(max_digits=12, decimal_places=2))
     #         )
     #     ).prefetch_related('transaction_set__entries__account')
-        
-    #     # Затем применяем сортировку
-    #     sort_value = self.request.query_params.get('sort', 'desc')
-        
-    #     # Обновляем карту сортировки для вычисляемых полей
+
+    #     # 3. Применяем фильтры через DjangoFilterBackend
+    #     queryset = self.filter_queryset(queryset)
+
+    #     # 4. Определяем сортировку
+    #     sort_value = self.request.query_params.get('sort', None)
+
     #     sort_map = {
     #         'balance_tmt_asc': 'computed_balance_tmt',
     #         'balance_tmt_desc': '-computed_balance_tmt',
@@ -296,26 +300,23 @@ class PartnerViewSet(viewsets.ModelViewSet):
     #         'desc': '-pk',
     #     }
         
-    #     order_field = sort_map.get(sort_value, '-pk')
+
+    #     # Если сортировка не передана — сортировка по name по умолчанию
+    #     order_field = sort_map.get(sort_value, 'name')
     #     queryset = queryset.order_by(order_field)
-        
+
     #     return queryset
     
     def get_queryset(self):
-        """
-        Применяем фильтрацию и сортировку с аннотацией вычисляемых балансов
-        """
-        # 1. Базовый queryset без order_by
         queryset = super().get_queryset()
-
-        # 2. Добавляем аннотации балансов
+        
         queryset = queryset.annotate(
             computed_balance_usd=Coalesce(
                 Sum(
                     Case(
                         When(
-                            transaction__entries__account__number__in=['60', '75'],
-                            then=F('transaction__entries__debit') - F('transaction__entries__credit')
+                            entry_set__account__number='60',
+                            then=F('entry_set__debit') - F('entry_set__credit')
                         ),
                         default=Value(0),
                         output_field=DecimalField(max_digits=12, decimal_places=2)
@@ -328,8 +329,8 @@ class PartnerViewSet(viewsets.ModelViewSet):
                 Sum(
                     Case(
                         When(
-                            transaction__entries__account__number__in=['62', '76'],
-                            then=F('transaction__entries__debit') - F('transaction__entries__credit')
+                            entry_set__account__number='62',
+                            then=F('entry_set__debit') - F('entry_set__credit')
                         ),
                         default=Value(0),
                         output_field=DecimalField(max_digits=12, decimal_places=2)
@@ -338,14 +339,11 @@ class PartnerViewSet(viewsets.ModelViewSet):
                 ),
                 Value(0, output_field=DecimalField(max_digits=12, decimal_places=2))
             )
-        ).prefetch_related('transaction_set__entries__account')
+        ).prefetch_related('entry_set__account', 'entry_set__transaction')
 
-        # 3. Применяем фильтры через DjangoFilterBackend
         queryset = self.filter_queryset(queryset)
 
-        # 4. Определяем сортировку
         sort_value = self.request.query_params.get('sort', None)
-
         sort_map = {
             'balance_tmt_asc': 'computed_balance_tmt',
             'balance_tmt_desc': '-computed_balance_tmt',
@@ -355,7 +353,6 @@ class PartnerViewSet(viewsets.ModelViewSet):
             'desc': '-pk',
         }
 
-        # Если сортировка не передана — сортировка по name по умолчанию
         order_field = sort_map.get(sort_value, 'name')
         queryset = queryset.order_by(order_field)
 

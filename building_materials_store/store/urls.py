@@ -151,6 +151,7 @@ urlpatterns = [
     path('get_active_warehouses/', query_views5.get_active_warehouses, name='get_active_warehouses'),
     path('upload_initial_stock', query_views5.upload_initial_stock, name='upload_initial_stock'),
     path('get_all_products_id_and_name', query_views5.get_all_products_id_and_name, name='get_all_products_id_and_name'),
+    path('product_buh_oborot_detail/<int:product_id>/', query_views5.product_buh_oborot_detail, name='product_buh_oborot_detail'),
     
     
     

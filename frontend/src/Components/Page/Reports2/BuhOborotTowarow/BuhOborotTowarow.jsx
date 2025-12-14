@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 import { DateContext } from "../../../UI/DateProvider";
 import MyFormatDate from "../../../UI/MyFormatDate";
 import myAxios from "../../../axios";
@@ -8,6 +8,9 @@ import { motion } from "framer-motion";
 import { formatNumber2 } from "../../../UI/formatNumber2";
 import { useSearchParams } from "react-router-dom";
 import { fetchWarehouses } from "../../../fetchs/optionsFetchers";
+import { ROUTES_RAPORT } from "../../../../routes";
+import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 export const BuhOborotTowarow = () => {
   const { t } = useTranslation();
@@ -17,12 +20,20 @@ export const BuhOborotTowarow = () => {
   const [loadingFetchProducts, setLoadingFetchProducts] = useState(false);
   const [selectedWarehouse, setSelectedWarehouse] = useState(null);
   const [warehouses, setWarehouses] = useState([]);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [searchParams] = useSearchParams();
+  const selectedProductId = searchParams.get("selected");
+  console.log("selectedProductId", selectedProductId);
+
   const warehouseId = searchParams.get("warehouse");
   const withWozwrat = searchParams.get("withWozwrat") === "1";
   const categories = searchParams.get("categories");
   const products_ids = searchParams.get("products");
+  const emptyTurnovers = searchParams.get("emptyTurnovers");
+
+  const rowRefs = useRef({});
 
   // Загрузка складов
   useEffect(() => {
@@ -59,6 +70,7 @@ export const BuhOborotTowarow = () => {
           withWozwrat: withWozwrat,
           categories: categories,
           products: products_ids,
+          emptyTurnovers: emptyTurnovers,
         },
       });
 
@@ -212,7 +224,52 @@ export const BuhOborotTowarow = () => {
     if (!dateFrom || !dateTo || !warehouseId) return;
     setGroupedProducts([]);
     fetchBuhOborotTowarow();
-  }, [dateFrom, dateTo, warehouseId, withWozwrat, categories, products_ids]);
+  }, [dateFrom, dateTo, warehouseId, withWozwrat, categories, products_ids, emptyTurnovers]);
+
+  // const getDetailProductOborot = async (productId) => {
+  //   try {
+  //     const res = await myAxios.get("getDetailProductOborot", {
+  //       params: {
+  //         productId,}
+  //       });
+  //   } catch (err) {
+  //     console.log("cant get getDetailProductOborot", err);
+
+  //   }
+  // }
+
+  const showDetailProductOborot = (productId) => {
+    const params = new URLSearchParams(location.search);
+    params.set("selected", productId);
+
+    // обновляем URL СПИСКА
+    navigate(
+      {
+        pathname: location.pathname,
+        search: params.toString(),
+      },
+      { replace: true }
+    );
+
+    // переходим в detail
+    // navigate(ROUTES_RAPORT.DETAIL_PRODUCT_OBOROT.replace(":id", productId));
+    navigate(ROUTES_RAPORT.DETAIL_PRODUCT_OBOROT.replace(":id", productId).replace(":warehouseId", warehouseId));
+  };
+
+  useEffect(() => {
+    if (!selectedProductId) return;
+
+    const row = rowRefs.current[selectedProductId];
+
+    if (row) {
+      row.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+      row.focus({ preventScroll: true });
+    }
+  }, [groupedProducts, selectedProductId]);
 
   return (
     <div className="p-4">
@@ -227,7 +284,11 @@ export const BuhOborotTowarow = () => {
         <p className="text-gray-500 dark:text-gray-400 mt-1">
           {MyFormatDate(dateFrom)} — {MyFormatDate(dateTo)}
         </p>
-        {!withWozwrat && <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">Отчет без учета возвратов</p>}
+        {!withWozwrat ? (
+          <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">Отчет без учета возвратов</p>
+        ) : (
+          <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">Отчет с учетом возвратов</p>
+        )}
       </motion.div>
 
       {/* CONTENT */}
@@ -341,7 +402,19 @@ export const BuhOborotTowarow = () => {
                   const endQty = parseFloat(p.end_selected_quantity) || 0;
 
                   return (
-                    <tr key={p.id || idx} className={`odd:bg-white even:bg-gray-50 dark:odd:bg-gray-900 dark:even:bg-gray-800`}>
+                    <tr
+                      ref={(el) => {
+                        if (el) rowRefs.current[p.id] = el;
+                      }}
+                      tabIndex={0}
+                      key={p.id || idx}
+                      className={`odd:bg-white even:bg-gray-50 dark:odd:bg-gray-900 dark:even:bg-gray-800 
+                      cursor-pointer
+                    hover:bg-indigo-100 dark:hover:bg-indigo-900
+                    focus:bg-indigo-300 dark:focus:bg-indigo-700
+                      focus:outline-none`}
+                      onDoubleClick={() => showDetailProductOborot(p.id)}
+                    >
                       <td className="border border-gray-200 dark:border-gray-700 px-3 py-2">{item.displayNumber}</td>
                       <td className="border border-gray-200 dark:border-gray-700 px-3 py-2">{p.name}</td>
                       <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-center">{p.unit}</td>

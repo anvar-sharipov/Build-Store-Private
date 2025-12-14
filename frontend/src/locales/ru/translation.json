@@ -227,6 +227,7 @@
   "report_title": "Подробный отчёт по изменениям цен",
   "download_excel": "Скачать Excel",
   "show": "Показать",
+  "hide": "Скрыть",
   "loading": "Загрузка...",
   "product": "Продукт",
   "old_price": "Старая цена",
@@ -658,7 +659,12 @@
   "Excluding": "Без учета",
   "no products found": "Товары не найдены",
   "Search categories": "Поиск категорий...",
-  "search products": "Поиск продуктов..."
+  "search products": "Поиск продуктов...",
+  "choose currect product": "Выберите корректный продукт",
+  "product not found": "Продукт не найден",
+  "Empty turnovers": "Пустые обороты",
+  "choose correct warehouse": "Выберите корректный склад",
+  "warehouse not found": "Склад не найден"
 
 
  

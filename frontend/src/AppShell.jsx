@@ -47,6 +47,7 @@ import Trip from "./Components/Page/Trip/Trip";
 import ViewTrip from "./Components/Page/Trip/ViewTrip";
 import { BuhOborotTowarow } from "./Components/Page/Reports2/BuhOborotTowarow/BuhOborotTowarow";
 import FirstPrihod from "./Components/Page/Admin/FirstPrihod";
+import DetailProductOborot from "./Components/Page/Reports2/BuhOborotTowarow/DetailProductOborot";
 
 function AppShell() {
   const location = useLocation();
@@ -104,6 +105,7 @@ function AppShell() {
                     <Route path={ROUTES_RAPORT.DETAIL_ACCOUNT_REPORT_60_62} element={<DetailReport6062 />} />
                     <Route path={ROUTES_RAPORT.DETAIL_ACCOUNT_REPORT_60_62_PARTNER} element={<DetailReport6062Partner />} />
                     <Route path={ROUTES_RAPORT.PRODUCTS_BUH_OBOROT} element={<BuhOborotTowarow />} />
+                    <Route path={ROUTES_RAPORT.DETAIL_PRODUCT_OBOROT} element={<DetailProductOborot />} />
                     <Route path={PROCHEE.QR_LIST_PRINT} element={<QrListPrint />} />
                     <Route path={PROCHEE.TRANSACTION_JOURNAL} element={<TransactionJournal />} />
                     <Route path={PROCHEE.TRIP} element={<Trip />} />

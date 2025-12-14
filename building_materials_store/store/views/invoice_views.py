@@ -13,7 +13,7 @@ from django.db.models import Q, Sum, F
 from datetime import datetime
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 
 
@@ -1134,19 +1134,31 @@ def get_invoices(request):
     data = []
     for invoice in page_obj:
         
-        # total_selected_price = InvoiceItem.objects.filter(invoice=invoice).aggregate(total=Sum("selected_price"))["total"] or 0
+        # kod rabotaet no s summoy kopeyki ne prawilno okruglyayutsya
+        # total_selected_price = (InvoiceItem.objects.filter(invoice=invoice).aggregate(total=Sum(F("selected_price") * F("selected_quantity"))))["total"] or 0
+        # total_purchase_price = (InvoiceItem.objects.filter(invoice=invoice).aggregate(total=Sum(F("purchase_price") * F("selected_quantity"))))["total"] or 0
+        # total_wholesale_price = (InvoiceItem.objects.filter(invoice=invoice).aggregate(total=Sum(F("wholesale_price") * F("selected_quantity"))))["total"] or 0
         
-        # total_selected_quantity = (InvoiceItem.objects.filter(invoice=invoice).aggregate(total=Sum("selected_quantity")))["total"] or 0
-        
-        # total_selected_price = 0
-        # items = InvoiceItem.objects.filter(invoice=invoice)
-        # for item in items:
-        #     total_selected_price += item.selected_price * item.selected_quantity
-            
-        total_selected_price = (InvoiceItem.objects.filter(invoice=invoice).aggregate(total=Sum(F("selected_price") * F("selected_quantity"))))["total"] or 0
-        total_purchase_price = (InvoiceItem.objects.filter(invoice=invoice).aggregate(total=Sum(F("purchase_price") * F("selected_quantity"))))["total"] or 0
-        
-        total_wholesale_price = (InvoiceItem.objects.filter(invoice=invoice).aggregate(total=Sum(F("wholesale_price") * F("selected_quantity"))))["total"] or 0
+        items = InvoiceItem.objects.filter(invoice=invoice)
+
+        total_selected_price = Decimal("0.00")
+        total_purchase_price = Decimal("0.00")
+        total_wholesale_price = Decimal("0.00")
+
+        for item in items:
+            qty = item.selected_quantity
+
+            total_selected_price += (item.selected_price * qty).quantize(
+                Decimal("0.01"), rounding=ROUND_HALF_UP
+            )
+
+            total_purchase_price += (item.purchase_price * qty).quantize(
+                Decimal("0.01"), rounding=ROUND_HALF_UP
+            )
+
+            total_wholesale_price += (item.wholesale_price * qty).quantize(
+                Decimal("0.01"), rounding=ROUND_HALF_UP
+            )
         
         total_income_price = total_selected_price - total_purchase_price
         total_dicount_price = total_selected_price - total_wholesale_price
@@ -1202,7 +1214,7 @@ def get_invoice_data(request, id):
             status=status.HTTP_404_NOT_FOUND
         )
     
-    
+    ic("invoice.comment", invoice.comment, id)
     if invoice.awto:
         awto_json = {"id":invoice.awto.id, "name":invoice.awto.name}
     else:
@@ -1336,8 +1348,6 @@ def get_invoice_data(request, id):
             # добавь любые другие поля, которые нужны
         })
         
-    
-
         
     data = {
         "awto":awto_json,

@@ -10,6 +10,9 @@ const Comment = ({ id = "comment", rows = 1, maxLength = 500 }) => {
     setFieldValue("comment", value);
   };
 
+  // console.log("values.comment", values);
+  
+
   return (
     <div className="w-full">
       <label

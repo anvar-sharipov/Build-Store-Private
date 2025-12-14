@@ -16,6 +16,7 @@ const BuhOborotTowarowFilter = () => {
 
   const warehouseId = searchParams.get("warehouse");
   const withWozwrat = searchParams.get("withWozwrat") !== "0";
+  const emptyTurnovers = searchParams.get("emptyTurnovers") !== "0";
 
   const [categories, setCategories] = useState([]);
   const [searchCategory, setSearchCategory] = useState("");
@@ -89,6 +90,7 @@ const BuhOborotTowarowFilter = () => {
     if (!newSelected.includes(String(catId))) {
       newSelected.push(String(catId));
       params.set("categories", newSelected.join(","));
+      params.delete("selected");
       setSearchParams(params);
     }
     setSearchCategory("");
@@ -102,6 +104,7 @@ const BuhOborotTowarowFilter = () => {
     } else {
       params.delete("categories");
     }
+    params.delete("selected");
     setSearchParams(params);
   };
 
@@ -111,6 +114,7 @@ const BuhOborotTowarowFilter = () => {
     if (!newSelected.includes(String(productId))) {
       newSelected.push(String(productId));
       params.set("products", newSelected.join(","));
+      params.delete("selected");
       setSearchParams(params);
     }
     setSearchProduct("");
@@ -124,6 +128,7 @@ const BuhOborotTowarowFilter = () => {
     } else {
       params.delete("products");
     }
+    params.delete("selected");
     setSearchParams(params);
   };
 
@@ -142,6 +147,7 @@ const BuhOborotTowarowFilter = () => {
   const handleWarehouseSelect = (wh) => {
     const params = new URLSearchParams(searchParams);
     params.set("warehouse", wh.id);
+    params.delete("selected");
     setSearchParams(params);
     setDropdownOpen(false);
   };
@@ -149,8 +155,17 @@ const BuhOborotTowarowFilter = () => {
   const handleWozwratChange = (value) => {
     const params = new URLSearchParams(searchParams);
     params.set("withWozwrat", value ? "1" : "0");
+    params.delete("selected");
     setSearchParams(params);
   };
+
+  const handleEmptyTurnovers = (value) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("emptyTurnovers", value ? "1" : "0");
+    params.delete("selected");
+    setSearchParams(params);
+  };
+  
 
   return (
     <div className="space-y-6 p-4">
@@ -384,7 +399,7 @@ const BuhOborotTowarowFilter = () => {
           <button
             onClick={() => handleWozwratChange(true)}
             className={`flex-1 py-3 rounded-lg border transition-colors
-                     ${withWozwrat
+                     ${withWozwrat && searchParams.get("withWozwrat") === "1"
                        ? "border-blue-500 bg-blue-500/10 text-blue-400"
                        : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"
                      }`}
@@ -398,7 +413,7 @@ const BuhOborotTowarowFilter = () => {
           <button
             onClick={() => handleWozwratChange(false)}
             className={`flex-1 py-3 rounded-lg border transition-colors
-                     ${!withWozwrat
+                     ${!withWozwrat || (searchParams.get("withWozwrat") !== "1" && searchParams.get("withWozwrat") !== "0")
                        ? "border-red-500 bg-red-500/10 text-red-400"
                        : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"
                      }`}
@@ -406,6 +421,43 @@ const BuhOborotTowarowFilter = () => {
             <div className="flex items-center justify-center gap-2">
               <X className="w-4 h-4" />
               <span>{t("Excluding")}</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* Показывать/Не Показывать пустые обороты */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-3">
+          {t("Empty turnovers")}
+        </label>
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleEmptyTurnovers(true)}
+            className={`flex-1 py-3 rounded-lg border transition-colors
+                     ${emptyTurnovers && searchParams.get("emptyTurnovers") === "1"
+                       ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                       : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"
+                     }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <Check className="w-4 h-4" />
+              <span>{t("show")}</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleEmptyTurnovers(false)}
+            className={`flex-1 py-3 rounded-lg border transition-colors
+                     ${!emptyTurnovers || (searchParams.get("emptyTurnovers") !== "1" && searchParams.get("emptyTurnovers") !== "0")
+                       ? "border-red-500 bg-red-500/10 text-red-400"
+                       : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"
+                     }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <X className="w-4 h-4" />
+              <span>{t("hide")}</span>
             </div>
           </button>
         </div>

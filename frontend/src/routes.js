@@ -28,6 +28,7 @@ export const ROUTES_RAPORT = {
   ACCOUNT_CARDS_DETAIL: "/account-cards/:id",
   ACOOUNT_CARDS: "/account-cards",
   PRODUCTS_BUH_OBOROT: "/products-buh-oborot",
+  DETAIL_PRODUCT_OBOROT: "/detail-product-oborot/:id/:warehouseId",
 };
 
 

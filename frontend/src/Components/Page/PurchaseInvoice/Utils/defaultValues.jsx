@@ -45,6 +45,7 @@ const getDefaultValues = async (id = null, dateProwodok = null, setDateProwodok)
     try {
       const res = await myAxios.get(`get-invoice-data/${id}/`);
       const data = res.data;
+      
       // console.log("data", data);
 
 
@@ -87,7 +88,7 @@ const getDefaultValues = async (id = null, dateProwodok = null, setDateProwodok)
       localStorage.setItem("purchaseWarehouse", JSON.stringify(warehouse));
       localStorage.setItem("purchaseWarehouse2", JSON.stringify(warehouse2));
       localStorage.setItem("wozwrat_or_prihod_purchase", data.wozwrat_or_prihod);
-
+      
      
 
       return {

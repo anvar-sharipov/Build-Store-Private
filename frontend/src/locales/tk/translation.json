@@ -204,6 +204,7 @@
   "report_title": "Bahalaryň üýtgemegi boýunça jikme-jik hasabat",
   "download_excel": "Excel ýükläň",
   "show": "Görkez",
+  "hide": "Görkezme",
   "loading": "Ýüklenýär...",
   "product": "Haryt",
   "old_price": "Köne baha",
@@ -627,7 +628,12 @@
   "Excluding": "Hasaba alynmadyk",
   "no products found": "Haryt tapylmady",
   "Search categories": "Kategoriýalary gözle...",
-  "search products": "Harytlar gözlemek..."
+  "search products": "Harytlar gözlemek...",
+  "choose currect product": "Dogry Harydy saýlaň",
+  "product not found": "Haryt tapylmady",
+  "Empty turnovers": "Boş dolanyşyklar",
+  "choose correct warehouse": "Dogry ammary saýlaň",
+  "warehouse not found": "Ambar tapylmady"
 
 
 

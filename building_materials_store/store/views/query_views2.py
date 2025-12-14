@@ -1491,8 +1491,6 @@ def _to_float(cell):
         return 0.0
 
 
-
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def upload_sales_excel_for_analis_with_return(request):
@@ -1783,8 +1781,6 @@ def upload_sales_excel_for_analis_with_return(request):
         import traceback
         print(traceback.format_exc())
         return HttpResponse(f"Ошибка при обработке файла: {e}", status=500)
-
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

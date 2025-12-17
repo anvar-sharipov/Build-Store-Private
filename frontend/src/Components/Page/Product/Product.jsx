@@ -15,6 +15,7 @@ import ProductAddModal from "./modals/ProductAddModal/ProductAddModal";
 import { fetchUnits, fetchCategories, fetchBrands, fetchModels, fetchTags, fetchWarehouses } from "../../fetchs/optionsFetchers";
 import ProductDeleteModal from "./modals/ProductDeleteModal";
 
+
 const Harytlar = () => {
   const { searchQuery, setSearchQuery, searchParams, setSearchParams } = useContext(SearchContext);
   const { t } = useTranslation();

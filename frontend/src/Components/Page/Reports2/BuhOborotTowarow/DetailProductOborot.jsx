@@ -1,8 +1,7 @@
 import { useEffect, useState, useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Package, Warehouse } from "lucide-react";
-
 import myAxios from "../../../axios";
 import { useNotification } from "../../../context/NotificationContext";
 import { useTranslation } from "react-i18next";
@@ -14,11 +13,23 @@ const BASE_URL = import.meta.env.VITE_BASE_URL || "";
 
 const DetailProductOborot = () => {
   const { t } = useTranslation();
-  const { id, warehouseId } = useParams();
+  const { id } = useParams();
+  const location = useLocation();
   const { showNotification } = useNotification();
   const { dateFrom, dateTo } = useContext(DateContext);
 
   const [detailOborot, setDetailOborot] = useState(null);
+  const [selectedWarehouses, setSelectedWarehouses] = useState([]);
+
+  // Получаем параметры из URL
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const warehousesParam = searchParams.get("warehouses");
+
+    if (warehousesParam) {
+      setSelectedWarehouses(warehousesParam.split(","));
+    }
+  }, [location.search]);
 
   const handleOpenInvoice = async (id) => {
     const url = id ? `/purchase-invoices/update/${id}` : ROUTES.PURCHASE_INVOICE_CREATE;
@@ -32,7 +43,7 @@ const DetailProductOborot = () => {
   };
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || selectedWarehouses.length === 0) return;
 
     const fetchData = async () => {
       try {
@@ -40,7 +51,7 @@ const DetailProductOborot = () => {
           params: {
             dateFrom,
             dateTo,
-            warehouseId,
+            warehouses: selectedWarehouses.join(","),
           },
         });
         setDetailOborot(res.data.data);
@@ -51,9 +62,11 @@ const DetailProductOborot = () => {
     };
 
     fetchData();
-  }, [id, dateFrom, dateTo]);
+  }, [id, dateFrom, dateTo, selectedWarehouses]);
 
-  if (!detailOborot) return null;
+  if (!detailOborot) {
+    return <div className="text-center py-10 text-gray-500">{selectedWarehouses.length === 0 ? "Выберите склад(ы) для просмотра деталей" : "Загрузка данных..."}</div>;
+  }
 
   return (
     <motion.div
@@ -94,7 +107,21 @@ const DetailProductOborot = () => {
 
           <div className="flex items-center gap-2">
             <Warehouse className="w-4 h-4 opacity-60" />
-            {detailOborot.warehouse_name}
+            {selectedWarehouses.length === 1 ? (
+              <span>{detailOborot.warehouse_name}</span>
+            ) : (
+              <div>
+                <span className="font-medium">Выбрано складов: {selectedWarehouses.length}</span>
+                <div className="text-[10px] text-zinc-500 mt-1">
+                  {selectedWarehouses.map((id, index) => (
+                    <span key={id} className="mr-2">
+                      {detailOborot.warehouses && detailOborot.warehouses[id] ? detailOborot.warehouses[id].name : `Склад ${id}`}
+                      {index < selectedWarehouses.length - 1 ? ", " : ""}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-x-6 gap-y-1">
@@ -105,16 +132,39 @@ const DetailProductOborot = () => {
               <b>{t("unit")}:</b> {detailOborot.product_unit}
             </div>
             <div>
-              <b>{t("wholesale_price")}:</b> {detailOborot.product_wholesale_price}
+              <b>{t("wholesale_price")}:</b> {formatNumber2(detailOborot.product_wholesale_price)}
             </div>
             <div>
-              <b>{t("retail_price")}:</b> {detailOborot.product_retail_price}
+              <b>{t("retail_price")}:</b> {formatNumber2(detailOborot.product_retail_price)}
             </div>
           </div>
 
           <div className="pt-1 text-[11px] text-zinc-500">
             {t("Period")}: {MyFormatDate(dateFrom)} – {MyFormatDate(dateTo)}
           </div>
+
+          {/* Отображение данных по каждому складу, если их несколько */}
+          {selectedWarehouses.length > 1 && detailOborot.warehouses && (
+            <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-700">
+              <div className="font-medium text-[11px] mb-1">Данные по складам:</div>
+              <div className="grid grid-cols-2 gap-2 text-[10px]">
+                {selectedWarehouses.map((whId) => {
+                  const whData = detailOborot.warehouses[whId];
+                  if (!whData) return null;
+
+                  return (
+                    <div key={whId} className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded">
+                      <div className="font-medium">{whData.name}</div>
+                      <div>Начало: {whData.start_quantity}</div>
+                      <div>Приход: {whData.income_qty}</div>
+                      <div>Расход: {whData.outcome_qty}</div>
+                      <div>Конец: {whData.end_quantity}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -167,46 +217,49 @@ const DetailProductOborot = () => {
                 {t("Opening balance")} {MyFormatDate(minusOneDay(dateFrom))}
               </td>
               <td colSpan={7} className="border"></td>
-              <td className="border px-2 py-1 text-right">{detailOborot.start_quantity}</td>
+              <td className="border px-2 py-1 text-right">{formatNumber2(detailOborot.start_quantity, 0)}</td>
               <td className="border px-2 py-1 text-right">{formatNumber2(detailOborot.start_quantity * detailOborot.product_wholesale_price)}</td>
             </tr>
 
             {/* ROWS */}
-            {detailOborot.rows.map((r, i) => (
-              <tr
-                key={i}
-                className="
+            {detailOborot.rows &&
+              detailOborot.rows.map((r, i) => (
+                <tr
+                  key={i}
+                  className="
                   hover:bg-zinc-100
                   dark:hover:bg-zinc-800
                   transition
                   cursor-pointer
                 "
-                onClick={() => handleOpenInvoice(r.invoice_id)}
-              >
-                <td className="border px-2 py-1">{MyFormatDate(r.date)} id: {r.invoice_id}</td>
-                <td className="border px-2 py-1">{r.partner}</td>
-                <td className="border px-2 py-1">{r.text}</td>
-                <td className="border px-2 py-1 text-right">{formatNumber2(r.price)}</td>
+                  onClick={() => handleOpenInvoice(r.invoice_id)}
+                >
+                  <td className="border px-2 py-1">
+                    {MyFormatDate(r.date)} {r.invoice_id && `id: ${r.invoice_id}`}
+                  </td>
+                  <td className="border px-2 py-1">{r.partner || "-"}</td>
+                  <td className="border px-2 py-1">{r.text || "-"}</td>
+                  <td className="border px-2 py-1 text-right">{formatNumber2(r.price)}</td>
 
-                <td className="border px-2 py-1 text-right">{r.income_qty}</td>
-                <td className="border px-2 py-1 text-right">{formatNumber2(r.income_sum)}</td>
+                  <td className="border px-2 py-1 text-right">{formatNumber2(r.income_qty, 0)}</td>
+                  <td className="border px-2 py-1 text-right">{formatNumber2(r.income_sum)}</td>
 
-                <td className="border px-2 py-1 text-right">{r.outcome_qty}</td>
-                <td className="border px-2 py-1 text-right">{formatNumber2(r.outcome_sum)}</td>
+                  <td className="border px-2 py-1 text-right">{formatNumber2(r.outcome_qty, 0)}</td>
+                  <td className="border px-2 py-1 text-right">{formatNumber2(r.outcome_sum)}</td>
 
-                <td className="border px-2 py-1 text-right font-medium">{r.balance_qty}</td>
-                <td className="border px-2 py-1 text-right font-medium">{formatNumber2(r.balance_sum)}</td>
-              </tr>
-            ))}
+                  <td className="border px-2 py-1 text-right font-medium">{formatNumber2(r.balance_qty, 0)}</td>
+                  <td className="border px-2 py-1 text-right font-medium">{formatNumber2(r.balance_sum)}</td>
+                </tr>
+              ))}
 
             {/* TURNOVER */}
             <tr className="bg-zinc-100 dark:bg-zinc-900 font-semibold">
               <td className="border px-2 py-1">{t("Total turnover")}</td>
               <td colSpan={3} className="border"></td>
-              <td className="border px-2 py-1 text-right">{detailOborot.turnover.income_qty}</td>
-              <td className="border px-2 py-1 text-right">{formatNumber2(detailOborot.turnover.income_sum)}</td>
-              <td className="border px-2 py-1 text-right">{detailOborot.turnover.outcome_qty}</td>
-              <td className="border px-2 py-1 text-right">{formatNumber2(detailOborot.turnover.outcome_sum)}</td>
+              <td className="border px-2 py-1 text-right">{formatNumber2(detailOborot.turnover?.income_qty || 0, 0)}</td>
+              <td className="border px-2 py-1 text-right">{formatNumber2(detailOborot.turnover?.income_sum || 0)}</td>
+              <td className="border px-2 py-1 text-right">{formatNumber2(detailOborot.turnover?.outcome_qty || 0, 0)}</td>
+              <td className="border px-2 py-1 text-right">{formatNumber2(detailOborot.turnover?.outcome_sum || 0)}</td>
               <td colSpan={2} className="border"></td>
             </tr>
 
@@ -216,8 +269,8 @@ const DetailProductOborot = () => {
                 {t("Closing balance")} {MyFormatDate(dateTo)}
               </td>
               <td colSpan={7} className="border"></td>
-              <td className="border px-2 py-1 text-right">{detailOborot.end.quantity}</td>
-              <td className="border px-2 py-1 text-right">{formatNumber2(detailOborot.end.sum)}</td>
+              <td className="border px-2 py-1 text-right">{formatNumber2(detailOborot.end?.quantity || 0, 0)}</td>
+              <td className="border px-2 py-1 text-right">{formatNumber2(detailOborot.end?.sum || 0)}</td>
             </tr>
           </tbody>
         </table>

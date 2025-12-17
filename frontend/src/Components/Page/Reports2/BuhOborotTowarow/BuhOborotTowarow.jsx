@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState, useRef } from "react";
+import { useContext, useEffect, useState, useRef, useMemo } from "react";
 import { DateContext } from "../../../UI/DateProvider";
 import MyFormatDate from "../../../UI/MyFormatDate";
 import myAxios from "../../../axios";
@@ -18,16 +18,22 @@ export const BuhOborotTowarow = () => {
   const [products, setProducts] = useState([]);
   const [groupedProducts, setGroupedProducts] = useState([]);
   const [loadingFetchProducts, setLoadingFetchProducts] = useState(false);
-  const [selectedWarehouse, setSelectedWarehouse] = useState(null);
   const [warehouses, setWarehouses] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
 
   const [searchParams] = useSearchParams();
   const selectedProductId = searchParams.get("selected");
-  console.log("selectedProductId", selectedProductId);
 
+  // Получаем параметры для множественного выбора складов
+  const warehouseIdsParam = searchParams.get("warehouses");
+  const selectedWarehouses = useMemo(() => {
+    return warehouseIdsParam ? warehouseIdsParam.split(",") : [];
+  }, [warehouseIdsParam]);
+
+  // Для обратной совместимости - если используется старый параметр warehouse
   const warehouseId = searchParams.get("warehouse");
+
   const withWozwrat = searchParams.get("withWozwrat") === "1";
   const categories = searchParams.get("categories");
   const products_ids = searchParams.get("products");
@@ -48,25 +54,33 @@ export const BuhOborotTowarow = () => {
     loadWarehouses();
   }, []);
 
-  // Установка выбранного склада
+  // Получаем выбранные склады для отображения
+  const getSelectedWarehousesInfo = useMemo(() => {
+    return selectedWarehouses.map((id) => warehouses.find((w) => String(w.id) === id)).filter(Boolean);
+  }, [selectedWarehouses, warehouses]);
+
+  // Для обратной совместимости - если используется старый параметр
   useEffect(() => {
-    if (!warehouseId) {
-      setSelectedWarehouse(null);
-      return;
+    if (warehouseId && selectedWarehouses.length === 0) {
+      // Если есть старый параметр warehouse, но нет warehouses
+      // Можно автоматически переключить или оставить как есть
+      console.log("Используется старый параметр warehouse:", warehouseId);
     }
-    const wh = warehouses.find((w) => String(w.id) === warehouseId);
-    setSelectedWarehouse(wh);
-  }, [warehouseId, warehouses]);
+  }, [warehouseId, selectedWarehouses]);
 
   // Fetch BUH OBOROT
   const fetchBuhOborotTowarow = async () => {
     setLoadingFetchProducts(true);
     try {
+      // Используем warehouses для множественного выбора
+      // Для обратной совместимости проверяем оба параметра
+      const warehouseParam = selectedWarehouses.length > 0 ? selectedWarehouses.join(",") : warehouseId || "";
+
       const res = await myAxios.get("BuhOborotTowarow", {
         params: {
           dateFrom,
           dateTo,
-          warehouse: warehouseId,
+          warehouses: warehouseParam, // Изменено на множественный параметр
           withWozwrat: withWozwrat,
           categories: categories,
           products: products_ids,
@@ -221,26 +235,21 @@ export const BuhOborotTowarow = () => {
   }, []);
 
   useEffect(() => {
-    if (!dateFrom || !dateTo || !warehouseId) return;
+    // Проверяем, выбран ли хотя бы один склад
+    const hasSelectedWarehouses = selectedWarehouses.length > 0 || warehouseId;
+
+    if (!dateFrom || !dateTo || !hasSelectedWarehouses) return;
+
     setGroupedProducts([]);
     fetchBuhOborotTowarow();
-  }, [dateFrom, dateTo, warehouseId, withWozwrat, categories, products_ids, emptyTurnovers]);
-
-  // const getDetailProductOborot = async (productId) => {
-  //   try {
-  //     const res = await myAxios.get("getDetailProductOborot", {
-  //       params: {
-  //         productId,}
-  //       });
-  //   } catch (err) {
-  //     console.log("cant get getDetailProductOborot", err);
-
-  //   }
-  // }
+  }, [dateFrom, dateTo, selectedWarehouses, warehouseId, withWozwrat, categories, products_ids, emptyTurnovers]);
 
   const showDetailProductOborot = (productId) => {
     const params = new URLSearchParams(location.search);
     params.set("selected", productId);
+
+    // Для детального просмотра передаем ВСЕ выбранные склады
+    const warehousesParam = selectedWarehouses.length > 0 ? selectedWarehouses.join(",") : warehouseId || "";
 
     // обновляем URL СПИСКА
     navigate(
@@ -251,9 +260,11 @@ export const BuhOborotTowarow = () => {
       { replace: true }
     );
 
-    // переходим в detail
-    // navigate(ROUTES_RAPORT.DETAIL_PRODUCT_OBOROT.replace(":id", productId));
-    navigate(ROUTES_RAPORT.DETAIL_PRODUCT_OBOROT.replace(":id", productId).replace(":warehouseId", warehouseId));
+    // переходим в detail с warehouses параметром в query string
+    navigate({
+      pathname: ROUTES_RAPORT.DETAIL_PRODUCT_OBOROT.replace(":id", productId),
+      search: `?warehouses=${warehousesParam}`,
+    });
   };
 
   useEffect(() => {
@@ -276,11 +287,28 @@ export const BuhOborotTowarow = () => {
       {/* HEADER */}
       <motion.div className="text-center mb-6" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         <h1 className="text-xl font-bold dark:text-white text-gray-800">{t("buh oborot towar2")}</h1>
-        {selectedWarehouse && (
+
+        {/* Отображение выбранных складов */}
+        {getSelectedWarehousesInfo.length > 0 && (
           <div className="mt-2 text-gray-600 dark:text-gray-400">
-            {t("choosed_warehouse")}: <span className="font-semibold">{selectedWarehouse?.name}</span>
+            {t("choosed_warehouses") || "Выбранные склады"}:
+            <div className="flex flex-wrap gap-2 mt-1 justify-center">
+              {getSelectedWarehousesInfo.map((wh) => (
+                <span key={wh.id} className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded text-sm">
+                  {wh.name}
+                </span>
+              ))}
+            </div>
           </div>
         )}
+
+        {/* Для обратной совместимости - если используется старый параметр */}
+        {warehouseId && selectedWarehouses.length === 0 && (
+          <div className="mt-2 text-gray-600 dark:text-gray-400">
+            {t("choosed_warehouse")}: <span className="font-semibold">{warehouses.find((w) => String(w.id) === warehouseId)?.name || `ID: ${warehouseId}`}</span>
+          </div>
+        )}
+
         <p className="text-gray-500 dark:text-gray-400 mt-1">
           {MyFormatDate(dateFrom)} — {MyFormatDate(dateTo)}
         </p>
@@ -342,7 +370,6 @@ export const BuhOborotTowarow = () => {
             <tbody>
               {groupedProducts.map((item, idx) => {
                 if (item.type === "category") {
-                  // Строка категории
                   return (
                     <tr key={`cat-${item.id}`} className="bg-gray-100 dark:bg-gray-700 font-semibold">
                       <td colSpan={12} className="border border-gray-200 dark:border-gray-700 px-3 py-2">
@@ -351,7 +378,6 @@ export const BuhOborotTowarow = () => {
                     </tr>
                   );
                 } else if (item.type === "total") {
-                  // Итог по категории
                   return (
                     <tr key={`total-${item.id}`} className="bg-gray-200 dark:bg-gray-600 font-semibold">
                       <td colSpan={4} className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">
@@ -372,7 +398,6 @@ export const BuhOborotTowarow = () => {
                     </tr>
                   );
                 } else if (item.type === "grand_total") {
-                  // Общий итог
                   return (
                     <tr key="grand-total" className="bg-blue-50 dark:bg-blue-900/30 font-bold">
                       <td colSpan={4} className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">
@@ -393,7 +418,6 @@ export const BuhOborotTowarow = () => {
                     </tr>
                   );
                 } else {
-                  // Строка товара
                   const p = item;
                   const price = parseFloat(p.price) || 0;
                   const selectedQty = parseFloat(p.selected_quantity) || 0;
@@ -438,7 +462,7 @@ export const BuhOborotTowarow = () => {
             </tbody>
           </table>
         </div>
-      ) : warehouseId ? (
+      ) : selectedWarehouses.length > 0 || warehouseId ? (
         loadingFetchProducts ? (
           <div className="flex justify-center items-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
@@ -447,7 +471,7 @@ export const BuhOborotTowarow = () => {
           <div className="text-center py-10 text-gray-500 dark:text-gray-400">{t("no products found") || "Товары не найдены"}</div>
         )
       ) : (
-        <div className="text-center py-10 text-gray-500 dark:text-gray-400">{t("choose_warehouse") || "Выберите склад для отображения данных"}</div>
+        <div className="text-center py-10 text-gray-500 dark:text-gray-400">{t("choose_warehouses") || "Выберите склад(ы) для отображения данных"}</div>
       )}
     </div>
   );

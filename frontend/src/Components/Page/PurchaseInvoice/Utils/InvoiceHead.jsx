@@ -19,6 +19,12 @@ import { useNotification } from "../../../context/NotificationContext";
 // import { FaReceipt } from "react-icons/fa";
 import PrintInvoiceButton from "./PrintInvoiceButton";
 // import { DateContext } from "../../../UI/DateProvider";
+// import exportInvoiceToExcel from "./exportInvoiceToExcel";
+import exportInvoiceWithSaldoToExcel from "./exportInvoiceToExcel";
+import { FileDown } from "lucide-react";
+import { DateContext } from "../../../UI/DateProvider";
+import { getSaldoForPartner } from "../../../../services/saldoService";
+
 
 const InvoiceHead = ({
   refs,
@@ -34,9 +40,15 @@ const InvoiceHead = ({
   setFakturaType,
   id,
   authGroup,
+
+  Saldo2,
+  letPrintSaldo,
+  setLetPrintSaldo,
+  setSaldo2,
 }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { dateProwodok } = useContext(DateContext);
   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
   const [openModal, setOpenModal] = useState(false);
   const [entryCancelModal, setEntryCancelModal] = useState(false);
@@ -52,6 +64,24 @@ const InvoiceHead = ({
   };
   const { showNotification } = useNotification();
 
+  const [saldoForExcel, setSaldoForExcel] = useState(null);
+
+  const fetchSaldo = async (date, partnerId) => {
+    try {
+      const saldo = await getSaldoForPartner(date, partnerId);
+      console.log("saldo", saldo);
+      setSaldoForExcel(saldo);
+    } catch (err) {
+      console.log("Ошибка при получении сальдо", err);
+    }
+  };
+
+  useEffect(() => {
+    if (!values.partner?.id) return;
+    fetchSaldo(dateProwodok, values.partner.id);
+  }, [values.partner?.id,dateProwodok]);
+
+
   // const { dateProwodok } = useContext(DateContext);
 
   const handleCancelEntry = async (comment) => {
@@ -64,7 +94,7 @@ const InvoiceHead = ({
       console.log("Entry canceled successfully:", res.data);
       // при успехе можно закрыть модалку или обновить данные
       setEntryCancelModal(false);
-      setCancelComment("")
+      setCancelComment("");
       showNotification(t(res.data.message), "success");
 
       // например, если у тебя есть функция обновления данных:
@@ -72,7 +102,7 @@ const InvoiceHead = ({
     } catch (error) {
       console.error("Can't cancel invoice entry:", error);
       console.log("error ===", error);
-      
+
       showNotification(`${t(error.response.data.message)}`, "error");
     }
   };
@@ -100,8 +130,6 @@ const InvoiceHead = ({
   // useEffect(() => {
   //   console.log("dayIsClosed", dayIsClosed);
   // }, [dayIsClosed]);
-
-  console.log("values GGGGG", values);
 
   const modalYesBtn = useRef(null);
   const modalNoBtn = useRef(null);
@@ -208,6 +236,23 @@ const InvoiceHead = ({
             </MyButton>
           </div>
         )}
+        <button
+          onClick={() =>
+            exportInvoiceWithSaldoToExcel(
+              values,
+              visibleColumns,
+              printVisibleColumns,
+              t,// передаем данные сальдо
+              values.awto,
+              saldoForExcel
+            )
+          }
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 print:hidden"
+          type="button"
+          title="Экспорт в Excel с сальдо"
+        >
+          <span className="font-medium">📊 Excel</span>
+        </button>
         {modalDeleteInvoice && (
           <MyModal2 onClose={() => setModalDeleteInvoice(false)}>
             <div className="p-8">
@@ -383,7 +428,7 @@ const InvoiceHead = ({
 
       {/* Заголовок */}
       <div className={invoiceClasses.zagolowok}>
-        {t(values.wozwrat_or_prihod)} {t("faktura")} {values.id && values.id} {values.canceled_at && <div className="text-red-500">({t("Canceled")})</div> }
+        {t(values.wozwrat_or_prihod)} {t("faktura")} {values.id && values.id} {values.canceled_at && <div className="text-red-500">({t("Canceled")})</div>}
       </div>
 
       {values.already_entry && !dayIsClosed && (

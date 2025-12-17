@@ -385,6 +385,10 @@ const MainPage = () => {
                 id={id}
                 showNotification={showNotification}
                 authGroup={authGroup}
+                Saldo2={Saldo2}
+                letPrintSaldo={letPrintSaldo}
+                setLetPrintSaldo={setLetPrintSaldo} 
+                setSaldo2={setSaldo2}
               />
               <fieldset disabled={values.already_entry || authGroup !== "admin" || values.canceled_at}>
                 <div className="grid grid-cols-1 md:grid-cols-10 gap-4 print:block">

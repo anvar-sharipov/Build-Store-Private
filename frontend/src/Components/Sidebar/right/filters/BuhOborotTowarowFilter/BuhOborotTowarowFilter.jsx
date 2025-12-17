@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import myAxios from "../../../../axios";
 import { Warehouse, Check, X, Filter } from "lucide-react";
@@ -15,19 +15,32 @@ const BuhOborotTowarowFilter = () => {
   const [loadingProducts, setLoadingProducts] = useState(false);
 
   const warehouseId = searchParams.get("warehouse");
+  const warehouseIdsParam = searchParams.get("warehouses");
+  
+  // Используем useMemo для предотвращения пересоздания массива
+  const selectedWarehouses = useMemo(() => {
+    return warehouseIdsParam ? warehouseIdsParam.split(",") : [];
+  }, [warehouseIdsParam]);
+
   const withWozwrat = searchParams.get("withWozwrat") !== "0";
   const emptyTurnovers = searchParams.get("emptyTurnovers") !== "0";
 
   const [categories, setCategories] = useState([]);
   const [searchCategory, setSearchCategory] = useState("");
   const selectedCategoriesParam = searchParams.get("categories");
-  const selectedCategories = selectedCategoriesParam ? selectedCategoriesParam.split(",") : [];
+  
+  const selectedCategories = useMemo(() => {
+    return selectedCategoriesParam ? selectedCategoriesParam.split(",") : [];
+  }, [selectedCategoriesParam]);
 
   // Product name search START
   const [products, setProducts] = useState([]);
   const [searchProduct, setSearchProduct] = useState("");
   const selectedProductsParam = searchParams.get("products");
-  const selectedProducts = selectedProductsParam ? selectedProductsParam.split(",") : [];
+  
+  const selectedProducts = useMemo(() => {
+    return selectedProductsParam ? selectedProductsParam.split(",") : [];
+  }, [selectedProductsParam]);
 
   // Загрузка складов
   useEffect(() => {
@@ -56,23 +69,28 @@ const BuhOborotTowarowFilter = () => {
     loadCategories();
   }, []);
 
-  // Загрузка продуктов при выборе склада
+  // Загрузка продуктов при выбоске складов
   useEffect(() => {
     const getAllProducts = async () => {
-      if (!warehouseId) {
+      if (selectedWarehouses.length === 0) {
         setProducts([]);
         return;
       }
-      
+
       setLoadingProducts(true);
       try {
+        // Здесь нужно определить логику для нескольких складов
+        // Вариант 1: Загружать продукты для всех выбранных складов
+        // Вариант 2: Загружать только для первого (как сейчас)
+        // Вариант 3: Запрашивать API, которое поддерживает несколько складов
+        
+        // Пока оставляем как есть - берем первый склад
         const res = await myAxios.get("/get_all_products_id_and_name", {
           params: {
-            warehouseId,
+            warehouseId: selectedWarehouses[0],
           },
         });
-        console.log("res", res.data.data);
-        setProducts(res.data.data || []); // Сохраняем в стейт
+        setProducts(res.data.data || []);
       } catch (err) {
         console.log("cant get allProducts", err);
         setProducts([]);
@@ -80,9 +98,9 @@ const BuhOborotTowarowFilter = () => {
         setLoadingProducts(false);
       }
     };
-    
+
     getAllProducts();
-  }, [warehouseId]); // Загружаем при изменении склада
+  }, [selectedWarehouses]); // selectedWarehouses теперь стабилен благодаря useMemo
 
   const addCategory = (catId) => {
     const params = new URLSearchParams(searchParams);
@@ -132,24 +150,39 @@ const BuhOborotTowarowFilter = () => {
     setSearchParams(params);
   };
 
-  const filteredCategories = categories.filter(
-    (cat) => cat.name.toLowerCase().includes(searchCategory.toLowerCase()) && 
+  const filteredCategories = categories.filter((cat) => 
+    cat.name.toLowerCase().includes(searchCategory.toLowerCase()) && 
     !selectedCategories.includes(String(cat.id))
   );
 
-  const filteredProducts = products.filter(
-    (prod) => prod.name.toLowerCase().includes(searchProduct.toLowerCase()) && 
+  const filteredProducts = products.filter((prod) => 
+    prod.name.toLowerCase().includes(searchProduct.toLowerCase()) && 
     !selectedProducts.includes(String(prod.id))
   );
 
-  const selectedWarehouse = activeWarehouses.find((w) => String(w.id) === warehouseId);
+  // Убрать эту строку, так как мы больше не используем одиночный выбор
+  // const selectedWarehouse = activeWarehouses.find((w) => String(w.id) === warehouseId);
 
   const handleWarehouseSelect = (wh) => {
     const params = new URLSearchParams(searchParams);
-    params.set("warehouse", wh.id);
+    const newSelected = [...selectedWarehouses];
+    const whId = String(wh.id);
+
+    if (newSelected.includes(whId)) {
+      const index = newSelected.indexOf(whId);
+      newSelected.splice(index, 1);
+    } else {
+      newSelected.push(whId);
+    }
+
+    if (newSelected.length) {
+      params.set("warehouses", newSelected.join(","));
+    } else {
+      params.delete("warehouses");
+    }
+    params.delete("warehouse");
     params.delete("selected");
     setSearchParams(params);
-    setDropdownOpen(false);
   };
 
   const handleWozwratChange = (value) => {
@@ -165,7 +198,6 @@ const BuhOborotTowarowFilter = () => {
     params.delete("selected");
     setSearchParams(params);
   };
-  
 
   return (
     <div className="space-y-6 p-4">
@@ -180,23 +212,25 @@ const BuhOborotTowarowFilter = () => {
         </div>
       </div>
 
-      {/* Выбор склада */}
+      {/* Выбор складов */}
       <div>
         <label className="block text-sm font-medium text-gray-300 mb-2">
-          {t("choose_warehouse")}
+          {t("choose_warehouses") || "Выберите склады"}
         </label>
 
         <div className="relative">
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
             className="w-full px-4 py-3 bg-gray-800 border border-gray-700 
-                     rounded-lg flex items-center justify-between hover:bg-gray-750 
-                     transition-colors"
+               rounded-lg flex items-center justify-between hover:bg-gray-750 
+               transition-colors"
           >
             <div className="flex items-center gap-3">
               <Warehouse className="w-5 h-5 text-blue-400" />
-              <span className={selectedWarehouse ? "text-white" : "text-gray-400"}>
-                {selectedWarehouse?.name || "Выберите склад"}
+              <span className="text-white">
+                {selectedWarehouses.length > 0 
+                  ? `Выбрано складов: ${selectedWarehouses.length}` 
+                  : "Выберите склады"}
               </span>
             </div>
             <div className={`transition-transform ${dropdownOpen ? "rotate-180" : ""}`}>
@@ -211,7 +245,7 @@ const BuhOborotTowarowFilter = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 className="absolute w-full mt-1 bg-gray-900 border border-gray-700 
-                         rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
+                   rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
               >
                 {loading ? (
                   <div className="p-4 text-center text-gray-400">Загрузка...</div>
@@ -221,16 +255,22 @@ const BuhOborotTowarowFilter = () => {
                       key={wh.id}
                       onClick={() => handleWarehouseSelect(wh)}
                       className={`w-full px-4 py-3 flex items-center justify-between 
-                               hover:bg-gray-800 border-b border-gray-800 last:border-0
-                               ${warehouseId === String(wh.id) ? "bg-gray-800" : ""}`}
+                         hover:bg-gray-800 border-b border-gray-800 last:border-0
+                         ${selectedWarehouses.includes(String(wh.id)) ? "bg-gray-800" : ""}`}
                     >
                       <div className="flex items-center gap-3">
+                        <div className={`w-4 h-4 border flex items-center justify-center 
+                          ${selectedWarehouses.includes(String(wh.id)) 
+                            ? "bg-blue-500 border-blue-500" 
+                            : "border-gray-500"}`}
+                        >
+                          {selectedWarehouses.includes(String(wh.id)) && 
+                            <Check className="w-3 h-3 text-white" />
+                          }
+                        </div>
                         <Warehouse className="w-4 h-4 text-gray-500" />
                         <span className="text-white">{wh.name}</span>
                       </div>
-                      {warehouseId === String(wh.id) && (
-                        <Check className="w-4 h-4 text-blue-400" />
-                      )}
                     </button>
                   ))
                 ) : (
@@ -240,6 +280,31 @@ const BuhOborotTowarowFilter = () => {
             )}
           </AnimatePresence>
         </div>
+
+        {/* Отображение выбранных складов */}
+        {selectedWarehouses.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {selectedWarehouses.map((id) => {
+              const wh = activeWarehouses.find((w) => String(w.id) === id);
+              if (!wh) return null;
+              return (
+                <div
+                  key={id}
+                  className="flex items-center gap-1 px-2 py-1 bg-blue-500/20 
+                     text-blue-400 rounded-lg text-sm"
+                >
+                  {wh.name}
+                  <button 
+                    onClick={() => handleWarehouseSelect({ id: Number(id) })} 
+                    className="ml-1 hover:text-white"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Фильтр по категориям */}
@@ -289,10 +354,7 @@ const BuhOborotTowarowFilter = () => {
                            text-blue-400 rounded-lg text-sm"
                 >
                   {cat.name}
-                  <button 
-                    onClick={() => removeCategory(id)} 
-                    className="ml-1 hover:text-white"
-                  >
+                  <button onClick={() => removeCategory(id)} className="ml-1 hover:text-white">
                     <X className="w-3 h-3" />
                   </button>
                 </div>
@@ -313,31 +375,26 @@ const BuhOborotTowarowFilter = () => {
           value={searchProduct}
           onChange={(e) => setSearchProduct(e.target.value)}
           placeholder={t("search products")}
-          disabled={!warehouseId || loadingProducts}
+          disabled={selectedWarehouses.length === 0 || loadingProducts}
           className={`w-full px-3 py-2 rounded-lg border text-white
                    placeholder-gray-500 focus:outline-none focus:border-blue-500
-                   ${!warehouseId || loadingProducts
-                     ? "bg-gray-900 border-gray-800 cursor-not-allowed text-gray-500"
-                     : "bg-gray-800 border-gray-700"
-                   }`}
+                   ${selectedWarehouses.length === 0 || loadingProducts 
+                     ? "bg-gray-900 border-gray-800 cursor-not-allowed text-gray-500" 
+                     : "bg-gray-800 border-gray-700"}`}
         />
 
         {/* Индикатор загрузки продуктов */}
         {loadingProducts && (
-          <div className="text-center text-sm text-gray-400">
-            Загрузка продуктов...
-          </div>
+          <div className="text-center text-sm text-gray-400">Загрузка продуктов...</div>
         )}
 
-        {/* Сообщение, если склад не выбран */}
-        {!warehouseId && !loadingProducts && (
-          <div className="text-center text-sm text-gray-400">
-            Сначала выберите склад
-          </div>
+        {/* Сообщение, если склады не выбраны */}
+        {selectedWarehouses.length === 0 && !loadingProducts && (
+          <div className="text-center text-sm text-gray-400">Сначала выберите склад(ы)</div>
         )}
 
         {/* Список найденных Продуктов */}
-        {searchProduct && filteredProducts.length > 0 && warehouseId && !loadingProducts && (
+        {searchProduct && filteredProducts.length > 0 && selectedWarehouses.length > 0 && !loadingProducts && (
           <div className="max-h-48 overflow-y-auto bg-gray-900 border border-gray-700 rounded-lg mt-1 text-gray-300">
             {filteredProducts.map((prod) => (
               <button
@@ -355,10 +412,8 @@ const BuhOborotTowarowFilter = () => {
         )}
 
         {/* Сообщение если нет результатов */}
-        {searchProduct && filteredProducts.length === 0 && warehouseId && !loadingProducts && (
-          <div className="text-center py-2 text-sm text-gray-500">
-            Продукты не найдены
-          </div>
+        {searchProduct && filteredProducts.length === 0 && selectedWarehouses.length > 0 && !loadingProducts && (
+          <div className="text-center py-2 text-sm text-gray-500">Продукты не найдены</div>
         )}
 
         {/* Выбранные продукты */}
@@ -376,10 +431,7 @@ const BuhOborotTowarowFilter = () => {
                            text-green-400 rounded-lg text-sm"
                 >
                   {prod?.name || `ID: ${id}`}
-                  <button 
-                    onClick={() => removeProduct(id)} 
-                    className="ml-1 hover:text-white"
-                  >
+                  <button onClick={() => removeProduct(id)} className="ml-1 hover:text-white">
                     <X className="w-3 h-3" />
                   </button>
                 </div>
@@ -399,10 +451,9 @@ const BuhOborotTowarowFilter = () => {
           <button
             onClick={() => handleWozwratChange(true)}
             className={`flex-1 py-3 rounded-lg border transition-colors
-                     ${withWozwrat && searchParams.get("withWozwrat") === "1"
-                       ? "border-blue-500 bg-blue-500/10 text-blue-400"
-                       : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"
-                     }`}
+                     ${withWozwrat && searchParams.get("withWozwrat") === "1" 
+                       ? "border-blue-500 bg-blue-500/10 text-blue-400" 
+                       : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"}`}
           >
             <div className="flex items-center justify-center gap-2">
               <Check className="w-4 h-4" />
@@ -413,9 +464,10 @@ const BuhOborotTowarowFilter = () => {
           <button
             onClick={() => handleWozwratChange(false)}
             className={`flex-1 py-3 rounded-lg border transition-colors
-                     ${!withWozwrat || (searchParams.get("withWozwrat") !== "1" && searchParams.get("withWozwrat") !== "0")
-                       ? "border-red-500 bg-red-500/10 text-red-400"
-                       : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"
+                     ${
+                       !withWozwrat || (searchParams.get("withWozwrat") !== "1" && searchParams.get("withWozwrat") !== "0")
+                         ? "border-red-500 bg-red-500/10 text-red-400"
+                         : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"
                      }`}
           >
             <div className="flex items-center justify-center gap-2">
@@ -436,9 +488,10 @@ const BuhOborotTowarowFilter = () => {
           <button
             onClick={() => handleEmptyTurnovers(true)}
             className={`flex-1 py-3 rounded-lg border transition-colors
-                     ${emptyTurnovers && searchParams.get("emptyTurnovers") === "1"
-                       ? "border-blue-500 bg-blue-500/10 text-blue-400"
-                       : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"
+                     ${
+                       emptyTurnovers && searchParams.get("emptyTurnovers") === "1" 
+                         ? "border-blue-500 bg-blue-500/10 text-blue-400" 
+                         : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"
                      }`}
           >
             <div className="flex items-center justify-center gap-2">
@@ -450,9 +503,10 @@ const BuhOborotTowarowFilter = () => {
           <button
             onClick={() => handleEmptyTurnovers(false)}
             className={`flex-1 py-3 rounded-lg border transition-colors
-                     ${!emptyTurnovers || (searchParams.get("emptyTurnovers") !== "1" && searchParams.get("emptyTurnovers") !== "0")
-                       ? "border-red-500 bg-red-500/10 text-red-400"
-                       : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"
+                     ${
+                       !emptyTurnovers || (searchParams.get("emptyTurnovers") !== "1" && searchParams.get("emptyTurnovers") !== "0")
+                         ? "border-red-500 bg-red-500/10 text-red-400"
+                         : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"
                      }`}
           >
             <div className="flex items-center justify-center gap-2">
@@ -465,9 +519,7 @@ const BuhOborotTowarowFilter = () => {
 
       {/* Статус загрузки складов */}
       {loading && (
-        <div className="text-center text-gray-400 text-sm">
-          Загрузка складов...
-        </div>
+        <div className="text-center text-gray-400 text-sm">Загрузка складов...</div>
       )}
     </div>
   );

@@ -18,144 +18,242 @@ from datetime import date
 ################################################################################################################################################################
 # BuhOborotTowarow (3 warianta moy, chatGpt i DeepSeek) START
 
-# # DeepSeek uskorenny rabochiy
+
+
+# # old chat gpt uskorennyy rabochiy
 # @api_view(['GET'])
 # @permission_classes([IsAuthenticated])
 # def BuhOborotTowarow(request):
-#     date_from = request.GET.get("dateFrom")
-#     date_to = request.GET.get("dateTo")
-#     warehouse_id = request.GET.get("warehouse")
-#     with_wozwrat = request.GET.get("withWozwrat") == "true"
+#     dateFrom = request.GET.get("dateFrom")
+#     dateTo = request.GET.get("dateTo")
+#     warehouse = request.GET.get("warehouse")
+#     withWozwrat = request.GET.get("withWozwrat") == "true"
+#     categories = request.GET.get("categories")
+#     products = request.GET.get("products")
+#     emptyTurnovers = True if request.GET.get("emptyTurnovers") == "1" else False
+    
+#     ic(emptyTurnovers)
+    
+#     product_units = (
+#         ProductUnit.objects
+#         .filter(is_default_for_sale=True)
+#         .select_related("unit")
+#     )
+    
+#     unit_map = {
+#         pu.product_id: pu
+#         for pu in product_units
+#     }
+    
+#     if categories:
+#         category_ids = [int(c) for c in categories.split(",") if c.isdigit()]
+#     else:
+#         category_ids = []
+        
+#     if products:
+#         product_ids = [int(c) for c in products.split(",") if c.isdigit()]
+#     else:
+#         product_ids = []
+        
 
-#     # Словарь для хранения баланса
+#     # Баланс по товарам
 #     balance = {}
 
 #     # ---------------------------------------------
-#     # 1) Начальные остатки (до dateFrom)
+#     # 1) SQL №1 — начальные остатки
 #     # ---------------------------------------------
+#     # start_items = InvoiceItem.objects.filter(
+#     #     invoice__entry_created_at_handle__lt=dateFrom,
+#     #     invoice__warehouse_id=warehouse
+#     # ).select_related(
+#     #     "product", "product__category", "product__base_unit", "invoice"
+#     # )
+    
 #     start_items = InvoiceItem.objects.filter(
-#         invoice__entry_created_at_handle__lt=date_from,
-#         invoice__warehouse_id=warehouse_id
+#     invoice__entry_created_at_handle__lt=dateFrom
+#     ).filter(
+#         Q(invoice__warehouse_id=warehouse) |
+#         Q(invoice__warehouse2_id=warehouse)
 #     ).select_related(
-#         "product__category", 
-#         "product__base_unit", 
-#         "invoice"
-#     ).only(
-#         "selected_quantity",
-#         "product__id",
-#         "product__name",
-#         "product__category__name",
-#         "product__base_unit__name",
-#         "product__wholesale_price",
-#         "invoice__wozwrat_or_prihod"
+#         "product", "product__category", "product__base_unit", "invoice"
 #     )
+    
+#     if category_ids:
+#         start_items = start_items.filter(product__category_id__in=category_ids)
+        
+#     if product_ids:
+#         start_items = start_items.filter(product__id__in=product_ids)
 
 #     for item in start_items:
 #         p = item.product
 #         inv = item.invoice
         
+
 #         if p.id not in balance:
+#             pu = unit_map.get(p.id)
+#             if pu:
+#                 unit = pu.unit.name
+#                 conversion_factor = pu.conversion_factor
+#             else:
+#                 unit = p.base_unit.name if p.base_unit else ""
+#                 conversion_factor = 1
+                
 #             balance[p.id] = {
+#                 "id": p.id,
 #                 "category": p.category.name,
 #                 "name": p.name,
-#                 "unit": p.base_unit.name,
+#                 "unit": unit,
 #                 "price": p.wholesale_price,
 #                 "selected_quantity": 0,
+#                 "income": 0,
+#                 "outcome": 0,
 #                 "oborot_selected_quantity_girdeji": 0,
 #                 "oborot_selected_quantity_chykdajy": 0,
-#                 "end_selected_quantity": 0
+#                 "conversion_factor": conversion_factor,
 #             }
-        
-#         # Упрощенная логика для начальных остатков
+#         cf = Decimal(balance[p.id]["conversion_factor"])
 #         if inv.wozwrat_or_prihod == "prihod":
-#             balance[p.id]["selected_quantity"] += item.selected_quantity
+#             if inv.warehouse_id == int(warehouse):
+#                 balance[p.id]["selected_quantity"] += (item.selected_quantity / cf)
+
 #         elif inv.wozwrat_or_prihod == "rashod":
-#             balance[p.id]["selected_quantity"] -= item.selected_quantity
+#             if inv.warehouse_id == int(warehouse):
+#                 balance[p.id]["selected_quantity"] -= (item.selected_quantity / cf)
+
 #         elif inv.wozwrat_or_prihod == "wozwrat":
-#             balance[p.id]["selected_quantity"] += item.selected_quantity
+#             if inv.warehouse_id == int(warehouse):
+#                 balance[p.id]["selected_quantity"] += (item.selected_quantity / cf)
+            
+#         elif inv.wozwrat_or_prihod == "transfer":
+#             # если со склада
+#             if inv.warehouse_id == int(warehouse):
+#                 balance[p.id]["selected_quantity"] -= (item.selected_quantity / cf)
+#             # если на склад
+#             elif inv.warehouse2_id == int(warehouse):
+#                 balance[p.id]["selected_quantity"] += (item.selected_quantity / cf)
 
 #     # ---------------------------------------------
-#     # 2) Обороты за период
+#     # 2) SQL №2 — обороты в периоде
 #     # ---------------------------------------------
 #     period_items = InvoiceItem.objects.filter(
-#         invoice__entry_created_at_handle__gte=date_from,
-#         invoice__entry_created_at_handle__lte=date_to,
-#         invoice__warehouse_id=warehouse_id
+#         invoice__entry_created_at_handle__gte=dateFrom,
+#         invoice__entry_created_at_handle__lte=dateTo
+#     ).filter(
+#         Q(invoice__warehouse_id=warehouse) |
+#         Q(invoice__warehouse2_id=warehouse)
 #     ).select_related(
-#         "product__category",
-#         "product__base_unit",
-#         "invoice"
-#     ).only(
-#         "selected_quantity",
-#         "product__id",
-#         "product__name",
-#         "product__category__name",
-#         "product__base_unit__name",
-#         "product__wholesale_price",
-#         "invoice__wozwrat_or_prihod"
+#         "product", "product__category", "product__base_unit", "invoice"
 #     ).order_by(
-#         "product__category__name", 
-#         "product__name"
+#         "product__category__name", "product__name"
 #     )
+    
+#     if category_ids:
+#         period_items = period_items.filter(product__category_id__in=category_ids)
+        
+#     if product_ids:
+#         period_items = period_items.filter(product__id__in=product_ids)
 
 #     for item in period_items:
 #         p = item.product
 #         inv = item.invoice
         
-#         # Создаем запись, если товара еще нет в балансе
+        
 #         if p.id not in balance:
+            
+#             pu = unit_map.get(p.id)
+#             if pu:
+#                 unit = pu.unit.name
+#                 conversion_factor = pu.conversion_factor
+#             else:
+#                 unit = p.base_unit.name if p.base_unit else ""
+#                 conversion_factor = 1
+
 #             balance[p.id] = {
+#                 "id": p.id,
 #                 "category": p.category.name,
 #                 "name": p.name,
-#                 "unit": p.base_unit.name,
+#                 "unit": unit,
 #                 "price": p.wholesale_price,
 #                 "selected_quantity": 0,
+#                 "income": 0,
+#                 "outcome": 0,
 #                 "oborot_selected_quantity_girdeji": 0,
 #                 "oborot_selected_quantity_chykdajy": 0,
-#                 "end_selected_quantity": 0
+#                 "conversion_factor": conversion_factor,
 #             }
-        
-#         # Логика для оборотов
+#         cf = Decimal(balance[p.id]["conversion_factor"])
 #         if inv.wozwrat_or_prihod == "prihod":
-#             balance[p.id]["oborot_selected_quantity_girdeji"] += item.selected_quantity
-        
+#             if inv.warehouse_id == int(warehouse):
+#                 balance[p.id]["oborot_selected_quantity_girdeji"] += (item.selected_quantity / cf)
+
 #         elif inv.wozwrat_or_prihod == "rashod":
-#             balance[p.id]["oborot_selected_quantity_chykdajy"] += item.selected_quantity
-        
+#             if inv.warehouse_id == int(warehouse):
+#                 balance[p.id]["oborot_selected_quantity_chykdajy"] += (item.selected_quantity / cf)
+
 #         elif inv.wozwrat_or_prihod == "wozwrat":
-#             if with_wozwrat:
-#                 balance[p.id]["oborot_selected_quantity_girdeji"] += item.selected_quantity
-#             else:
-#                 # Обратите внимание: здесь -item.selected_quantity
-#                 balance[p.id]["oborot_selected_quantity_chykdajy"] -= item.selected_quantity
+#             if inv.warehouse_id == int(warehouse):
+#                 if withWozwrat:
+#                     balance[p.id]["oborot_selected_quantity_girdeji"] += (item.selected_quantity / cf)
+#                 else:
+#                     balance[p.id]["oborot_selected_quantity_chykdajy"] -= (item.selected_quantity / cf)
+#         elif inv.wozwrat_or_prihod == "transfer":
+#             # уход со склада
+#             if inv.warehouse_id == int(warehouse):
+#                 balance[p.id]["oborot_selected_quantity_chykdajy"] += (item.selected_quantity / cf)
+#             # приход на склад
+#             elif inv.warehouse2_id == int(warehouse):
+#                 balance[p.id]["oborot_selected_quantity_girdeji"] += (item.selected_quantity / cf)
 
 #     # ---------------------------------------------
-#     # 3) Расчет итоговых остатков
+#     # 3) Итог
 #     # ---------------------------------------------
-#     result_data = []
-#     for p_id, data in balance.items():
-#         data["end_selected_quantity"] = (
-#             data["selected_quantity"]
-#             + data["oborot_selected_quantity_girdeji"]
-#             - data["oborot_selected_quantity_chykdajy"]
+#     for p_id, d in balance.items():
+#         d["end_selected_quantity"] = (
+#             d["selected_quantity"]
+#             + d["oborot_selected_quantity_girdeji"]
+#             - d["oborot_selected_quantity_chykdajy"]
 #         )
-#         result_data.append(data)
+        
+#     if not emptyTurnovers:
+#         balance = {
+#             p_id: d
+#             for p_id, d in balance.items()
+#             if d["oborot_selected_quantity_girdeji"] != 0
+#             or d["oborot_selected_quantity_chykdajy"] != 0
+#         }
 
-#     return JsonResponse({"data": result_data})
+#     return JsonResponse({"data": list(balance.values())})
 
-# chat gpt uskorennyy rabochiy
+# ispolzowanie neskolkih warehouse
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def BuhOborotTowarow(request):
     dateFrom = request.GET.get("dateFrom")
     dateTo = request.GET.get("dateTo")
-    warehouse = request.GET.get("warehouse")
+    
+    # Поддержка нового параметра warehouses и старого warehouse
+    warehouses_param = request.GET.get("warehouses", "")
+    warehouse_param = request.GET.get("warehouse", "")
+    
     withWozwrat = request.GET.get("withWozwrat") == "true"
     categories = request.GET.get("categories")
     products = request.GET.get("products")
     emptyTurnovers = True if request.GET.get("emptyTurnovers") == "1" else False
     
-    ic(emptyTurnovers)
+    # Обработка параметра складов
+    warehouse_ids = []
+    
+    if warehouses_param:
+        try:
+            warehouse_ids = [int(id.strip()) for id in warehouses_param.split(",") if id.strip().isdigit()]
+        except ValueError:
+            return JsonResponse({"status": "error", "message": "Invalid warehouse IDs"}, status=400)
+    elif warehouse_param and warehouse_param.isdigit():
+        warehouse_ids = [int(warehouse_param)]
+    
+    if not warehouse_ids:
+        return JsonResponse({"status": "error", "message": "Warehouse(s) not selected"}, status=400)
     
     product_units = (
         ProductUnit.objects
@@ -183,20 +281,13 @@ def BuhOborotTowarow(request):
     balance = {}
 
     # ---------------------------------------------
-    # 1) SQL №1 — начальные остатки
+    # 1) SQL №1 — начальные остатки (суммируем по всем складам сразу)
     # ---------------------------------------------
-    # start_items = InvoiceItem.objects.filter(
-    #     invoice__entry_created_at_handle__lt=dateFrom,
-    #     invoice__warehouse_id=warehouse
-    # ).select_related(
-    #     "product", "product__category", "product__base_unit", "invoice"
-    # )
-    
     start_items = InvoiceItem.objects.filter(
-    invoice__entry_created_at_handle__lt=dateFrom
+        invoice__entry_created_at_handle__lt=dateFrom
     ).filter(
-        Q(invoice__warehouse_id=warehouse) |
-        Q(invoice__warehouse2_id=warehouse)
+        Q(invoice__warehouse_id__in=warehouse_ids) |
+        Q(invoice__warehouse2_id__in=warehouse_ids)
     ).select_related(
         "product", "product__category", "product__base_unit", "invoice"
     )
@@ -211,7 +302,6 @@ def BuhOborotTowarow(request):
         p = item.product
         inv = item.invoice
         
-
         if p.id not in balance:
             pu = unit_map.get(p.id)
             if pu:
@@ -227,43 +317,46 @@ def BuhOborotTowarow(request):
                 "name": p.name,
                 "unit": unit,
                 "price": p.wholesale_price,
-                "selected_quantity": 0,
-                "income": 0,
-                "outcome": 0,
-                "oborot_selected_quantity_girdeji": 0,
-                "oborot_selected_quantity_chykdajy": 0,
+                "selected_quantity": Decimal("0"),
+                "income": Decimal("0"),
+                "outcome": Decimal("0"),
+                "oborot_selected_quantity_girdeji": Decimal("0"),
+                "oborot_selected_quantity_chykdajy": Decimal("0"),
                 "conversion_factor": conversion_factor,
             }
+        
         cf = Decimal(balance[p.id]["conversion_factor"])
+        
+        # Проверяем принадлежность к выбранным складам
         if inv.wozwrat_or_prihod == "prihod":
-            if inv.warehouse_id == int(warehouse):
+            if inv.warehouse_id in warehouse_ids:
                 balance[p.id]["selected_quantity"] += (item.selected_quantity / cf)
 
         elif inv.wozwrat_or_prihod == "rashod":
-            if inv.warehouse_id == int(warehouse):
+            if inv.warehouse_id in warehouse_ids:
                 balance[p.id]["selected_quantity"] -= (item.selected_quantity / cf)
 
         elif inv.wozwrat_or_prihod == "wozwrat":
-            if inv.warehouse_id == int(warehouse):
+            if inv.warehouse_id in warehouse_ids:
                 balance[p.id]["selected_quantity"] += (item.selected_quantity / cf)
             
         elif inv.wozwrat_or_prihod == "transfer":
-            # если со склада
-            if inv.warehouse_id == int(warehouse):
+            # если со склада (и склад в выбранных)
+            if inv.warehouse_id in warehouse_ids:
                 balance[p.id]["selected_quantity"] -= (item.selected_quantity / cf)
-            # если на склад
-            elif inv.warehouse2_id == int(warehouse):
+            # если на склад (и склад в выбранных)
+            elif inv.warehouse2_id in warehouse_ids:
                 balance[p.id]["selected_quantity"] += (item.selected_quantity / cf)
 
     # ---------------------------------------------
-    # 2) SQL №2 — обороты в периоде
+    # 2) SQL №2 — обороты в периоде (суммируем по всем складам)
     # ---------------------------------------------
     period_items = InvoiceItem.objects.filter(
         invoice__entry_created_at_handle__gte=dateFrom,
         invoice__entry_created_at_handle__lte=dateTo
     ).filter(
-        Q(invoice__warehouse_id=warehouse) |
-        Q(invoice__warehouse2_id=warehouse)
+        Q(invoice__warehouse_id__in=warehouse_ids) |
+        Q(invoice__warehouse2_id__in=warehouse_ids)
     ).select_related(
         "product", "product__category", "product__base_unit", "invoice"
     ).order_by(
@@ -280,9 +373,7 @@ def BuhOborotTowarow(request):
         p = item.product
         inv = item.invoice
         
-        
         if p.id not in balance:
-            
             pu = unit_map.get(p.id)
             if pu:
                 unit = pu.unit.name
@@ -297,34 +388,36 @@ def BuhOborotTowarow(request):
                 "name": p.name,
                 "unit": unit,
                 "price": p.wholesale_price,
-                "selected_quantity": 0,
-                "income": 0,
-                "outcome": 0,
-                "oborot_selected_quantity_girdeji": 0,
-                "oborot_selected_quantity_chykdajy": 0,
+                "selected_quantity": Decimal("0"),
+                "income": Decimal("0"),
+                "outcome": Decimal("0"),
+                "oborot_selected_quantity_girdeji": Decimal("0"),
+                "oborot_selected_quantity_chykdajy": Decimal("0"),
                 "conversion_factor": conversion_factor,
             }
+        
         cf = Decimal(balance[p.id]["conversion_factor"])
+        
         if inv.wozwrat_or_prihod == "prihod":
-            if inv.warehouse_id == int(warehouse):
+            if inv.warehouse_id in warehouse_ids:
                 balance[p.id]["oborot_selected_quantity_girdeji"] += (item.selected_quantity / cf)
 
         elif inv.wozwrat_or_prihod == "rashod":
-            if inv.warehouse_id == int(warehouse):
+            if inv.warehouse_id in warehouse_ids:
                 balance[p.id]["oborot_selected_quantity_chykdajy"] += (item.selected_quantity / cf)
 
         elif inv.wozwrat_or_prihod == "wozwrat":
-            if inv.warehouse_id == int(warehouse):
+            if inv.warehouse_id in warehouse_ids:
                 if withWozwrat:
                     balance[p.id]["oborot_selected_quantity_girdeji"] += (item.selected_quantity / cf)
                 else:
                     balance[p.id]["oborot_selected_quantity_chykdajy"] -= (item.selected_quantity / cf)
         elif inv.wozwrat_or_prihod == "transfer":
-            # уход со склада
-            if inv.warehouse_id == int(warehouse):
+            # уход со склада (и склад в выбранных)
+            if inv.warehouse_id in warehouse_ids:
                 balance[p.id]["oborot_selected_quantity_chykdajy"] += (item.selected_quantity / cf)
-            # приход на склад
-            elif inv.warehouse2_id == int(warehouse):
+            # приход на склад (и склад в выбранных)
+            elif inv.warehouse2_id in warehouse_ids:
                 balance[p.id]["oborot_selected_quantity_girdeji"] += (item.selected_quantity / cf)
 
     # ---------------------------------------------
@@ -341,118 +434,12 @@ def BuhOborotTowarow(request):
         balance = {
             p_id: d
             for p_id, d in balance.items()
-            if d["oborot_selected_quantity_girdeji"] != 0
-            or d["oborot_selected_quantity_chykdajy"] != 0
+            if d["oborot_selected_quantity_girdeji"] != Decimal("0")
+            or d["oborot_selected_quantity_chykdajy"] != Decimal("0")
         }
 
     return JsonResponse({"data": list(balance.values())})
 
-
-
-# # moy rabochiy
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def BuhOborotTowarow(request):
-#     dateFrom = request.GET.get('dateFrom')
-#     dateTo = request.GET.get('dateTo')
-#     warehouse = request.GET.get('warehouse')
-#     withWozwrat = True if request.GET.get('withWozwrat') == "true" else False
-#     ic(withWozwrat, type(withWozwrat))
-    
-    
-
-#     # 1. Начальный остаток
-#     start_invoices = Invoice.objects.filter(
-#         entry_created_at_handle__lt=dateFrom,
-#         warehouse_id=warehouse
-#     )
-    
-#     # Invoice.objects.all().delete()
-#     # InvoiceItem.objects.all().delete()
-#     # FreeItemForInvoiceItem.objects.all().delete()
-#     # UnitForInvoiceItem.objects.all().delete()
-
-#     initial_balance = {}
-
-#     for invoice in start_invoices:
-#         for item in invoice.items.all():
-#             p = item.product
-#             qty = item.selected_quantity
-            
-
-#             if p.id not in initial_balance:
-#                 initial_balance[p.id] = {
-#                     "category": p.category.name,
-#                     "name": p.name,
-#                     "unit": p.base_unit.name,
-#                     "price": p.wholesale_price,
-#                     "selected_quantity": 0,
-#                     "income": 0,
-#                     "outcome": 0,
-#                     "oborot_selected_quantity_girdeji": 0,
-#                     "oborot_selected_quantity_chykdajy": 0
-#                 }
-
-#             # Если invoice тип "приход"
-#             if invoice.wozwrat_or_prihod == "prihod":
-#                 initial_balance[p.id]["selected_quantity"] += qty
-#             # Если тип расход
-#             if invoice.wozwrat_or_prihod == "rashod":
-#                 initial_balance[p.id]["selected_quantity"] -= qty
-#             # Если invoice тип "wozwrat"
-#             if invoice.wozwrat_or_prihod == "wozwrat":
-#                     initial_balance[p.id]["selected_quantity"] += qty
-
-#     # 2. Период оборота
-#     period_invoices = Invoice.objects.filter(
-#         entry_created_at_handle__gte=dateFrom,
-#         entry_created_at_handle__lte=dateTo,
-#         warehouse_id=warehouse
-#     )
-
-#     for invoice in period_invoices:
-#         for item in invoice.items.all().order_by("product__category__name", "product__name"):
-#             p = item.product
-#             qty = item.selected_quantity
-
-#             if p.id not in initial_balance:
-#                 initial_balance[p.id] = {
-#                     "category": p.category.name,
-#                     "name": p.name,
-#                     "unit": p.base_unit.name,
-#                     "price": p.wholesale_price,
-#                     "selected_quantity": 0,
-#                     "income": 0,
-#                     "outcome": 0,
-#                     "oborot_selected_quantity_girdeji": 0,
-#                     "oborot_selected_quantity_chykdajy": 0
-#                 }
-
-#             if invoice.wozwrat_or_prihod == "prihod":
-#                 initial_balance[p.id]["oborot_selected_quantity_girdeji"] += qty
-#             if invoice.wozwrat_or_prihod == "rashod":
-#                 initial_balance[p.id]["oborot_selected_quantity_chykdajy"] += qty
-#             if invoice.wozwrat_or_prihod == "wozwrat":
-#                 if withWozwrat:
-#                     initial_balance[p.id]["oborot_selected_quantity_girdeji"] += qty
-#                 else:
-#                     initial_balance[p.id]["oborot_selected_quantity_chykdajy"] += -qty
-                    
-
-#     # 3. Итоговые остатки
-#     for p_id, data in initial_balance.items():
-#         data["end_selected_quantity"] = data["selected_quantity"] + data["oborot_selected_quantity_girdeji"] - data["oborot_selected_quantity_chykdajy"]
-        
-    
-#     data = list(initial_balance.values())
-#     new_data = []
-#     for d in data:
-#         if d["name"] == "AB-3, AKRENK 3KG POL (4)":
-#             ic(d)
-#     # return JsonResponse({"data": initial_balance})
-#     return JsonResponse({
-#         "data": data
-#     })
 
 
 # BuhOborotTowarow (3 warianta moy, chatGpt i DeepSeek) END
@@ -639,6 +626,225 @@ def get_all_products_id_and_name(request):
     
     
     
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def product_buh_oborot_detail(request, product_id):
+    
+#     dateFrom = request.GET.get("dateFrom")
+#     dateTo = request.GET.get("dateTo")
+    
+#     warehouseId_raw = request.GET.get("warehouseId")
+#     if not warehouseId_raw or not warehouseId_raw.isdigit():
+#         return JsonResponse(
+#             {"status": "error", "message": "choose correct warehouse"},
+#             status=400
+#         )
+#     warehouseId = int(warehouseId_raw)
+
+    
+#     ic(dateFrom)
+#     ic(dateTo)
+#     if not product_id:
+#         return JsonResponse(
+#             {"status": "error", "message": "choose correct product"},
+#             status=400
+#         )
+
+#     try:
+#         product = Product.objects.get(id=product_id)
+#     except Product.DoesNotExist:
+#         return JsonResponse(
+#             {"status": "error", "message": "product not found"},
+#             status=404
+#         )
+        
+#     if not warehouseId:
+#         return JsonResponse(
+#             {"status": "error", "message": "choose correct warehouse"},
+#             status=400
+#         )
+
+#     try:
+#         warehouse_obj = Warehouse.objects.get(id=warehouseId)
+#     except Warehouse.DoesNotExist:
+#         return JsonResponse(
+#             {"status": "error", "message": "warehouse not found"},
+#             status=404
+#         )
+
+#     # базовая единица по умолчанию
+#     unit_name = product.base_unit.name
+#     conversion_factor = 1
+
+#     default_unit = ProductUnit.objects.filter(
+#         product=product,
+#         is_default_for_sale=True
+#     ).select_related('unit').first()
+
+#     if default_unit:
+#         unit_name = default_unit.unit.name
+#         conversion_factor = float(default_unit.conversion_factor)
+
+#     data = {
+#         "product_id": product.id,
+#         "product_name": product.name,
+#         "product_unit": unit_name,          # ✅ строка
+#         "conversion_factor": conversion_factor,  # ✅ float
+#     }
+    
+#     items = (
+#         InvoiceItem.objects
+#         .filter(
+#             product_id=product.id,
+#             invoice__entry_created_at_handle__lt=dateFrom
+#         )
+#         .filter(
+#             Q(invoice__warehouse_id=warehouseId) |
+#             Q(invoice__warehouse2_id=warehouseId)
+#         )
+#         .select_related("invoice")
+#     )
+    
+#     start_quantity = Decimal("0")
+#     cf = Decimal(str(conversion_factor))
+    
+#     for item in items:
+#         inv = item.invoice
+#         qty = Decimal(item.selected_quantity) / cf
+
+#         if inv.wozwrat_or_prihod == "prihod":
+#             if inv.warehouse_id == warehouseId:
+#                 start_quantity += qty
+
+#         elif inv.wozwrat_or_prihod == "rashod":
+#             if inv.warehouse_id == warehouseId:
+#                 start_quantity -= qty
+
+#         elif inv.wozwrat_or_prihod == "wozwrat":
+#             if inv.warehouse_id == warehouseId:
+#                 start_quantity += qty
+
+#         elif inv.wozwrat_or_prihod == "transfer":
+#             if inv.warehouse_id == warehouseId:
+#                 start_quantity -= qty
+#             elif inv.warehouse2_id == warehouseId:
+#                 start_quantity += qty
+                
+                
+#     period_items = (
+#         InvoiceItem.objects
+#         .filter(
+#             product_id=product.id,
+#             invoice__entry_created_at_handle__gte=dateFrom,
+#             invoice__entry_created_at_handle__lte=dateTo
+#         )
+#         .filter(
+#             Q(invoice__warehouse_id=warehouseId) |
+#             Q(invoice__warehouse2_id=warehouseId)
+#         )
+#         .select_related("invoice", "invoice__partner")
+#         .order_by("invoice__entry_created_at_handle", "invoice_id")
+#     )
+    
+#     rows = []
+#     balance_qty = start_quantity
+#     cf = Decimal(str(conversion_factor))
+
+#     for item in period_items:
+#         inv = item.invoice
+#         qty = Decimal(item.selected_quantity) / cf
+#         price = Decimal(item.selected_price)
+#         income_qty = Decimal("0")
+#         outcome_qty = Decimal("0")
+
+#         # ПРИХОД
+#         if inv.wozwrat_or_prihod == "prihod" and inv.warehouse_id == warehouseId:
+#             income_qty = qty
+#             balance_qty += qty
+
+#         # РАСХОД
+#         elif inv.wozwrat_or_prihod == "rashod" and inv.warehouse_id == warehouseId:
+#             outcome_qty = qty
+#             balance_qty -= qty
+
+#         # ВОЗВРАТ
+#         elif inv.wozwrat_or_prihod == "wozwrat" and inv.warehouse_id == warehouseId:
+#             income_qty = qty
+#             balance_qty += qty
+
+#         # ПЕРЕМЕЩЕНИЕ
+#         elif inv.wozwrat_or_prihod == "transfer":
+#             if inv.warehouse_id == warehouseId:
+#                 outcome_qty = qty
+#                 balance_qty -= qty
+#             elif inv.warehouse2_id == warehouseId:
+#                 income_qty = qty
+#                 balance_qty += qty
+#         ic("invoice_id", inv.id)
+#         rows.append({
+#             "date": inv.entry_created_at_handle,
+#             "invoice_id": inv.id,
+#             "partner": inv.partner.name if inv.partner else "",
+#             "text": f"{inv.get_wozwrat_or_prihod_display()} №{inv.id} ({inv.comment})",
+#             "price": price,
+#             "income_qty": income_qty,
+#             "income_sum": income_qty * price,
+#             "outcome_qty": outcome_qty,
+#             "outcome_sum": outcome_qty * price,
+#             "balance_qty": balance_qty,
+#             "balance_sum": balance_qty * price,
+#         })
+        
+        
+#     total_income_qty = Decimal("0")
+#     total_income_sum = Decimal("0")
+#     total_outcome_qty = Decimal("0")
+#     total_outcome_sum = Decimal("0")
+
+#     for r in rows:
+#         total_income_qty += r["income_qty"]
+#         total_income_sum += r["income_sum"]
+#         total_outcome_qty += r["outcome_qty"]
+#         total_outcome_sum += r["outcome_sum"]
+
+#     end_quantity = start_quantity + total_income_qty - total_outcome_qty
+#     end_sum = end_quantity * product.wholesale_price
+    
+#     product_image = (
+#         ProductImage.objects
+#         .filter(product=product)
+#         .only("image")
+#         .first()
+#     )
+
+#     image_url = product_image.image.url if product_image else None
+                    
+                
+#     data = {
+#         "product_id": product.id,
+#         "product_name": product.name,
+#         "product_unit": unit_name,
+#         "product_wholesale_price": product.wholesale_price,
+#         "product_retail_price": product.retail_price,
+#         "warehouse_id": warehouse_obj.id,
+#         "warehouse_name": warehouse_obj.name,
+#         # "conversion_factor": float(conversion_factor),
+#         "start_quantity": start_quantity,
+#         "image": image_url,
+#         "turnover": {
+#             "income_qty": total_income_qty,
+#             "income_sum": total_income_sum,
+#             "outcome_qty": total_outcome_qty,
+#             "outcome_sum": total_outcome_sum,
+#         },
+
+#         "end": {
+#             "quantity": end_quantity,
+#             "sum": end_sum
+#         },
+#         "rows": rows,
+#     }
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def product_buh_oborot_detail(request, product_id):
@@ -646,17 +852,25 @@ def product_buh_oborot_detail(request, product_id):
     dateFrom = request.GET.get("dateFrom")
     dateTo = request.GET.get("dateTo")
     
-    warehouseId_raw = request.GET.get("warehouseId")
-    if not warehouseId_raw or not warehouseId_raw.isdigit():
+    # Поддержка нового параметра warehouses и старого warehouseId
+    warehouses_param = request.GET.get("warehouses", "")
+    warehouse_id_param = request.GET.get("warehouseId", "")
+    
+    if warehouses_param:
+        # Новый формат: несколько складов
+        try:
+            warehouse_ids = [int(id.strip()) for id in warehouses_param.split(",") if id.strip().isdigit()]
+        except ValueError:
+            return JsonResponse({"status": "error", "message": "Invalid warehouse IDs"}, status=400)
+    elif warehouse_id_param and warehouse_id_param.isdigit():
+        # Старый формат: один склад
+        warehouse_ids = [int(warehouse_id_param)]
+    else:
         return JsonResponse(
-            {"status": "error", "message": "choose correct warehouse"},
+            {"status": "error", "message": "choose correct warehouse(s)"},
             status=400
         )
-    warehouseId = int(warehouseId_raw)
-
     
-    ic(dateFrom)
-    ic(dateTo)
     if not product_id:
         return JsonResponse(
             {"status": "error", "message": "choose correct product"},
@@ -668,20 +882,6 @@ def product_buh_oborot_detail(request, product_id):
     except Product.DoesNotExist:
         return JsonResponse(
             {"status": "error", "message": "product not found"},
-            status=404
-        )
-        
-    if not warehouseId:
-        return JsonResponse(
-            {"status": "error", "message": "choose correct warehouse"},
-            status=400
-        )
-
-    try:
-        warehouse_obj = Warehouse.objects.get(id=warehouseId)
-    except Warehouse.DoesNotExist:
-        return JsonResponse(
-            {"status": "error", "message": "warehouse not found"},
             status=404
         )
 
@@ -698,130 +898,158 @@ def product_buh_oborot_detail(request, product_id):
         unit_name = default_unit.unit.name
         conversion_factor = float(default_unit.conversion_factor)
 
-    data = {
-        "product_id": product.id,
-        "product_name": product.name,
-        "product_unit": unit_name,          # ✅ строка
-        "conversion_factor": conversion_factor,  # ✅ float
-    }
+    # Данные для каждого склада
+    warehouses_data = {}
+    all_rows = []
     
-    items = (
-        InvoiceItem.objects
-        .filter(
-            product_id=product.id,
-            invoice__entry_created_at_handle__lt=dateFrom
+    for warehouse_id in warehouse_ids:
+        try:
+            warehouse_obj = Warehouse.objects.get(id=warehouse_id)
+        except Warehouse.DoesNotExist:
+            continue
+        
+        items = (
+            InvoiceItem.objects
+            .filter(
+                product_id=product.id,
+                invoice__entry_created_at_handle__lt=dateFrom
+            )
+            .filter(
+                Q(invoice__warehouse_id=warehouse_id) |
+                Q(invoice__warehouse2_id=warehouse_id)
+            )
+            .select_related("invoice")
         )
-        .filter(
-            Q(invoice__warehouse_id=warehouseId) |
-            Q(invoice__warehouse2_id=warehouseId)
+        
+        start_quantity = Decimal("0")
+        cf = Decimal(str(conversion_factor))
+        
+        for item in items:
+            inv = item.invoice
+            qty = Decimal(item.selected_quantity) / cf
+
+            if inv.wozwrat_or_prihod == "prihod":
+                if inv.warehouse_id == warehouse_id:
+                    start_quantity += qty
+
+            elif inv.wozwrat_or_prihod == "rashod":
+                if inv.warehouse_id == warehouse_id:
+                    start_quantity -= qty
+
+            elif inv.wozwrat_or_prihod == "wozwrat":
+                if inv.warehouse_id == warehouse_id:
+                    start_quantity += qty
+
+            elif inv.wozwrat_or_prihod == "transfer":
+                if inv.warehouse_id == warehouse_id:
+                    start_quantity -= qty
+                elif inv.warehouse2_id == warehouse_id:
+                    start_quantity += qty
+        
+        period_items = (
+            InvoiceItem.objects
+            .filter(
+                product_id=product.id,
+                invoice__entry_created_at_handle__gte=dateFrom,
+                invoice__entry_created_at_handle__lte=dateTo
+            )
+            .filter(
+                Q(invoice__warehouse_id=warehouse_id) |
+                Q(invoice__warehouse2_id=warehouse_id)
+            )
+            .select_related("invoice", "invoice__partner")
+            .order_by("invoice__entry_created_at_handle", "invoice_id")
         )
-        .select_related("invoice")
-    )
-    
-    start_quantity = Decimal("0")
-    cf = Decimal(str(conversion_factor))
-    
-    for item in items:
-        inv = item.invoice
-        qty = Decimal(item.selected_quantity) / cf
+        
+        rows = []
+        balance_qty = start_quantity
+        cf = Decimal(str(conversion_factor))
 
-        if inv.wozwrat_or_prihod == "prihod":
-            if inv.warehouse_id == warehouseId:
-                start_quantity += qty
+        for item in period_items:
+            inv = item.invoice
+            qty = Decimal(item.selected_quantity) / cf
+            price = Decimal(item.selected_price)
+            income_qty = Decimal("0")
+            outcome_qty = Decimal("0")
 
-        elif inv.wozwrat_or_prihod == "rashod":
-            if inv.warehouse_id == warehouseId:
-                start_quantity -= qty
-
-        elif inv.wozwrat_or_prihod == "wozwrat":
-            if inv.warehouse_id == warehouseId:
-                start_quantity += qty
-
-        elif inv.wozwrat_or_prihod == "transfer":
-            if inv.warehouse_id == warehouseId:
-                start_quantity -= qty
-            elif inv.warehouse2_id == warehouseId:
-                start_quantity += qty
-                
-                
-    period_items = (
-        InvoiceItem.objects
-        .filter(
-            product_id=product.id,
-            invoice__entry_created_at_handle__gte=dateFrom,
-            invoice__entry_created_at_handle__lte=dateTo
-        )
-        .filter(
-            Q(invoice__warehouse_id=warehouseId) |
-            Q(invoice__warehouse2_id=warehouseId)
-        )
-        .select_related("invoice", "invoice__partner")
-        .order_by("invoice__entry_created_at_handle", "invoice_id")
-    )
-    
-    rows = []
-    balance_qty = start_quantity
-    cf = Decimal(str(conversion_factor))
-
-    for item in period_items:
-        inv = item.invoice
-        qty = Decimal(item.selected_quantity) / cf
-        price = Decimal(item.selected_price)
-        income_qty = Decimal("0")
-        outcome_qty = Decimal("0")
-
-        # ПРИХОД
-        if inv.wozwrat_or_prihod == "prihod" and inv.warehouse_id == warehouseId:
-            income_qty = qty
-            balance_qty += qty
-
-        # РАСХОД
-        elif inv.wozwrat_or_prihod == "rashod" and inv.warehouse_id == warehouseId:
-            outcome_qty = qty
-            balance_qty -= qty
-
-        # ВОЗВРАТ
-        elif inv.wozwrat_or_prihod == "wozwrat" and inv.warehouse_id == warehouseId:
-            income_qty = qty
-            balance_qty += qty
-
-        # ПЕРЕМЕЩЕНИЕ
-        elif inv.wozwrat_or_prihod == "transfer":
-            if inv.warehouse_id == warehouseId:
-                outcome_qty = qty
-                balance_qty -= qty
-            elif inv.warehouse2_id == warehouseId:
+            # ПРИХОД
+            if inv.wozwrat_or_prihod == "prihod" and inv.warehouse_id == warehouse_id:
                 income_qty = qty
                 balance_qty += qty
-        ic("invoice_id", inv.id)
-        rows.append({
-            "date": inv.entry_created_at_handle,
-            "invoice_id": inv.id,
-            "partner": inv.partner.name if inv.partner else "",
-            "text": f"{inv.get_wozwrat_or_prihod_display()} №{inv.id} ({inv.comment})",
-            "price": price,
-            "income_qty": income_qty,
-            "income_sum": income_qty * price,
-            "outcome_qty": outcome_qty,
-            "outcome_sum": outcome_qty * price,
-            "balance_qty": balance_qty,
-            "balance_sum": balance_qty * price,
-        })
-        
-        
-    total_income_qty = Decimal("0")
-    total_income_sum = Decimal("0")
-    total_outcome_qty = Decimal("0")
-    total_outcome_sum = Decimal("0")
 
-    for r in rows:
-        total_income_qty += r["income_qty"]
-        total_income_sum += r["income_sum"]
-        total_outcome_qty += r["outcome_qty"]
-        total_outcome_sum += r["outcome_sum"]
+            # РАСХОД
+            elif inv.wozwrat_or_prihod == "rashod" and inv.warehouse_id == warehouse_id:
+                outcome_qty = qty
+                balance_qty -= qty
 
-    end_quantity = start_quantity + total_income_qty - total_outcome_qty
-    end_sum = end_quantity * product.wholesale_price
+            # ВОЗВРАТ
+            elif inv.wozwrat_or_prihod == "wozwrat" and inv.warehouse_id == warehouse_id:
+                income_qty = qty
+                balance_qty += qty
+
+            # ПЕРЕМЕЩЕНИЕ
+            elif inv.wozwrat_or_prihod == "transfer":
+                if inv.warehouse_id == warehouse_id:
+                    outcome_qty = qty
+                    balance_qty -= qty
+                elif inv.warehouse2_id == warehouse_id:
+                    income_qty = qty
+                    balance_qty += qty
+            
+            row_data = {
+                "date": inv.entry_created_at_handle,
+                "invoice_id": inv.id,
+                "partner": inv.partner.name if inv.partner else "",
+                "text": f"{inv.get_wozwrat_or_prihod_display()} №{inv.id} ({inv.comment})",
+                "price": price,
+                "income_qty": income_qty,
+                "income_sum": income_qty * price,
+                "outcome_qty": outcome_qty,
+                "outcome_sum": outcome_qty * price,
+                "balance_qty": balance_qty,
+                "balance_sum": balance_qty * price,
+                "warehouse_id": warehouse_id,
+            }
+            rows.append(row_data)
+            all_rows.append(row_data)
+        
+        total_income_qty = Decimal("0")
+        total_income_sum = Decimal("0")
+        total_outcome_qty = Decimal("0")
+        total_outcome_sum = Decimal("0")
+
+        for r in rows:
+            total_income_qty += r["income_qty"]
+            total_income_sum += r["income_sum"]
+            total_outcome_qty += r["outcome_qty"]
+            total_outcome_sum += r["outcome_sum"]
+
+        end_quantity = start_quantity + total_income_qty - total_outcome_qty
+        end_sum = end_quantity * product.wholesale_price
+        
+        warehouses_data[str(warehouse_id)] = {
+            "id": warehouse_id,
+            "name": warehouse_obj.name,
+            "start_quantity": start_quantity,
+            "income_qty": total_income_qty,
+            "income_sum": total_income_sum,
+            "outcome_qty": total_outcome_qty,
+            "outcome_sum": total_outcome_sum,
+            "end_quantity": end_quantity,
+            "end_sum": end_sum,
+        }
+    
+    # Сортируем общие строки по дате
+    all_rows.sort(key=lambda x: x["date"])
+    
+    # Агрегируем общие данные
+    total_start_quantity = sum(wh["start_quantity"] for wh in warehouses_data.values())
+    total_income_qty = sum(wh["income_qty"] for wh in warehouses_data.values())
+    total_income_sum = sum(wh["income_sum"] for wh in warehouses_data.values())
+    total_outcome_qty = sum(wh["outcome_qty"] for wh in warehouses_data.values())
+    total_outcome_sum = sum(wh["outcome_sum"] for wh in warehouses_data.values())
+    total_end_quantity = sum(wh["end_quantity"] for wh in warehouses_data.values())
+    total_end_sum = total_end_quantity * product.wholesale_price
     
     product_image = (
         ProductImage.objects
@@ -832,17 +1060,14 @@ def product_buh_oborot_detail(request, product_id):
 
     image_url = product_image.image.url if product_image else None
                     
-                
     data = {
         "product_id": product.id,
         "product_name": product.name,
         "product_unit": unit_name,
         "product_wholesale_price": product.wholesale_price,
         "product_retail_price": product.retail_price,
-        "warehouse_id": warehouse_obj.id,
-        "warehouse_name": warehouse_obj.name,
-        # "conversion_factor": float(conversion_factor),
-        "start_quantity": start_quantity,
+        "warehouses": warehouses_data,
+        "start_quantity": total_start_quantity,
         "image": image_url,
         "turnover": {
             "income_qty": total_income_qty,
@@ -850,13 +1075,14 @@ def product_buh_oborot_detail(request, product_id):
             "outcome_qty": total_outcome_qty,
             "outcome_sum": total_outcome_sum,
         },
-
         "end": {
-            "quantity": end_quantity,
-            "sum": end_sum
+            "quantity": total_end_quantity,
+            "sum": total_end_sum
         },
-        "rows": rows,
+        "rows": all_rows,
     }
+    
+    return JsonResponse({"data": data})
                 
     
     

@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Edit3, Trash2, Package, DollarSign, ChevronDown, Image, FolderOpen } from "lucide-react";
 import { myFormatNumber } from "../../../UI/myFormatNumber";
 import { AuthContext } from "../../../../AuthContext";
+import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { ROUTES_RAPORT } from "../../../../routes";
 
 const ProductList = ({
   myClass,
@@ -22,6 +25,14 @@ const ProductList = ({
 }) => {
   const loadMoreButtonRef = useRef(null);
   const { authUser, authGroup } = useContext(AuthContext);
+  // const location = useLocation();
+  // const navigate = useNavigate();
+
+  // const showDetailProductOborot = (productId) => {
+  //   const params = new URLSearchParams(location.search);
+  //   params.set("selected", productId);
+  //   navigate(ROUTES_RAPORT.DETAIL_PRODUCT_OBOROT.replace(":id", productId).replace(":warehouseId", warehouseId));
+  // };
 
   const sound_up_down = new Audio("/sounds/up_down.mp3");
 
@@ -68,6 +79,8 @@ const ProductList = ({
                       setOpenDeleteModal({ open: true, data: p, index });
                     } else if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
+                      // showDetailProductOborot(p.id)
+
                       setProductEditModal2({ open: true, data: p, index });
                     } else if (e.key === "ArrowDown" && index + 1 < products.length) {
                       e.preventDefault();
@@ -99,10 +112,10 @@ const ProductList = ({
                         <div className="flex-shrink-0 w-6 h-6 bg-gray-100 dark:bg-gray-800 rounded-md flex items-center justify-center">
                           <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{index + 1}</span>
                         </div>
-                        
+
                         <div className="flex-1 min-w-0">
                           <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 line-clamp-2 mb-1">{p.name}</h3>
-                          
+
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <div className="flex items-center gap-1 px-1.5 py-0.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded text-xs">
                               <Package className="w-3 h-3 text-amber-600 dark:text-amber-400" />
@@ -159,11 +172,7 @@ const ProductList = ({
                       </div>
 
                       {p.images.length > 0 ? (
-                        <img 
-                          src={`${p.images[0].image}`} 
-                          alt={p.images[0].alt_text || "Product image"} 
-                          className="w-12 h-12 object-cover rounded-lg border border-gray-200 dark:border-gray-700" 
-                        />
+                        <img src={`${p.images[0].image}`} alt={p.images[0].alt_text || "Product image"} className="w-12 h-12 object-cover rounded-lg border border-gray-200 dark:border-gray-700" />
                       ) : (
                         <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center">
                           <Image className="w-5 h-5 text-gray-400" />
@@ -171,9 +180,7 @@ const ProductList = ({
                       )}
 
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                          {p.name}
-                        </h3>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{p.name}</h3>
                         {p.category_name_obj?.name && (
                           <div className="flex items-center gap-1 mt-0.5">
                             <FolderOpen className="w-3 h-3 text-gray-400" />
@@ -260,11 +267,7 @@ const ProductList = ({
           >
             {loading ? (
               <>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                />
+                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
                 <span>Загрузка...</span>
               </>
             ) : (
@@ -334,11 +337,11 @@ export default ProductList;
 //                   animate={{ opacity: 1, y: 0 }}
 //                   exit={{ opacity: 0, x: -100 }}
 //                   transition={{ duration: 0.2, delay: index * 0.02 }}
-//                   className="group relative bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl p-2 sm:p-3 
-//                     hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 
+//                   className="group relative bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl p-2 sm:p-3
+//                     hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50
 //                     dark:hover:from-blue-950/20 dark:hover:to-indigo-950/20
 //                     focus-within:ring-2 focus-within:ring-blue-500 focus-within:bg-blue-50 dark:focus-within:bg-blue-950/30
-//                     transition-all duration-300 cursor-pointer border border-transparent 
+//                     transition-all duration-300 cursor-pointer border border-transparent
 //                     hover:border-blue-200 dark:hover:border-blue-800
 //                     shadow-sm hover:shadow-md sm:hover:shadow-lg"
 //                   ref={(el) => (listItemRefs.current[index] = el)}
@@ -520,9 +523,9 @@ export default ProductList;
 //             ref={loadMoreButtonRef}
 //             whileHover={{ scale: 1.02 }}
 //             whileTap={{ scale: 0.98 }}
-//             className="w-full py-2.5 sm:py-3 px-3 sm:px-4 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 
+//             className="w-full py-2.5 sm:py-3 px-3 sm:px-4 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600
 //               disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed
-//               text-white text-sm sm:text-base font-bold rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl 
+//               text-white text-sm sm:text-base font-bold rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl
 //               transition-all duration-300 flex items-center justify-center gap-2"
 //             disabled={!nextPageUrl || loading}
 //             onClick={() => {

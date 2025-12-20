@@ -633,7 +633,13 @@
   "product not found": "Haryt tapylmady",
   "Empty turnovers": "Boş dolanyşyklar",
   "choose correct warehouse": "Dogry ammary saýlaň",
-  "warehouse not found": "Ambar tapylmady"
+  "warehouse not found": "Ambar tapylmady",
+  "Zakazy": "Zakazlar",
+  "Zakaz": "Zakaz",
+  "Create zakaz": "Zakaz döretmek",
+  "serch deliver": "Zakazçy saýla...",
+  "buyer": "Zakazçy",
+  "search buyer": "Zakazçy saýla..."
 
 
 

@@ -112,9 +112,13 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
     // 6. Стили
     const styles = {
       // Основной заголовок
+      // mainHeader: {
+      //   font: { size: 16, bold: true, color: { argb: "FFFFFFFF" } },
+      //   fill: { type: "pattern", pattern: "solid", fgColor: { argb: values.wozwrat_or_prihod === "prihod" ? "FF2E7D32" : "FFC62828" } },
+      //   alignment: { horizontal: "center", vertical: "middle" },
+      // },
       mainHeader: {
-        font: { size: 16, bold: true, color: { argb: "FFFFFFFF" } },
-        fill: { type: "pattern", pattern: "solid", fgColor: { argb: values.wozwrat_or_prihod === "prihod" ? "FF2E7D32" : "FFC62828" } },
+        font: { size: 16, bold: true }, // цвет текста тоже можно убрать или изменить
         alignment: { horizontal: "center", vertical: "middle" },
       },
 
@@ -289,7 +293,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
       const partnerInfo = worksheet.getRow(currentRow);
       partnerInfo.getCell(1).value = "Партнёр:";
       partnerInfo.getCell(1).style = styles.boldInfoCell;
-      
+
       let partnerText = values.partner.name;
       if (values.partner?.phone) {
         partnerText += ` (Тел: ${values.partner.phone})`;
@@ -508,7 +512,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
 
     // 12. Итоговая строка товаров
     const totalRow = worksheet.getRow(currentRow);
-    
+
     // Заполняем ВСЕ ячейки итоговой строки рамкой
     for (let col = 1; col <= columnMapping.length; col++) {
       const cell = totalRow.getCell(col);
@@ -585,7 +589,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
     // 13. Добавляем внешнюю рамку вокруг всей таблицы товаров (если нужно)
     // Можно добавить более толстую рамку вокруг всей таблицы
     const tableEndRow = currentRow; // строка с итогами
-    
+
     // // Раскомментируйте для внешней рамки вокруг всей таблицы:
     // // Верхняя рамка таблицы
     // for (let col = 1; col <= tableEndCol; col++) {
@@ -595,18 +599,18 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
     //     top: { style: "medium", color: { argb: "FF000000" } }
     //   };
     // }
-    
+
     // // Нижняя рамка таблицы (итоговая строка уже имеет medium границу)
     // // Левая и правая рамки таблицы
     // for (let row = tableStartRow; row <= tableEndRow; row++) {
     //   const leftCell = worksheet.getRow(row).getCell(1);
     //   const rightCell = worksheet.getRow(row).getCell(tableEndCol);
-      
+
     //   leftCell.border = {
     //     ...leftCell.border,
     //     left: { style: "medium", color: { argb: "FF000000" } }
     //   };
-      
+
     //   rightCell.border = {
     //     ...rightCell.border,
     //     right: { style: "medium", color: { argb: "FF000000" } }
@@ -732,8 +736,11 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
     // Генерируем имя файла с именем партнера
     const invoiceType = t(values.wozwrat_or_prihod);
     const invoiceNumber = values.id || "draft";
-    const partnerName = values.partner?.name 
-      ? values.partner.name.replace(/[^\w\sа-яА-Я]/gi, "").replace(/\s+/g, "_").substring(0, 30)
+    const partnerName = values.partner?.name
+      ? values.partner.name
+          .replace(/[^\w\sа-яА-Я]/gi, "")
+          .replace(/\s+/g, "_")
+          .substring(0, 30)
       : "partner";
     const date = new Date().toISOString().split("T")[0];
     const fileName = `${invoiceType}_${invoiceNumber}_${partnerName}_${date}.xlsx`;

@@ -15,6 +15,7 @@ export const ROUTES = {
   PROCHEE: "/prochee",
   
   
+  
 };
 
 export const ROUTES_RAPORT = {
@@ -43,6 +44,7 @@ export const PROCHEE = {
   EXPORT_IMPORT_ENTRIES: "/export-import-entries",
   TRIP: "/trip",
   VIEW_TRIP: "/trip/:id",
+  ZAKAZ: "/zakaz",
 };
 
 

@@ -67,7 +67,7 @@ export const fetchWarehouses = async () => {
 export const fetchPartners = async () => {
   try {
     const res = await myAxios.get("/partners");
-    console.log('rrrreeeessss.data', res.data);
+    // console.log('rrrreeeessss.data', res.data);
     
     return res.data;
   } catch (e) {
@@ -79,7 +79,7 @@ export const fetchPartners = async () => {
 export const fetchPartners_no_pag = async () => {
   try {
     const res = await myAxios.get("/partners/?no_pagination=1");
-    console.log('rrrreeeessss.data', res.data);
+    // console.log('rrrreeeessss.data', res.data);
     
     return res.data;
   } catch (e) {

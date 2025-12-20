@@ -664,7 +664,12 @@
   "product not found": "Продукт не найден",
   "Empty turnovers": "Пустые обороты",
   "choose correct warehouse": "Выберите корректный склад",
-  "warehouse not found": "Склад не найден"
+  "warehouse not found": "Склад не найден",
+  "Zakazy": "Заказы",
+  "Zakaz": "Заказ",
+  "Create zakaz": "Создать заказ",
+  "buyer": "Заказчик",
+  "search buyer": "Выберите заказчика..."
 
 
  

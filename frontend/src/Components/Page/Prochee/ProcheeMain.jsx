@@ -5,8 +5,10 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation, useSearchPar
 import { Settings, Users, Bell, Shield, Database, Globe, Wrench, Package, Zap, Star, QrCode, Car } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import QrListPrint from "./QrListPrint/QrListPrint";
+import { useTranslation } from "react-i18next";
 
 const ProcheeMain = () => {
+  const {t} = useTranslation();
   const listRefs = useRef({});
   const sound = new Audio("/sounds/up_down.mp3");
   const change_type = new Audio("/sounds/change_type.mp3");
@@ -28,7 +30,7 @@ const ProcheeMain = () => {
     { id: 5, name: "Export Import Faktura", icon: Bell, color: "yellow", to: PROCHEE.EXPORT_FAKTURA },
     { id: 6, name: "Export Import Prowodki", icon: Shield, color: "green", to: PROCHEE.EXPORT_IMPORT_ENTRIES },
     { id: 7, name: "Рейс", icon: Car, color: "violet", to: PROCHEE.TRIP },
-    { id: 8, name: "Интеграции", icon: Globe, color: "orange" },
+    { id: 8, name: t("Zakazy"), icon: Globe, color: "orange", to: PROCHEE.ZAKAZ },
     { id: 9, name: "Инструменты", icon: Wrench, color: "sky" },
     { id: 10, name: "Модули", icon: Package, color: "fuchsia" },
     { id: 11, name: "Автоматизация", icon: Zap, color: "lime" },

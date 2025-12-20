@@ -1,7 +1,7 @@
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime
 from rest_framework.decorators import api_view, permission_classes
-from ..models import Partner, Invoice, Transaction, Entry, Account, Warehouse, FreeItemForInvoiceItem, UnitForInvoiceItem, Product, UnitOfMeasurement, Employee, ProductUnit, ProductImage
+from ..models import Partner, Invoice, Transaction, Entry, Account, Warehouse, FreeItemForInvoiceItem, UnitForInvoiceItem, Product, UnitOfMeasurement, Employee, ProductUnit, ProductImage, InvoiceItem
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
@@ -9,7 +9,6 @@ from collections import defaultdict
 from django.db.models import Sum, F, Q
 from django.http import JsonResponse
 from icecream import ic
-from ..models import Invoice, InvoiceItem
 from django.db import transaction as db_transaction
 import pandas as pd
 from datetime import date

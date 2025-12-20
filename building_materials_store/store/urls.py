@@ -13,6 +13,7 @@ from . views.query_views2 import *
 from . views.query_views3 import *
 from . views import query_views4
 from . views import query_views5
+from . views import query_views6
 from . views import admin_views
 from . views.sale_invoice_views import *
 from . views.report_views import *
@@ -152,6 +153,9 @@ urlpatterns = [
     path('upload_initial_stock', query_views5.upload_initial_stock, name='upload_initial_stock'),
     path('get_all_products_id_and_name', query_views5.get_all_products_id_and_name, name='get_all_products_id_and_name'),
     path('product_buh_oborot_detail/<int:product_id>/', query_views5.product_buh_oborot_detail, name='product_buh_oborot_detail'),
+    
+    # query_views5
+    path('search-product-for-zakaz-input-search', query_views6.search_product_for_zakaz_input_search, name='search_product_for_zakaz_input_search'),
     
     
     

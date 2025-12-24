@@ -49,6 +49,7 @@ import { BuhOborotTowarow } from "./Components/Page/Reports2/BuhOborotTowarow/Bu
 import FirstPrihod from "./Components/Page/Admin/FirstPrihod";
 import DetailProductOborot from "./Components/Page/Reports2/BuhOborotTowarow/DetailProductOborot";
 import Zakaz from "./Components/Page/Prochee/Zakaz/Zakaz";
+import ZakazList from "./Components/Page/Prochee/Zakaz/ZakazList";
 
 function AppShell() {
   const location = useLocation();
@@ -61,7 +62,7 @@ function AppShell() {
 
   const hideRightBar = location.pathname === "/prochee/qr-list-print" || location.pathname === "/prochee" || location.pathname === "/reports" || location.pathname === "/entries2";
   // console.log("hideRightBar", hideRightBar);
-  
+
   return (
     <>
       <NotificationProvider>
@@ -69,7 +70,11 @@ function AppShell() {
           <AuthProvider>
             <Header />
             <SearchProvider>
-              <main className={`flex flex-grow gap-4 mt-4 ${isFullScreenPage ? "" : `lg:ml-52 ${hideRightBar ? "" : "lg:mr-72"}`} print:w-full print:block print:p-0 print:m-0 ${hideRightBar && "lg:mr-0"}`}>
+              <main
+                className={`flex flex-grow gap-4 mt-4 ${isFullScreenPage ? "" : `lg:ml-52 ${hideRightBar ? "" : "lg:mr-72"}`} print:w-full print:block print:p-0 print:m-0 ${
+                  hideRightBar && "lg:mr-0"
+                }`}
+              >
                 {!isFullScreenPage && <SidebarLeft />}
 
                 <section className={`flex-grow flex flex-col bg-zinc-50 dark:bg-gray-800 rounded-lg shadow-sm ${isFullScreenPage ? "p-0" : "p-4 print:p-0"}`}>
@@ -86,7 +91,7 @@ function AppShell() {
                     <Route path={ROUTES.PARTNERS_new} element={<Partner2 />} />
                     <Route path={ROUTES.AGENTS} element={<Agent />} />
                     {/* <Route path={ROUTES.ENTRIES} element={<Entries />} /> */}
-                    
+
                     <Route path={ROUTES.REPORTS} element={<ReportsMain />} />
                     <Route path={ROUTES.PROCHEE} element={<ProcheeMain />} />
                     {/* <Route path={ROUTES.ACCOUNT} element={<Account />} /> */}
@@ -111,8 +116,8 @@ function AppShell() {
                     <Route path={PROCHEE.TRANSACTION_JOURNAL} element={<TransactionJournal />} />
                     <Route path={PROCHEE.TRIP} element={<Trip />} />
                     <Route path={PROCHEE.VIEW_TRIP} element={<ViewTrip />} />
+                    <Route path={PROCHEE.ZAKAZ_LIST} element={<ZakazList />} />
                     <Route path={PROCHEE.ZAKAZ} element={<Zakaz />} />
-      
 
                     {/* PurchaseInvoice */}
                     <Route path={ROUTES.PURCHASEINVOICE} element={<PurchaseInvoice />} />
@@ -122,7 +127,6 @@ function AppShell() {
                     {/* Export import */}
                     <Route path={PROCHEE.EXPORT_FAKTURA} element={<ExportFaktura />} />
                     <Route path={PROCHEE.EXPORT_IMPORT_ENTRIES} element={<ExportImportEntries />} />
-
 
                     {/* adminPanel */}
                     <Route path={ADMIN_PANEL.IMPORT_PRODUCTS} element={<ImportProducts />} />

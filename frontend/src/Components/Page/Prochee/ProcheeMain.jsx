@@ -30,7 +30,7 @@ const ProcheeMain = () => {
     { id: 5, name: "Export Import Faktura", icon: Bell, color: "yellow", to: PROCHEE.EXPORT_FAKTURA },
     { id: 6, name: "Export Import Prowodki", icon: Shield, color: "green", to: PROCHEE.EXPORT_IMPORT_ENTRIES },
     { id: 7, name: "Рейс", icon: Car, color: "violet", to: PROCHEE.TRIP },
-    { id: 8, name: t("Zakazy"), icon: Globe, color: "orange", to: PROCHEE.ZAKAZ },
+    { id: 8, name: t("Zakazy"), icon: Globe, color: "orange", to: PROCHEE.ZAKAZ_LIST },
     { id: 9, name: "Инструменты", icon: Wrench, color: "sky" },
     { id: 10, name: "Модули", icon: Package, color: "fuchsia" },
     { id: 11, name: "Автоматизация", icon: Zap, color: "lime" },

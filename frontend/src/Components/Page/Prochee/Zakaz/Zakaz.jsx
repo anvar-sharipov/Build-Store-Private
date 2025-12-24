@@ -12,6 +12,17 @@ import SearchInputWithLiBackend from "../../../UI/Universal/SearchInputWithLiBac
 import SelectInput from "../../../UI/Universal/SelectInput";
 import { X, ImageOff, Package, User } from "lucide-react";
 import { formatNumber2 } from "../../../UI/formatNumber2";
+import ZakazForPrint from "./ZakazForPrint";
+import SyncFormik from "./SyncFormik";
+import { useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
+import * as Yup from "yup";
+
+const ZakazSchema = Yup.object().test("partner-buyer-products", "Нужно выбрать партнёра, покупателя или добавить товар", (values) => {
+  return !(!values.partner && !values.buyer && (!values.products || values.products.length === 0));
+});
+
+const ALL_COLUMNS = ["price", "total_price", "weight", "volume"];
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -25,11 +36,28 @@ const Zakaz = () => {
   const [selectedBuyer, setSelectedBuyer] = useState(null);
   const [selectedWarehouse, setSelectedWarehouse] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProducts, setSelectedProducts] = useState([]);
 
   const partnerInputRef = useRef(null);
   const buyerInputRef = useRef(null);
   const warehouseInputRef = useRef(null);
   const productInputRef = useRef(null);
+
+  const [searchParams] = useSearchParams();
+  const visibleCols = searchParams.get("cols")?.split(",").filter(Boolean) || ALL_COLUMNS;
+
+  const show = (col) => visibleCols.includes(col);
+
+  const priceInputRefs = useRef({});
+  const prevLengthRef = useRef(0);
+
+  const qtyRefs = useRef({});
+  const priceRefs = useRef({});
+
+  const [focusedCell, setFocusedCell] = useState({
+    rowIndex: null,
+    field: null, // "qty" | "price"
+  });
 
   // Загрузка partners only founder
   useEffect(() => {
@@ -54,9 +82,9 @@ const Zakaz = () => {
       try {
         const res = await myAxios.get("get_active_warehouses");
         // console.log(res.data.data);
-        const results = res.data.data 
+        const results = res.data.data;
         if (results.length > 0) {
-          setSelectedWarehouse(results[0])
+          setSelectedWarehouse(results[0]);
         }
         setWarehouses(results);
       } catch (err) {
@@ -71,17 +99,135 @@ const Zakaz = () => {
     partnerInputRef.current?.focus();
   }, []);
 
-  useEffect(() => {
-    console.log("selectedPartner", selectedPartner);
-  }, [selectedPartner]);
+  // useEffect(() => {
+  //   console.log("selectedPartner", selectedPartner);
+  // }, [selectedPartner]);
+
+  // useEffect(() => {
+  //   console.log("selectedBuyer", selectedBuyer);
+  // }, [selectedBuyer]);
 
   useEffect(() => {
-    console.log("selectedBuyer", selectedBuyer);
-  }, [selectedBuyer]);
-
-  useEffect(() => {
+    if (!selectedProduct) return;
     console.log("selectedProduct", selectedProduct);
+
+    handleAddProduct(selectedProduct);
   }, [selectedProduct]);
+
+  const handleAddProduct = (product) => {
+    setSelectedProducts((prev) => {
+      const exists = prev.find((p) => p.id === product.id);
+
+      if (exists) {
+        return prev.map((p) => (p.id === product.id ? { ...p, selected_quantity: p.selected_quantity + 1 } : p));
+      }
+
+      return [
+        ...prev,
+        {
+          ...product,
+          selected_quantity: 1,
+          selected_price: product.selected_price ?? product.purchase_price,
+        },
+      ];
+    });
+  };
+
+  const removeProduct = (id) => {
+    setSelectedProducts((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const totals = useMemo(() => {
+    return selectedProducts.reduce(
+      (acc, p) => {
+        const qty = Number(p.selected_quantity) || 0;
+        const price = Number(p.selected_price) || 0;
+        const weight = Number(p.weight) || 0;
+        const volume = Number(p.volume) || 0;
+
+        acc.qty += qty;
+        acc.sum += qty * price;
+        acc.weight += qty * weight;
+        acc.volume += qty * volume;
+
+        return acc;
+      },
+      { qty: 0, sum: 0, weight: 0, volume: 0 }
+    );
+  }, [selectedProducts]);
+
+  const updateProductField = (id, field, value) => {
+    setSelectedProducts((prev) => prev.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
+  };
+
+  // useEffect(() => {
+  //   if (selectedProducts.length > prevLengthRef.current) {
+  //     const last = selectedProducts[selectedProducts.length - 1];
+
+  //     setTimeout(() => {
+  //       qtyRefs.current[last.id]?.focus();
+  //       qtyRefs.current[last.id]?.select();
+  //     }, 0);
+  //   }
+
+  //   prevLengthRef.current = selectedProducts.length;
+  // }, [selectedProducts.length]);
+
+  useEffect(() => {
+    if (selectedProducts.length > prevLengthRef.current) {
+      setFocusedCell({
+        rowIndex: selectedProducts.length - 1,
+        field: "qty",
+      });
+    }
+
+    prevLengthRef.current = selectedProducts.length;
+  }, [selectedProducts.length]);
+
+  useEffect(() => {
+    if (focusedCell.rowIndex === null) return;
+    // if (selectedProducts.length > prevLengthRef.current) return;
+
+    const product = selectedProducts[focusedCell.rowIndex];
+    if (!product) return;
+
+    const ref = focusedCell.field === "qty" ? qtyRefs.current[product.id] : priceRefs.current[product.id];
+
+    ref?.focus();
+    ref?.select();
+  }, [focusedCell]);
+
+  const handleCellKeyDown = (e, rowIndex, field) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      productInputRef.current?.focus();
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+
+      // если последняя строка — назад в product input
+      if (rowIndex === selectedProducts.length - 1) {
+        productInputRef.current?.focus();
+        setFocusedCell({ rowIndex: null, field: null });
+        return;
+      }
+
+      setFocusedCell({ rowIndex: rowIndex + 1, field });
+    }
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+
+      // если первая строка → в product input
+      if (rowIndex === 0) {
+        productInputRef.current?.focus();
+        setFocusedCell({ rowIndex: null, field: null });
+        return;
+      }
+
+      setFocusedCell({ rowIndex: rowIndex - 1, field });
+    }
+  };
 
   return (
     <div>
@@ -106,6 +252,7 @@ const Zakaz = () => {
             buyer: "",
             products: [],
           }}
+          validationSchema={ZakazSchema}
           onSubmit={(values) => {
             const valuesForPost = {
               ...values,
@@ -118,6 +265,7 @@ const Zakaz = () => {
             return (
               <Form>
                 <div className="grid grid-cols-[2fr_3fr] gap-4">
+                  <SyncFormik selectedPartner={selectedPartner} selectedBuyer={selectedBuyer} selectedProduct={selectedProduct} selectedProducts={selectedProducts} />
                   <div className="min-w-0 border-r border-gray-300 dark:border-gray-700 pr-4">
                     <div className="flex flex-col gap-2">
                       {/* warehouse search */}
@@ -294,6 +442,9 @@ const Zakaz = () => {
                         ref1: { ref: buyerInputRef, value: selectedBuyer },
                         ref2: { ref: partnerInputRef, value: selectedPartner },
                       }}
+                      // eto chisto dlya Zakaz.jsx ne uniwersalnyy props
+                      selectedProducts={selectedProducts}
+                      setFocusedCell={setFocusedCell}
                       disabled={selectedWarehouse?.id ? false : true}
                       disableMessage={selectedWarehouse?.id ? "Поле недоступно" : "forSearchProductShooseWarehouse"}
                       renderItemContent={(item, { active, index }) => (
@@ -319,59 +470,159 @@ const Zakaz = () => {
                             <span
                               className={`text-xs font-semibold px-2 py-0.5 rounded-md
                                 ${
-                                  item.quantity > 0
+                                  item.quantity_in_warehouse > 0
                                     ? active
                                       ? "bg-white/20 text-white"
                                       : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                                     : "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
                                 }`}
                             >
-                              {formatNumber2(item.quantity)}
+                              {formatNumber2(item.quantity_in_warehouse)}
                             </span>
                           </div>
                         </div>
                       )}
                     />
+                    {selectedProducts.length > 0 && (
+                      <div className="overflow-x-auto rounded-xl border border-black dark:border-gray-700 mt-7">
+                        <motion.table
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 1 }}
+                          className="min-w-full text-xs text-black dark:text-gray-200 border border-black dark:border-gray-700 border-collapse"
+                        >
+                          <thead className="bg-gray-100 dark:bg-gray-800 text-[11px] uppercase tracking-wide text-black dark:text-gray-400">
+                            <tr>
+                              <th className="px-2 py-2 text-center w-10 border border-black dark:border-gray-700">№</th>
+                              <th className="px-3 py-2 text-left border border-black dark:border-gray-700">{t("product name")}</th>
+                              <th className="px-2 py-2 text-center w-24 border border-black dark:border-gray-700">{t("uni")}</th>
+                              <th className="px-2 py-2 text-right w-20 border border-black dark:border-gray-700">{t("q-ty")}</th>
+                              {show("price") && <th className="px-2 py-2 text-right w-24 border border-black dark:border-gray-700">{t("Price")}</th>}
+                              {show("total_price") && <th className="px-2 py-2 text-right w-24 border border-black dark:border-gray-700">{t("Amount")}</th>}
+                              {show("weight") && <th className="px-2 py-2 text-right w-16 border border-black dark:border-gray-700">{t("kg")}</th>}
+                              {show("volume") && <th className="px-2 py-2 text-right w-16 border border-black dark:border-gray-700">Куб</th>}
+                              <th className="px-1 py-2 text-center w-8 border border-black dark:border-gray-700"></th>
+                            </tr>
+                          </thead>
 
-                    <div className="overflow-x-auto rounded-xl border border-black dark:border-gray-700 mt-7">
-                      <table className="min-w-full text-xs text-gray-700 dark:text-gray-200 border border-black dark:border-gray-700 border-collapse">
-                        <thead className="bg-gray-100 dark:bg-gray-800 text-[11px] uppercase tracking-wide text-gray-600 dark:text-gray-400">
-                          <tr>
-                            <th className="px-2 py-2 text-center w-10 border border-black dark:border-gray-700">№</th>
-                            <th className="px-3 py-2 text-left border border-black dark:border-gray-700">Наименование товара</th>
-                            <th className="px-2 py-2 text-center w-24 border border-black dark:border-gray-700">Ед.</th>
-                            <th className="px-2 py-2 text-right w-20 border border-black dark:border-gray-700">Кол-во</th>
-                            <th className="px-2 py-2 text-right w-24 border border-black dark:border-gray-700">Цена</th>
-                            <th className="px-2 py-2 text-right w-24 border border-black dark:border-gray-700">Сумма</th>
-                            <th className="px-2 py-2 text-right w-16 border border-black dark:border-gray-700">Кг</th>
-                            <th className="px-2 py-2 text-right w-16 border border-black dark:border-gray-700">Куб</th>
-                          </tr>
-                        </thead>
+                          <tbody>
+                            {selectedProducts.map((product, index) => {
+                              return (
+                                <tr
+                                  key={product.id}
+                                  className={`transition ${focusedCell.rowIndex === index ? "bg-blue-50 dark:bg-blue-900/30 ring-1 ring-blue-500/40" : "hover:bg-gray-50 dark:hover:bg-gray-700"}`}
+                                >
+                                  <td className="px-2 py-1 text-center border border-black dark:border-gray-700">{index + 1}</td>
+                                  <td className="px-3 py-1 truncate max-w-xs border border-black dark:border-gray-700">{product.name}</td>
+                                  <td className="px-2 py-1 text-center border border-black dark:border-gray-700">{product.unit}</td>
+                                  {/* <td className="px-2 py-1 text-right border border-black dark:border-gray-700">{product.selected_quantity}</td> */}
+                                  <td className="px-2 py-1 text-right border border-black dark:border-gray-700">
+                                    <input
+                                      ref={(el) => {
+                                        if (el) qtyRefs.current[product.id] = el;
+                                      }}
+                                      type="text"
+                                      // min="0"
+                                      // step="0.001"
+                                      value={product.selected_quantity}
+                                      onChange={(e) => {
+                                        let val = e.target.value;
 
-                        <tbody>
-                          <tr className="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                            <td className="px-2 py-1 text-center border border-black dark:border-gray-700">1</td>
-                            <td className="px-3 py-1 truncate max-w-xs border border-black dark:border-gray-700">Товар пример длинного названия</td>
-                            <td className="px-2 py-1 text-center border border-black dark:border-gray-700">шт</td>
-                            <td className="px-2 py-1 text-right border border-black dark:border-gray-700">10</td>
-                            <td className="px-2 py-1 text-right border border-black dark:border-gray-700">120.00</td>
-                            <td className="px-2 py-1 text-right font-medium border border-black dark:border-gray-700">1200.00</td>
-                            <td className="px-2 py-1 text-right border border-black dark:border-gray-700">2.5</td>
-                            <td className="px-2 py-1 text-right border border-black dark:border-gray-700">0.12</td>
-                          </tr>
-                          <tr className="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                            <td className="px-2 py-1 text-center border border-black dark:border-gray-700">1</td>
-                            <td className="px-3 py-1 truncate max-w-xs border border-black dark:border-gray-700">Товар пример длинного названия</td>
-                            <td className="px-2 py-1 text-center border border-black dark:border-gray-700">шт</td>
-                            <td className="px-2 py-1 text-right border border-black dark:border-gray-700">10</td>
-                            <td className="px-2 py-1 text-right border border-black dark:border-gray-700">120.00</td>
-                            <td className="px-2 py-1 text-right font-medium border border-black dark:border-gray-700">1200.00</td>
-                            <td className="px-2 py-1 text-right border border-black dark:border-gray-700">2.5</td>
-                            <td className="px-2 py-1 text-right border border-black dark:border-gray-700">0.12</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+                                        val = val.replace(",", ".");
+
+                                        if (val.startsWith(".")) {
+                                          val = "0" + val;
+                                        }
+
+                                        if (!/^\d*\.?\d{0,3}$/.test(val)) return;
+
+                                        // разрешаем только цифры и одну точку
+                                        if (!/^\d*\.?\d*$/.test(val)) return;
+                                        updateProductField(product.id, "selected_quantity", val);
+                                      }}
+                                      className="w-16 bg-transparent text-right text-xs border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                      onFocus={() => setFocusedCell({ rowIndex: index, field: "qty" })}
+                                      onKeyDown={(e) => handleCellKeyDown(e, index, "qty")}
+                                    />
+                                  </td>
+                                  {show("price") && (
+                                    <td className="px-2 py-1 text-right border border-black dark:border-gray-700">
+                                      <input
+                                        ref={(el) => {
+                                          if (el) priceRefs.current[product.id] = el;
+                                        }}
+                                        type="text"
+                                        inputMode="decimal"
+                                        value={product.selected_price}
+                                        onChange={(e) => {
+                                          let val = e.target.value;
+
+                                          // заменяем запятую на точку
+                                          val = val.replace(",", ".");
+
+                                          if (val.startsWith(".")) {
+                                            val = "0" + val;
+                                          }
+
+                                          if (!/^\d*\.?\d{0,3}$/.test(val)) return;
+
+                                          // разрешаем только цифры и одну точку
+                                          if (!/^\d*\.?\d*$/.test(val)) return;
+
+                                          updateProductField(product.id, "selected_price", val);
+                                        }}
+                                        className="w-20 bg-transparent text-right text-xs border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        onFocus={() => setFocusedCell({ rowIndex: index, field: "price" })}
+                                        onKeyDown={(e) => handleCellKeyDown(e, index, "price")}
+                                      />
+                                    </td>
+                                  )}
+                                  {show("total_price") && (
+                                    <td className="px-2 py-1 text-right font-medium border border-black dark:border-gray-700">
+                                      {formatNumber2(parseFloat(product.selected_quantity) * parseFloat(product.selected_price))}
+                                    </td>
+                                  )}
+                                  {show("weight") && (
+                                    <td className="px-2 py-1 text-right border border-black dark:border-gray-700">
+                                      {formatNumber2(parseFloat(product.weight) * parseFloat(product.selected_quantity))}
+                                    </td>
+                                  )}
+                                  {show("volume") && (
+                                    <td className="px-2 py-1 text-right border border-black dark:border-gray-700">
+                                      {formatNumber2(parseFloat(product.volume) * parseFloat(product.selected_quantity))}
+                                    </td>
+                                  )}
+                                  <td className="px-1 py-1 text-center border border-black dark:border-gray-700">
+                                    <button type="button" onClick={() => removeProduct(product.id)} className="text-gray-400 hover:text-red-600 transition text-xs leading-none" title="Удалить">
+                                      ✕
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                          <tfoot className="bg-gray-100 dark:bg-gray-800 font-semibold">
+                            <tr>
+                              <td className="px-3 py-2 text-right border border-black dark:border-gray-700"></td>
+                              <td className="px-3 py-2 text-right border border-black dark:border-gray-700"></td>
+                              <td className="px-3 py-2 text-right border border-black dark:border-gray-700">{t("itogo")}:</td>
+
+                              <td className="px-2 py-2 text-right border border-black dark:border-gray-700">{formatNumber2(totals.qty)}</td>
+
+                              {show("price") && <td className="px-2 py-2 border border-black dark:border-gray-700"></td>}
+
+                              {show("total_price") && <td className="px-2 py-2 text-right border border-black dark:border-gray-700">{formatNumber2(totals.sum)}</td>}
+
+                              {show("weight") && <td className="px-2 py-2 text-right border border-black dark:border-gray-700">{formatNumber2(totals.weight)}</td>}
+
+                              {show("volume") && <td className="px-2 py-2 text-right border border-black dark:border-gray-700">{formatNumber2(totals.volume)}</td>}
+
+                              <td className="border border-black dark:border-gray-700"></td>
+                            </tr>
+                          </tfoot>
+                        </motion.table>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -381,61 +632,21 @@ const Zakaz = () => {
           }}
         </Formik>
       </div>
-      <div className="hidden print:block">
-        <div className="flex justify-between border-b-2 border-gray-300 mb-3">
-          <div>
-            <img src="/polisem.png" alt="polisem-icon" className="h-12 lg:h-14 w-auto" />
-          </div>
-          <h2 className="self-end mb-0 text-xl font-bold text-center print:!text-black">{t("Create zakaz")}</h2>
-          <div className="self-end mb-0 text-sm font-bold text-gray-900 dark:text-white truncate print:!text-black">{MyFormatDate(dateProwodok)}</div>
-        </div>
 
-        {selectedWarehouse?.id && (
-          <Xrow
-            selectedObject={selectedWarehouse}
-            setSelectedObject={setSelectedWarehouse}
-            labelText="warehouse" // text dlya label inputa
-            containerClass="grid grid-cols-1 items-center md:grid-cols-[70px_1fr]" // mojno menyat style containera dlya label i input, w odin ryad ili w odnu kolonku
-            labelAnimation={{ initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.3, delay: 0.1 } }}
-            inputAnimation={{ initial: { opacity: 0, x: 20 }, animate: { opacity: 1, x: 0 }, transition: { duration: 0.3, delay: 0.1 } }}
-            focusRef={warehouseInputRef} // chto focus esli X najat
-            onlyDarkModeInputStyle={false}
-            labelIcon="🏭"
-            showXText={(item) => `${item.name}`} // eto budet pokazuwatsya w label name w dannom slucahe (mojno `${item.id}. ${item.name}`)
-          />
-        )}
-
-        {selectedPartner?.id && (
-          <Xrow
-            selectedObject={selectedPartner}
-            setSelectedObject={setSelectedPartner}
-            labelText="partner" // text dlya label inputa
-            containerClass="grid grid-cols-1 items-center md:grid-cols-[70px_1fr]" // mojno menyat style containera dlya label i input, w odin ryad ili w odnu kolonku
-            labelAnimation={{ initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.3, delay: 0.2 } }}
-            inputAnimation={{ initial: { opacity: 0, x: 20 }, animate: { opacity: 1, x: 0 }, transition: { duration: 0.3, delay: 0.2 } }}
-            focusRef={partnerInputRef} // chto focus esli X najat
-            onlyDarkModeInputStyle={false}
-            labelIcon="👥"
-            showXText={(item) => `${item.name}`} // eto budet pokazuwatsya w label name w dannom slucahe (mojno `${item.id}. ${item.name}`)
-            disabled={false}
-          />
-        )}
-
-        {selectedBuyer?.id && (
-          <Xrow
-            selectedObject={selectedBuyer}
-            setSelectedObject={setSelectedBuyer}
-            labelText="buyer" // text dlya label inputa
-            containerClass="grid grid-cols-1 items-center md:grid-cols-[70px_1fr]" // mojno menyat style containera dlya label i input, w odin ryad ili w odnu kolonku
-            labelAnimation={{ initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.3, delay: 0.3 } }}
-            inputAnimation={{ initial: { opacity: 0, x: 20 }, animate: { opacity: 1, x: 0 }, transition: { duration: 0.3, delay: 0.3 } }}
-            focusRef={buyerInputRef} // chto focus esli X najat
-            onlyDarkModeInputStyle={false}
-            labelIcon="👥"
-            showXText={(item) => `${item.name}`} // eto budet pokazuwatsya w label name w dannom slucahe (mojno `${item.id}. ${item.name}`)
-          />
-        )}
-      </div>
+      <ZakazForPrint
+        selectedWarehouse={selectedWarehouse}
+        setSelectedWarehouse={setSelectedWarehouse}
+        warehouseInputRef={warehouseInputRef}
+        selectedPartner={selectedPartner}
+        setSelectedPartner={setSelectedPartner}
+        partnerInputRef={partnerInputRef}
+        selectedBuyer={selectedBuyer}
+        setSelectedBuyer={setSelectedBuyer}
+        buyerInputRef={buyerInputRef}
+        selectedProducts={selectedProducts}
+        totals={totals}
+        show={show}
+      />
     </div>
   );
 };

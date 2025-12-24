@@ -45,6 +45,7 @@ export const PROCHEE = {
   TRIP: "/trip",
   VIEW_TRIP: "/trip/:id",
   ZAKAZ: "/zakaz",
+  ZAKAZ_LIST: "/zakaz-list",
 };
 
 

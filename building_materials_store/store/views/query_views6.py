@@ -71,7 +71,11 @@ def search_product_for_zakaz_input_search(request):
                 "image": image_obj.image.url if image_obj else None,
                 "unit": unit_name,
                 "conversion_factor": conversion_factor,
-                "quantity": quantity,
+                "quantity_in_warehouse": quantity,
+                "purchase_price": p.purchase_price,
+                "selected_price": p.purchase_price,
+                "weight": p.weight,
+                "volume": p.volume
             })
             
 

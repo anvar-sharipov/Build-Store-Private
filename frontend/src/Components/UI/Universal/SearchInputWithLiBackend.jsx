@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import useDebounce from "../../../hooks/useDebounce";
 import { useTranslation } from "react-i18next";
 
-
 const SearchInputWithLiBackend = forwardRef(
   (
     {
@@ -19,9 +18,14 @@ const SearchInputWithLiBackend = forwardRef(
       onlyDarkModeInputStyle = false,
       refsFocusAfterSelect = null,
       refsFocusAfterArrowUp = null,
+      refsFocusAfterArrowDown = null,
       disabled = false,
       disableMessage = "Поле недоступно",
       renderItemContent = "",
+
+      // eto chisto dlya Zakaz.jsx ne uniwersalnyy props
+      selectedProducts = null,
+      setFocusedCell = null,
     },
     ref
   ) => {
@@ -80,7 +84,12 @@ const SearchInputWithLiBackend = forwardRef(
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
-          if (!limitedResults.length) {
+          if (selectedProducts && limitedResults.length === 0) {
+            if (selectedProducts.length > 0) {
+              e.preventDefault();
+              setFocusedCell({ rowIndex: 0, field: "qty" });
+            }
+          } else if (!limitedResults.length) {
             if (refsFocusAfterSelect) {
               if (!refsFocusAfterSelect.ref1?.value?.id) {
                 refsFocusAfterSelect.ref1?.ref?.current?.focus();

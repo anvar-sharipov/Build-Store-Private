@@ -507,7 +507,7 @@
   "Transaction Journal": "Amallaryň gündeligi",
   "Period": "Period",
   "Operation": "Amallar",
-  "Amount": "Summa",
+  "Amount": "Jemi",
   "transfer": "Ammardan ammara geçiş",
   "from warehouse": "Ammarden",
   "to warehouse": "Ammara",
@@ -639,7 +639,12 @@
   "Create zakaz": "Zakaz döretmek",
   "serch deliver": "Zakazçy saýla...",
   "buyer": "Zakazçy",
-  "search buyer": "Zakazçy gözle..."
+  "search buyer": "Zakazçy gözle...",
+  "product name": "Harydyň ady",
+  "uni": "Ölç.",
+  "itogo": "Jemi",
+  "create zakaz": "Zakaz döretmek",
+  "zakaz list": "Zakaz spisogy"
 
 
 

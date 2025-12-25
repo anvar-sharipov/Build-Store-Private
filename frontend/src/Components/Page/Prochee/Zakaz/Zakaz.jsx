@@ -10,17 +10,14 @@ import SearchInputWithLiFrontend from "../../../UI/Universal/SearchInputWithLiFr
 import Xrow from "../../../UI/Universal/Xrow";
 import SearchInputWithLiBackend from "../../../UI/Universal/SearchInputWithLiBackend";
 import SelectInput from "../../../UI/Universal/SelectInput";
-import { X, ImageOff, Package, User } from "lucide-react";
+import { X, ImageOff, Package, User, Warehouse } from "lucide-react";
 import { formatNumber2 } from "../../../UI/formatNumber2";
 import ZakazForPrint from "./ZakazForPrint";
 import SyncFormik from "./SyncFormik";
 import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import * as Yup from "yup";
-
-const ZakazSchema = Yup.object().test("partner-buyer-products", "Нужно выбрать партнёра, покупателя или добавить товар", (values) => {
-  return !(!values.partner && !values.buyer && (!values.products || values.products.length === 0));
-});
+import { useNotification } from "../../../context/NotificationContext";
 
 const ALL_COLUMNS = ["price", "total_price", "weight", "volume"];
 
@@ -28,6 +25,7 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const Zakaz = () => {
   const { t } = useTranslation();
+  const { showNotification } = useNotification();
   const { dateFrom, dateTo, dateProwodok } = useContext(DateContext);
   const [partners, setPartners] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
@@ -229,6 +227,35 @@ const Zakaz = () => {
     }
   };
 
+  const handleSave = async (value) => {
+
+    const hasProducts = Array.isArray(value.products) && value.products.length > 0;
+    const hasBuyer = !!value.buyer;
+    const hasPartner = !!value.partner;
+    const hasWarehouse = !!value.warehouse;
+
+
+    if (!hasProducts && !hasBuyer && !hasPartner && !hasWarehouse) {
+      showNotification("Заполните хотя бы одно поле", "error");
+      return;
+    }
+
+    try {
+      const res = await myAxios.post("/save_zakaz/", value);
+      // console.log("res", res);
+      showNotification(t(res.data.message), "success");
+    } catch (err) {
+      if (err.response.data.message === "transactionChange") {
+        showNotification(t(err.response.data.reason_for_the_error), "error");  
+      } else {
+        showNotification(t(err.response.data.message), "error");
+      }
+      
+      // console.log("cant save zakaz", err);
+    } finally {
+    }
+  };
+
   return (
     <div>
       <div className="p-4 print:hidden">
@@ -251,13 +278,14 @@ const Zakaz = () => {
             partner: "",
             buyer: "",
             products: [],
+            warehouse: ""
           }}
-          validationSchema={ZakazSchema}
-          onSubmit={(values) => {
+          onSubmit={async (values) => {
             const valuesForPost = {
               ...values,
               date: dateProwodok,
             };
+            handleSave(valuesForPost);
             console.log(valuesForPost);
           }}
         >
@@ -265,7 +293,7 @@ const Zakaz = () => {
             return (
               <Form>
                 <div className="grid grid-cols-[2fr_3fr] gap-4">
-                  <SyncFormik selectedPartner={selectedPartner} selectedBuyer={selectedBuyer} selectedProduct={selectedProduct} selectedProducts={selectedProducts} />
+                  <SyncFormik selectedPartner={selectedPartner} selectedBuyer={selectedBuyer} selectedProduct={selectedProduct} selectedProducts={selectedProducts} selectedWarehouse={selectedWarehouse} setSelectedProducts={setSelectedProducts} />
                   <div className="min-w-0 border-r border-gray-300 dark:border-gray-700 pr-4">
                     <div className="flex flex-col gap-2">
                       {/* warehouse search */}

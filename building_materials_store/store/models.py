@@ -912,3 +912,47 @@ class TripInvoiceHistory(models.Model):
 # Trip END ###############################################################################################################################################################################
 
 
+class Zakaz(models.Model):
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.PROTECT, null=True, blank=True)
+    partner = models.ForeignKey(Partner, on_delete=models.PROTECT, related_name="partner_orders", null=True, blank=True)
+    buyer = models.ForeignKey(Partner, on_delete=models.PROTECT, related_name="buyer_orders", null=True, blank=True)
+    
+    created_at_handle = models.DateTimeField(null=True, blank=True)
+    updated_at_handle = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="created_zakaz", verbose_name="Кто создал")
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="updated_zakaz", verbose_name="Кто обновил")
+
+    def total_sum(self):
+        return sum(item.total_price for item in self.items.all())
+
+    def total_qty(self):
+        return sum(item.quantity for item in self.items.all())
+
+    def __str__(self):
+        return f"Zakaz #{self.id}"
+    
+    class Meta:
+        verbose_name = "Заказ"
+        verbose_name_plural = "Заказы"
+
+
+class ZakazItem(models.Model):
+    zakaz = models.ForeignKey(Zakaz, related_name="items", on_delete=models.CASCADE, null=True, blank=True)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, null=True, blank=True)
+    selected_quantity = models.DecimalField(max_digits=10, decimal_places=3, default=Decimal(0))
+    selected_price = models.DecimalField(max_digits=12, decimal_places=3, default=Decimal(0))
+
+    @property
+    def total_price(self):
+        return self.selected_quantity * self.selected_price
+    
+    def __str__(self):
+        if self.product:
+            return f"{self.product} x {self.selected_quantity}"
+        return f"Item #{self.id}"
+    
+    class Meta:
+        verbose_name = "Позиция заказа"
+        verbose_name_plural = "Позиции заказа"

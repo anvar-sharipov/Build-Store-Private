@@ -644,7 +644,12 @@
   "uni": "Ölç.",
   "itogo": "Jemi",
   "create zakaz": "Zakaz döretmek",
-  "zakaz list": "Zakaz spisogy"
+  "zakaz list": "Zakaz spisogy",
+  "price cant be less than zero": "Bahasy noldan pes bolup bilmez",
+  "quantity cant be less than zero": "Mukdary noldan pes bolup bilmez",
+  "fill in at least one field": "Iň azyndan bir meýdany dolduryň",
+  "zakaz saved": "Zakaz saklandy",
+  "buyer not found": "Alyjy tapylmady"
 
 
 

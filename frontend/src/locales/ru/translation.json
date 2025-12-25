@@ -674,7 +674,12 @@
   "uni": "Ед.",
   "itogo": "Итого",
   "create zakaz": "Создать заказ",
-  "zakaz list": "Список заказов"
+  "zakaz list": "Список заказов",
+  "price cant be less than zero": "Цена не может быть меньше нуля",
+  "quantity cant be less than zero": "Количество не может быть меньше нуля",
+  "fill in at least one field": "Заполните хотя бы одно поле",
+  "zakaz saved": "Заказ сохранён",
+  "buyer not found": "Покупатель не найден"
 
 
  

@@ -154,8 +154,10 @@ urlpatterns = [
     path('get_all_products_id_and_name', query_views5.get_all_products_id_and_name, name='get_all_products_id_and_name'),
     path('product_buh_oborot_detail/<int:product_id>/', query_views5.product_buh_oborot_detail, name='product_buh_oborot_detail'),
     
-    # query_views5
+    # query_views6
     path('search-product-for-zakaz-input-search', query_views6.search_product_for_zakaz_input_search, name='search_product_for_zakaz_input_search'),
+    path('save_zakaz/', query_views6.save_zakaz, name='save_zakaz'),
+    path('zakaz_list/', query_views6.zakaz_list, name='zakaz_list'),
     
     
     

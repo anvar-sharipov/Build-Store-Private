@@ -1,7 +1,7 @@
 import { useFormikContext } from "formik";
 import { useEffect } from "react";
 
-const SyncFormik = ({ selectedPartner, selectedBuyer, selectedProduct, selectedProducts }) => {
+const SyncFormik = ({ selectedPartner, selectedBuyer, selectedProduct, selectedProducts, selectedWarehouse, setSelectedProducts }) => {
   const { setFieldValue } = useFormikContext();
 
   useEffect(() => {
@@ -21,6 +21,15 @@ const SyncFormik = ({ selectedPartner, selectedBuyer, selectedProduct, selectedP
   }, [selectedBuyer]);
 
   useEffect(() => {
+    if (selectedWarehouse) {
+      setFieldValue("warehouse", selectedWarehouse.id);
+    } else {
+      setSelectedProducts([])
+      setFieldValue("warehouse", "");
+    }
+  }, [selectedWarehouse]);
+
+  useEffect(() => {
     setFieldValue(
       "products",
       selectedProducts.map((p) => ({
@@ -30,6 +39,8 @@ const SyncFormik = ({ selectedPartner, selectedBuyer, selectedProduct, selectedP
       }))
     );
   }, [selectedProducts]);
+
+
 
   return null;
 };

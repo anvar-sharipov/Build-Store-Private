@@ -679,7 +679,9 @@
   "quantity cant be less than zero": "Количество не может быть меньше нуля",
   "fill in at least one field": "Заполните хотя бы одно поле",
   "zakaz saved": "Заказ сохранён",
-  "buyer not found": "Покупатель не найден"
+  "buyer not found": "Покупатель не найден",
+  "update zakaz": "Обновить заказ",
+  "zakaz not found": "Заказ не найден"
 
 
  

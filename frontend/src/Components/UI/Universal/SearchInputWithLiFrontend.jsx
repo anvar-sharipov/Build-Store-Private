@@ -19,8 +19,7 @@ const SearchInputWithLiFrontend = forwardRef(
       selectedObject = null,
       setSelectedObject = null,
 
-
-      renderLabel=null,
+      renderLabel = null,
 
       handleFuseKeys = ["name"], // поле объекта, по которому ищем
       handleFuseThreshold = 0.3, // насколько строго искать
@@ -41,6 +40,8 @@ const SearchInputWithLiFrontend = forwardRef(
     const [activeIndex, setActiveIndex] = useState(-1);
     const wrapperRef = useRef(null); // Добавь один общий ref для всего автокомплита: nujno dlya Закрытие списка при клике вне компонента wrapperRef
     const listRefs = useRef([]);
+
+    const up_down = new Audio("/sounds/up_down.mp3");
 
     const reactId = useId();
     const inputId = `search-input-${reactId}`;
@@ -98,6 +99,8 @@ const SearchInputWithLiFrontend = forwardRef(
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
+          up_down.currentTime = 0;
+          up_down.play();
           if (!limitedResults.length) {
             if (refsFocusAfterSelect) {
               if (!refsFocusAfterSelect.ref1?.value?.id) {
@@ -114,6 +117,8 @@ const SearchInputWithLiFrontend = forwardRef(
           break;
         case "ArrowUp":
           e.preventDefault();
+          up_down.currentTime = 0;
+          up_down.play();
           if (!limitedResults.length) {
             if (refsFocusAfterArrowUp) {
               if (!refsFocusAfterArrowUp.ref1?.value?.id) {
@@ -221,8 +226,14 @@ const SearchInputWithLiFrontend = forwardRef(
             className={`h-9 w-full pl-9 pr-3 text-sm rounded-lg border transition placeholder-gray-400
               ${
                 diasbledInput
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-300 dark:bg-gray-800 dark:text-gray-500 dark:border-gray-700"
-                  : "bg-white text-gray-900 border-gray-300 hover:border-gray-400 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700 dark:hover:border-gray-600"
+                  ? `${
+                      onlyDarkModeInputStyle ? "bg-gray-800 text-gray-500 border-gray-700" : "bg-gray-100 text-gray-400 border-gray-300 dark:bg-gray-800 dark:text-gray-500 dark:border-gray-700"
+                    }  cursor-not-allowed`
+                  : `${
+                      onlyDarkModeInputStyle
+                        ? "bg-gray-900 text-gray-100 border-gray-700 hover:border-gray-600"
+                        : "bg-white text-gray-900 border-gray-300 hover:border-gray-400 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700 dark:hover:border-gray-600"
+                    } focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500`
               }
           `}
           />

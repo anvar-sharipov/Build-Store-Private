@@ -24,6 +24,8 @@ import DetailReport6062Filter from "./filters/DetailReport6062Filter/DetailRepor
 import BuhOborotTowarowFilter from "./filters/BuhOborotTowarowFilter/BuhOborotTowarowFilter";
 import ZakazFilter from "./filters/Zakaz/ZakazFilter";
 import ZakazListFilter from "./filters/Zakaz/ZakazListFilter";
+import ShowHideColums from "./filters/Zakaz/ShowHideColums";
+import ZakazNavigate from "./filters/Zakaz/ZakazNavigate";
 
 // настройки для разных страниц
 const FILTER_CONFIG = {
@@ -206,7 +208,7 @@ export default function SidebarRight() {
 
   if (!(currentPath in FILTER_CONFIG) && currentPath !== "/products" &&
    currentPath !== "/main" && currentPath !== "/purchase_invoice" && currentPath !== "/detail-account-report-60-62" 
-   && currentPath !== "/products-buh-oborot" && currentPath !== "/zakaz" && currentPath !== "/zakaz-list") return null;
+   && currentPath !== "/products-buh-oborot" && !currentPath.includes("zakaz") && currentPath !== "/zakaz-list") return null;
 
   const typeOptions = config.type || [];
   const sortTmtOptions = config.sort_tmt || [];
@@ -230,6 +232,8 @@ export default function SidebarRight() {
     setSearchParams(searchParams);
   };
 
+    console.log("currentPath", currentPath);
+    
   return (
     <motion.aside
       initial={{ x: 300, opacity: 0 }}
@@ -418,18 +422,21 @@ export default function SidebarRight() {
             </motion.div>
           )}
 
-          {currentPath === "/zakaz" && (
+          {currentPath.includes("zakaz") && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
             >
-              <ZakazListFilter />
-              <ZakazFilter />
+              <ZakazNavigate />              
+              {/* {currentPath === "/zakaz" && <div><ZakazFilter /></div> } */}
+              {currentPath === "/zakaz" && <div><ShowHideColums /> </div> }
+              {currentPath !== "/zakaz" && <ZakazListFilter />}
+              
             </motion.div>
           )}
 
-          {currentPath === "/zakaz-list" && (
+          {/* {currentPath === "/zakaz-list" && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -437,7 +444,7 @@ export default function SidebarRight() {
             >
               <ZakazListFilter />
             </motion.div>
-          )}
+          )} */}
 
         </AnimatePresence>
       </div>

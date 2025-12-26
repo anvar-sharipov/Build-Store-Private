@@ -943,6 +943,7 @@ class ZakazItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT, null=True, blank=True)
     selected_quantity = models.DecimalField(max_digits=10, decimal_places=3, default=Decimal(0))
     selected_price = models.DecimalField(max_digits=12, decimal_places=3, default=Decimal(0))
+    unit = models.CharField(max_length=32, null=True, blank=True)
 
     @property
     def total_price(self):

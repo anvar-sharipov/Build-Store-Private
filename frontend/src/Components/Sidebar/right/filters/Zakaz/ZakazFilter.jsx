@@ -1,5 +1,6 @@
 import ShowHideColums from "./ShowHideColums"
 import { useSearchParams } from "react-router-dom"
+import ZakazNavigate from "./ZakazNavigate";
 
 const ZakazFilter = () => {
     const [searchParams] = useSearchParams();
@@ -7,7 +8,9 @@ const ZakazFilter = () => {
     
   return (
     <div>
-        <ShowHideColums />
+        {/* <ZakazNavigate /> */}
+        {/* <ShowHideColums /> */}
+        
     </div>
   )
 }

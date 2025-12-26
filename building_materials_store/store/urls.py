@@ -158,6 +158,7 @@ urlpatterns = [
     path('search-product-for-zakaz-input-search', query_views6.search_product_for_zakaz_input_search, name='search_product_for_zakaz_input_search'),
     path('save_zakaz/', query_views6.save_zakaz, name='save_zakaz'),
     path('zakaz_list/', query_views6.zakaz_list, name='zakaz_list'),
+    path('zakaz/<int:id>', query_views6.get_zakaz_data, name='get_zakaz_data'),
     
     
     

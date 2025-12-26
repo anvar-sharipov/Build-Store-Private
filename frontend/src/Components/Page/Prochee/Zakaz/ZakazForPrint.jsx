@@ -18,6 +18,8 @@ const ZakazForPrint = ({
   selectedProducts,
   totals,
   show,
+  isEdit, 
+  id,
 }) => {
   const { dateProwodok } = useContext(DateContext);
   const { t } = useTranslation();
@@ -27,7 +29,15 @@ const ZakazForPrint = ({
         <div>
           <img src="/polisem.png" alt="polisem-icon" className="h-12 lg:h-14 w-auto" />
         </div>
-        <h2 className="self-end mb-0 text-xl font-bold text-center print:!text-black">{t("Create zakaz")}</h2>
+        <h2 className="self-end mb-0 text-xl font-bold text-center print:!text-black">
+          {isEdit ? (
+            <div>
+              {t("Zakaz")} № {id}
+            </div>
+          ) : (
+            t("Create zakaz")
+          )}
+        </h2>
         <div className="self-end mb-0 text-sm font-bold text-gray-900 dark:text-white truncate print:!text-black">{MyFormatDate(dateProwodok)}</div>
       </div>
 

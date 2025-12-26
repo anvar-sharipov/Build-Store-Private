@@ -36,6 +36,7 @@ const SyncFormik = ({ selectedPartner, selectedBuyer, selectedProduct, selectedP
         product: p.id,
         selected_quantity: p.selected_quantity,
         selected_price: p.selected_price,
+        unit: p.unit,
       }))
     );
   }, [selectedProducts]);

@@ -18,17 +18,30 @@ import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import * as Yup from "yup";
 import { useNotification } from "../../../context/NotificationContext";
+import { useParams } from "react-router-dom";
+import MyModal2 from "../../../UI/MyModal2";
+import { useNavigate } from "react-router-dom";
 
 const ALL_COLUMNS = ["price", "total_price", "weight", "volume"];
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const Zakaz = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isEdit = Boolean(id);
+  console.log("isEdit", isEdit);
+
   const { t } = useTranslation();
   const { showNotification } = useNotification();
   const { dateFrom, dateTo, dateProwodok } = useContext(DateContext);
   const [partners, setPartners] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
+
+  const [savedZakazId, setSavedZakazId] = useState(null);
+
+  const [saveModal, setSaveModal] = useState(false);
+  const [formValuesToSave, setFormValuesToSave] = useState(null);
 
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [selectedBuyer, setSelectedBuyer] = useState(null);
@@ -56,6 +69,11 @@ const Zakaz = () => {
     rowIndex: null,
     field: null, // "qty" | "price"
   });
+
+  useEffect(() => {
+    if (!savedZakazId) return;
+    navigate("/zakaz-list", { state: { focusId: savedZakazId } });
+  }, [savedZakazId]);
 
   // Загрузка partners only founder
   useEffect(() => {
@@ -93,9 +111,32 @@ const Zakaz = () => {
   }, []);
 
   useEffect(() => {
-    document.title = t("Zakazy");
+    {
+      isEdit ? (document.title = t("update zakaz")) : (document.title = t("create zakaz"));
+    }
+
     partnerInputRef.current?.focus();
-  }, []);
+  }, [t, isEdit]);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const loadZakaz = async () => {
+      try {
+        const res = await myAxios.get(`/zakaz/${id}`);
+        console.log("res loadZakaz", res.data.data);
+        setSelectedWarehouse(res.data.data.warehouse);
+        setSelectedPartner(res.data.data.partner);
+        setSelectedBuyer(res.data.data.buyer);
+        setSelectedProducts(res.data.data.products);
+      } catch (err) {
+        showNotification(t(err.response.data.message), "error");
+        console.error("Ошибка загрузки заказа", err);
+      }
+    };
+
+    loadZakaz();
+  }, [id]);
 
   // useEffect(() => {
   //   console.log("selectedPartner", selectedPartner);
@@ -228,12 +269,10 @@ const Zakaz = () => {
   };
 
   const handleSave = async (value) => {
-
     const hasProducts = Array.isArray(value.products) && value.products.length > 0;
     const hasBuyer = !!value.buyer;
     const hasPartner = !!value.partner;
     const hasWarehouse = !!value.warehouse;
-
 
     if (!hasProducts && !hasBuyer && !hasPartner && !hasWarehouse) {
       showNotification("Заполните хотя бы одно поле", "error");
@@ -242,19 +281,30 @@ const Zakaz = () => {
 
     try {
       const res = await myAxios.post("/save_zakaz/", value);
-      // console.log("res", res);
+      console.log("res", res.data.zakaz_id);
       showNotification(t(res.data.message), "success");
+      setSavedZakazId(res.data.zakaz_id);
     } catch (err) {
       if (err.response.data.message === "transactionChange") {
-        showNotification(t(err.response.data.reason_for_the_error), "error");  
+        showNotification(t(err.response.data.reason_for_the_error), "error");
       } else {
         showNotification(t(err.response.data.message), "error");
       }
-      
+
       // console.log("cant save zakaz", err);
     } finally {
     }
   };
+
+  useEffect(() => {
+    if (!isEdit) {
+      // сброс формы и выбранных объектов при create
+      setSelectedWarehouse(null);
+      setSelectedPartner(null);
+      setSelectedBuyer(null);
+      setSelectedProducts([]);
+    }
+  }, [isEdit]);
 
   return (
     <div>
@@ -269,7 +319,15 @@ const Zakaz = () => {
           <div>
             <img src="/polisem.png" alt="polisem-icon" className="h-12 lg:h-14 w-auto" />
           </div>
-          <h2 className="self-end mb-0 text-xl font-bold text-center print:!text-black">{t("Create zakaz")}</h2>
+          <h2 className="self-end mb-0 text-xl font-bold text-center print:!text-black">
+            {isEdit ? (
+              <div>
+                {t("Zakaz")} № {id}
+              </div>
+            ) : (
+              t("Create zakaz")
+            )}
+          </h2>
           <div className="self-end mb-0 text-sm font-bold text-gray-900 dark:text-white truncate print:!text-black">{MyFormatDate(dateProwodok)}</div>
         </motion.div>
 
@@ -278,22 +336,25 @@ const Zakaz = () => {
             partner: "",
             buyer: "",
             products: [],
-            warehouse: ""
+            warehouse: "",
           }}
-          onSubmit={async (values) => {
-            const valuesForPost = {
-              ...values,
-              date: dateProwodok,
-            };
-            handleSave(valuesForPost);
-            console.log(valuesForPost);
+          onSubmit={(values) => {
+            setFormValuesToSave({ ...values, date: dateProwodok, isEdit: isEdit, id: id });
+            setSaveModal(true); // открываем модалку
           }}
         >
           {({ values, setFieldValue }) => {
             return (
               <Form>
                 <div className="grid grid-cols-[2fr_3fr] gap-4">
-                  <SyncFormik selectedPartner={selectedPartner} selectedBuyer={selectedBuyer} selectedProduct={selectedProduct} selectedProducts={selectedProducts} selectedWarehouse={selectedWarehouse} setSelectedProducts={setSelectedProducts} />
+                  <SyncFormik
+                    selectedPartner={selectedPartner}
+                    selectedBuyer={selectedBuyer}
+                    selectedProduct={selectedProduct}
+                    selectedProducts={selectedProducts}
+                    selectedWarehouse={selectedWarehouse}
+                    setSelectedProducts={setSelectedProducts}
+                  />
                   <div className="min-w-0 border-r border-gray-300 dark:border-gray-700 pr-4">
                     <div className="flex flex-col gap-2">
                       {/* warehouse search */}
@@ -674,7 +735,31 @@ const Zakaz = () => {
         selectedProducts={selectedProducts}
         totals={totals}
         show={show}
+        isEdit={isEdit}
+        id={id}
       />
+
+      {saveModal && (
+        <MyModal2 onClose={() => setSaveModal(false)}>
+          <div>
+            <p>Вы уверены, что хотите сохранить заказ?</p>
+            <div className="flex justify-end gap-2 mt-4">
+              <button onClick={() => setSaveModal(false)} className="px-4 py-2 border rounded">
+                Отмена
+              </button>
+              <button
+                onClick={() => {
+                  handleSave(formValuesToSave);
+                  setSaveModal(false);
+                }}
+                className="px-4 py-2 bg-blue-500 text-white rounded"
+              >
+                Подтвердить
+              </button>
+            </div>
+          </div>
+        </MyModal2>
+      )}
     </div>
   );
 };

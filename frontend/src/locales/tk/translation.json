@@ -649,7 +649,9 @@
   "quantity cant be less than zero": "Mukdary noldan pes bolup bilmez",
   "fill in at least one field": "Iň azyndan bir meýdany dolduryň",
   "zakaz saved": "Zakaz saklandy",
-  "buyer not found": "Alyjy tapylmady"
+  "buyer not found": "Alyjy tapylmady",
+  "update zakaz": "Zakazy täzelemek",
+  "zakaz not found": "Zakaz tapylmady"
 
 
 

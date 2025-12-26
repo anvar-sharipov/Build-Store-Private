@@ -71,7 +71,7 @@ function AppShell() {
             <Header />
             <SearchProvider>
               <main
-                className={`flex flex-grow gap-4 mt-4 ${isFullScreenPage ? "" : `lg:ml-52 ${hideRightBar ? "" : "lg:mr-72"}`} print:w-full print:block print:p-0 print:m-0 ${
+                className={`flex flex-grow gap-4 mt-4 ${isFullScreenPage ? "" : `lg:ml-52 ${hideRightBar ? "" : "lg:mr-80"}`} print:w-full print:block print:p-0 print:m-0 ${
                   hideRightBar && "lg:mr-0"
                 }`}
               >
@@ -118,6 +118,7 @@ function AppShell() {
                     <Route path={PROCHEE.VIEW_TRIP} element={<ViewTrip />} />
                     <Route path={PROCHEE.ZAKAZ_LIST} element={<ZakazList />} />
                     <Route path={PROCHEE.ZAKAZ} element={<Zakaz />} />
+                    <Route path="/zakaz/:id" element={<Zakaz />} />
 
                     {/* PurchaseInvoice */}
                     <Route path={ROUTES.PURCHASEINVOICE} element={<PurchaseInvoice />} />

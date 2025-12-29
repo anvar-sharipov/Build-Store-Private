@@ -50,9 +50,13 @@ import FirstPrihod from "./Components/Page/Admin/FirstPrihod";
 import DetailProductOborot from "./Components/Page/Reports2/BuhOborotTowarow/DetailProductOborot";
 import Zakaz from "./Components/Page/Prochee/Zakaz/Zakaz";
 import ZakazList from "./Components/Page/Prochee/Zakaz/ZakazList";
+import Snowfall from "react-snowfall";
+import { useSelector } from "react-redux";
+import ProductCards from "./Components/Page/Reports2/ProductCards/ProductCards";
 
 function AppShell() {
   const location = useLocation();
+  const isSnowfallOn = useSelector((state) => state.snowfall.isSnowfallOn);
   const isFullScreenPage =
     location.pathname === "/sale-invoices/new" ||
     location.pathname.includes("/sale-invoices/update") ||
@@ -66,6 +70,20 @@ function AppShell() {
   return (
     <>
       <NotificationProvider>
+        {isSnowfallOn && (
+          <Snowfall
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              pointerEvents: "none",
+              zIndex: 9999,
+            }}
+            snowflakeCount={200}
+          />
+        )}
         <DateProvider>
           <AuthProvider>
             <Header />
@@ -106,6 +124,8 @@ function AppShell() {
                     <Route path={ROUTES_RAPORT.SALES_ANALIS_WITHOUT_RETURN} element={<AnalysSalesWithoutReturn />} />
                     <Route path={ROUTES_RAPORT.ACOOUNT_CARDS} element={<AccountCards />} />
                     <Route path={ROUTES_RAPORT.ACCOUNT_CARDS_DETAIL} element={<AccountCardDetail />} />
+                    <Route path={ROUTES_RAPORT.PRODUCT_CARDS} element={<ProductCards />} />
+
 
                     <Route path={ROUTES_RAPORT.DETAIL_REPORT_1} element={<DetailReport1 />} />
                     <Route path={ROUTES_RAPORT.DETAIL_ACCOUNT_REPORT_60_62} element={<DetailReport6062 />} />

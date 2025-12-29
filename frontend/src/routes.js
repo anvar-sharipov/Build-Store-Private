@@ -31,6 +31,7 @@ export const ROUTES_RAPORT = {
   PRODUCTS_BUH_OBOROT: "/products-buh-oborot",
   // DETAIL_PRODUCT_OBOROT: "/detail-product-oborot/:id/:warehouseId",
   DETAIL_PRODUCT_OBOROT: "/report/detail-product-oborot/:id",
+  PRODUCT_CARDS: "/product-cards",
 };
 
 

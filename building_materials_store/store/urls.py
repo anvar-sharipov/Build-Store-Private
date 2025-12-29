@@ -14,6 +14,7 @@ from . views.query_views3 import *
 from . views import query_views4
 from . views import query_views5
 from . views import query_views6
+from . views import product_cards_views
 from . views import admin_views
 from . views.sale_invoice_views import *
 from . views.report_views import *
@@ -159,6 +160,10 @@ urlpatterns = [
     path('save_zakaz/', query_views6.save_zakaz, name='save_zakaz'),
     path('zakaz_list/', query_views6.zakaz_list, name='zakaz_list'),
     path('zakaz/<int:id>', query_views6.get_zakaz_data, name='get_zakaz_data'),
+    
+    # product_cards_views
+    path('product_cards', product_cards_views.product_cards, name='product_cards'),
+    
     
     
     

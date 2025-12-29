@@ -1,18 +1,56 @@
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthContext } from "../../AuthContext";
-import { Menu, X, UserPlus, LogIn, LogOut, Sun, Moon, Lock, LockOpen, Calendar, CalendarRange, User, ChevronDown } from "lucide-react";
+import { Menu, X, UserPlus, LogIn, LogOut, Sun, Moon, Lock, LockOpen, Calendar, CalendarRange, User, ChevronDown, Trees } from "lucide-react";
 import LanguageSwitcher from "../../LanguageSwitcher";
 import { DateContext } from "../UI/DateProvider";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 import myAxios from "../axios";
 import { useNotification } from "../context/NotificationContext";
 import CloseDayModal from "./modals/CloseDayModal";
+import { useDispatch, useSelector } from "react-redux";
+import { toggleSnowfall } from "../../app/store/snowfallSlice";
 
 const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDarkMode, darkMode, i18n, user, setShowAvatarModal }) => {
   const { dateFrom, setDateFrom, dateTo, setDateTo, dateProwodok, setDateProwodok } = useContext(DateContext);
   const { showNotification } = useNotification();
   const { authUser, authGroup } = useContext(AuthContext);
+
+  const jingleBells = useRef(null);
+
+  useEffect(() => {
+    jingleBells.current = new Audio("/sounds/Christmas-jingle-bells-melody.mp3");
+  }, []);
+
+  const handleClick = () => {
+    if (!isSnowfallOn) {
+      jingleBells.current.currentTime = 0;
+      jingleBells.current.play().catch((err) => console.log(err));
+    } else {
+      jingleBells.current.pause();
+      jingleBells.current.currentTime = 0;
+    }
+
+    dispatch(toggleSnowfall());
+  };
+
+  // // const jingleBells = useRef(new Audio("/audio/Christmas-jingle-bells-melody.mp3"));
+  // const jingleBells = new Audio("/sounds/Christmas-jingle-bells-melody.mp3");
+
+  // const handleClick = () => {
+  //   if (!isSnowfallOn) {
+  //     jingleBells.currentTime = 0;
+  //     jingleBells.play();
+  //   } else {
+  //     jingleBells.pause();
+  //     jingleBells.currentTime = 0;
+  //   }
+
+  //   dispatch(toggleSnowfall());
+  // };
+
+  const dispatch = useDispatch();
+  const isSnowfallOn = useSelector((state) => state.snowfall.isSnowfallOn);
 
   const [openModalCloseDay, setOpenModalCloseDay] = useState(false);
   const [dayIsClosed, setDayIsClosed] = useState(false);
@@ -98,6 +136,23 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex-shrink-0">
           <img src="/polisem.png" alt="polisem-icon" className="h-12 lg:h-14 w-auto" />
         </motion.div>
+
+        <motion.button
+          onClick={handleClick}
+          whileTap={{ scale: 0.9, rotate: -10 }} // анимация при клике
+          whileHover={{ scale: 1.05, rotate: 5 }} // анимация при ховере
+          className="flex items-center gap-2 px-3 py-1 bg-blue-500 rounded hover:bg-blue-600 text-white font-semibold shadow-lg"
+        >
+          <motion.div
+            key={isSnowfallOn ? "on" : "off"} // для анимации смены состояния
+            initial={{ rotate: -45, opacity: 0 }}
+            animate={{ rotate: 0, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
+            <Trees className="w-5 h-5" />
+          </motion.div>
+          {isSnowfallOn ? "Snow On" : "Snow Off"}
+        </motion.button>
 
         {/* Burger button */}
         <motion.button

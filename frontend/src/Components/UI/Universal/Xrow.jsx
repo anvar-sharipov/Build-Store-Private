@@ -20,10 +20,12 @@ const Xrow = ({
 
   const handleClearX = () => {
     setSelectedObject(null);
-    console.log("focusRef", focusRef);
-    setTimeout(() => {
-      focusRef.current?.focus();
-    }, 0);
+    if (focusRef) {
+      console.log("focusRef", focusRef);
+      setTimeout(() => {
+        focusRef.current?.focus();
+      }, 0);
+    }
   };
 
   return (

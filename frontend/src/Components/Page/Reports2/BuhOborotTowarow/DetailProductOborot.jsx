@@ -21,6 +21,13 @@ const DetailProductOborot = () => {
   const [detailOborot, setDetailOborot] = useState(null);
   const [selectedWarehouses, setSelectedWarehouses] = useState([]);
 
+  useEffect(() => {
+    if (!detailOborot?.product_name) return
+    document.title = `${t("card")} ${detailOborot.product_name}`
+  }, [t])
+  console.log("detailOborot", detailOborot); 
+  
+
   // Получаем параметры из URL
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);

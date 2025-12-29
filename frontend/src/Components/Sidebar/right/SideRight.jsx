@@ -26,6 +26,7 @@ import ZakazFilter from "./filters/Zakaz/ZakazFilter";
 import ZakazListFilter from "./filters/Zakaz/ZakazListFilter";
 import ShowHideColums from "./filters/Zakaz/ShowHideColums";
 import ZakazNavigate from "./filters/Zakaz/ZakazNavigate";
+import ProductCardsFilter from "./filters/ProductCardsFilter/ProductCardsFilter";
 
 // настройки для разных страниц
 const FILTER_CONFIG = {
@@ -208,7 +209,9 @@ export default function SidebarRight() {
 
   if (!(currentPath in FILTER_CONFIG) && currentPath !== "/products" &&
    currentPath !== "/main" && currentPath !== "/purchase_invoice" && currentPath !== "/detail-account-report-60-62" 
-   && currentPath !== "/products-buh-oborot" && !currentPath.includes("zakaz") && currentPath !== "/zakaz-list") return null;
+   && currentPath !== "/products-buh-oborot" && !currentPath.includes("zakaz") 
+   && currentPath !== "/zakaz-list" 
+   && currentPath !== "/product-cards") return null;
 
   const typeOptions = config.type || [];
   const sortTmtOptions = config.sort_tmt || [];
@@ -435,6 +438,19 @@ export default function SidebarRight() {
               
             </motion.div>
           )}
+
+          {currentPath.includes("product-cards") && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+            >
+              <ProductCardsFilter />              
+          
+              
+            </motion.div>
+          )}
+
 
           {/* {currentPath === "/zakaz-list" && (
             <motion.div

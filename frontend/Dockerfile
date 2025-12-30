@@ -3,7 +3,14 @@ FROM node:20 AS build
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+# RUN npm ci
+# RUN rm -rf node_modules package-lock.json \
+#     && npm install
+# RUN rm -rf node_modules package-lock.json \
+#     && npm install --legacy-peer-deps
+# RUN npm install --legacy-peer-deps \
+#     && npx esbuild install
+RUN npm install --legacy-peer-deps
 
 COPY . .
 RUN npm run build

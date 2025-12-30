@@ -27,6 +27,7 @@ const Input = ({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
+        autoComplete="off"
         className={`h-9 w-full pl-3 pr-3 text-sm rounded-lg border transition placeholder-gray-400
                     ${
                       diasbledInput

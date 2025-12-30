@@ -21,3 +21,41 @@
   height: 100%;
 } */
 
+
+/* Печать таблицы только для этой таблицы */
+@media print {
+  /* Таблица */
+  .print_table {
+    table-layout: fixed;       /* фиксированная ширина колонок */
+    font-size: 10px;           /* мелкий шрифт для печати */
+    word-break: break-word;
+    page-break-inside: avoid;  /* не разрывать таблицу */
+  }
+
+  /* Заголовки и ячейки */
+  .print_th, .print_td {
+    padding: 2px 4px !important; 
+    border-width: 1px !important;
+  }
+
+  /* Повторяем заголовок на каждой странице */
+  .print_thead {
+    display: table-header-group;
+  }
+
+  /* Фон и цвет заголовков для экономии чернил */
+  .print_thead .print_th {
+    background: #eee !important;
+    color: #000 !important;
+  }
+
+  /* Строки таблицы */
+  .break_tr {
+    page-break-inside: avoid;  /* не разрывать строку */
+  }
+
+  /* Футер таблицы */
+  .break_tfoot {
+    display: table-footer-group;
+  }
+}

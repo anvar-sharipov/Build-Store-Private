@@ -3,6 +3,7 @@ import zakazReducer from "./zakazSlice";
 import snowfallReducer from "./snowfallSlice";
 import warehouseReducer from "./warehouseSlice";
 import searchReducer from "./searchQuerySlice";
+import productSortReducer from "./ProductCardsSlice/productSortSlice";
 
 export const store = configureStore({
   reducer: {
@@ -10,5 +11,6 @@ export const store = configureStore({
     snowfall: snowfallReducer,
     warehouse: warehouseReducer,
     search: searchReducer,
+    productSort: productSortReducer, 
   },
 });

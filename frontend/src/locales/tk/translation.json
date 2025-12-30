@@ -653,7 +653,11 @@
   "update zakaz": "Zakazy täzelemek",
   "zakaz not found": "Zakaz tapylmady",
   "product cards": "Haryt kartoçkalary",
-  "no data": "Maglumat ýok"
+  "no data": "Maglumat ýok",
+  "sortByRashod": "Çykdajy boýunça tertiplemek",
+  "sortByPrihod": "Gelir boýunça tertiplemek",
+  "sortByWozwrat": "Gaýtaryş boýunça tertiplemek",
+  "search agent": "Agent gözle..."
 
 
 

@@ -146,9 +146,13 @@ def product_cards(request):
     # date_to = datetime.strptime(request.GET.get("date_to"), "%Y-%m-%d")
     # date_to лучше включать полностью (до конца дня) Иначе записи за этот день после 00:00 могут не попасть.
     date_to = datetime.strptime(request.GET.get("date_to"), "%Y-%m-%d") + timedelta(days=1)
+    field = request.GET.get("field")
+    order = request.GET.get("order")
+    partner = request.GET.get("partner")
     
     query = request.GET.get("query")
-    ic(query)
+    agent = request.GET.get("agent")
+
     
 
     # 1️⃣ Загружаем все товары + единицы
@@ -166,6 +170,8 @@ def product_cards(request):
     
     if query:
         products = products.filter(name__icontains=query)
+        
+
 
     # 2️⃣ Загружаем ВСЕ движения одним запросом
     items = (
@@ -173,6 +179,12 @@ def product_cards(request):
         .select_related("invoice", "invoice__partner")
         .filter(invoice__entry_created_at_handle__lte=date_to)
     )
+    
+    if partner:
+        items = items.filter(invoice__partner_id=int(partner))
+        
+    if agent:
+        items = items.filter(invoice__partner__agent_id=int(agent))
 
     results = []
 
@@ -190,7 +202,7 @@ def product_cards(request):
         start_qty = Decimal("0")
         prihod_qty = Decimal("0")
         rashod_qty = Decimal("0")
-        vozvrat_qty = Decimal("0")
+        wozwrat_qty = Decimal("0")
         operations = []
 
         for item in product_items:
@@ -222,9 +234,9 @@ def product_cards(request):
                 rashod_qty += qty
                 typ = "rashod"
 
-            elif inv.wozwrat_or_prihod == "vozvrat":
-                vozvrat_qty += qty
-                typ = "vozvrat"
+            elif inv.wozwrat_or_prihod == "wozwrat":
+                wozwrat_qty += qty
+                typ = "wozwrat"
 
             elif inv.wozwrat_or_prihod == "transfer":
                 if inv.warehouse_id == warehouse_id:
@@ -248,7 +260,7 @@ def product_cards(request):
             })
 
         # ❗ пропускаем если нет движения
-        if prihod_qty == 0 and rashod_qty == 0 and vozvrat_qty == 0:
+        if prihod_qty == 0 and rashod_qty == 0 and wozwrat_qty == 0:
             continue
 
         results.append({
@@ -259,10 +271,20 @@ def product_cards(request):
             "start_qty": start_qty,
             "prihod": prihod_qty,
             "rashod": rashod_qty,
-            "vozvrat": vozvrat_qty,
-            "end_qty": start_qty + prihod_qty - rashod_qty + vozvrat_qty,
+            "wozwrat": wozwrat_qty,
+            "end_qty": start_qty + prihod_qty - rashod_qty + wozwrat_qty,
             "operations": sorted(operations, key=lambda x: x["date"]),
         })
+        
+        # сортировка по приходу / расходу / возврату
+        if field in ["prihod", "rashod", "wozwrat"]:
+            reverse = order == "desc"
+            results = sorted(
+                results,
+                key=lambda x: x.get(field, 0),
+                reverse=reverse
+            )
+
 
     return Response({
         "warehouse_id": warehouse_id,

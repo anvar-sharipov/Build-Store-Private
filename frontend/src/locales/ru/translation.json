@@ -683,7 +683,11 @@
   "update zakaz": "Обновить заказ",
   "zakaz not found": "Заказ не найден",
   "product cards": "Продукт карточки",
-  "no data": "Нет данных"
+  "no data": "Нет данных",
+  "sortByRashod": "Сортировать по расходу",
+  "sortByPrihod": "Сортировать по приходу",
+  "sortByWozwrat": "Сортировать по возврату",
+  "search agent": "Поиск агента..."
 
 
  

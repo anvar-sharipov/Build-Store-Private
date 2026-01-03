@@ -9,7 +9,7 @@ import { formatNumber2 } from "../../../UI/formatNumber2";
 import { Coins } from "lucide-react";
 import { ROUTES } from "../../../../routes";
 import { setPrintExcel } from "../../../../app/store/ProductCardsSlice/productSortSlice";
-import { exportToExcel } from "./exportToExcel";
+import { ExportToExcel } from "./ExportToExcel";
 
 const ProductCards = () => {
   const { t } = useTranslation();
@@ -31,7 +31,7 @@ const ProductCards = () => {
 
   useEffect(() => {
     if (printExcel && cards?.products?.length) {
-      exportToExcel(cards, dateFrom, dateTo);
+      ExportToExcel(cards, dateFrom, dateTo);
 
       // сброс флага после экспорта
       dispatch(setPrintExcel(false));
@@ -96,8 +96,13 @@ const ProductCards = () => {
             (cards.products.length > 0 ? (
               <div>
                 {cards?.products?.map((product) => {
-                  let runningBalance = product.start_qty;
-                 
+                  let runningBalance = product.start_qty; // udalit potom
+
+                  // table
+                  let myRunningBalance = product.start_qty * product.retail_price; // na ostatok balance
+                  let total_prihod = 0; // prihod itogo balance
+                  let total_rashod = 0; // rashod itogo balance
+                  let total_wozwrat = 0; // wozwrat itogo balance
 
                   return (
                     <div key={product.product_id} className="bg-white dark:bg-gray-900 mb-6 print:dark:!text-black print:dark:!border-black">
@@ -122,7 +127,7 @@ const ProductCards = () => {
                               <th className="border border-black bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 print:dark:!text-black print_th">Дата</th>
                               <th className="border border-black bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 print:dark:!text-black print_th">Партнёр</th>
                               <th className="border border-black bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 print:dark:!text-black print_th">Комментарий</th>
-                              {/* <th className="border border-black bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 print:dark:!text-black print_th">Цена</th> */}
+                              <th className="border border-black bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 print:dark:!text-black print_th">Цена</th>
                               <th className="border border-black bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 print:dark:!text-black print_th" colSpan={2}>
                                 Приход
                               </th>
@@ -141,7 +146,7 @@ const ProductCards = () => {
                               <th className="border border-black dark:border-gray-600 px-2 py-1 text-left font-semibold print_th"></th>
                               <th className="border border-black dark:border-gray-600 px-2 py-1 text-left font-semibold print_th"></th>
                               <th className="border border-black dark:border-gray-600 px-2 py-1 text-left font-semibold print_th"></th>
-                              {/* <th className="border border-black dark:border-gray-600 px-2 py-1 text-left font-semibold print_th"></th> */}
+                              <th className="border border-black dark:border-gray-600 px-2 py-1 text-left font-semibold print_th"></th>
                               <th className="border border-black dark:border-gray-600 px-2 py-1 text-left font-semibold print_th">Кол-во</th>
                               <th className="border border-black dark:border-gray-600 px-2 py-1 text-left font-semibold print_th">Всего</th>
                               <th className="border border-black dark:border-gray-600 px-2 py-1 text-left font-semibold print_th">Кол-во</th>
@@ -159,7 +164,7 @@ const ProductCards = () => {
                               <td className="border border-black px-2 py-1 print_td">Остаток на начало</td>
                               <td className="border border-black px-2 py-1 print_td" />
                               <td className="border border-black px-2 py-1 print_td" />
-                              {/* <td className="border border-black px-2 py-1 print_td"></td> */}
+                              <td className="border border-black px-2 py-1 print_td"></td>
                               <td className="border border-black px-2 py-1 text-right print_td"></td>
                               <td className="border border-black px-2 py-1 text-right print_td"></td>
                               <td className="border border-black px-2 py-1 print_td" />
@@ -172,10 +177,22 @@ const ProductCards = () => {
 
                             {/* Операции */}
                             {product.operations.map((op, idx) => {
-                              if (op.type === "prihod") runningBalance += op.qty;
-                              if (op.type === "rashod") runningBalance -= op.qty;
-                              if (op.type === "wozwrat") runningBalance += op.qty;
-
+                              if (op.type === "prihod") {
+                                runningBalance += op.qty;
+                                myRunningBalance += op.qty * op.price;
+                                total_prihod += op.sum;
+                              }
+                              if (op.type === "rashod") {
+                                runningBalance -= op.qty;
+                                myRunningBalance -= op.qty * op.price;
+                                total_rashod += op.sum;
+                              }
+                              if (op.type === "wozwrat") {
+                                runningBalance += op.qty;
+                                myRunningBalance += op.qty * op.price;
+                                total_wozwrat += op.sum;
+                              }
+                              // {formatNumber2(myRunningBalance)}
                               return (
                                 <tr
                                   key={idx}
@@ -187,7 +204,13 @@ const ProductCards = () => {
                                   <td className="border border-black px-2 py-1 whitespace-nowrap print_td">{new Date(op.date).toLocaleDateString()}</td>
                                   <td className="border border-black px-2 py-1 print_td">{op.partner}</td>
                                   <td className="border border-black px-2 py-1 print_td">{op.comment}</td>
-                                  {/* <td className="border border-black px-2 py-1 text-right print_td">{op.price ? op.price.toFixed(2) : "-"}</td> */}
+                                  <td
+                                    className={`border border-black px-2 py-1 text-right print_td ${
+                                      op.price < product.retail_price ? "bg-red-200" : op.price > product.retail_price ? "bg-green-200" : ""
+                                    }`}
+                                  >
+                                    {op.price ? formatNumber2(op.price) : "-"}
+                                  </td>
 
                                   <td className="border border-black px-2 py-1 text-right text-green-600 print_td">{op.type === "prihod" ? op.qty : "-"}</td>
                                   <td className="border border-black px-2 py-1 text-right text-green-600 print_td">{op.type === "prihod" ? formatNumber2(op.qty * op.price) : "-"}</td>
@@ -199,7 +222,7 @@ const ProductCards = () => {
                                   <td className="border border-black px-2 py-1 text-right text-blue-600 print_td">{op.type === "wozwrat" ? formatNumber2(op.qty * op.price) : "-"}</td>
 
                                   <td className="border border-black px-2 py-1 text-right font-semibold print_td">{formatNumber2(runningBalance, 0)}</td>
-                                  <td className="border border-black px-2 py-1 text-right font-semibold print_td">{formatNumber2(runningBalance * op.price)}</td>
+                                  <td className="border border-black px-2 py-1 text-right font-semibold print_td">{formatNumber2(runningBalance * product.retail_price)}</td>
                                 </tr>
                               );
                             })}
@@ -209,16 +232,16 @@ const ProductCards = () => {
                               <td className="border border-black px-2 py-1 print_td">Итого</td>
                               <td className="border border-black px-2 py-1 print_td"></td>
                               <td className="border border-black px-2 py-1 print_td"></td>
-                              {/* <td className="border border-black px-2 py-1 print_td"></td> */}
+                              <td className="border border-black px-2 py-1 print_td"></td>
 
                               <td className="border border-black px-2 py-1 print_td">{product.prihod || "-"}</td>
-                              <td className="border border-black px-2 py-1 print_td">{formatNumber2(product.prihod * product.retail_price)}</td>
+                              <td className="border border-black px-2 py-1 print_td">{formatNumber2(total_prihod)}</td>
 
                               <td className="border border-black px-2 py-1 text-right print_td">{product.rashod || "-"}</td>
-                              <td className="border border-black px-2 py-1 text-right print_td">{formatNumber2(product.rashod * product.retail_price)}</td>
+                              <td className="border border-black px-2 py-1 text-right print_td">{formatNumber2(total_rashod)}</td>
 
                               <td className="border border-black px-2 py-1 text-right print_td">{product.wozwrat || "-"}</td>
-                              <td className="border border-black px-2 py-1 text-right print_td">{formatNumber2(product.wozwrat * product.retail_price)}</td>
+                              <td className="border border-black px-2 py-1 text-right print_td">{formatNumber2(total_wozwrat)}</td>
 
                               <td className="border border-black px-2 py-1 text-right print_td">
                                 {formatNumber2(runningBalance, 0) || "-"}

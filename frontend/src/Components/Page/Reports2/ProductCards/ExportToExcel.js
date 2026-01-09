@@ -212,7 +212,7 @@ export const ExportToExcel = async (cards, dateFrom, dateTo) => {
         sheet.getCell(`A${startRow}`).value = MyFormatDate(f.date);
         sheet.getCell(`A${startRow}`).border = borderThin;
         sheet.getCell(`B${startRow}`).value = f.partner;
-        sheet.getCell(`C${startRow}`).value = f.comment;
+        sheet.getCell(`C${startRow}`).value = `№${f.invoice_id} ${f.comment}`;
         sheet.getCell(`D${startRow}`).value = f.price;
         if (f.price < product.retail_price) {
           sheet.getCell(`D${startRow}`).fill = bgRed;

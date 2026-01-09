@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.db.models import Sum
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+import os
 
 
 class CustomUser(AbstractUser):
@@ -916,3 +917,32 @@ class ZakazItem(models.Model):
     class Meta:
         verbose_name = "Позиция заказа"
         verbose_name_plural = "Позиции заказа"
+        
+        
+        
+
+
+def day_report_upload_path(instance, filename):
+    """
+    Путь для сохранения Excel:
+    media/day_reports/<год>/<месяц>/<дд.мм.гггг>.xlsx
+    """
+    year = instance.date.year
+    month_str = f"{instance.date.month:02d}"  # 01, 02, ..., 12
+    day_str = instance.date.strftime("%d.%m.%Y")
+    ext = ".xlsx"  # строго Excel
+    return f"day_reports/{year}/{month_str}/{day_str}{ext}"
+
+        
+class CloseDayAllReportExcel(models.Model):
+    date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="day_reports")
+    file = models.FileField(upload_to=day_report_upload_path, null=True, blank=True)
+    comment = models.TextField(blank=True)
+
+    class Meta:
+        unique_together = ("date",)
+
+    def __str__(self):
+        return f"Day report {self.date}"

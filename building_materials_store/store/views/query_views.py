@@ -12,6 +12,7 @@ from django.contrib.postgres.search import TrigramSimilarity
 from ..models import *
 from icecream import ic
 import json
+from collections import defaultdict
 
 
 # query agent
@@ -574,9 +575,118 @@ def close_day(request):
         return JsonResponse({"success": False, "error": "youDidntAuthenticated"})
     
     user = User.objects.get(id=user_id)
+    
+    #############################################################################################################################################################
+    #############################################################################################################################################################
+    ####### start towar oborot otchet
+
+    # product_units = (
+    #     ProductUnit.objects
+    #     .filter(is_default_for_sale=True)
+    #     .select_related("unit")
+    # )
+    
+    # unit_map = {
+    #     pu.product_id: pu
+    #     for pu in product_units
+    # }
+    
+    # turnover_product = defaultdict(lambda: defaultdict(dict))
+    
+    # # ---------------------------------------------
+    # # 1) SQL №1 — начальные остатки (по складам)
+    # # ---------------------------------------------
+    
+    # for w in Warehouse.objects.all():   
+    #     start_items = InvoiceItem.objects.filter(
+    #             invoice__entry_created_at_handle__lt=close_date, invoice__canceled_at__isnull=True
+    #         ).filter(
+    #             Q(invoice__warehouse=w) |
+    #             Q(invoice__warehouse2=w)
+    #         ).select_related(
+    #             "product", "product__category", "product__base_unit", "invoice"
+    #         )
+        
+    #     for item in start_items:
+    #         p = item.product
+    #         inv = item.invoice
+            
+    #         product_data = turnover_product[w.id].get(p.id)
+            
+    #         if not product_data:
+    #             pu = unit_map.get(p.id)
+                
+    #             if pu:
+    #                 unit = pu.unit.name
+    #                 conversion_factor = Decimal(pu.conversion_factor)
+    #             else:
+    #                 unit = p.base_unit.name if p.base_unit else ""
+    #                 conversion_factor = Decimal("1")
+                    
+    #             product_data = {
+    #                 "id": p.id,
+    #                 "category": p.category.name if p.category else "",
+    #                 "name": p.name,
+    #                 "unit": unit,
+    #                 "price": p.wholesale_price or Decimal("0"),
+
+    #                 "start_qty": Decimal("0"),
+
+    #                 "oborot_prihod": Decimal("0"),
+    #                 "oborot_rashod": Decimal("0"),
+    #                 "oborot_wozwrat": Decimal("0"),
+    #                 "oborot_transfer_in": Decimal("0"),
+    #                 "oborot_transfer_out": Decimal("0"),
+
+    #                 "end_qty": Decimal("0"),
+    #                 "conversion_factor": conversion_factor,
+    #             }
+                
+    #             turnover_product[w.id][p.id] = product_data
+            
+    #         cf = product_data["conversion_factor"]
+    #         qty = item.selected_quantity / cf
+            
+    #         if inv.wozwrat_or_prihod == "prihod":
+    #             if inv.warehouse_id == w.id:
+    #                 product_data["start_qty"] += qty
+    #                 # product_data["oborot_prihod"] += qty
+
+    #         elif inv.wozwrat_or_prihod == "rashod":
+    #             if inv.warehouse_id == w.id:
+    #                 product_data["start_qty"] -= qty
+    #                 # product_data["oborot_rashod"] += qty
+
+    #         elif inv.wozwrat_or_prihod == "wozwrat":
+    #             if inv.warehouse_id == w.id:
+    #                 product_data["start_qty"] += qty
+    #                 # product_data["oborot_wozwrat"] += qty
+
+    #         elif inv.wozwrat_or_prihod == "transfer":
+    #             if inv.warehouse_id == w.id:
+    #                 product_data["start_qty"] -= qty
+    #                 # product_data["oborot_transfer_out"] += qty
+
+    #             elif inv.warehouse2_id == w.id:
+    #                 product_data["start_qty"] += qty
+    #                 # product_data["oborot_transfer_in"] += qty
+    
+    # # ic(turnover_product)
+    # for warehouse_id, values in turnover_product.items():
+    #     if warehouse_id == 1:
+    #         for product_id, value in values.items():
+    #             if product_id == 606:
+    #                 ic(value)
+    ####### start towar oborot otchet    
+    #############################################################################################################################################################
+    #############################################################################################################################################################
+    
+
+    
 
     try:
         with transaction.atomic():
+            # 1/0
             # если уже закрыт
             if DayClosing.objects.filter(date=close_date).exists():
                 transaction.set_rollback(True)
@@ -648,6 +758,7 @@ def close_day(request):
                 )
 
     except Exception as e:
+        # ic(str(e))
         return JsonResponse({"success": False, "error": str(e)})
     
     return JsonResponse({"success": True, "message": "day success is closed", "date": close_date})

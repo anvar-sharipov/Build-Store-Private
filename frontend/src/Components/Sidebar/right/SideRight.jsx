@@ -242,7 +242,7 @@ export default function SidebarRight() {
       initial={{ x: 300, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ type: "spring", damping: 25 }}
-      className="hidden lg:flex fixed right-0 w-80 flex-col p-6 bg-gradient-to-b from-gray-900 to-gray-800 shadow-xl border-l border-gray-700 overflow-y-auto z-20 backdrop-blur-sm"
+      className="hidden lg:flex fixed right-0 w-80 flex-col p-6 bg-gradient-to-b from-gray-900 to-gray-800 shadow-xl border-l border-gray-700 overflow-y-auto z-20 backdrop-blur-sm print:hidden"
       style={{
         top: `${80 - offset}px`,
         height: `calc(100vh - ${80 - offset}px)`,

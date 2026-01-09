@@ -14,7 +14,7 @@ import ProductEditModal2 from "./modals/ProductEditModal/ProductEditModal2";
 import ProductAddModal from "./modals/ProductAddModal/ProductAddModal";
 import { fetchUnits, fetchCategories, fetchBrands, fetchModels, fetchTags, fetchWarehouses } from "../../fetchs/optionsFetchers";
 import ProductDeleteModal from "./modals/ProductDeleteModal";
-
+import { DateContext } from "../../UI/DateProvider";
 
 const Harytlar = () => {
   const { searchQuery, setSearchQuery, searchParams, setSearchParams } = useContext(SearchContext);
@@ -27,6 +27,7 @@ const Harytlar = () => {
   const searchInputRef = useRef(null);
   const [clickedNextPageBtn, setClickedNextPageBtn] = useState(false);
   // const [warehouses, setWarehouses] = useState([])
+  const { dateFrom, dateTo } = useContext(DateContext);
 
   const [openDeleteModal, setOpenDeleteModal] = useState({
     open: false,
@@ -247,8 +248,11 @@ const Harytlar = () => {
       if (!url) {
         listItemRefs.current = []; // очищаем ссылки при смене фильтра
         console.log("res.data.results", res.data.results);
-        
+
         setProducts(res.data.results);
+        console.log("products res.data.results == ", res.data.results);
+        console.log("products res.data.results == ", res.data.meta);
+        
         setTotalCount(res.data.count);
         // console.log(res.data.results);
       } else {
@@ -302,6 +306,31 @@ const Harytlar = () => {
     setSearchQuery(queryFromParams);
     searchInputRef.current?.focus();
   }, []);
+
+//   useEffect(() => {
+//   if (!dateFrom || !dateTo) return; // ждем, пока есть даты
+
+//   const load = async () => {
+//     const params = new URLSearchParams(searchParams);
+//     params.set("date_from", dateFrom);
+//     params.set("date_to", dateTo);
+
+//     await fetchProducts(`products/?${params.toString()}`);
+//     searchInputRef.current?.focus();
+//   };
+
+//   load();
+// }, [searchParams, dateFrom, dateTo]);
+
+useEffect(() => {
+    if (!dateFrom || !dateTo) return;
+    const params = new URLSearchParams(searchParams);
+
+    if (dateFrom) params.set("date_from", dateFrom);
+    if (dateTo) params.set("date_to", dateTo);
+
+    setSearchParams(params);
+  }, [searchParams, dateFrom, dateTo]);
 
   return (
     <div>

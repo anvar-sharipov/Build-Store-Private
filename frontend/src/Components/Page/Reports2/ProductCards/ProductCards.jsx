@@ -110,7 +110,7 @@ const ProductCards = () => {
                       {/* <div className="px-3 py-2 font-semibold text-sm border-b border-black dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-center">{product.product_name}</div> */}
 
                       <div className="overflow-x-auto print:dark:!text-black">
-                        <table className="min-w-full border-collapse text-xs print:text-[10px] print:table-fixed break_table print_table">
+                        <table className="min-w-full border-collapse text-xs print:text-[10px] print:table-fixed break_table print_table tabular-nums">
                           <thead className="break_thead print_thead">
                             <tr className="break_tr">
                               <th className="border border-black print_th" colSpan={12}>
@@ -192,6 +192,8 @@ const ProductCards = () => {
                                 myRunningBalance += op.qty * op.price;
                                 total_wozwrat += op.sum;
                               }
+                            
+                              
                               // {formatNumber2(myRunningBalance)}
                               return (
                                 <tr
@@ -203,7 +205,7 @@ const ProductCards = () => {
                                 >
                                   <td className="border border-black px-2 py-1 whitespace-nowrap print_td">{new Date(op.date).toLocaleDateString()}</td>
                                   <td className="border border-black px-2 py-1 print_td">{op.partner}</td>
-                                  <td className="border border-black px-2 py-1 print_td">{op.comment}</td>
+                                  <td className="border border-black px-2 py-1 print_td">№{op.invoice_id} {op.comment}</td>
                                   <td
                                     className={`border border-black px-2 py-1 text-right print_td ${
                                       op.price < product.retail_price ? "bg-red-200" : op.price > product.retail_price ? "bg-green-200" : ""

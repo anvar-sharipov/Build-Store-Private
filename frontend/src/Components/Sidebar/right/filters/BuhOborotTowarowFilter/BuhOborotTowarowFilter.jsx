@@ -200,7 +200,7 @@ const BuhOborotTowarowFilter = () => {
   };
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="space-y-6 p-4 print:hidden">
       {/* Заголовок */}
       <div className="flex items-center gap-3 pb-4 border-b border-gray-700">
         <div className="p-2 bg-blue-600 rounded-lg">
@@ -343,7 +343,7 @@ const BuhOborotTowarowFilter = () => {
 
         {/* Выбранные категории */}
         {selectedCategories.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-2">
+          <div className="flex flex-wrap gap-2 mt-2 text-sm">
             {selectedCategories.map((id) => {
               const cat = categories.find((c) => String(c.id) === id);
               if (!cat) return null;
@@ -395,7 +395,7 @@ const BuhOborotTowarowFilter = () => {
 
         {/* Список найденных Продуктов */}
         {searchProduct && filteredProducts.length > 0 && selectedWarehouses.length > 0 && !loadingProducts && (
-          <div className="max-h-48 overflow-y-auto bg-gray-900 border border-gray-700 rounded-lg mt-1 text-gray-300">
+          <div className="max-h-48 overflow-y-auto bg-gray-900 border border-gray-700 rounded-lg mt-1 text-gray-300 text-sm">
             {filteredProducts.map((prod) => (
               <button
                 key={prod.id}
@@ -442,7 +442,7 @@ const BuhOborotTowarowFilter = () => {
       </div>
 
       {/* Тип отчета */}
-      <div>
+      {/* <div>
         <label className="block text-sm font-medium text-gray-300 mb-3">
           {t("Including the return")}
         </label>
@@ -476,7 +476,7 @@ const BuhOborotTowarowFilter = () => {
             </div>
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* Показывать/Не Показывать пустые обороты */}
       <div>

@@ -22,11 +22,10 @@ const DetailProductOborot = () => {
   const [selectedWarehouses, setSelectedWarehouses] = useState([]);
 
   useEffect(() => {
-    if (!detailOborot?.product_name) return
-    document.title = `${t("card")} ${detailOborot.product_name}`
-  }, [t])
-  console.log("detailOborot", detailOborot); 
-  
+    if (!detailOborot?.product_name) return;
+    document.title = `${t("card")} ${detailOborot.product_name}`;
+  }, [t]);
+  console.log("detailOborot", detailOborot);
 
   // Получаем параметры из URL
   useEffect(() => {
@@ -165,6 +164,7 @@ const DetailProductOborot = () => {
                       <div>Начало: {whData.start_quantity}</div>
                       <div>Приход: {whData.income_qty}</div>
                       <div>Расход: {whData.outcome_qty}</div>
+                      <div className="text-blue-600">Возврат: {whData.return_qty}</div>
                       <div>Конец: {whData.end_quantity}</div>
                     </div>
                   );
@@ -180,21 +180,27 @@ const DetailProductOborot = () => {
         <table
           className="
             w-full
-            text-[11px]
+            text-sm
             leading-tight
             border-collapse
             border
             border-zinc-200 dark:border-zinc-800
+           
+            tabular-nums
           "
         >
           <thead className="sticky top-0 z-10">
             <tr className="bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+              <th className="border px-2 py-1">№</th>
               <th className="border px-2 py-1">{t("Date")}</th>
               <th className="border px-2 py-1">{t("partner")}</th>
               <th className="border px-2 py-1">{t("comment2")}</th>
               <th className="border px-2 py-1 text-right">{t("Price")}</th>
               <th className="border px-2 py-1 text-center" colSpan={2}>
                 {t("prihod")}
+              </th>
+              <th className="border px-2 py-1 text-center" colSpan={2}>
+                {t("rashod")}
               </th>
               <th className="border px-2 py-1 text-center" colSpan={2}>
                 {t("wozwrat")}
@@ -208,6 +214,9 @@ const DetailProductOborot = () => {
               <th className="border px-2 py-1"></th>
               <th className="border px-2 py-1"></th>
               <th className="border px-2 py-1"></th>
+              <th className="border px-2 py-1"></th>
+              <th className="border px-2 py-1 text-right">{t("quantity")}</th>
+              <th className="border px-2 py-1 text-right">{t("total")}</th>
               <th className="border px-2 py-1 text-right">{t("quantity")}</th>
               <th className="border px-2 py-1 text-right">{t("total")}</th>
               <th className="border px-2 py-1 text-right">{t("quantity")}</th>
@@ -220,10 +229,11 @@ const DetailProductOborot = () => {
           <tbody>
             {/* OPENING BALANCE */}
             <tr className="bg-zinc-50 dark:bg-zinc-800 font-semibold">
+              <td className="border px-2 py-1"></td>
               <td className="border px-2 py-1">
                 {t("Opening balance")} {MyFormatDate(minusOneDay(dateFrom))}
               </td>
-              <td colSpan={7} className="border"></td>
+              <td colSpan={9} className="border"></td>
               <td className="border px-2 py-1 text-right">{formatNumber2(detailOborot.start_quantity, 0)}</td>
               <td className="border px-2 py-1 text-right">{formatNumber2(detailOborot.start_quantity * detailOborot.product_wholesale_price)}</td>
             </tr>
@@ -241,6 +251,7 @@ const DetailProductOborot = () => {
                 "
                   onClick={() => handleOpenInvoice(r.invoice_id)}
                 >
+                  <td className="border px-2 py-1">{i + 1}</td>
                   <td className="border px-2 py-1">
                     {MyFormatDate(r.date)} {r.invoice_id && `id: ${r.invoice_id}`}
                   </td>
@@ -254,6 +265,9 @@ const DetailProductOborot = () => {
                   <td className="border px-2 py-1 text-right">{formatNumber2(r.outcome_qty, 0)}</td>
                   <td className="border px-2 py-1 text-right">{formatNumber2(r.outcome_sum)}</td>
 
+                  <td className="border px-2 py-1 text-right text-blue-600 dark:text-blue-400">{formatNumber2(r.return_qty, 0)}</td>
+                  <td className="border px-2 py-1 text-right text-blue-600 dark:text-blue-400">{formatNumber2(r.return_sum)}</td>
+
                   <td className="border px-2 py-1 text-right font-medium">{formatNumber2(r.balance_qty, 0)}</td>
                   <td className="border px-2 py-1 text-right font-medium">{formatNumber2(r.balance_sum)}</td>
                 </tr>
@@ -261,21 +275,25 @@ const DetailProductOborot = () => {
 
             {/* TURNOVER */}
             <tr className="bg-zinc-100 dark:bg-zinc-900 font-semibold">
+              <td className="border px-2 py-1"></td>
               <td className="border px-2 py-1">{t("Total turnover")}</td>
               <td colSpan={3} className="border"></td>
               <td className="border px-2 py-1 text-right">{formatNumber2(detailOborot.turnover?.income_qty || 0, 0)}</td>
               <td className="border px-2 py-1 text-right">{formatNumber2(detailOborot.turnover?.income_sum || 0)}</td>
               <td className="border px-2 py-1 text-right">{formatNumber2(detailOborot.turnover?.outcome_qty || 0, 0)}</td>
               <td className="border px-2 py-1 text-right">{formatNumber2(detailOborot.turnover?.outcome_sum || 0)}</td>
+              <td className="border px-2 py-1 text-right text-blue-600 dark:text-blue-400">{formatNumber2(detailOborot.turnover?.return_qty || 0, 0)}</td>
+              <td className="border px-2 py-1 text-right text-blue-600 dark:text-blue-400">{formatNumber2(detailOborot.turnover?.return_sum || 0)}</td>
               <td colSpan={2} className="border"></td>
             </tr>
 
             {/* END BALANCE */}
             <tr className="bg-zinc-100 dark:bg-zinc-900 font-semibold">
+              <td className="border px-2 py-1"></td>
               <td className="border px-2 py-1">
                 {t("Closing balance")} {MyFormatDate(dateTo)}
               </td>
-              <td colSpan={7} className="border"></td>
+              <td colSpan={9} className="border"></td>
               <td className="border px-2 py-1 text-right">{formatNumber2(detailOborot.end?.quantity || 0, 0)}</td>
               <td className="border px-2 py-1 text-right">{formatNumber2(detailOborot.end?.sum || 0)}</td>
             </tr>

@@ -30,17 +30,21 @@ const WarehousesSection = ({ options, t, warehouses }) => {
                     }
                   }}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors"
-                  disabled={
-                    options.warehouses.length <= values.warehouses.length
-                  }
+                  // sdelaem luchshe diabled true dlya zashity
+                  // disabled={
+                  //   options.warehouses.length <= values.warehouses.length
+                  // }
+                  disabled={true}
                 >
                   + 1 {t("warehouse")}
                   {/* {t("add")} */}
                 </MyButton>
                 <MyButton
-                  disabled={
-                    options.warehouses.length <= values.warehouses.length
-                  }
+                  // sdelaem luchshe diabled true dlya zashity
+                  // disabled={
+                  //   options.warehouses.length <= values.warehouses.length
+                  // }
+                  disabled={true}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors"
                   type="button"
                   onClick={() => {
@@ -63,6 +67,7 @@ const WarehousesSection = ({ options, t, warehouses }) => {
                   <div key={index} className="flex gap-2 items-center mb-2">
                     <Field
                       as="select"
+                      disabled={true}
                       name={`warehouses.${index}.warehouse`}
                       className={myClass.input2}
                       required
@@ -76,6 +81,7 @@ const WarehousesSection = ({ options, t, warehouses }) => {
                     </Field>
 
                     <Field
+                      disabled={true}
                       type="number"
                       name={`warehouses.${index}.quantity`}
                       min="0"
@@ -86,6 +92,7 @@ const WarehousesSection = ({ options, t, warehouses }) => {
                     />
 
                     <button
+                      disabled={true}
                       type="button"
                       onClick={() => remove(index)}
                       className="text-red-500 font-bold"

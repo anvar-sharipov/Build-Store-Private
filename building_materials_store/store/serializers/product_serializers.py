@@ -125,7 +125,7 @@ class FreeProductSerializer(serializers.ModelSerializer):
         model = FreeProduct
         fields = ['id', 'gift_product', 'gift_product_name', 'quantity_per_unit', 'gift_product_quantity', 'gift_product_unit_name']
 
-
+   
 class ProductSerializer(serializers.ModelSerializer):
     category_name_obj = CategorySerializer(read_only=True, source='category')
     base_unit_obj = UnitOfMeasurementSerializer(read_only=True, source='base_unit')
@@ -152,7 +152,7 @@ class ProductSerializer(serializers.ModelSerializer):
     total_quantity = serializers.SerializerMethodField()
 
     quantity_on_selected_warehouses = serializers.SerializerMethodField()
-
+    turnover_data = serializers.SerializerMethodField()
     
     class Meta:
         model = Product
@@ -171,8 +171,28 @@ class ProductSerializer(serializers.ModelSerializer):
             'warehouses', 'warehouses_data',    # для записи остатков
             'total_quantity', # для отображения суммы
             'is_active', 'created_at', 'updated_at',
-            'quantity_on_selected_warehouses',
+            'quantity_on_selected_warehouses',  
+            "turnover_data",
         ]
+    
+    def get_turnover_data(self, obj):
+        turnover_data = self.context.get("turnover_data", {})
+        return turnover_data.get(obj.id, {"qty": 0, "sum": 0})
+        # t = turnover_data.get(obj.id, {"qty": 0, "sum": 0})
+        # if id == 606:
+        #     ic(t)
+
+        # # print(obj.id)
+        # return {
+        #     "qty": obj.name,
+        #     "sum": 0,
+        # }
+        # turnover_map = self.context.get("turnover_map", {})
+        # print("ID:", obj.id, "IN MAP:", obj.id in turnover_map)
+        # return turnover_map.get(obj.id, {
+        #     "qty": obj.name,
+        #     "sum": 0,
+        # })
 
     def get_quantity_on_selected_warehouses(self, obj):
         # warehouse_ids = self.context.get('warehouse_ids', [])
@@ -191,13 +211,22 @@ class ProductSerializer(serializers.ModelSerializer):
             else:
                 return obj.get_total_quantity()
 
-
+    # ❌ Как сейчас (медленно) no rabotaet poprobuem sowet chata gpt on goworit budet bystree
+    # def get_total_quantity(self, obj):
+    #     # Если queryset аннотирован, возвращаем аннотированное значение
+    #     if hasattr(obj, 'total_quantity') and obj.total_quantity is not None:
+    #         return obj.total_quantity
+    #     # Если аннотация отсутствует (например, отдельный объект), считаем на лету
+    #     return obj.warehouse_products.aggregate(total=Sum('quantity'))['total'] or 0
+    
+    # ✅ Как изменить (НИЧЕГО НЕ ЛОМАЯ)
     def get_total_quantity(self, obj):
-        # Если queryset аннотирован, возвращаем аннотированное значение
-        if hasattr(obj, 'total_quantity') and obj.total_quantity is not None:
-            return obj.total_quantity
-        # Если аннотация отсутствует (например, отдельный объект), считаем на лету
-        return obj.warehouse_products.aggregate(total=Sum('quantity'))['total'] or 0
+        if hasattr(obj, 'total_quantity2') and obj.total_quantity2 is not None:
+            return obj.total_quantity2
+
+        return obj.warehouse_products.aggregate(
+            total=Sum('quantity')
+        )['total'] or 0
 
     
 

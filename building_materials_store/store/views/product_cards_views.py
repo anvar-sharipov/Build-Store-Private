@@ -1,7 +1,7 @@
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime, timedelta
 from rest_framework.decorators import api_view, permission_classes
-from ..models import Invoice, InvoiceItem, ProductUnit, Product
+from ..models import Invoice, InvoiceItem, ProductUnit, Product, StockSnapshot
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
@@ -152,9 +152,31 @@ def product_cards(request):
     
     query = request.GET.get("query")
     agent = request.GET.get("agent")
-
     
-
+    # snapshots = (
+    #     StockSnapshot.objects
+    #     .filter(
+    #         warehouse_id=warehouse_id,
+    #         closing__date__lt=date_from
+    #     )
+    #     .select_related("closing")
+    #     .order_by("product_id", "-closing__date")
+    # )
+    
+    
+    # snapshot_map = {}
+    
+    # for s in snapshots:
+    #     if s.product_id not in snapshot_map:
+    #         snapshot_map[s.product_id] = s
+            
+    
+    
+    # ic(snapshot_map)
+    
+    
+    
+    
     # 1️⃣ Загружаем все товары + единицы
     # products = (
     #     Product.objects
@@ -179,7 +201,7 @@ def product_cards(request):
         .select_related("invoice", "invoice__partner")
         .filter(invoice__entry_created_at_handle__lte=date_to)
     )
-    
+
     if partner:
         items = items.filter(invoice__partner_id=int(partner))
         
@@ -187,6 +209,11 @@ def product_cards(request):
         items = items.filter(invoice__partner__agent_id=int(agent))
 
     results = []
+    
+    items_by_product = defaultdict(list)
+
+    for i in items:
+        items_by_product[i.product_id].append(i)
 
     for product in products:
         # единица измерения
@@ -197,7 +224,8 @@ def product_cards(request):
         unit = unit_obj.unit.name if unit_obj else product.base_unit.name
 
         # все движения по товару
-        product_items = [i for i in items if i.product_id == product.id]
+        # product_items = [i for i in items if i.product_id == product.id]
+        product_items = items_by_product.get(product.id, [])
 
         start_qty = Decimal("0")
         prihod_qty = Decimal("0")
@@ -276,15 +304,16 @@ def product_cards(request):
             "operations": sorted(operations, key=lambda x: x["date"]),
         })
         
-        # сортировка по приходу / расходу / возврату
-        if field in ["prihod", "rashod", "wozwrat"]:
-            reverse = order == "desc"
-            results = sorted(
-                results,
-                key=lambda x: x.get(field, 0),
-                reverse=reverse
-            )
-
+    # сортировка по приходу / расходу / возврату
+    if field in ["prihod", "rashod", "wozwrat"]:
+        reverse = order == "desc"
+        results = sorted(
+            results,
+            key=lambda x: x.get(field, 0),
+            reverse=reverse
+        )
+            
+    
 
     return Response({
         "warehouse_id": warehouse_id,

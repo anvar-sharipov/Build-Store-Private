@@ -22,6 +22,8 @@ export const BuhOborotTowarow = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const printStylesThTd = "print:border-black print:px-1 print:py-0.5 print:text-[10px] print:leading-none border-black px-1 py-0.5 text-[12px] leading-none" 
+
   const [searchParams] = useSearchParams();
   const selectedProductId = searchParams.get("selected");
 
@@ -34,7 +36,7 @@ export const BuhOborotTowarow = () => {
   // Для обратной совместимости - если используется старый параметр warehouse
   const warehouseId = searchParams.get("warehouse");
 
-  const withWozwrat = searchParams.get("withWozwrat") === "1";
+  // const withWozwrat = searchParams.get("withWozwrat") === "1";
   const categories = searchParams.get("categories");
   const products_ids = searchParams.get("products");
   const emptyTurnovers = searchParams.get("emptyTurnovers");
@@ -81,7 +83,7 @@ export const BuhOborotTowarow = () => {
           dateFrom,
           dateTo,
           warehouses: warehouseParam, // Изменено на множественный параметр
-          withWozwrat: withWozwrat,
+          // withWozwrat: withWozwrat,
           categories: categories,
           products: products_ids,
           emptyTurnovers: emptyTurnovers,
@@ -101,6 +103,10 @@ export const BuhOborotTowarow = () => {
         totalAmountIncome: 0,
         oborot_selected_quantity_chykdajy: 0,
         totalAmountOutcome: 0,
+
+        oborot_selected_quantity_wozwrat: 0,
+        totalAmountWozwrat: 0,
+
         end_selected_quantity: 0,
         totalAmountEnd: 0,
       };
@@ -134,6 +140,10 @@ export const BuhOborotTowarow = () => {
             totalAmountIncome: 0,
             oborot_selected_quantity_chykdajy: 0,
             totalAmountOutcome: 0,
+
+            oborot_selected_quantity_wozwrat: 0,
+            totalAmountWozwrat: 0,
+            
             end_selected_quantity: 0,
             totalAmountEnd: 0,
           };
@@ -163,6 +173,7 @@ export const BuhOborotTowarow = () => {
         const selectedQty = parseFloat(product.selected_quantity) || 0;
         const girdejiQty = parseFloat(product.oborot_selected_quantity_girdeji) || 0;
         const chykdajyQty = parseFloat(product.oborot_selected_quantity_chykdajy) || 0;
+        const wozwratQty = parseFloat(product.oborot_selected_quantity_wozwrat) || 0;
         const endQty = parseFloat(product.end_selected_quantity) || 0;
 
         categoryTotal.selected_quantity += selectedQty;
@@ -173,6 +184,9 @@ export const BuhOborotTowarow = () => {
 
         categoryTotal.oborot_selected_quantity_chykdajy += chykdajyQty;
         categoryTotal.totalAmountOutcome += price * chykdajyQty;
+
+        categoryTotal.oborot_selected_quantity_wozwrat += wozwratQty;
+        categoryTotal.totalAmountWozwrat += price * wozwratQty;
 
         categoryTotal.end_selected_quantity += endQty;
         categoryTotal.totalAmountEnd += price * endQty;
@@ -195,6 +209,10 @@ export const BuhOborotTowarow = () => {
             totalAmountIncome: 0,
             oborot_selected_quantity_chykdajy: 0,
             totalAmountOutcome: 0,
+
+            oborot_selected_quantity_wozwrat: 0,
+            totalAmountWozwrat: 0,
+
             end_selected_quantity: 0,
             totalAmountEnd: 0,
           };
@@ -208,6 +226,10 @@ export const BuhOborotTowarow = () => {
               grandTotal.totalAmountIncome += item.totalAmountIncome;
               grandTotal.oborot_selected_quantity_chykdajy += item.oborot_selected_quantity_chykdajy;
               grandTotal.totalAmountOutcome += item.totalAmountOutcome;
+
+              grandTotal.oborot_selected_quantity_wozwrat += item.oborot_selected_quantity_wozwrat;
+              grandTotal.totalAmountWozwrat += item.totalAmountWozwrat;
+
               grandTotal.end_selected_quantity += item.end_selected_quantity;
               grandTotal.totalAmountEnd += item.totalAmountEnd;
             }
@@ -242,7 +264,7 @@ export const BuhOborotTowarow = () => {
 
     setGroupedProducts([]);
     fetchBuhOborotTowarow();
-  }, [dateFrom, dateTo, selectedWarehouses, warehouseId, withWozwrat, categories, products_ids, emptyTurnovers]);
+  }, [dateFrom, dateTo, selectedWarehouses, warehouseId, categories, products_ids, emptyTurnovers]);
 
   const showDetailProductOborot = (productId) => {
     const params = new URLSearchParams(location.search);
@@ -283,16 +305,16 @@ export const BuhOborotTowarow = () => {
   }, [groupedProducts, selectedProductId]);
 
   return (
-    <div className="p-4">
+    <div>
       {/* HEADER */}
       <motion.div className="text-center mb-6" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-        <h1 className="text-xl font-bold dark:text-white text-gray-800">{t("buh oborot towar2")}</h1>
+        <h1 className="text-md font-bold dark:text-white text-gray-800">{t("buh oborot towar2")}</h1>
 
         {/* Отображение выбранных складов */}
         {getSelectedWarehousesInfo.length > 0 && (
-          <div className="mt-2 text-gray-600 dark:text-gray-400">
+          <div className="mt-2 print:mt-0 text-gray-600 dark:text-gray-400">
             {t("choosed_warehouse") || "Выбранные склады"}:
-            <div className="flex flex-wrap gap-2 mt-1 justify-center">
+            <div className="flex flex-wrap gap-2 mt-1 print:mt-0 justify-center">
               {getSelectedWarehousesInfo.map((wh) => (
                 <span key={wh.id} className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded text-sm">
                   {wh.name}
@@ -304,7 +326,7 @@ export const BuhOborotTowarow = () => {
 
         {/* Для обратной совместимости - если используется старый параметр */}
         {warehouseId && selectedWarehouses.length === 0 && (
-          <div className="mt-2 text-gray-600 dark:text-gray-400">
+          <div className="mt-2 print:mt-0 text-gray-600 dark:text-gray-400">
             {t("choosed_warehouse")}: <span className="font-semibold">{warehouses.find((w) => String(w.id) === warehouseId)?.name || `ID: ${warehouseId}`}</span>
           </div>
         )}
@@ -312,58 +334,64 @@ export const BuhOborotTowarow = () => {
         <p className="text-gray-500 dark:text-gray-400 mt-1">
           {MyFormatDate(dateFrom)} — {MyFormatDate(dateTo)}
         </p>
-        {!withWozwrat ? (
+        {/* {!withWozwrat ? (
           <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">Отчет без учета возвратов</p>
         ) : (
           <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">Отчет с учетом возвратов</p>
-        )}
+        )} */}
       </motion.div>
 
       {/* CONTENT */}
       {groupedProducts.length > 0 ? (
         <div className="w-full bg-white dark:bg-gray-900 rounded-md p-2 overflow-x-auto">
-          <table className="w-full table-auto border-collapse border border-gray-200 dark:border-gray-700 text-sm">
+          <table className="w-full table-auto border-collapse border border-black dark:border-gray-700 text-sm tabular-nums text-[10px]">
             <thead>
               <tr className="bg-gray-50 dark:bg-gray-800">
-                <th rowSpan={2} className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-left">
+                <th rowSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-left ${printStylesThTd}`}>
                   №
                 </th>
-                <th rowSpan={2} className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-left">
-                  Haryt-maddy gymmatlyklar Ady, häsiýeti
+                <th rowSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-left ${printStylesThTd}`}>
+                  Haryt ady
                 </th>
-                <th rowSpan={2} className="border border-gray-200 dark:border-gray-700 px-3 py-2">
+                <th rowSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>
                   Ölçeg birligi
                 </th>
-                <th rowSpan={2} className="border border-gray-200 dark:border-gray-700 px-3 py-2">
+                <th rowSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>
                   SATYS BAHA
                 </th>
 
-                <th colSpan={2} className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-center">
-                  Hasabat döwrüniň başyna galyndy
+                <th colSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-center ${printStylesThTd}`}>
+                  başyna galyndy
                 </th>
-                <th colSpan={2} className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-center">
-                  Hasabat döwründäki girdeji
+                <th colSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-center ${printStylesThTd}`}>
+                  girdeji
                 </th>
-                <th colSpan={2} className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-center">
-                  Hasabat döwründäki çykdajy
+                <th colSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-center ${printStylesThTd}`}>
+                  çykdajy
                 </th>
-                <th colSpan={2} className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-center">
-                  Hasabat döwrüniň ahyryna galyndy
+                <th colSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-center ${printStylesThTd}`}>
+                  wozwrat
+                </th>
+                <th colSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-center ${printStylesThTd}`}>
+                  ahyryna galyndy
                 </th>
               </tr>
 
               <tr className="bg-gray-50 dark:bg-gray-800">
-                <th className="border border-gray-200 dark:border-gray-700 px-3 py-2">mukdary</th>
-                <th className="border border-gray-200 dark:border-gray-700 px-3 py-2">möçberi</th>
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>mukdary</th>
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>möçberi</th>
 
-                <th className="border border-gray-200 dark:border-gray-700 px-3 py-2">mukdary</th>
-                <th className="border border-gray-200 dark:border-gray-700 px-3 py-2">möçberi</th>
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>mukdary</th>
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>möçberi</th>
 
-                <th className="border border-gray-200 dark:border-gray-700 px-3 py-2">mukdary</th>
-                <th className="border border-gray-200 dark:border-gray-700 px-3 py-2">möçberi</th>
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>mukdary</th>
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>möçberi</th>
 
-                <th className="border border-gray-200 dark:border-gray-700 px-3 py-2">mukdary</th>
-                <th className="border border-gray-200 dark:border-gray-700 px-3 py-2">möçberi</th>
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>mukdary</th>
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>möçberi</th>
+
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>mukdary</th>
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>möçberi</th>
               </tr>
             </thead>
 
@@ -372,7 +400,7 @@ export const BuhOborotTowarow = () => {
                 if (item.type === "category") {
                   return (
                     <tr key={`cat-${item.id}`} className="bg-gray-100 dark:bg-gray-700 font-semibold">
-                      <td colSpan={12} className="border border-gray-200 dark:border-gray-700 px-3 py-2">
+                      <td colSpan={14} className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>
                         {item.name}
                       </td>
                     </tr>
@@ -380,41 +408,49 @@ export const BuhOborotTowarow = () => {
                 } else if (item.type === "total") {
                   return (
                     <tr key={`total-${item.id}`} className="bg-gray-200 dark:bg-gray-600 font-semibold">
-                      <td colSpan={4} className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">
+                      <td colSpan={4} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>
                         Итого по категории:
                       </td>
 
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(item.selected_quantity, 0)}</td>
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(item.totalAmountStart)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.selected_quantity, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountStart)}</td>
 
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(item.oborot_selected_quantity_girdeji, 0)}</td>
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(item.totalAmountIncome)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_girdeji, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountIncome)}</td>
 
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(item.oborot_selected_quantity_chykdajy, 0)}</td>
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(item.totalAmountOutcome)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_chykdajy, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountOutcome)}</td>
 
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(item.end_selected_quantity, 0)}</td>
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(item.totalAmountEnd)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_wozwrat, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountWozwrat)}</td>
+
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.end_selected_quantity, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountEnd)}</td>
                     </tr>
                   );
                 } else if (item.type === "grand_total") {
+                  console.log("item", item);
+                  
                   return (
                     <tr key="grand-total" className="bg-blue-50 dark:bg-blue-900/30 font-bold">
-                      <td colSpan={4} className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">
+                      <td colSpan={4} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>
                         ВСЕГО:
                       </td>
 
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(item.selected_quantity, 0)}</td>
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(item.totalAmountStart)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.selected_quantity, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountStart)}</td>
 
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(item.oborot_selected_quantity_girdeji, 0)}</td>
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(item.totalAmountIncome)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_girdeji, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountIncome)}</td>
 
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(item.oborot_selected_quantity_chykdajy, 0)}</td>
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(item.totalAmountOutcome)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_chykdajy, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountOutcome)}</td>
 
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(item.end_selected_quantity, 0)}</td>
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(item.totalAmountEnd)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_wozwrat, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountWozwrat)}</td>
+
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.end_selected_quantity, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountEnd)}</td>
                     </tr>
                   );
                 } else {
@@ -423,6 +459,7 @@ export const BuhOborotTowarow = () => {
                   const selectedQty = parseFloat(p.selected_quantity) || 0;
                   const girdejiQty = parseFloat(p.oborot_selected_quantity_girdeji) || 0;
                   const chykdajyQty = parseFloat(p.oborot_selected_quantity_chykdajy) || 0;
+                  const wozwratQty = parseFloat(p.oborot_selected_quantity_wozwrat) || 0;
                   const endQty = parseFloat(p.end_selected_quantity) || 0;
 
                   return (
@@ -439,22 +476,25 @@ export const BuhOborotTowarow = () => {
                       focus:outline-none`}
                       onDoubleClick={() => showDetailProductOborot(p.id)}
                     >
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2">{item.displayNumber}</td>
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2">{p.name}</td>
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-center">{p.unit}</td>
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{price > 0 ? formatNumber2(price) : "-"}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>{item.displayNumber}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>{p.name}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-center ${printStylesThTd}`}>{p.unit}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{price > 0 ? formatNumber2(price) : "-"}</td>
 
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(selectedQty, 0)}</td>
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(price * selectedQty)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(selectedQty, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(price * selectedQty)}</td>
 
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(girdejiQty, 0)}</td>
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(price * girdejiQty)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(girdejiQty, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(price * girdejiQty)}</td>
 
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(chykdajyQty, 0)}</td>
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(price * chykdajyQty)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(chykdajyQty, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(price * chykdajyQty)}</td>
 
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(endQty, 0)}</td>
-                      <td className="border border-gray-200 dark:border-gray-700 px-3 py-2 text-right">{formatNumber2(price * endQty)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(wozwratQty, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(price * wozwratQty)}</td>
+
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(endQty, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(price * endQty)}</td>
                     </tr>
                   );
                 }

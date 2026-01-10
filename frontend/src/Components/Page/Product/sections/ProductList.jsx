@@ -176,10 +176,10 @@ const ProductList = ({
                                 Оборот приход
                               </th>
                               <th className="border border-gray-300 px-2 py-1 text-left font-normal" colSpan={2}>
-                                Оборот расход
+                                Оборот возврат
                               </th>
                               <th className="border border-gray-300 px-2 py-1 text-left font-normal" colSpan={2}>
-                                Оборот возврат
+                                Оборот расход
                               </th>
                               <th className="border border-gray-300 px-2 py-1 text-left font-normal" colSpan={2}>
                                 Конец
@@ -203,14 +203,14 @@ const ProductList = ({
                               <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.start_quantity, 0)}</td>
                               <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.start_quantity * p.turnover_data.price)}</td>
 
-                              <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.turnover_quantity_prihod, 0)}</td>
-                              <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.turnover_quantity_prihod * p.turnover_data.price)}</td>
+                              <td className="border border-gray-300 px-2 py-1 text-green-700 dark:text-green-400">{formatNumber2(p.turnover_data.turnover_quantity_prihod, 0)}</td>
+                              <td className="border border-gray-300 px-2 py-1 text-green-700 dark:text-green-400">{formatNumber2(p.turnover_data.turnover_quantity_prihod * p.turnover_data.price)}</td>
 
-                              <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.turnover_quantity_rashod, 0)}</td>
-                              <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.turnover_quantity_rashod * p.turnover_data.price)}</td>
+                              <td className="border border-gray-300 px-2 py-1 text-red-700 dark:text-red-400">{formatNumber2(p.turnover_data.turnover_quantity_wozwrat, 0)}</td>
+                              <td className="border border-gray-300 px-2 py-1 text-red-700 dark:text-red-400">{formatNumber2(p.turnover_data.turnover_quantity_wozwrat * p.turnover_data.price)}</td>
 
-                              <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.turnover_quantity_wozwrat, 0)}</td>
-                              <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.turnover_quantity_wozwrat * p.turnover_data.price)}</td>
+                              <td className="border border-gray-300 px-2 py-1 text-blue-700 dark:text-blue-400">{formatNumber2(p.turnover_data.turnover_quantity_rashod, 0)}</td>
+                              <td className="border border-gray-300 px-2 py-1 text-blue-700 dark:text-blue-400">{formatNumber2(p.turnover_data.turnover_quantity_rashod * p.turnover_data.price)}</td>
 
                               <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.qty_end, 0)}</td>
                               <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.qty_end * p.turnover_data.price)}</td>
@@ -257,11 +257,13 @@ const ProductList = ({
                             <th className="border border-gray-300 px-2 py-1 text-left font-normal" colSpan={2}>
                               Оборот приход
                             </th>
-                            <th className="border border-gray-300 px-2 py-1 text-left font-normal" colSpan={2}>
-                              Оборот расход
-                            </th>
+                            
                             <th className="border border-gray-300 px-2 py-1 text-left font-normal" colSpan={2}>
                               Оборот возврат
+                            </th>
+                            
+                            <th className="border border-gray-300 px-2 py-1 text-left font-normal" colSpan={2}>
+                              Оборот расход
                             </th>
                             <th className="border border-gray-300 px-2 py-1 text-left font-normal" colSpan={2}>
                               Конец
@@ -285,14 +287,14 @@ const ProductList = ({
                             <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.start_quantity, 0)}</td>
                             <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.start_quantity * p.turnover_data.price)}</td>
 
-                            <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.turnover_quantity_prihod, 0)}</td>
-                            <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.turnover_quantity_prihod * p.turnover_data.price)}</td>
+                            <td className="border border-gray-300 px-2 py-1 text-green-700 dark:text-green-400">{formatNumber2(p.turnover_data.turnover_quantity_prihod, 0)}</td>
+                            <td className="border border-gray-300 px-2 py-1 text-green-700 dark:text-green-400">{formatNumber2(p.turnover_data.turnover_quantity_prihod * p.turnover_data.price)}</td>
 
-                            <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.turnover_quantity_rashod, 0)}</td>
-                            <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.turnover_quantity_rashod * p.turnover_data.price)}</td>
+                            <td className="border border-gray-300 px-2 py-1 text-red-700 dark:text-red-400">{formatNumber2(p.turnover_data.turnover_quantity_wozwrat, 0)}</td>
+                            <td className="border border-gray-300 px-2 py-1 text-red-700 dark:text-red-400">{formatNumber2(p.turnover_data.turnover_quantity_wozwrat * p.turnover_data.price)}</td>
 
-                            <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.turnover_quantity_wozwrat, 0)}</td>
-                            <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.turnover_quantity_wozwrat * p.turnover_data.price)}</td>
+                            <td className="border border-gray-300 px-2 py-1 text-blue-700 dark:text-blue-400">{formatNumber2(p.turnover_data.turnover_quantity_rashod, 0)}</td>
+                            <td className="border border-gray-300 px-2 py-1 text-blue-700 dark:text-blue-400">{formatNumber2(p.turnover_data.turnover_quantity_rashod * p.turnover_data.price)}</td>
 
                             <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.qty_end, 0)}</td>
                             <td className="border border-gray-300 px-2 py-1">{formatNumber2(p.turnover_data.qty_end * p.turnover_data.price)}</td>

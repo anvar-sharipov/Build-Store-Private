@@ -71,7 +71,7 @@ const TDPrice = forwardRef(({ product, onFocusPriceRow, onBlurPriceRow, setFocus
   // console.log("ssfsfsfsf", values.products[productIndex]);
 
   return (
-    <td className={`p-0 m-0 text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400  print:!text-black print:!border-black text-center`}>
+    <td className={`p-0 m-0 text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400  print:!text-black print:!border-black text-center font-mono tabular-nums`}>
       <input
         ref={ref} // сюда приходит ref из родителя
         type="text"

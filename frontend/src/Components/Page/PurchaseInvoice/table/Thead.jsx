@@ -5,7 +5,7 @@ const Thead = ({ printVisibleColumns, visibleColumns }) => {
   
   return (
     <thead>
-      <tr className="bg-gray-400 dark:bg-gray-900 dark:text-gray-300">
+      <tr className="bg-gray-400 dark:bg-gray-900 dark:text-gray-300 text-sm">
         <th className={`px-1 text-left font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black w-4`}>№</th>
         <th className={`px-1 text-left font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black`}>{t("name2")}</th>
         <th

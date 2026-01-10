@@ -132,11 +132,12 @@ const ProductCards = () => {
                                 Приход
                               </th>
                               <th className="border border-black bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 print:dark:!text-black print_th" colSpan={2}>
-                                Расход
-                              </th>
-                              <th className="border border-black bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 print:dark:!text-black print_th" colSpan={2}>
                                 Возврат
                               </th>
+                              <th className="border border-black bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 print:dark:!text-black print_th" colSpan={2}>
+                                Расход
+                              </th>
+                              
                               <th className="border border-black bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 print:dark:!text-black print_th" colSpan={2}>
                                 Остаток
                               </th>
@@ -171,8 +172,8 @@ const ProductCards = () => {
                               <td className="border border-black px-2 py-1 print_td" />
                               <td className="border border-black px-2 py-1 print_td" />
                               <td className="border border-black px-2 py-1 print_td" />
-                              <td className="border border-black px-2 py-1 text-right print_td">{product.start_qty}</td>
-                              <td className="border border-black px-2 py-1 text-right print_td">{formatNumber2(product.start_qty * product.retail_price)}</td>
+                              <td className="border border-black px-2 py-1 text-right print_td whitespace-nowrap">{product.start_qty}</td>
+                              <td className="border border-black px-2 py-1 text-right print_td whitespace-nowrap">{formatNumber2(product.start_qty * product.retail_price)}</td>
                             </tr>
 
                             {/* Операции */}
@@ -207,24 +208,24 @@ const ProductCards = () => {
                                   <td className="border border-black px-2 py-1 print_td">{op.partner}</td>
                                   <td className="border border-black px-2 py-1 print_td">№{op.invoice_id} {op.comment}</td>
                                   <td
-                                    className={`border border-black px-2 py-1 text-right print_td ${
+                                    className={`border border-black px-2 py-1 text-right print_td whitespace-nowrap ${
                                       op.price < product.retail_price ? "bg-red-200" : op.price > product.retail_price ? "bg-green-200" : ""
                                     }`}
                                   >
                                     {op.price ? formatNumber2(op.price) : "-"}
                                   </td>
 
-                                  <td className="border border-black px-2 py-1 text-right text-green-600 print_td">{op.type === "prihod" ? op.qty : "-"}</td>
-                                  <td className="border border-black px-2 py-1 text-right text-green-600 print_td">{op.type === "prihod" ? formatNumber2(op.qty * op.price) : "-"}</td>
+                                  <td className="border border-black px-2 py-1 text-right text-green-700 dark:text-green-400 print_td whitespace-nowrap">{op.type === "prihod" ? op.qty : "-"}</td>
+                                  <td className="border border-black px-2 py-1 text-right text-green-700 dark:text-green-400 print_td whitespace-nowrap">{op.type === "prihod" ? formatNumber2(op.qty * op.price) : "-"}</td>
 
-                                  <td className="border border-black px-2 py-1 text-right text-red-600 print_td">{op.type === "rashod" ? op.qty : "-"}</td>
-                                  <td className="border border-black px-2 py-1 text-right text-red-600 print_td">{op.type === "rashod" ? formatNumber2(op.qty * op.price) : "-"}</td>
+                                  <td className="border border-black px-2 py-1 text-right text-red-700 dark:text-red-400 print_td whitespace-nowrap">{op.type === "wozwrat" ? op.qty : "-"}</td>
+                                  <td className="border border-black px-2 py-1 text-right text-red-700 dark:text-red-400 print_td whitespace-nowrap">{op.type === "wozwrat" ? formatNumber2(op.qty * op.price) : "-"}</td>
+                                  
+                                  <td className="border border-black px-2 py-1 text-right text-blue-700 dark:text-blue-400 print_td whitespace-nowrap">{op.type === "rashod" ? op.qty : "-"}</td>
+                                  <td className="border border-black px-2 py-1 text-right text-blue-700 dark:text-blue-400 print_td whitespace-nowrap">{op.type === "rashod" ? formatNumber2(op.qty * op.price) : "-"}</td>
 
-                                  <td className="border border-black px-2 py-1 text-right text-blue-600 print_td">{op.type === "wozwrat" ? op.qty : "-"}</td>
-                                  <td className="border border-black px-2 py-1 text-right text-blue-600 print_td">{op.type === "wozwrat" ? formatNumber2(op.qty * op.price) : "-"}</td>
-
-                                  <td className="border border-black px-2 py-1 text-right font-semibold print_td">{formatNumber2(runningBalance, 0)}</td>
-                                  <td className="border border-black px-2 py-1 text-right font-semibold print_td">{formatNumber2(runningBalance * product.retail_price)}</td>
+                                  <td className="border border-black px-2 py-1 text-right font-semibold print_td whitespace-nowrap">{formatNumber2(runningBalance, 0)}</td>
+                                  <td className="border border-black px-2 py-1 text-right font-semibold print_td whitespace-nowrap">{formatNumber2(runningBalance * product.retail_price)}</td>
                                 </tr>
                               );
                             })}
@@ -236,20 +237,20 @@ const ProductCards = () => {
                               <td className="border border-black px-2 py-1 print_td"></td>
                               <td className="border border-black px-2 py-1 print_td"></td>
 
-                              <td className="border border-black px-2 py-1 print_td">{product.prihod || "-"}</td>
-                              <td className="border border-black px-2 py-1 print_td">{formatNumber2(total_prihod)}</td>
+                              <td className="border border-black px-2 py-1 print_td whitespace-nowrap">{product.prihod || "-"}</td>
+                              <td className="border border-black px-2 py-1 print_td whitespace-nowrap">{formatNumber2(total_prihod)}</td>
 
-                              <td className="border border-black px-2 py-1 text-right print_td">{product.rashod || "-"}</td>
-                              <td className="border border-black px-2 py-1 text-right print_td">{formatNumber2(total_rashod)}</td>
+                              <td className="border border-black px-2 py-1 text-right print_td whitespace-nowrap">{product.wozwrat || "-"}</td>
+                              <td className="border border-black px-2 py-1 text-right print_td whitespace-nowrap">{formatNumber2(total_wozwrat)}</td>
+                              
+                              <td className="border border-black px-2 py-1 text-right print_td whitespace-nowrap">{product.rashod || "-"}</td>
+                              <td className="border border-black px-2 py-1 text-right print_td whitespace-nowrap">{formatNumber2(total_rashod)}</td>
 
-                              <td className="border border-black px-2 py-1 text-right print_td">{product.wozwrat || "-"}</td>
-                              <td className="border border-black px-2 py-1 text-right print_td">{formatNumber2(total_wozwrat)}</td>
-
-                              <td className="border border-black px-2 py-1 text-right print_td">
+                              <td className="border border-black px-2 py-1 text-right print_td whitespace-nowrap">
                                 {formatNumber2(runningBalance, 0) || "-"}
                                 {/* product.end_qty*/}
                               </td>
-                              <td className="border border-black px-2 py-1 text-right print_td">
+                              <td className="border border-black px-2 py-1 text-right print_td whitespace-nowrap">
                                 {formatNumber2(runningBalance * product.retail_price)}
                                 {/* product.end_qty*/}
                               </td>

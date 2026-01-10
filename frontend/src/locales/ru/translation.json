@@ -687,7 +687,9 @@
   "sortByRashod": "Сортировать по расходу",
   "sortByPrihod": "Сортировать по приходу",
   "sortByWozwrat": "Сортировать по возврату",
-  "search agent": "Поиск агента..."
+  "search agent": "Поиск агента...",
+  "category total": "Итого по категории",
+  "TOTAL": "ВСЕГО"
 
 
  

@@ -351,47 +351,48 @@ export const BuhOborotTowarow = () => {
                   №
                 </th>
                 <th rowSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-left ${printStylesThTd}`}>
-                  Haryt ady
+                  {t("product name")}
                 </th>
                 <th rowSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>
-                  Ölçeg birligi
+                  {t('uni')}
                 </th>
                 <th rowSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>
-                  SATYS BAHA
+                  {t("Price")}
                 </th>
 
                 <th colSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-center ${printStylesThTd}`}>
-                  başyna galyndy
+                  {t("Opening balance")}
                 </th>
                 <th colSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-center ${printStylesThTd}`}>
-                  girdeji
+                  {t("prihod")}
                 </th>
                 <th colSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-center ${printStylesThTd}`}>
-                  çykdajy
+                  {t("wozwrat")}
                 </th>
                 <th colSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-center ${printStylesThTd}`}>
-                  wozwrat
+                  {t("rashod")}
                 </th>
+                
                 <th colSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-center ${printStylesThTd}`}>
-                  ahyryna galyndy
+                  {t("Closing balance")}
                 </th>
               </tr>
 
               <tr className="bg-gray-50 dark:bg-gray-800">
-                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>mukdary</th>
-                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>möçberi</th>
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>{t("quantity")}</th>
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>{t("total")}</th>
 
-                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>mukdary</th>
-                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>möçberi</th>
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>{t("quantity")}</th>
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>{t("total")}</th>
 
-                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>mukdary</th>
-                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>möçberi</th>
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>{t("quantity")}</th>
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>{t("total")}</th>
 
-                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>mukdary</th>
-                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>möçberi</th>
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>{t("quantity")}</th>
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>{t("total")}</th>
 
-                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>mukdary</th>
-                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>möçberi</th>
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>{t("quantity")}</th>
+                <th className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>{t("total")}</th>
               </tr>
             </thead>
 
@@ -409,23 +410,23 @@ export const BuhOborotTowarow = () => {
                   return (
                     <tr key={`total-${item.id}`} className="bg-gray-200 dark:bg-gray-600 font-semibold">
                       <td colSpan={4} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>
-                        Итого по категории:
+                        {t("category total")}:
                       </td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.selected_quantity, 0)}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountStart)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.selected_quantity, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountStart)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_girdeji, 0)}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountIncome)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_girdeji, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountIncome)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_chykdajy, 0)}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountOutcome)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_wozwrat, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountWozwrat)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_wozwrat, 0)}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountWozwrat)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_chykdajy, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountOutcome)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.end_selected_quantity, 0)}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountEnd)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.end_selected_quantity, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountEnd)}</td>
                     </tr>
                   );
                 } else if (item.type === "grand_total") {
@@ -434,23 +435,23 @@ export const BuhOborotTowarow = () => {
                   return (
                     <tr key="grand-total" className="bg-blue-50 dark:bg-blue-900/30 font-bold">
                       <td colSpan={4} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>
-                        ВСЕГО:
+                        {t("TOTAL")}:
                       </td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.selected_quantity, 0)}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountStart)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.selected_quantity, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountStart)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_girdeji, 0)}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountIncome)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_girdeji, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountIncome)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_chykdajy, 0)}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountOutcome)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_wozwrat, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountWozwrat)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_wozwrat, 0)}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountWozwrat)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_chykdajy, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountOutcome)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.end_selected_quantity, 0)}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(item.totalAmountEnd)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.end_selected_quantity, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountEnd)}</td>
                     </tr>
                   );
                 } else {
@@ -479,22 +480,22 @@ export const BuhOborotTowarow = () => {
                       <td className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>{item.displayNumber}</td>
                       <td className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>{p.name}</td>
                       <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-center ${printStylesThTd}`}>{p.unit}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{price > 0 ? formatNumber2(price) : "-"}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{price > 0 ? formatNumber2(price) : "-"}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(selectedQty, 0)}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(price * selectedQty)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(selectedQty, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(price * selectedQty)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(girdejiQty, 0)}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(price * girdejiQty)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap text-green-700 dark:text-greed-400 ${printStylesThTd}`}>{formatNumber2(girdejiQty, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap text-green-700 dark:text-greed-400 ${printStylesThTd}`}>{formatNumber2(price * girdejiQty)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(chykdajyQty, 0)}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(price * chykdajyQty)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap text-red-700 dark:text-red-400 ${printStylesThTd}`}>{formatNumber2(wozwratQty, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap text-red-700 dark:text-red-400 ${printStylesThTd}`}>{formatNumber2(price * wozwratQty)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(wozwratQty, 0)}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(price * wozwratQty)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap text-blue-700 dark:text-blue-400 ${printStylesThTd}`}>{formatNumber2(chykdajyQty, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap text-blue-700 dark:text-blue-400 ${printStylesThTd}`}>{formatNumber2(price * chykdajyQty)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(endQty, 0)}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>{formatNumber2(price * endQty)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(endQty, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(price * endQty)}</td>
                     </tr>
                   );
                 }

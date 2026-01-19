@@ -23,7 +23,7 @@ const ReportsMain = () => {
     { id: 5, name: "Список карточек", icon: Activity, color: "rose", to: ROUTES_RAPORT.ACOOUNT_CARDS },
     { id: 6, name: t("buh oborot towar"), icon: Calendar, color: "indigo", to: ROUTES_RAPORT.PRODUCTS_BUH_OBOROT },
     { id: 7, name: "Список карточек товаров", icon: DollarSign, color: "red", to: ROUTES_RAPORT.PRODUCT_CARDS },
-    { id: 8, name: "Складская аналитика", icon: BarChart3, color: "teal" },
+    { id: 8, name: "Скидки/Наценки", icon: BarChart3, color: "teal", to: ROUTES_RAPORT.SKIDKI_NASENKI },
   ];
 
   useEffect(() => {

@@ -32,6 +32,7 @@ export const ROUTES_RAPORT = {
   // DETAIL_PRODUCT_OBOROT: "/detail-product-oborot/:id/:warehouseId",
   DETAIL_PRODUCT_OBOROT: "/report/detail-product-oborot/:id",
   PRODUCT_CARDS: "/product-cards",
+  SKIDKI_NASENKI: "/skidki-nasenki",
 };
 
 
@@ -56,4 +57,5 @@ export const ADMIN_PANEL = {
   DELETE_MODELS: "/delete_models",
   SET_PARTNER_TO_ENTRY: "/set_partner_to_entry",
   FIRST_PRIHOD: "/first-prihod",
+  UNIVERSAL: "/universal",
 };

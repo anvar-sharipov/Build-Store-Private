@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useFormikContext } from "formik";
 import { formatNumber } from "../../../UI/formatNumber";
-import MyDecimalPrice from "../../../UI/MyDecimalPrice";
+import { MyDecimalPrice, sumDiffMoney, sumMoney } from "../../../UI/MyDecimalPrice";
 
 const TFoot = ({ printVisibleColumns, visibleColumns }) => {
   const { t } = useTranslation();
@@ -14,30 +14,13 @@ const TFoot = ({ printVisibleColumns, visibleColumns }) => {
   //     return acc + qty * price;
   //   }, 0);
 
-  const total_purchase = MyDecimalPrice(
-    values.products.reduce((sum, p) => {
-      return sum + (Number(p.purchase_price) || 0) * (Number(p.selected_quantity) || 0);
-    }, 0)
-  );
+  const total_purchase = sumMoney(values.products, "purchase_price", "selected_quantity");
 
-  const total_income = MyDecimalPrice(
-    values.products.reduce((sum, p) => {
-      const income = (Number(p.selected_price) - Number(p.purchase_price)) * Number(p.selected_quantity || 0);
-      return sum + income;
-    }, 0)
-  );
+  const total_selected_price = sumMoney(values.products, "selected_price", "selected_quantity");
 
-  const total_selected_price = MyDecimalPrice(
-    values.products.reduce((sum, p) => {
-      return sum + Number(p.selected_price || 0) * Number(p.selected_quantity || 0);
-    }, 0)
-  );
+  const total_income = sumDiffMoney(values.products, "selected_price", "purchase_price", "selected_quantity");
 
-  const total_discount_price = MyDecimalPrice(
-    values.products.reduce((sum, p) => {
-      return sum + (Number(p.selected_price) - Number(p.wholesale_price)) * Number(p.selected_quantity || 0);
-    }, 0)
-  );
+  const total_discount_price = sumDiffMoney(values.products, "selected_price", "wholesale_price", "selected_quantity");
 
   const total_volume_price = values.products.reduce((sum, p) => {
     return sum + Number(p.volume) * Number(p.selected_quantity || 0);
@@ -77,7 +60,9 @@ const TFoot = ({ printVisibleColumns, visibleColumns }) => {
         <th className={`px-1 text-right font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black w-24 dark:border-gray-400 print:!border-black`}></th>
         <th className={`px-1 text-right font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black`}></th>
         <th className={`px-1 text-right font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black`}></th>
-        <th className={`px-1 text-right font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black whitespace-nowrap font-mono tabular-nums`}>
+        <th
+          className={`px-1 text-right font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black whitespace-nowrap font-mono tabular-nums`}
+        >
           {formatNumber(total_selected_price, 2)}
         </th>
         <th

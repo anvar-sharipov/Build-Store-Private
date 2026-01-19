@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES_RAPORT } from "../../../routes";
 import OSW2Excel from "./OSW2Excel";
 import MyFormatDate from "../../UI/MyFormatDate";
+import { formatNumber2 } from "../../UI/formatNumber2";
 
 const OSW2 = () => {
   const { t } = useTranslation();

@@ -22,7 +22,7 @@ export const BuhOborotTowarow = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const printStylesThTd = "print:border-black print:px-1 print:py-0.5 print:text-[10px] print:leading-none border-black px-1 py-0.5 text-[12px] leading-none" 
+  const printStylesThTd = "print:border-black print:px-1 print:py-0.5 print:text-[10px] print:leading-none border-black px-1 py-0.5 text-[12px] leading-none";
 
   const [searchParams] = useSearchParams();
   const selectedProductId = searchParams.get("selected");
@@ -92,6 +92,160 @@ export const BuhOborotTowarow = () => {
 
       setProducts(res.data.data);
 
+      // // Группируем товары по категориям
+      // const grouped = [];
+      // let currentCategory = null;
+      // let counter = 1;
+      // let categoryTotal = {
+      //   selected_quantity: 0,
+      //   totalAmountStart: 0,
+      //   oborot_selected_quantity_girdeji: 0,
+      //   totalAmountIncome: 0,
+      //   oborot_selected_quantity_chykdajy: 0,
+      //   totalAmountOutcome: 0,
+
+      //   oborot_selected_quantity_wozwrat: 0,
+      //   totalAmountWozwrat: 0,
+
+      //   end_selected_quantity: 0,
+      //   totalAmountEnd: 0,
+      // };
+
+      // // Сортируем по категориям
+      // const sortedProducts = [...res.data.data].sort((a, b) => {
+      //   const catA = a.category || "Без категории";
+      //   const catB = b.category || "Без категории";
+      //   return catA.localeCompare(catB);
+      // });
+
+      // // Создаем структуру с категориями и totals
+      // sortedProducts.forEach((product, idx) => {
+      //   const category = product.category || "Без категории";
+      //   const price = parseFloat(product.price) || 0;
+
+      //   // Если категория меняется и это не первая категория
+      //   if (category !== currentCategory && currentCategory !== null) {
+      //     // Добавляем итог предыдущей категории
+      //     grouped.push({
+      //       type: "total",
+      //       ...categoryTotal,
+      //       id: currentCategory + "_total",
+      //     });
+
+      //     // Сбрасываем totals
+      //     categoryTotal = {
+      //       selected_quantity: 0,
+      //       totalAmountStart: 0,
+      //       oborot_selected_quantity_girdeji: 0,
+      //       totalAmountIncome: 0,
+      //       oborot_selected_quantity_chykdajy: 0,
+      //       totalAmountOutcome: 0,
+
+      //       oborot_selected_quantity_wozwrat: 0,
+      //       totalAmountWozwrat: 0,
+
+      //       end_selected_quantity: 0,
+      //       totalAmountEnd: 0,
+      //     };
+
+      //     // Если хотите, чтобы каждая категория начиналась с 1, раскомментируйте:
+      //     // counter = 1;
+      //   }
+
+      //   if (category !== currentCategory) {
+      //     // Добавляем категорию
+      //     grouped.push({
+      //       type: "category",
+      //       name: category,
+      //       id: category,
+      //     });
+      //     currentCategory = category;
+      //   }
+
+      //   // Добавляем товар
+      //   grouped.push({
+      //     type: "product",
+      //     ...product,
+      //     displayNumber: counter++,
+      //   });
+
+      //   // Накопление totals для категории
+      //   const selectedQty = parseFloat(product.selected_quantity) || 0;
+      //   const girdejiQty = parseFloat(product.oborot_selected_quantity_girdeji) || 0;
+      //   const chykdajyQty = parseFloat(product.oborot_selected_quantity_chykdajy) || 0;
+      //   const wozwratQty = parseFloat(product.oborot_selected_quantity_wozwrat) || 0;
+      //   const endQty = parseFloat(product.end_selected_quantity) || 0;
+
+      //   categoryTotal.selected_quantity += selectedQty;
+      //   categoryTotal.totalAmountStart += price * selectedQty;
+
+      //   categoryTotal.oborot_selected_quantity_girdeji += girdejiQty;
+      //   categoryTotal.totalAmountIncome += price * girdejiQty;
+
+      //   categoryTotal.oborot_selected_quantity_chykdajy += chykdajyQty;
+      //   categoryTotal.totalAmountOutcome += price * chykdajyQty;
+
+      //   categoryTotal.oborot_selected_quantity_wozwrat += wozwratQty;
+      //   categoryTotal.totalAmountWozwrat += price * wozwratQty;
+
+      //   categoryTotal.end_selected_quantity += endQty;
+      //   categoryTotal.totalAmountEnd += price * endQty;
+
+      //   // Если это последний товар
+      //   if (idx === sortedProducts.length - 1) {
+      //     // Добавляем итог последней категории
+      //     grouped.push({
+      //       type: "total",
+      //       ...categoryTotal,
+      //       id: currentCategory + "_total",
+      //     });
+
+      //     // Подсчитываем общий итог по всем категориям
+      //     const grandTotal = {
+      //       type: "grand_total",
+      //       selected_quantity: 0,
+      //       totalAmountStart: 0,
+      //       oborot_selected_quantity_girdeji: 0,
+      //       totalAmountIncome: 0,
+      //       oborot_selected_quantity_chykdajy: 0,
+      //       totalAmountOutcome: 0,
+
+      //       oborot_selected_quantity_wozwrat: 0,
+      //       totalAmountWozwrat: 0,
+
+      //       end_selected_quantity: 0,
+      //       totalAmountEnd: 0,
+      //     };
+
+      //     // Суммируем все totals
+      //     grouped.forEach((item) => {
+      //       if (item.type === "total") {
+      //         grandTotal.selected_quantity += item.selected_quantity;
+      //         grandTotal.totalAmountStart += item.totalAmountStart;
+      //         grandTotal.oborot_selected_quantity_girdeji += item.oborot_selected_quantity_girdeji;
+      //         grandTotal.totalAmountIncome += item.totalAmountIncome;
+      //         grandTotal.oborot_selected_quantity_chykdajy += item.oborot_selected_quantity_chykdajy;
+      //         grandTotal.totalAmountOutcome += item.totalAmountOutcome;
+
+      //         grandTotal.oborot_selected_quantity_wozwrat += item.oborot_selected_quantity_wozwrat;
+      //         grandTotal.totalAmountWozwrat += item.totalAmountWozwrat;
+
+      //         grandTotal.end_selected_quantity += item.end_selected_quantity;
+      //         grandTotal.totalAmountEnd += item.totalAmountEnd;
+      //       }
+      //     });
+
+      //     // Добавляем общий итог в конце
+      //     grouped.push({
+      //       type: "grand_total",
+      //       ...grandTotal,
+      //       id: "grand_total",
+      //     });
+      //   }
+      // });
+
+      // ЗАМЕНИТЕ В ВАШЕМ КОДЕ РАЗДЕЛ ГРУППИРОВКИ:
+
       // Группируем товары по категориям
       const grouped = [];
       let currentCategory = null;
@@ -103,10 +257,8 @@ export const BuhOborotTowarow = () => {
         totalAmountIncome: 0,
         oborot_selected_quantity_chykdajy: 0,
         totalAmountOutcome: 0,
-
         oborot_selected_quantity_wozwrat: 0,
         totalAmountWozwrat: 0,
-
         end_selected_quantity: 0,
         totalAmountEnd: 0,
       };
@@ -140,16 +292,11 @@ export const BuhOborotTowarow = () => {
             totalAmountIncome: 0,
             oborot_selected_quantity_chykdajy: 0,
             totalAmountOutcome: 0,
-
             oborot_selected_quantity_wozwrat: 0,
             totalAmountWozwrat: 0,
-            
             end_selected_quantity: 0,
             totalAmountEnd: 0,
           };
-
-          // Если хотите, чтобы каждая категория начиналась с 1, раскомментируйте:
-          // counter = 1;
         }
 
         if (category !== currentCategory) {
@@ -176,20 +323,21 @@ export const BuhOborotTowarow = () => {
         const wozwratQty = parseFloat(product.oborot_selected_quantity_wozwrat) || 0;
         const endQty = parseFloat(product.end_selected_quantity) || 0;
 
+        // ✅ ИСПРАВЛЕНО: используем фактические суммы из API
         categoryTotal.selected_quantity += selectedQty;
-        categoryTotal.totalAmountStart += price * selectedQty;
+        categoryTotal.totalAmountStart += price * selectedQty; // начальный остаток по текущей цене
 
         categoryTotal.oborot_selected_quantity_girdeji += girdejiQty;
-        categoryTotal.totalAmountIncome += price * girdejiQty;
+        categoryTotal.totalAmountIncome += parseFloat(product.oborot_girdeji_price) || 0; // ← ФАКТИЧЕСКАЯ СУММА
 
         categoryTotal.oborot_selected_quantity_chykdajy += chykdajyQty;
-        categoryTotal.totalAmountOutcome += price * chykdajyQty;
+        categoryTotal.totalAmountOutcome += parseFloat(product.oborot_chykdajy_price) || 0; // ← ФАКТИЧЕСКАЯ СУММА
 
         categoryTotal.oborot_selected_quantity_wozwrat += wozwratQty;
-        categoryTotal.totalAmountWozwrat += price * wozwratQty;
+        categoryTotal.totalAmountWozwrat += parseFloat(product.oborot_wozwrat_price) || 0; // ← ФАКТИЧЕСКАЯ СУММА
 
         categoryTotal.end_selected_quantity += endQty;
-        categoryTotal.totalAmountEnd += price * endQty;
+        categoryTotal.totalAmountEnd += price * endQty; // конечный остаток по текущей цене
 
         // Если это последний товар
         if (idx === sortedProducts.length - 1) {
@@ -209,10 +357,8 @@ export const BuhOborotTowarow = () => {
             totalAmountIncome: 0,
             oborot_selected_quantity_chykdajy: 0,
             totalAmountOutcome: 0,
-
             oborot_selected_quantity_wozwrat: 0,
             totalAmountWozwrat: 0,
-
             end_selected_quantity: 0,
             totalAmountEnd: 0,
           };
@@ -226,10 +372,8 @@ export const BuhOborotTowarow = () => {
               grandTotal.totalAmountIncome += item.totalAmountIncome;
               grandTotal.oborot_selected_quantity_chykdajy += item.oborot_selected_quantity_chykdajy;
               grandTotal.totalAmountOutcome += item.totalAmountOutcome;
-
               grandTotal.oborot_selected_quantity_wozwrat += item.oborot_selected_quantity_wozwrat;
               grandTotal.totalAmountWozwrat += item.totalAmountWozwrat;
-
               grandTotal.end_selected_quantity += item.end_selected_quantity;
               grandTotal.totalAmountEnd += item.totalAmountEnd;
             }
@@ -354,7 +498,7 @@ export const BuhOborotTowarow = () => {
                   {t("product name")}
                 </th>
                 <th rowSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>
-                  {t('uni')}
+                  {t("uni")}
                 </th>
                 <th rowSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 ${printStylesThTd}`}>
                   {t("Price")}
@@ -372,7 +516,7 @@ export const BuhOborotTowarow = () => {
                 <th colSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-center ${printStylesThTd}`}>
                   {t("rashod")}
                 </th>
-                
+
                 <th colSpan={2} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-center ${printStylesThTd}`}>
                   {t("Closing balance")}
                 </th>
@@ -413,44 +557,56 @@ export const BuhOborotTowarow = () => {
                         {t("category total")}:
                       </td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.selected_quantity, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.selected_quantity, 2)}</td>
                       <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountStart)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_girdeji, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>
+                        {formatNumber2(item.oborot_selected_quantity_girdeji, 2)}
+                      </td>
                       <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountIncome)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_wozwrat, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>
+                        {formatNumber2(item.oborot_selected_quantity_wozwrat, 2)}
+                      </td>
                       <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountWozwrat)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_chykdajy, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>
+                        {formatNumber2(item.oborot_selected_quantity_chykdajy, 2)}
+                      </td>
                       <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountOutcome)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.end_selected_quantity, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.end_selected_quantity, 2)}</td>
                       <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountEnd)}</td>
                     </tr>
                   );
                 } else if (item.type === "grand_total") {
                   console.log("item", item);
-                  
+
                   return (
                     <tr key="grand-total" className="bg-blue-50 dark:bg-blue-900/30 font-bold">
                       <td colSpan={4} className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right ${printStylesThTd}`}>
                         {t("TOTAL")}:
                       </td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.selected_quantity, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.selected_quantity, 2)}</td>
                       <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountStart)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_girdeji, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>
+                        {formatNumber2(item.oborot_selected_quantity_girdeji, 2)}
+                      </td>
                       <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountIncome)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_wozwrat, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>
+                        {formatNumber2(item.oborot_selected_quantity_wozwrat, 2)}
+                      </td>
                       <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountWozwrat)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.oborot_selected_quantity_chykdajy, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>
+                        {formatNumber2(item.oborot_selected_quantity_chykdajy, 2)}
+                      </td>
                       <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountOutcome)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.end_selected_quantity, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.end_selected_quantity, 2)}</td>
                       <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(item.totalAmountEnd)}</td>
                     </tr>
                   );
@@ -482,19 +638,31 @@ export const BuhOborotTowarow = () => {
                       <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-center ${printStylesThTd}`}>{p.unit}</td>
                       <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{price > 0 ? formatNumber2(price) : "-"}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(selectedQty, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(selectedQty, 2)}</td>
                       <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(price * selectedQty)}</td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap text-green-700 dark:text-greed-400 ${printStylesThTd}`}>{formatNumber2(girdejiQty, 0)}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap text-green-700 dark:text-greed-400 ${printStylesThTd}`}>{formatNumber2(price * girdejiQty)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap text-green-700 dark:text-greed-400 ${printStylesThTd}`}>
+                        {formatNumber2(girdejiQty, 2)}
+                      </td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap text-green-700 dark:text-greed-400 ${printStylesThTd}`}>
+                        {formatNumber2(price * girdejiQty)}
+                      </td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap text-red-700 dark:text-red-400 ${printStylesThTd}`}>{formatNumber2(wozwratQty, 0)}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap text-red-700 dark:text-red-400 ${printStylesThTd}`}>{formatNumber2(price * wozwratQty)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap text-red-700 dark:text-red-400 ${printStylesThTd}`}>
+                        {formatNumber2(wozwratQty, 2)}
+                      </td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap text-red-700 dark:text-red-400 ${printStylesThTd}`}>
+                        {formatNumber2(price * wozwratQty)}
+                      </td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap text-blue-700 dark:text-blue-400 ${printStylesThTd}`}>{formatNumber2(chykdajyQty, 0)}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap text-blue-700 dark:text-blue-400 ${printStylesThTd}`}>{formatNumber2(price * chykdajyQty)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap text-blue-700 dark:text-blue-400 ${printStylesThTd}`}>
+                        {formatNumber2(chykdajyQty, 2)}
+                      </td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap text-blue-700 dark:text-blue-400 ${printStylesThTd}`}>
+                        {formatNumber2(price * chykdajyQty)}
+                      </td>
 
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(endQty, 0)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(endQty, 2)}</td>
                       <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(price * endQty)}</td>
                     </tr>
                   );

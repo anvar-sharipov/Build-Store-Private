@@ -206,7 +206,7 @@ class WarehouseAdmin(admin.ModelAdmin):
 # Остатки на складах
 @admin.register(WarehouseProduct)
 class WarehouseProductAdmin(admin.ModelAdmin):
-    list_display = ('warehouse', 'product', 'quantity')
+    list_display = ('id', 'warehouse', 'product', 'quantity')
     list_filter = ('warehouse',)
     search_fields = ('product__name', 'warehouse__name')
     
@@ -519,7 +519,7 @@ class CustomePostingRuleAdmin(admin.ModelAdmin):
 
 @admin.register(WarehouseAccount)
 class WarehouseAccountAdmin(admin.ModelAdmin):
-    list_display = ('warehouse', 'account', 'description')
+    list_display = ('id', 'warehouse', 'account', 'description')
     list_filter = ('warehouse',)
     search_fields = ('warehouse__name', 'account__code')
     
@@ -918,3 +918,74 @@ class CurrencyAdmin(admin.ModelAdmin):
     list_display = ("code", "name")  # показывать в списке
     search_fields = ("code", "name")  # поиск по коду и названию
     ordering = ("code",)  # сортировка по коду
+    
+    
+    
+    
+    
+@admin.register(DayReport)
+class DayReportAdmin(admin.ModelAdmin):
+    list_display = (
+        "date",
+        "report_type_display",
+        "created_by",
+        "created_at",
+        "file_link",
+        "comment_short",
+    )
+
+    list_filter = (
+        "date",
+        "report_type",
+        "created_by",
+    )
+
+    search_fields = (
+        "comment",
+        "created_by__username",
+    )
+
+    date_hierarchy = "date"
+    ordering = ("-date",)
+
+    readonly_fields = ("created_at",)
+
+    fieldsets = (
+        (None, {
+            "fields": ("date", "report_type", "created_by", "comment")
+        }),
+        ("Excel файл", {
+            "fields": ("file",),
+        }),
+        ("Служебная информация", {
+            "fields": ("created_at",),
+        }),
+    )
+
+    # ---------- helpers ----------
+
+    def report_type_display(self, obj):
+        return obj.get_report_type_display()
+    report_type_display.short_description = "Тип отчёта"
+
+    def file_link(self, obj):
+        if obj.file:
+            return format_html(
+                '<a href="{}" target="_blank">Скачать</a>',
+                obj.file.url
+            )
+        return "—"
+    file_link.short_description = "Excel"
+
+    def comment_short(self, obj):
+        if obj.comment:
+            return obj.comment[:50] + ("…" if len(obj.comment) > 50 else "")
+        return "—"
+    comment_short.short_description = "Комментарий"
+
+    # ---------- auto created_by ----------
+
+    def save_model(self, request, obj, form, change):
+        if not change and not obj.created_by:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)

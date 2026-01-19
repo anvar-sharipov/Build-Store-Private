@@ -251,6 +251,12 @@ def get_account_for_osw2(request):
     data = []
     data_dict = {}  # ключ = номер счета, значение = агрегированные данные
     
+    # test = Invoice.objects.get(id=3478).items.all()
+    # test_count = 0
+    # for t in test:
+    #     test_count += t.selected_quantity * t.selected_price
+    # ic(test_count)
+    
     # Функция для добавления или суммирования счета в data_dict
     def add_or_update(acc_number, acc_name):
         if acc_number not in data_dict:
@@ -282,7 +288,7 @@ def get_account_for_osw2(request):
             d["final_debit"] += float(initial_debit) + float(period_debit)
             d["final_credit"] += float(initial_credit) + float(period_credit)
             d['final_balance'] += float(final_balance)
-
+    test_total = 0
     for a in accounts:
         # Начальный остаток
         entries_before = Entry.objects.filter(account=a)
@@ -307,13 +313,33 @@ def get_account_for_osw2(request):
 
         final_balance = initial_balance + period_debit - period_credit
         
-        if a.number == "40.1":
-            ic(initial_debit)
-            ic(initial_credit)
-            ic(period_debit)
-            ic(period_credit)
+        
+        
+        # if a.number == "40.1":
+        #     for test in entries_before:
+        #         if test.transaction.id == 6253:
+        #             if test.product and test.product.id == 465:
+        #                 pass
+        #                 # test.debit = Decimal('7.79')
+        #                 # test.save()
+            # ic(initial_debit)
+        #     ic(initial_credit)
+        #     ic(period_debit)
+        #     ic(period_credit)
             
-            ic(final_balance)
+        #     ic(final_balance)
+        
+        
+        # if a.number == "75":
+        #     for test in entries_period:
+        #         test_total += test.credit
+        #         if test.transaction.id == 6253:
+        #             if test.product and test.product.id == 465:
+        #                 pass
+        #                 # test.debit = Decimal('7.79')
+        #                 # test.save()
+        # ic(test_total)
+      
 
         
 

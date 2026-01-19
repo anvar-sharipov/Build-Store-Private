@@ -53,6 +53,8 @@ import ZakazList from "./Components/Page/Prochee/Zakaz/ZakazList";
 import Snowfall from "react-snowfall";
 import { useSelector } from "react-redux";
 import ProductCards from "./Components/Page/Reports2/ProductCards/ProductCards";
+import Univresal from "./Components/Page/Admin/Univresal";
+import SkidkaNasenka from "./Components/Page/Reports2/SkidkaNasenka/SkidkaNasenka";
 
 function AppShell() {
   const location = useLocation();
@@ -132,6 +134,8 @@ function AppShell() {
                     <Route path={ROUTES_RAPORT.DETAIL_ACCOUNT_REPORT_60_62_PARTNER} element={<DetailReport6062Partner />} />
                     <Route path={ROUTES_RAPORT.PRODUCTS_BUH_OBOROT} element={<BuhOborotTowarow />} />
                     <Route path={ROUTES_RAPORT.DETAIL_PRODUCT_OBOROT} element={<DetailProductOborot />} />
+                    <Route path={ROUTES_RAPORT.SKIDKI_NASENKI} element={<SkidkaNasenka />} />
+
                     <Route path={PROCHEE.QR_LIST_PRINT} element={<QrListPrint />} />
                     <Route path={PROCHEE.TRANSACTION_JOURNAL} element={<TransactionJournal />} />
                     <Route path={PROCHEE.TRIP} element={<Trip />} />
@@ -155,6 +159,7 @@ function AppShell() {
                     <Route path={ADMIN_PANEL.DELETE_MODELS} element={<DeleteData />} />
                     <Route path={ADMIN_PANEL.SET_PARTNER_TO_ENTRY} element={<SetPartnerInEntry />} />
                     <Route path={ADMIN_PANEL.FIRST_PRIHOD} element={<FirstPrihod />} />
+                    <Route path={ADMIN_PANEL.UNIVERSAL} element={<Univresal />} />
                   </Routes>
                 </section>
 

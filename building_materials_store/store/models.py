@@ -634,9 +634,9 @@ class Entry(models.Model):
     partner = models.ForeignKey(Partner, null=True, blank=True, on_delete=models.SET_NULL, verbose_name='Партнер (субконто)', related_name='entry_set')
     product = models.ForeignKey('Product', null=True, blank=True, on_delete=models.SET_NULL)
     warehouse = models.ForeignKey('Warehouse', null=True, blank=True, on_delete=models.SET_NULL)
-    debit = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), verbose_name='Дебет')
-    credit = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'), verbose_name='Кредит')
-    
+    debit = models.DecimalField(max_digits=15, decimal_places=5, default=Decimal('0.00000'), verbose_name='Дебет')
+    credit = models.DecimalField(max_digits=15, decimal_places=5, default=Decimal('0.00000'), verbose_name='Кредит')
+
     # class Meta:
     #     indexes = [
     #         models.Index(fields=["account"]),
@@ -921,28 +921,61 @@ class ZakazItem(models.Model):
         
         
 
+# def day_report_upload_path(instance, filename):
+#     """
+#     media/day_reports/<year>/<month>/<day>/<report_type>.xlsx
+#     """
+#     date = instance.date
 
+#     return (
+#         f"day_reports/"
+#         f"{date.year}/"
+#         f"{date.month:02d}/"
+#         f"{date.day:02d}/"
+#         f"{instance.report_type}.xlsx"
+#     )
+    
 def day_report_upload_path(instance, filename):
-    """
-    Путь для сохранения Excel:
-    media/day_reports/<год>/<месяц>/<дд.мм.гггг>.xlsx
-    """
-    year = instance.date.year
-    month_str = f"{instance.date.month:02d}"  # 01, 02, ..., 12
-    day_str = instance.date.strftime("%d.%m.%Y")
-    ext = ".xlsx"  # строго Excel
-    return f"day_reports/{year}/{month_str}/{day_str}{ext}"
+    date = instance.date
+    return (
+        f"day_reports/"
+        f"{date.year}/"
+        f"{date.month:02d}/"
+        f"{date.day:02d}/"
+        f"{filename}"
+    )
+    
+class DayReport(models.Model):
+    REPORT_TYPES = (
+        ("OBOROT_TOWAR", "OBOROT_TOWAR"),
+        ("SKIDKA", "SKIDKA")
+    )
 
-        
-class CloseDayAllReportExcel(models.Model):
     date = models.DateField()
+    report_type = models.CharField(
+        max_length=50,
+        choices=REPORT_TYPES,
+        db_index=True
+    )
+
+    file = models.FileField(
+        upload_to=day_report_upload_path,
+        null=True,
+        blank=True
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="day_reports")
-    file = models.FileField(upload_to=day_report_upload_path, null=True, blank=True)
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name="day_reports"
+    )
+
     comment = models.TextField(blank=True)
 
     class Meta:
-        unique_together = ("date",)
+        unique_together = ("date", "report_type")
+        ordering = ("-date",)
 
     def __str__(self):
-        return f"Day report {self.date}"
+        return f"{self.get_report_type_display()} | {self.date}"

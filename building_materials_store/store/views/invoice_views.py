@@ -49,8 +49,22 @@ def normalize_date(date_str: str) -> str:
 def save_invoice(request):
     if request.method == "POST":
         
-        if not request.user.groups.filter(name="admin").exists():
-            return JsonResponse({"status": "error", "message": "permission denied"}, status=403)
+        # test = Invoice.objects.get(id=3478).items.all()
+        # test_transaction = Transaction.objects.get(invoice__id=3478)
+        # test_entries = Entry.objects.filter(transaction__id=test_transaction.id) # 6253
+        # # ic(test_transaction.id)
+        # test_count = 0
+        # for t in test_entries:
+        #     if t.product and t.product.id == 465 and t.debit > 0:
+        #         ic(t.debit)
+        #         # t.debit = Decimal('7.79')
+        #         # t.save()
+
+            # test_count += t.selected_quantity * t.selected_price
+            # ic(t.selected_quantity, t.selected_quantity * t.selected_price)
+        
+        # if not request.user.groups.filter(name="admin").exists():
+        #     return JsonResponse({"status": "error", "message": "permission denied"}, status=403)
                 
                 
         
@@ -91,7 +105,7 @@ def save_invoice(request):
                 partner=partner_obj if needs_partner(debit_acc) else None,  # ⭐ УМНО
                 debit=amount,
             )
-            
+            ic(amount)
             Entry.objects.create(
                 transaction=transaction_obj,
                 account=credit_acc,

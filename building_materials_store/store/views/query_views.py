@@ -1,8 +1,8 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from django.db.models import Q, Sum
 from datetime import datetime, timedelta
 from django.utils.dateparse import parse_date
@@ -13,6 +13,25 @@ from ..models import *
 from icecream import ic
 import json
 from collections import defaultdict
+
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
+from django.http import FileResponse
+import os
+from io import BytesIO
+from django.core.files.base import ContentFile
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.formatting.rule import CellIsRule
+from openpyxl.worksheet.page import PageMargins
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+
+
+
+
 
 
 # query agent
@@ -553,146 +572,1468 @@ def check_day_closed(request):
 
     
     
-    
-    
-@csrf_exempt
-def close_day(request):
-    if request.method != "POST":
-        return JsonResponse({"success": False, "error": "Только POST запросы разрешены"})
 
-    data = json.loads(request.body)
+    
+# # rabotaet no ne polnopaya otchetnost 
+# @csrf_exempt
+# def close_day(request):
+#     if request.method != "POST":
+#         return JsonResponse({"success": False, "error": "Только POST запросы разрешены"})
+
+#     data = json.loads(request.body)
+#     close_date = data.get("date")
+#     reason = data.get("reason", "")
+#     user_id = data.get("user_id")
+
+#     if not close_date:
+#         return JsonResponse({"success": False, "error": "choose close date"})
+    
+#     if not user_id:
+#         return JsonResponse({"success": False, "error": "youDidntAuthenticated"})
+    
+#     if not User.objects.filter(id=user_id).exists():
+#         return JsonResponse({"success": False, "error": "youDidntAuthenticated"})
+    
+#     user = User.objects.get(id=user_id)
+    
+#     #############################################################################################################################################################
+#     #############################################################################################################################################################
+#     ####### start towar oborot otchet
+    
+#     close_date_format = datetime.strptime(close_date, "%Y-%m-%d").date()
+
+#     day_start = close_date_format
+#     day_end = close_date_format + timedelta(days=1)
+
+#     product_units = (
+#         ProductUnit.objects
+#         .filter(is_default_for_sale=True)
+#         .select_related("unit")
+#     )
+
+#     unit_map = {pu.product_id: pu for pu in product_units}
+
+#     turnover_product = defaultdict(lambda: defaultdict(dict))
+
+#     # ---------------------------------------------
+#     # 1) НАЧАЛЬНЫЕ ОСТАТКИ
+#     # ---------------------------------------------
+
+#     for w in Warehouse.objects.all():
+#         start_items = (
+#             InvoiceItem.objects
+#             .filter(
+#                 invoice__entry_created_at_handle__lt=day_start,
+#                 invoice__canceled_at__isnull=True
+#             )
+#             .filter(
+#                 Q(invoice__warehouse=w) |
+#                 Q(invoice__warehouse2=w)
+#             )
+#             .select_related(
+#                 "product", "product__category", "product__base_unit", "invoice"
+#             )
+#         )
+
+#         for item in start_items:
+#             p = item.product
+#             inv = item.invoice
+
+#             product_data = turnover_product[w.id].get(p.id)
+
+#             if not product_data:
+#                 pu = unit_map.get(p.id)
+
+#                 if pu:
+#                     unit = pu.unit.name
+#                     conversion_factor = Decimal(pu.conversion_factor)
+#                 else:
+#                     unit = p.base_unit.name if p.base_unit else ""
+#                     conversion_factor = Decimal("1")
+
+#                 product_data = {
+#                     "id": p.id,
+#                     "category": p.category.name if p.category else "",
+#                     "name": p.name,
+#                     "unit": unit,
+#                     "price": p.wholesale_price or Decimal("0"),
+
+#                     "start_qty": Decimal("0"),
+
+#                     "oborot_prihod_qty": Decimal("0"),
+#                     "oborot_wozwrat_qty": Decimal("0"),
+#                     "oborot_rashod_qty": Decimal("0"),
+
+#                     "oborot_prihod_price": Decimal("0"),
+#                     "oborot_wozwrat_price": Decimal("0"),
+#                     "oborot_rashod_price": Decimal("0"),
+
+#                     "end_qty": Decimal("0"),
+#                     "conversion_factor": conversion_factor,
+#                 }
+
+#                 turnover_product[w.id][p.id] = product_data
+
+#             cf = product_data["conversion_factor"]
+#             qty = item.selected_quantity / cf
+
+#             if inv.wozwrat_or_prihod == "prihod":
+#                 if inv.warehouse_id == w.id:
+#                     product_data["start_qty"] += qty
+
+#             elif inv.wozwrat_or_prihod == "rashod":
+#                 if inv.warehouse_id == w.id:
+#                     product_data["start_qty"] -= qty
+
+#             elif inv.wozwrat_or_prihod == "wozwrat":
+#                 if inv.warehouse_id == w.id:
+#                     product_data["start_qty"] += qty
+
+#             elif inv.wozwrat_or_prihod == "transfer":
+#                 if inv.warehouse_id == w.id:
+#                     product_data["start_qty"] -= qty
+#                 elif inv.warehouse2_id == w.id:
+#                     product_data["start_qty"] += qty
+
+#         # ---------------------------------------------
+#         # 2) ОБОРОТ ЗА ДЕНЬ
+#         # ---------------------------------------------
+
+#         turnover_items = (
+#             InvoiceItem.objects
+#             .filter(
+#                 invoice__entry_created_at_handle__gte=day_start,
+#                 invoice__entry_created_at_handle__lt=day_end,
+#                 invoice__canceled_at__isnull=True
+#             )
+#             .filter(
+#                 Q(invoice__warehouse=w) |
+#                 Q(invoice__warehouse2=w)
+#             )
+#             .select_related(
+#                 "product", "product__category", "product__base_unit", "invoice"
+#             )
+#         )
+
+#         for item in turnover_items:
+#             p = item.product
+#             inv = item.invoice
+
+#             product_data = turnover_product[w.id].get(p.id)
+
+#             if not product_data:
+#                 pu = unit_map.get(p.id)
+
+#                 if pu:
+#                     unit = pu.unit.name
+#                     conversion_factor = Decimal(pu.conversion_factor)
+#                 else:
+#                     unit = p.base_unit.name if p.base_unit else ""
+#                     conversion_factor = Decimal("1")
+
+#                 product_data = {
+#                     "id": p.id,
+#                     "category": p.category.name if p.category else "",
+#                     "name": p.name,
+#                     "unit": unit,
+#                     "price": p.wholesale_price or Decimal("0"),
+
+#                     "start_qty": Decimal("0"),
+
+#                     "oborot_prihod_qty": Decimal("0"),
+#                     "oborot_wozwrat_qty": Decimal("0"),
+#                     "oborot_rashod_qty": Decimal("0"),
+
+#                     "oborot_prihod_price": Decimal("0"),
+#                     "oborot_wozwrat_price": Decimal("0"),
+#                     "oborot_rashod_price": Decimal("0"),
+
+#                     "end_qty": Decimal("0"),
+#                     "conversion_factor": conversion_factor,
+#                 }
+
+#                 turnover_product[w.id][p.id] = product_data
+
+#             cf = product_data["conversion_factor"]
+#             qty = item.selected_quantity / cf
+#             price = qty * item.selected_price
+
+#             if inv.wozwrat_or_prihod == "prihod":
+#                 if inv.warehouse_id == w.id:
+#                     product_data["oborot_prihod_qty"] += qty
+#                     product_data["oborot_prihod_price"] += price
+
+#             elif inv.wozwrat_or_prihod == "rashod":
+#                 if inv.warehouse_id == w.id:
+#                     product_data["oborot_rashod_qty"] += qty
+#                     product_data["oborot_rashod_price"] += price
+
+#             elif inv.wozwrat_or_prihod == "wozwrat":
+#                 if inv.warehouse_id == w.id:
+#                     product_data["oborot_wozwrat_qty"] += qty
+#                     product_data["oborot_wozwrat_price"] += price
+
+#             elif inv.wozwrat_or_prihod == "transfer":
+#                 if inv.warehouse_id == w.id:
+#                     product_data["oborot_rashod_qty"] += qty
+#                     product_data["oborot_rashod_price"] += price
+#                 elif inv.warehouse2_id == w.id:
+#                     product_data["oborot_prihod_qty"] += qty
+#                     product_data["oborot_prihod_price"] += price
+
+#         # ---------------------------------------------
+#         # 3) КОНЕЧНЫЙ ОСТАТОК (END_QTY)
+#         # ---------------------------------------------
+
+#         for product_data in turnover_product[w.id].values():
+#             product_data["end_qty"] = (
+#                 product_data["start_qty"]
+#                 + product_data["oborot_prihod_qty"]
+#                 + product_data["oborot_wozwrat_qty"]
+#                 - product_data["oborot_rashod_qty"]
+#             )
+            
+#         # for product_data in turnover_product[w.id].values():
+#         #     if product_data["id"] == 1736:
+#         #         ic(product_data)
+        
+#     # ------------------------------------------------
+#     # 6) Excel
+#     # ------------------------------------------------
+#     # ================== СТИЛИ ==================
+
+#     # Шапка
+#     HEADER_FILL = PatternFill(
+#         fill_type="solid",
+#         fgColor="4472C4"   # синий
+#     )
+#     HEADER_FONT = Font(
+#         bold=True,
+#         color="FFFFFF"    # белый текст
+#     )
+#     CENTER_ALIGN = Alignment(
+#         horizontal="center",
+#         vertical="center",
+#         wrap_text=True
+#     )
+
+#     # Категория
+#     CATEGORY_FILL = PatternFill(
+#         fill_type="solid",
+#         fgColor="E7E6E6"
+#     )
+#     CATEGORY_FONT = Font(bold=True)
+
+#     # Обычные ячейки
+#     NORMAL_FONT = Font(color="000000")
+#     LEFT_ALIGN = Alignment(vertical="center", horizontal="left")
+#     RIGHT_ALIGN = Alignment(vertical="center", horizontal="right")
+
+#     # Границы
+#     THIN_BORDER = Border(
+#         left=Side(style="thin"),
+#         right=Side(style="thin"),
+#         top=Side(style="thin"),
+#         bottom=Side(style="thin"),
+#     )
+
+#     # Форматы чисел
+#     PRICE_FMT = '#,##0.00'
+#     QTY_FMT = '#,##0.###'
+
+#     # Ширина колонок
+#     COLUMN_WIDTHS = {
+#         "A": 25,
+#         "B": 40,
+#         "C": 10,
+#         "D": 12,
+#         "E": 8, "F": 8,
+#         "G": 8, "H": 8,
+#         "I": 8, "J": 8,
+#         "K": 8, "L": 8,
+#         "M": 8, "N": 8,
+#     }
+    
+#     TOTAL_FILL = PatternFill(
+#         fill_type="solid",
+#         fgColor="D9D9D9"   # светло-серый
+#     )
+
+#     TOTAL_FONT = Font(
+#         bold=True
+#     )
+
+#     # ================== EXCEL ==================
+
+#     wb = Workbook()
+#     wb.remove(wb.active)
+
+#     for warehouse_id, products in turnover_product.items():
+#         warehouse = Warehouse.objects.get(id=warehouse_id)
+#         ws = wb.create_sheet(title=warehouse.name[:31])
+
+#         # ширина колонок
+#         for col, width in COLUMN_WIDTHS.items():
+#             ws.column_dimensions[col].width = width
+
+#         # ---------- ШАПКА ----------
+#         ws["A1"] = "Категория"
+#         ws["B1"] = "Товар"
+#         ws["C1"] = "Ед."
+#         ws["D1"] = "Цена"
+
+#         ws.merge_cells("E1:F1"); ws["E1"] = "Остаток на начало"
+#         ws.merge_cells("G1:H1"); ws["G1"] = "Приход"
+#         ws.merge_cells("I1:J1"); ws["I1"] = "Возврат"
+#         ws.merge_cells("K1:L1"); ws["K1"] = "Расход"
+#         ws.merge_cells("M1:N1"); ws["M1"] = "Конечный остаток"
+
+#         ws["E2"] = "Кол-во"; ws["F2"] = "Сумма"
+#         ws["G2"] = "Кол-во"; ws["H2"] = "Сумма"
+#         ws["I2"] = "Кол-во"; ws["J2"] = "Сумма"
+#         ws["K2"] = "Кол-во"; ws["L2"] = "Сумма"
+#         ws["M2"] = "Кол-во"; ws["N2"] = "Сумма"
+
+#         ws.freeze_panes = "A3"
+
+#         # стиль шапки
+#         for row in (1, 2):
+#             for col in range(1, 15):
+#                 cell = ws.cell(row=row, column=col)
+#                 cell.fill = HEADER_FILL
+#                 cell.font = HEADER_FONT
+#                 cell.alignment = CENTER_ALIGN
+#                 cell.border = THIN_BORDER
+
+#         # ---------- ДАННЫЕ ----------
+#         row_num = 3
+#         current_category = None
+#         category_start_row = None
+#         warehouse_start_row = row_num
+
+#         for data in sorted(products.values(), key=lambda x: (x["category"], x["name"])):
+
+#             # ===== НОВАЯ КАТЕГОРИЯ =====
+#             if data["category"] != current_category:
+
+#                 # ---- Итог по предыдущей категории ----
+#                 if current_category is not None:
+#                     ws[f"B{row_num}"] = f"ИТОГО по категории: {current_category}"
+
+#                     for col in ["E","F","G","H","I","J","K","L","M","N"]:
+#                         ws[f"{col}{row_num}"] = f"=SUM({col}{category_start_row}:{col}{row_num-1})"
+
+#                     for col in range(1, 15):
+#                         cell = ws.cell(row=row_num, column=col)
+#                         cell.fill = TOTAL_FILL
+#                         cell.font = TOTAL_FONT
+#                         cell.border = THIN_BORDER
+#                         cell.alignment = RIGHT_ALIGN if col >= 5 else LEFT_ALIGN
+
+#                     row_num += 2  # пустая строка после итога
+
+#                 # ---- Строка категории ----
+#                 ws.merge_cells(f"A{row_num}:N{row_num}")
+#                 cell = ws[f"A{row_num}"]
+#                 cell.value = data["category"]
+#                 cell.fill = CATEGORY_FILL
+#                 cell.font = CATEGORY_FONT
+#                 cell.alignment = LEFT_ALIGN
+#                 cell.border = THIN_BORDER
+
+#                 for col in range(2, 15):
+#                     ws.cell(row=row_num, column=col).border = THIN_BORDER
+
+#                 current_category = data["category"]
+#                 category_start_row = row_num + 1
+#                 row_num += 1
+
+#             # ===== СТРОКА ТОВАРА =====
+#             ws[f"B{row_num}"] = data["name"]
+#             ws[f"C{row_num}"] = data["unit"]
+#             ws[f"D{row_num}"] = float(data["price"])
+
+#             ws[f"E{row_num}"] = float(data["start_qty"])
+#             ws[f"F{row_num}"] = float(data["start_qty"] * data["price"])
+
+#             ws[f"G{row_num}"] = float(data["oborot_prihod_qty"])
+#             ws[f"H{row_num}"] = float(data["oborot_prihod_price"])
+
+#             ws[f"I{row_num}"] = float(data["oborot_wozwrat_qty"])
+#             ws[f"J{row_num}"] = float(data["oborot_wozwrat_price"])
+
+#             ws[f"K{row_num}"] = float(data["oborot_rashod_qty"])
+#             ws[f"L{row_num}"] = float(data["oborot_rashod_price"])
+
+#             ws[f"M{row_num}"] = float(data["end_qty"])
+#             ws[f"N{row_num}"] = float(data["end_qty"] * data["price"])
+
+#             for col in range(1, 15):
+#                 cell = ws.cell(row=row_num, column=col)
+#                 cell.font = NORMAL_FONT
+#                 cell.border = THIN_BORDER
+#                 cell.alignment = LEFT_ALIGN if col <= 3 else RIGHT_ALIGN
+
+#             ws[f"D{row_num}"].number_format = PRICE_FMT
+#             for col in ["F", "H", "J", "L", "N"]:
+#                 ws[f"{col}{row_num}"].number_format = PRICE_FMT
+#             for col in ["E", "G", "I", "K", "M"]:
+#                 ws[f"{col}{row_num}"].number_format = QTY_FMT
+
+#             row_num += 1
+
+#         # ===== ИТОГ ПО ПОСЛЕДНЕЙ КАТЕГОРИИ =====
+#         ws[f"B{row_num}"] = f"ИТОГО по категории: {current_category}"
+
+#         for col in ["E","F","G","H","I","J","K","L","M","N"]:
+#             ws[f"{col}{row_num}"] = f"=SUM({col}{category_start_row}:{col}{row_num-1})"
+
+#         for col in range(1, 15):
+#             cell = ws.cell(row=row_num, column=col)
+#             cell.fill = TOTAL_FILL
+#             cell.font = TOTAL_FONT
+#             cell.border = THIN_BORDER
+#             cell.alignment = RIGHT_ALIGN if col >= 5 else LEFT_ALIGN
+
+#         row_num += 2
+
+#         # ===== ИТОГ ПО СКЛАДУ =====
+#         ws[f"B{row_num}"] = "ИТОГО ПО СКЛАДУ"
+
+#         for col in ["E","F","G","H","I","J","K","L","M","N"]:
+#             ws[f"{col}{row_num}"] = f"=SUM({col}{warehouse_start_row}:{col}{row_num-1})"
+
+#         for col in range(1, 15):
+#             cell = ws.cell(row=row_num, column=col)
+#             cell.fill = PatternFill(fill_type="solid", fgColor="BDD7EE")
+#             cell.font = Font(bold=True)
+#             cell.border = THIN_BORDER
+#             cell.alignment = RIGHT_ALIGN if col >= 5 else LEFT_ALIGN
+
+#     # ================== СОХРАНЕНИЕ ==================
+
+#     excel_buffer = BytesIO()
+#     wb.save(excel_buffer)
+#     excel_buffer.seek(0)
+    
+#     report, _ = DayReport.objects.get_or_create(
+#         date=datetime.strptime(close_date, "%Y-%m-%d").date(),
+#         report_type="turnover",
+#         defaults={
+#             "created_by": user,
+#             "comment": reason
+#         }
+#     )
+
+#     report.file.save(
+#         "turnover.xlsx",   # имя не важно, upload_to решает
+#         ContentFile(excel_buffer.read()),
+#         save=True
+#     )
+
+#     # report = CloseDayAllReportExcel.objects.create(
+#     #     date=close_date_format,
+#     #     created_by=user,
+#     #     comment=reason
+#     # )
+
+#     # report.file.save(
+#     #     "tovar_oborot.xlsx",
+#     #     ContentFile(excel_buffer.read()),
+#     #     save=True
+#     # )
+
+            
+            
+#     # ic(day_start)        
+#     # ic(day_end)        
+#     # ic(turnover_product)
+#     # for warehouse_id, values in turnover_product.items():
+#     #     if warehouse_id == 1:
+#     #         for product_id, value in values.items():
+#     #             if product_id == 606:
+#     #                 ic(value)
+#     ####### start towar oborot otchet    
+#     #############################################################################################################################################################
+#     #############################################################################################################################################################
+    
+
+     
+
+#     try:
+#         with transaction.atomic():
+#             1/0
+#             # если уже закрыт
+#             if DayClosing.objects.filter(date=close_date).exists():
+#                 transaction.set_rollback(True)
+#                 return JsonResponse({"success": False, "error": "День уже закрыт"})
+            
+#             day_closing = DayClosing.objects.create(date=close_date)
+
+#             # обновляем статус
+#             day_closing.closed_at = timezone.now()
+#             day_closing.closed_by = user
+#             day_closing.note = reason
+#             day_closing.save()
+
+#             # логируем
+#             DayClosingLog.objects.create(
+#                 day_closing=day_closing,
+#                 action="close",
+#                 performed_by=user,
+#                 reason=reason
+#             )
+
+#             # ФУНКЦИИ ДЛЯ ВЫЧИСЛЕНИЯ БАЛАНСОВ ПО КАЖДОМУ СЧЕТУ
+#             def calculate_balance_by_account(partner, target_date, account_number):
+#                 """Вычисляет баланс по конкретному счету"""
+#                 entries = Entry.objects.filter(
+#                     transaction__partner=partner,
+#                     transaction__date__lte=target_date,
+#                     account__number=account_number
+#                 )
+#                 debit = entries.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
+#                 credit = entries.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
+#                 return debit - credit
+
+#             # снимки балансов партнёров ОТДЕЛЬНО ПО КАЖДОМУ СЧЕТУ
+#             for partner in Partner.objects.all():
+#                 balance_60_usd = calculate_balance_by_account(partner, close_date, '60')
+#                 balance_62_tmt = calculate_balance_by_account(partner, close_date, '62')
+#                 balance_75_usd = calculate_balance_by_account(partner, close_date, '75')
+#                 balance_76_tmt = calculate_balance_by_account(partner, close_date, '76')
+                
+#                 # Итоговые балансы по валютам (для обратной совместимости)
+#                 total_usd = balance_60_usd + balance_75_usd
+#                 total_tmt = balance_62_tmt + balance_76_tmt
+                
+#                 PartnerBalanceSnapshot.objects.create(
+#                     closing=day_closing,
+#                     partner=partner,
+#                     balance_60_usd=balance_60_usd,
+#                     balance_62_tmt=balance_62_tmt,
+#                     balance_75_usd=balance_75_usd,
+#                     balance_76_tmt=balance_76_tmt,
+#                     balance_usd=total_usd,  # для обратной совместимости
+#                     balance_tmt=total_tmt,  # для обратной совместимости
+#                     balance=Decimal('0.000')  # старое поле
+#                 )
+
+#             # снимки складов (остается без изменений)
+#             for wp in WarehouseProduct.objects.all():
+#                 StockSnapshot.objects.create(
+#                     closing=day_closing,
+#                     warehouse=wp.warehouse,
+#                     product=wp.product,
+#                     purchase_price=wp.product.purchase_price,
+#                     retail_price=wp.product.retail_price,
+#                     wholesale_price=wp.product.wholesale_price,
+#                     discount_price=wp.product.discount_price,
+#                     firma_price=wp.product.firma_price,
+#                     quantity=wp.quantity
+#                 )
+
+#     except Exception as e:
+#         # ic(str(e))
+#         return JsonResponse({"success": False, "error": str(e)})
+    
+#     return JsonResponse({"success": True, "message": "day success is closed", "date": close_date})
+
+# Удаляем товары которые НЕ участвовали в обороте за день, если ВСЕ три поля = 0: oborot_prihod_qty == 0and oborot_wozwrat_qty == 0 and oborot_rashod_qty == 0
+def filter_turnover_products(turnover_product):
+    """
+    Оставляет только товары, у которых был оборот за день
+    """
+    result = {}
+
+    for warehouse_id, products in turnover_product.items():
+        filtered_products = {}
+
+        for product_id, data in products.items():
+            if (
+                data["oborot_prihod_qty"] != Decimal("0")
+                or data["oborot_wozwrat_qty"] != Decimal("0")
+                or data["oborot_rashod_qty"] != Decimal("0")
+            ):
+                filtered_products[product_id] = data
+
+        # если в складе остались товары — добавляем склад
+        if filtered_products:
+            result[warehouse_id] = filtered_products
+
+    return result
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def close_day(request):
+    user = request.user          # ✅ настоящий пользователь
+    data = request.data
+
     close_date = data.get("date")
     reason = data.get("reason", "")
-    user_id = data.get("user_id")
+    
 
     if not close_date:
-        return JsonResponse({"success": False, "error": "choose close date"})
+        return Response({"success": False, "error": "choose close date"})
+  
     
-    if not user_id:
-        return JsonResponse({"success": False, "error": "youDidntAuthenticated"})
-    
-    if not User.objects.filter(id=user_id).exists():
-        return JsonResponse({"success": False, "error": "youDidntAuthenticated"})
-    
-    user = User.objects.get(id=user_id)
+    # если уже закрыт
+    if DayClosing.objects.filter(date=close_date).exists():
+        return JsonResponse({"success": False, "error": "День уже закрыт"})
     
     #############################################################################################################################################################
     #############################################################################################################################################################
     ####### start towar oborot otchet
+    
+    close_date_format = datetime.strptime(close_date, "%Y-%m-%d").date()
+    convert_close_date = close_date_format.strftime("%d.%m.%Y") # dlya date w models.py
+    
 
-    # product_units = (
-    #     ProductUnit.objects
-    #     .filter(is_default_for_sale=True)
-    #     .select_related("unit")
-    # )
+    day_start = close_date_format
+    day_end = close_date_format + timedelta(days=1)
+
+    product_units = (
+        ProductUnit.objects
+        .filter(is_default_for_sale=True)
+        .select_related("unit")
+    )
+
+    unit_map = {pu.product_id: pu for pu in product_units}
+
+    turnover_product = {}
+
+    # ---------------------------------------------
+    # 1) НАЧАЛЬНЫЕ ОСТАТКИ
+    # ---------------------------------------------
     
-    # unit_map = {
-    #     pu.product_id: pu
-    #     for pu in product_units
-    # }
+    last_closing = DayClosing.objects.filter(
+        date__lt=close_date
+    ).order_by("-date").first()
     
-    # turnover_product = defaultdict(lambda: defaultdict(dict))
-    
-    # # ---------------------------------------------
-    # # 1) SQL №1 — начальные остатки (по складам)
-    # # ---------------------------------------------
-    
-    # for w in Warehouse.objects.all():   
-    #     start_items = InvoiceItem.objects.filter(
-    #             invoice__entry_created_at_handle__lt=close_date, invoice__canceled_at__isnull=True
-    #         ).filter(
-    #             Q(invoice__warehouse=w) |
-    #             Q(invoice__warehouse2=w)
-    #         ).select_related(
-    #             "product", "product__category", "product__base_unit", "invoice"
-    #         )
+    snap_map = {}
+    #  and close_date != "2025-12-27"
+    if last_closing and close_date != "2025-12-27":
+        snapshots = StockSnapshot.objects.filter(closing=last_closing)
+        snap_map = {
+            (s.warehouse_id, s.product_id): s.quantity
+            for s in snapshots
+        }
+
+  
+    for w in Warehouse.objects.all():
+        turnover_product[w.id] = {}
         
-    #     for item in start_items:
-    #         p = item.product
-    #         inv = item.invoice
+        # Получаем ВСЕ товары (все продукты из базы)
+        # products = Product.objects.all().select_related('category', 'base_unit')
+        products = WarehouseProduct.objects.filter(warehouse__id=w.id).select_related('product')
+        
+        
+        for pr in products:
+            p = pr.product
             
-    #         product_data = turnover_product[w.id].get(p.id)
+            pu = unit_map.get(p.id)
+            if pu:
+                unit = pu.unit.name
+                conversion_factor = Decimal(pu.conversion_factor)
+            else:
+                unit = p.base_unit.name if p.base_unit else ""
+                conversion_factor = Decimal("1")
+
+            turnover_product[w.id][p.id] = {
+                "id": p.id,
+                "category": p.category.name if p.category else "",
+                "name": p.name,
+                "unit": unit,
+                "price": p.wholesale_price or Decimal("0"),
+
+                # 👇 ВАЖНО: начинаем с НУЛЯ, будем считать из истории
+                "start_qty": Decimal("0"),
+
+                "oborot_prihod_qty": Decimal("0"),
+                "oborot_wozwrat_qty": Decimal("0"),
+                "oborot_rashod_qty": Decimal("0"),
+
+                "oborot_prihod_price": Decimal("0"),
+                "oborot_wozwrat_price": Decimal("0"),
+                "oborot_rashod_price": Decimal("0"),
+
+                "end_qty": Decimal("0"),
+                "conversion_factor": conversion_factor,
+            }
             
-    #         if not product_data:
-    #             pu = unit_map.get(p.id)
-                
-    #             if pu:
-    #                 unit = pu.unit.name
-    #                 conversion_factor = Decimal(pu.conversion_factor)
-    #             else:
-    #                 unit = p.base_unit.name if p.base_unit else ""
-    #                 conversion_factor = Decimal("1")
-                    
-    #             product_data = {
-    #                 "id": p.id,
-    #                 "category": p.category.name if p.category else "",
-    #                 "name": p.name,
-    #                 "unit": unit,
-    #                 "price": p.wholesale_price or Decimal("0"),
-
-    #                 "start_qty": Decimal("0"),
-
-    #                 "oborot_prihod": Decimal("0"),
-    #                 "oborot_rashod": Decimal("0"),
-    #                 "oborot_wozwrat": Decimal("0"),
-    #                 "oborot_transfer_in": Decimal("0"),
-    #                 "oborot_transfer_out": Decimal("0"),
-
-    #                 "end_qty": Decimal("0"),
-    #                 "conversion_factor": conversion_factor,
-    #             }
-                
-    #             turnover_product[w.id][p.id] = product_data
+        #  and close_date != "2025-12-27"
+        if last_closing and close_date != "2025-12-27":
+            for p_id, product_data in turnover_product[w.id].items():
+                product_data["start_qty"] = snap_map.get(
+                    (w.id, p_id),
+                    Decimal("0")
+                )
+        else:
             
-    #         cf = product_data["conversion_factor"]
-    #         qty = item.selected_quantity / cf
-            
-    #         if inv.wozwrat_or_prihod == "prihod":
-    #             if inv.warehouse_id == w.id:
-    #                 product_data["start_qty"] += qty
-    #                 # product_data["oborot_prihod"] += qty
+            # Считаем начальные остатки из всех операций ДО начала дня
+            start_items = (
+                InvoiceItem.objects
+                .filter(
+                    invoice__entry_created_at_handle__lt=day_start,
+                    invoice__canceled_at__isnull=True
+                )
+                .filter(
+                    Q(invoice__warehouse=w) |
+                    Q(invoice__warehouse2=w)
+                )
+                .select_related(
+                    "product", "product__category", "product__base_unit", "invoice"
+                )
+            )
+            # test = 0
+            for item in start_items:
+                p = item.product
+                inv = item.invoice
 
-    #         elif inv.wozwrat_or_prihod == "rashod":
-    #             if inv.warehouse_id == w.id:
-    #                 product_data["start_qty"] -= qty
-    #                 # product_data["oborot_rashod"] += qty
+                product_data = turnover_product[w.id].get(p.id)
 
-    #         elif inv.wozwrat_or_prihod == "wozwrat":
-    #             if inv.warehouse_id == w.id:
-    #                 product_data["start_qty"] += qty
-    #                 # product_data["oborot_wozwrat"] += qty
+                if not product_data:
+                    continue
 
-    #         elif inv.wozwrat_or_prihod == "transfer":
-    #             if inv.warehouse_id == w.id:
-    #                 product_data["start_qty"] -= qty
-    #                 # product_data["oborot_transfer_out"] += qty
+                cf = product_data["conversion_factor"]
+                qty = item.selected_quantity / cf
 
-    #             elif inv.warehouse2_id == w.id:
-    #                 product_data["start_qty"] += qty
-    #                 # product_data["oborot_transfer_in"] += qty
+                if inv.wozwrat_or_prihod == "prihod":
+                    if inv.warehouse_id == w.id:
+                        product_data["start_qty"] += qty
+
+                elif inv.wozwrat_or_prihod == "rashod":
+                    if inv.warehouse_id == w.id:
+                        product_data["start_qty"] -= qty
+
+                elif inv.wozwrat_or_prihod == "wozwrat":
+                    if inv.warehouse_id == w.id:
+                        product_data["start_qty"] += qty
+
+                elif inv.wozwrat_or_prihod == "transfer":
+                    if inv.warehouse_id == w.id:
+                        product_data["start_qty"] -= qty
+                    elif inv.warehouse2_id == w.id:
+                        product_data["start_qty"] += qty
+
+        # ---------------------------------------------
+        # 2) ОБОРОТ ЗА ДЕНЬ
+        # ---------------------------------------------
+
+        turnover_items = (
+            InvoiceItem.objects
+            .filter(
+                invoice__entry_created_at_handle__gte=day_start,
+                invoice__entry_created_at_handle__lt=day_end,
+                invoice__canceled_at__isnull=True
+            )
+            .filter(
+                Q(invoice__warehouse=w) |
+                Q(invoice__warehouse2=w)
+            )
+            .select_related(
+                "product", "product__category", "product__base_unit", "invoice"
+            )
+        )
+
+        for item in turnover_items:
+            p = item.product
+            inv = item.invoice
+
+            product_data = turnover_product[w.id].get(p.id)
+
+            if not product_data:
+                continue
+
+            cf = product_data["conversion_factor"]
+            qty = item.selected_quantity / cf
+            price = qty * item.selected_price
+
+            if inv.wozwrat_or_prihod == "prihod":
+                if inv.warehouse_id == w.id:
+                    product_data["oborot_prihod_qty"] += qty
+                    product_data["oborot_prihod_price"] += price
+
+            elif inv.wozwrat_or_prihod == "rashod":
+                if inv.warehouse_id == w.id:
+                    product_data["oborot_rashod_qty"] += qty
+                    product_data["oborot_rashod_price"] += price
+
+            elif inv.wozwrat_or_prihod == "wozwrat":
+                if inv.warehouse_id == w.id:
+                    product_data["oborot_wozwrat_qty"] += qty
+                    product_data["oborot_wozwrat_price"] += price
+
+            elif inv.wozwrat_or_prihod == "transfer":
+                if inv.warehouse_id == w.id:
+                    product_data["oborot_rashod_qty"] += qty
+                    product_data["oborot_rashod_price"] += price
+                elif inv.warehouse2_id == w.id:
+                    product_data["oborot_prihod_qty"] += qty
+                    product_data["oborot_prihod_price"] += price
+
+        # ---------------------------------------------
+        # 3) КОНЕЧНЫЙ ОСТАТОК (END_QTY)
+        # ---------------------------------------------
+        
+        for product_data in turnover_product[w.id].values():
+            product_data["end_qty"] = (
+                product_data["start_qty"]
+                + product_data["oborot_prihod_qty"]
+                + product_data["oborot_wozwrat_qty"]
+                - product_data["oborot_rashod_qty"]
+            )
+                 
+    # ------------------------------------------------
+    # 6) Excel
+    # ------------------------------------------------
+    # ================== СТИЛИ ==================
+
+    # Шапка
+    HEADER_FILL = PatternFill(
+        fill_type="solid",
+        fgColor="4472C4"   # синий
+    )
+    HEADER_FONT = Font(
+        bold=True,
+        color="FFFFFF"    # белый текст
+    )
+    CENTER_ALIGN = Alignment(
+        horizontal="center",
+        vertical="center",
+        wrap_text=True
+    )
+
+    # Категория
+    CATEGORY_FILL = PatternFill(
+        fill_type="solid",
+        fgColor="E7E6E6"
+    )
+    CATEGORY_FONT = Font(bold=True)
+
+    # Обычные ячейки
+    NORMAL_FONT = Font(color="000000")
+    LEFT_ALIGN = Alignment(vertical="center", horizontal="left")
+    RIGHT_ALIGN = Alignment(vertical="center", horizontal="right")
+
+    # Границы
+    THIN_BORDER = Border(
+        left=Side(style="thin"),
+        right=Side(style="thin"),
+        top=Side(style="thin"),
+        bottom=Side(style="thin"),
+    )
+
+    # Форматы чисел
+    PRICE_FMT = '#,##0.00'
+    QTY_FMT = '#,##0.###'
+
+    # Ширина колонок
+    COLUMN_WIDTHS = {
+        "A": 25,
+        "B": 40,
+        "C": 10,
+        "D": 12,
+        "E": 8, "F": 8,
+        "G": 8, "H": 8,
+        "I": 8, "J": 8,
+        "K": 8, "L": 8,
+        "M": 8, "N": 8,
+    }
     
-    # # ic(turnover_product)
-    # for warehouse_id, values in turnover_product.items():
-    #     if warehouse_id == 1:
-    #         for product_id, value in values.items():
-    #             if product_id == 606:
-    #                 ic(value)
-    ####### start towar oborot otchet    
+    TOTAL_FILL = PatternFill(
+        fill_type="solid",
+        fgColor="D9D9D9"   # светло-серый
+    )
+
+    TOTAL_FONT = Font(
+        bold=True
+    )
+
+    # ================== EXCEL ==================
+
+    wb_oborot = Workbook()
+    wb_oborot.remove(wb_oborot.active)
+    
+    turnover_product_only_turnover = filter_turnover_products(turnover_product)
+
+    # wse towary
+    for warehouse_id, products in turnover_product.items():
+        warehouse = Warehouse.objects.get(id=warehouse_id)
+        ws = wb_oborot.create_sheet(title=f"{warehouse.name[:31]}_all")
+
+        # ширина колонок
+        for col, width in COLUMN_WIDTHS.items():
+            ws.column_dimensions[col].width = width
+
+        # ---------- ШАПКА ----------
+        ws["A1"] = "Категория"
+        ws["B1"] = "Товар"
+        ws["C1"] = "Ед."
+        ws["D1"] = "Цена"
+
+        ws.merge_cells("E1:F1"); ws["E1"] = "Остаток на начало"
+        ws.merge_cells("G1:H1"); ws["G1"] = "Приход"
+        ws.merge_cells("I1:J1"); ws["I1"] = "Возврат"
+        ws.merge_cells("K1:L1"); ws["K1"] = "Расход"
+        ws.merge_cells("M1:N1"); ws["M1"] = "Конечный остаток"
+
+        ws["E2"] = "Кол-во"; ws["F2"] = "Сумма"
+        ws["G2"] = "Кол-во"; ws["H2"] = "Сумма"
+        ws["I2"] = "Кол-во"; ws["J2"] = "Сумма"
+        ws["K2"] = "Кол-во"; ws["L2"] = "Сумма"
+        ws["M2"] = "Кол-во"; ws["N2"] = "Сумма"
+
+        ws.freeze_panes = "A3"
+
+        # стиль шапки
+        for row in (1, 2):
+            for col in range(1, 15):
+                cell = ws.cell(row=row, column=col)
+                cell.fill = HEADER_FILL
+                cell.font = HEADER_FONT
+                cell.alignment = CENTER_ALIGN
+                cell.border = THIN_BORDER
+
+        # ---------- ДАННЫЕ ----------
+        row_num = 3
+        current_category = None
+        category_start_row = None
+        warehouse_start_row = row_num
+
+        # Фильтруем товары - ПОКАЗЫВАЕМ ВСЕ ТОВАРЫ
+        # Убрана фильтрация по нулевым оборотам
+        filtered_products = products
+        warehouse_product_rows = []
+        for data in sorted(filtered_products.values(), key=lambda x: (x["category"], x["name"])):
+            
+
+            # ===== НОВАЯ КАТЕГОРИЯ =====
+            if data["category"] != current_category:
+
+                # ---- Итог по предыдущей категории ----
+                if current_category is not None:
+                    ws[f"B{row_num}"] = f"ИТОГО по категории: {current_category}"
+
+                    for col in ["E","F","G","H","I","J","K","L","M","N"]:
+                        ws[f"{col}{row_num}"] = f"=SUM({col}{category_start_row}:{col}{row_num-1})"
+
+                    for col in range(1, 15):
+                        cell = ws.cell(row=row_num, column=col)
+                        cell.fill = TOTAL_FILL
+                        cell.font = TOTAL_FONT
+                        cell.border = THIN_BORDER
+                        cell.alignment = RIGHT_ALIGN if col >= 5 else LEFT_ALIGN
+
+                    row_num += 2  # пустая строка после итога
+
+                # ---- Строка категории ----
+                ws.merge_cells(f"A{row_num}:N{row_num}")
+                cell = ws[f"A{row_num}"]
+                cell.value = data["category"]
+                cell.fill = CATEGORY_FILL
+                cell.font = CATEGORY_FONT
+                cell.alignment = LEFT_ALIGN
+                cell.border = THIN_BORDER
+
+                for col in range(2, 15):
+                    ws.cell(row=row_num, column=col).border = THIN_BORDER
+
+                current_category = data["category"]
+                category_start_row = row_num + 1
+                row_num += 1
+
+            # ===== СТРОКА ТОВАРА =====
+            
+            
+            ws[f"A{row_num}"] = ""  # Категория (пустая в строке товара)
+            ws[f"B{row_num}"] = data["name"]
+            ws[f"C{row_num}"] = data["unit"]
+            ws[f"D{row_num}"] = float(data["price"])
+
+            ws[f"E{row_num}"] = float(data["start_qty"])
+            ws[f"F{row_num}"] = float(data["start_qty"] * data["price"])
+
+            ws[f"G{row_num}"] = float(data["oborot_prihod_qty"])
+            ws[f"H{row_num}"] = float(data["oborot_prihod_price"])
+
+            ws[f"I{row_num}"] = float(data["oborot_wozwrat_qty"])
+            ws[f"J{row_num}"] = float(data["oborot_wozwrat_price"])
+
+            ws[f"K{row_num}"] = float(data["oborot_rashod_qty"])
+            ws[f"L{row_num}"] = float(data["oborot_rashod_price"])
+
+            ws[f"M{row_num}"] = float(data["end_qty"])
+            ws[f"N{row_num}"] = float(data["end_qty"] * data["price"])
+
+            for col in range(1, 15):
+                cell = ws.cell(row=row_num, column=col)
+                cell.font = NORMAL_FONT
+                cell.border = THIN_BORDER
+                cell.alignment = LEFT_ALIGN if col <= 3 else RIGHT_ALIGN
+
+            ws[f"D{row_num}"].number_format = PRICE_FMT
+            for col in ["F", "H", "J", "L", "N"]:
+                ws[f"{col}{row_num}"].number_format = PRICE_FMT
+            for col in ["E", "G", "I", "K", "M"]:
+                ws[f"{col}{row_num}"].number_format = QTY_FMT
+            
+            warehouse_product_rows.append(row_num)
+            row_num += 1
+
+        # ===== ИТОГ ПО ПОСЛЕДНЕЙ КАТЕГОРИИ =====
+        if current_category is not None:
+            ws[f"B{row_num}"] = f"ИТОГО по категории: {current_category}"
+
+            for col in ["E","F","G","H","I","J","K","L","M","N"]:
+                ws[f"{col}{row_num}"] = f"=SUM({col}{category_start_row}:{col}{row_num-1})"
+
+            for col in range(1, 15):
+                cell = ws.cell(row=row_num, column=col)
+                cell.fill = TOTAL_FILL
+                cell.font = TOTAL_FONT
+                cell.border = THIN_BORDER
+                cell.alignment = RIGHT_ALIGN if col >= 5 else LEFT_ALIGN
+
+            row_num += 2
+
+        # ===== ИТОГ ПО СКЛАДУ =====
+        ws[f"B{row_num}"] = "ИТОГО ПО СКЛАДУ"
+
+        for col in ["E","F","G","H","I","J","K","L","M","N"]:
+
+            if not warehouse_product_rows:
+                ws[f"{col}{row_num}"] = 0
+                continue
+
+            ranges = []
+            start = prev = warehouse_product_rows[0]
+
+            for r in warehouse_product_rows[1:]:
+                if r == prev + 1:
+                    prev = r
+                else:
+                    ranges.append(f"{col}{start}:{col}{prev}")
+                    start = prev = r
+
+            ranges.append(f"{col}{start}:{col}{prev}")
+
+            ws[f"{col}{row_num}"] = f"=SUM({','.join(ranges)})"
+
+        for col in range(1, 15):
+            cell = ws.cell(row=row_num, column=col)
+            cell.fill = PatternFill(fill_type="solid", fgColor="BDD7EE")
+            cell.font = Font(bold=True)
+            cell.border = THIN_BORDER
+            cell.alignment = RIGHT_ALIGN if col >= 5 else LEFT_ALIGN
+
+    # towary tolko s oborotami za den
+    for warehouse_id, products in turnover_product_only_turnover.items():
+        warehouse = Warehouse.objects.get(id=warehouse_id)
+        ws = wb_oborot.create_sheet(title=warehouse.name[:31])
+
+        # ширина колонок
+        for col, width in COLUMN_WIDTHS.items():
+            ws.column_dimensions[col].width = width
+
+        # ---------- ШАПКА ----------
+        ws["A1"] = "Категория"
+        ws["B1"] = "Товар"
+        ws["C1"] = "Ед."
+        ws["D1"] = "Цена"
+
+        ws.merge_cells("E1:F1"); ws["E1"] = "Остаток на начало"
+        ws.merge_cells("G1:H1"); ws["G1"] = "Приход"
+        ws.merge_cells("I1:J1"); ws["I1"] = "Возврат"
+        ws.merge_cells("K1:L1"); ws["K1"] = "Расход"
+        ws.merge_cells("M1:N1"); ws["M1"] = "Конечный остаток"
+
+        ws["E2"] = "Кол-во"; ws["F2"] = "Сумма"
+        ws["G2"] = "Кол-во"; ws["H2"] = "Сумма"
+        ws["I2"] = "Кол-во"; ws["J2"] = "Сумма"
+        ws["K2"] = "Кол-во"; ws["L2"] = "Сумма"
+        ws["M2"] = "Кол-во"; ws["N2"] = "Сумма"
+
+        ws.freeze_panes = "A3"
+
+        # стиль шапки
+        for row in (1, 2):
+            for col in range(1, 15):
+                cell = ws.cell(row=row, column=col)
+                cell.fill = HEADER_FILL
+                cell.font = HEADER_FONT
+                cell.alignment = CENTER_ALIGN
+                cell.border = THIN_BORDER
+
+        # ---------- ДАННЫЕ ----------
+        row_num = 3
+        current_category = None
+        category_start_row = None
+        warehouse_start_row = row_num
+
+        # Фильтруем товары - ПОКАЗЫВАЕМ ВСЕ ТОВАРЫ
+        # Убрана фильтрация по нулевым оборотам
+        filtered_products = products
+        warehouse_product_rows = []
+        for data in sorted(filtered_products.values(), key=lambda x: (x["category"], x["name"])):
+            
+
+            # ===== НОВАЯ КАТЕГОРИЯ =====
+            if data["category"] != current_category:
+
+                # ---- Итог по предыдущей категории ----
+                if current_category is not None:
+                    ws[f"B{row_num}"] = f"ИТОГО по категории: {current_category}"
+
+                    for col in ["E","F","G","H","I","J","K","L","M","N"]:
+                        ws[f"{col}{row_num}"] = f"=SUM({col}{category_start_row}:{col}{row_num-1})"
+
+                    for col in range(1, 15):
+                        cell = ws.cell(row=row_num, column=col)
+                        cell.fill = TOTAL_FILL
+                        cell.font = TOTAL_FONT
+                        cell.border = THIN_BORDER
+                        cell.alignment = RIGHT_ALIGN if col >= 5 else LEFT_ALIGN
+
+                    row_num += 2  # пустая строка после итога
+
+                # ---- Строка категории ----
+                ws.merge_cells(f"A{row_num}:N{row_num}")
+                cell = ws[f"A{row_num}"]
+                cell.value = data["category"]
+                cell.fill = CATEGORY_FILL
+                cell.font = CATEGORY_FONT
+                cell.alignment = LEFT_ALIGN
+                cell.border = THIN_BORDER
+
+                for col in range(2, 15):
+                    ws.cell(row=row_num, column=col).border = THIN_BORDER
+
+                current_category = data["category"]
+                category_start_row = row_num + 1
+                row_num += 1
+
+            # ===== СТРОКА ТОВАРА =====
+            
+            
+            ws[f"A{row_num}"] = ""  # Категория (пустая в строке товара)
+            ws[f"B{row_num}"] = data["name"]
+            ws[f"C{row_num}"] = data["unit"]
+            ws[f"D{row_num}"] = float(data["price"])
+
+            ws[f"E{row_num}"] = float(data["start_qty"])
+            ws[f"F{row_num}"] = float(data["start_qty"] * data["price"])
+
+            ws[f"G{row_num}"] = float(data["oborot_prihod_qty"])
+            ws[f"H{row_num}"] = float(data["oborot_prihod_price"])
+
+            ws[f"I{row_num}"] = float(data["oborot_wozwrat_qty"])
+            ws[f"J{row_num}"] = float(data["oborot_wozwrat_price"])
+
+            ws[f"K{row_num}"] = float(data["oborot_rashod_qty"])
+            ws[f"L{row_num}"] = float(data["oborot_rashod_price"])
+
+            ws[f"M{row_num}"] = float(data["end_qty"])
+            ws[f"N{row_num}"] = float(data["end_qty"] * data["price"])
+
+            for col in range(1, 15):
+                cell = ws.cell(row=row_num, column=col)
+                cell.font = NORMAL_FONT
+                cell.border = THIN_BORDER
+                cell.alignment = LEFT_ALIGN if col <= 3 else RIGHT_ALIGN
+
+            ws[f"D{row_num}"].number_format = PRICE_FMT
+            for col in ["F", "H", "J", "L", "N"]:
+                ws[f"{col}{row_num}"].number_format = PRICE_FMT
+            for col in ["E", "G", "I", "K", "M"]:
+                ws[f"{col}{row_num}"].number_format = QTY_FMT
+            
+            warehouse_product_rows.append(row_num)
+            row_num += 1
+
+        # ===== ИТОГ ПО ПОСЛЕДНЕЙ КАТЕГОРИИ =====
+        if current_category is not None:
+            ws[f"B{row_num}"] = f"ИТОГО по категории: {current_category}"
+
+            for col in ["E","F","G","H","I","J","K","L","M","N"]:
+                ws[f"{col}{row_num}"] = f"=SUM({col}{category_start_row}:{col}{row_num-1})"
+
+            for col in range(1, 15):
+                cell = ws.cell(row=row_num, column=col)
+                cell.fill = TOTAL_FILL
+                cell.font = TOTAL_FONT
+                cell.border = THIN_BORDER
+                cell.alignment = RIGHT_ALIGN if col >= 5 else LEFT_ALIGN
+
+            row_num += 2
+
+        # ===== ИТОГ ПО СКЛАДУ =====
+        ws[f"B{row_num}"] = "ИТОГО ПО СКЛАДУ"
+
+        for col in ["E","F","G","H","I","J","K","L","M","N"]:
+
+            if not warehouse_product_rows:
+                ws[f"{col}{row_num}"] = 0
+                continue
+
+            ranges = []
+            start = prev = warehouse_product_rows[0]
+
+            for r in warehouse_product_rows[1:]:
+                if r == prev + 1:
+                    prev = r
+                else:
+                    ranges.append(f"{col}{start}:{col}{prev}")
+                    start = prev = r
+
+            ranges.append(f"{col}{start}:{col}{prev}")
+
+            ws[f"{col}{row_num}"] = f"=SUM({','.join(ranges)})"
+
+        for col in range(1, 15):
+            cell = ws.cell(row=row_num, column=col)
+            cell.fill = PatternFill(fill_type="solid", fgColor="BDD7EE")
+            cell.font = Font(bold=True)
+            cell.border = THIN_BORDER
+            cell.alignment = RIGHT_ALIGN if col >= 5 else LEFT_ALIGN
+             
+    # ================== СОХРАНЕНИЕ ==================
+    
+    
+
+    excel_buffer = BytesIO()
+    wb_oborot.save(excel_buffer)
+    excel_buffer.seek(0)
+    oborot_content = excel_buffer.read()
+    
+    
+
+    ####### end towar oborot otchet    
+    #############################################################################################################################################################
+    #############################################################################################################################################################
+    
+        
+    #############################################################################################################################################################
+    #############################################################################################################################################################
+    ####### start, skidka, Отклонение от оптовой цены
+    
+    # ====== СКЛАДЫ ======
+    warehouses = Warehouse.objects.all()
+
+    # ====== WORKBOOK ======
+    wb_skidka = Workbook()
+    wb_skidka.remove(wb_skidka.active)
+
+    # =========================================================
+    # 📊 ЛИСТ: ПО СКЛАДАМ (СВОДКА)
+    # =========================================================
+    ws_total = wb_skidka.create_sheet(title="ПО СКЛАДАМ")
+
+    ws_total.merge_cells("A1:E1")
+    ws_total["A1"] = f"Отклонение от оптовой цены за {convert_close_date}"
+    ws_total["A1"].fill = HEADER_FILL
+    ws_total["A1"].font = HEADER_FONT
+    ws_total["A1"].alignment = CENTER_ALIGN
+
+    ws_total["A3"] = "Склад"
+    ws_total["B3"] = "Выручка"
+    ws_total["C3"] = "Скидки"
+    ws_total["D3"] = "Наценки"
+    ws_total["E3"] = "Итоговое отклонение"
+
+    ws_total.column_dimensions["A"].width = 18
+    ws_total.column_dimensions["E"].width = 28
+
+    for c in ["A3", "B3", "C3", "D3", "E3"]:
+        ws_total[c].fill = CATEGORY_FILL
+        ws_total[c].border = THIN_BORDER
+        ws_total[c].alignment = CENTER_ALIGN
+
+    row_total = 4
+
+    # =========================================================
+    # 🔁 ОДИН ПРОХОД ПО СКЛАДАМ
+    # =========================================================
+    for w in warehouses:
+
+        total_all_price = Decimal('0')
+        otkloneniy_wsego = Decimal('0')
+        skidki = Decimal('0')
+        nasenki = Decimal('0')
+        opt_sum = Decimal('0')
+
+        table = []
+
+        turnover_items = (
+            InvoiceItem.objects
+            .filter(
+                invoice__entry_created_at_handle__gte=day_start,
+                invoice__entry_created_at_handle__lt=day_end,
+                invoice__canceled_at__isnull=True,
+                invoice__wozwrat_or_prihod="rashod",
+                invoice__warehouse=w,
+            )
+            .select_related(
+                "invoice",
+                "invoice__partner",
+                "product"
+            )
+        )
+
+        # ================== ПОДСЧЁТ ==================
+        for t in turnover_items:
+            opt_sum += t.wholesale_price * t.selected_quantity
+            total_all_price += t.selected_quantity * t.selected_price
+
+            otkloneniye = (
+                t.selected_price - t.wholesale_price
+            ) * t.selected_quantity
+
+            otkloneniy_wsego += otkloneniye
+
+            if otkloneniye < 0:
+                skidki += abs(otkloneniye)
+            elif otkloneniye > 0:
+                nasenki += otkloneniye
+
+            if t.selected_price != t.product.wholesale_price:
+                table.append({
+                    "partner_name": t.invoice.partner.name,
+                    "invoice": t.invoice,
+                    "product_name": t.product.name,
+                    "unit": t.unit_name_on_selected_warehouses,
+                    "wholesale_price": t.product.wholesale_price,
+                    "selected_price": t.selected_price,
+                    "selected_quantity": t.selected_quantity,
+                    "total_selected_price": t.selected_price * t.selected_quantity,
+                    "difference": (
+                        t.selected_price * t.selected_quantity
+                        - t.product.wholesale_price * t.selected_quantity
+                    ),
+                })
+
+        percent = Decimal('0')
+        if opt_sum > 0:
+            percent = (otkloneniy_wsego / opt_sum * 100).quantize(
+                Decimal('0.01'),
+                rounding=ROUND_HALF_UP
+            )
+
+        # =====================================================
+        # 🧾 ЗАПИСЬ В СВОДНЫЙ ЛИСТ
+        # =====================================================
+        ws_total[f"A{row_total}"] = w.name
+        ws_total[f"B{row_total}"] = total_all_price
+        ws_total[f"C{row_total}"] = -skidki if skidki > 0 else Decimal('0')
+        ws_total[f"D{row_total}"] = nasenki
+        ws_total[f"E{row_total}"] = otkloneniy_wsego
+
+        for col in ["B", "C", "D", "E"]:
+            ws_total[f"{col}{row_total}"].number_format = '#,##0.00'
+            ws_total[f"{col}{row_total}"].border = THIN_BORDER
+
+        ws_total[f"A{row_total}"].border = THIN_BORDER
+        row_total += 1
+
+        # =====================================================
+        # 📄 ЛИСТ КОНКРЕТНОГО СКЛАДА
+        # =====================================================
+        ws = wb_skidka.create_sheet(title=w.name[:31])
+
+        ws.merge_cells("A1:J1")
+        ws["A1"] = f"Отклонение от оптовой цены за {convert_close_date} — {w.name}"
+        ws["A1"].fill = HEADER_FILL
+        ws["A1"].font = HEADER_FONT
+        ws["A1"].alignment = CENTER_ALIGN
+
+        headers = [
+            "№", "Партнер", "Комментарий", "Товар", "Ед.",
+            "Оптовая цена", "Цена продажи", "Кол-во",
+            "Всего цена продажи", "Разница"
+        ]
+
+        for col, h in enumerate(headers, start=1):
+            cell = ws.cell(row=2, column=col, value=h)
+            cell.fill = CATEGORY_FILL
+            cell.alignment = CENTER_ALIGN
+            cell.border = THIN_BORDER
+
+        row = 3
+        for i, value in enumerate(table, start=1):
+            ws[f"A{row}"] = i
+            ws[f"B{row}"] = value["partner_name"]
+            ws[f"C{row}"] = f"№{value['invoice'].pk} {value['invoice'].comment}"
+            ws[f"D{row}"] = value["product_name"]
+            ws[f"E{row}"] = value["unit"]
+            ws[f"F{row}"] = value["wholesale_price"]
+            ws[f"G{row}"] = value["selected_price"]
+            ws[f"H{row}"] = value["selected_quantity"]
+            ws[f"I{row}"] = value["total_selected_price"]
+            ws[f"J{row}"] = value["difference"]
+
+            for c in ["F", "G", "I", "J"]:
+                ws[f"{c}{row}"].number_format = '#,##0.00'
+            ws[f"H{row}"].number_format = '#,##0.###'
+
+            for c in ["A","B","C","D","E","F","G","H","I","J"]:
+                ws[f"{c}{row}"].border = THIN_BORDER
+
+            row += 1
+
+        # ===== ИТОГИ =====
+        row += 1
+        ws[f"B{row}"] = "Показатель"
+        ws[f"C{row}"] = "Значение"
+        ws[f"B{row}"].fill = CATEGORY_FILL
+        ws[f"C{row}"].fill = CATEGORY_FILL
+        ws[f"B{row}"].border = THIN_BORDER
+        ws[f"C{row}"].border = THIN_BORDER
+
+        labels = [
+            ("Общая выручка", total_all_price),
+            ("Отклонение всего", otkloneniy_wsego),
+            ("Скидки", -skidki if skidki > 0 else Decimal('0')),
+            ("Наценки", nasenki),
+            ("% отклонения", percent),
+        ]
+
+        for i, (label, val) in enumerate(labels, start=1):
+            ws[f"B{row+i}"] = label
+            ws[f"C{row+i}"] = val
+            ws[f"B{row+i}"].border = THIN_BORDER
+            ws[f"C{row+i}"].border = THIN_BORDER
+
+        ws[f"C{row+1}"].number_format = '#,##0.00'
+        ws[f"C{row+2}"].number_format = '#,##0.00'
+        ws[f"C{row+3}"].number_format = '#,##0.00'
+        ws[f"C{row+4}"].number_format = '#,##0.00'
+        ws[f"C{row+5}"].number_format = '0.00"%"'
+
+    # =========================================================
+    # 💾 СОХРАНЕНИЕ
+    # =========================================================
+    excel_buffer = BytesIO()
+    wb_skidka.save(excel_buffer)
+    excel_buffer.seek(0)
+    skidka_content = excel_buffer.read()
+        
+
+    
+        
+    
+    
+    ####### end, skidka, Отклонение от оптовой цены
     #############################################################################################################################################################
     #############################################################################################################################################################
     
 
-    
 
     try:
         with transaction.atomic():
             # 1/0
-            # если уже закрыт
-            if DayClosing.objects.filter(date=close_date).exists():
-                transaction.set_rollback(True)
-                return JsonResponse({"success": False, "error": "День уже закрыт"})
             
-            day_closing = DayClosing.objects.create(date=close_date)
+            day_closing = DayClosing.objects.create(date=close_date_format)
 
             # обновляем статус
             day_closing.closed_at = timezone.now()
@@ -738,12 +2079,12 @@ def close_day(request):
                     balance_62_tmt=balance_62_tmt,
                     balance_75_usd=balance_75_usd,
                     balance_76_tmt=balance_76_tmt,
-                    balance_usd=total_usd,  # для обратной совместимости
-                    balance_tmt=total_tmt,  # для обратной совместимости
-                    balance=Decimal('0.000')  # старое поле
+                    balance_usd=total_usd,
+                    balance_tmt=total_tmt,
+                    balance=Decimal('0.000')
                 )
 
-            # снимки складов (остается без изменений)
+            # снимки складов
             for wp in WarehouseProduct.objects.all():
                 StockSnapshot.objects.create(
                     closing=day_closing,
@@ -754,14 +2095,49 @@ def close_day(request):
                     wholesale_price=wp.product.wholesale_price,
                     discount_price=wp.product.discount_price,
                     firma_price=wp.product.firma_price,
-                    quantity=wp.quantity
+                    # quantity=wp.quantity
+                    quantity = turnover_product[wp.warehouse_id][wp.product_id]["end_qty"]
                 )
+                
+            # oborot excel
+            report_oborot, _ = DayReport.objects.get_or_create(
+                date=close_date_format,
+                report_type=f"OBOROT_TOWAR",
+                defaults={
+                    "created_by": user,
+                    "comment": reason
+                }
+            )
+
+            filename = f"OBOROT_TOWAR_{convert_close_date}.xlsx"
+            report_oborot.file.save(
+                filename,
+                ContentFile(oborot_content),
+                save=True
+            )
+            
+            # skidka excel
+            report_skidka, _ = DayReport.objects.get_or_create(
+                date=close_date_format,
+                report_type=f"SKIDKA",
+                defaults={
+                    "created_by": user,
+                    "comment": reason
+                }
+            )
+
+            filename = f"SKIDKA_{convert_close_date}.xlsx"
+
+            report_skidka.file.save(
+                filename,
+                ContentFile(skidka_content),
+                save=True
+            )
 
     except Exception as e:
-        # ic(str(e))
-        return JsonResponse({"success": False, "error": str(e)})
+        return Response({"success": False, "error": str(e)})
     
-    return JsonResponse({"success": True, "message": "day success is closed", "date": close_date})
+    return Response({"success": True, "message": "day success is closed", "date": close_date})
 
 
 # close day

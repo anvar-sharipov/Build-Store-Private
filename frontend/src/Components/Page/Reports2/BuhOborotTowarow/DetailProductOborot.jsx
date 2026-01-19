@@ -234,7 +234,7 @@ const DetailProductOborot = () => {
                 {t("Opening balance")} {MyFormatDate(minusOneDay(dateFrom))}
               </td>
               <td colSpan={9} className="border"></td>
-              <td className="border px-2 py-1 text-right whitespace-nowrap">{formatNumber2(detailOborot.start_quantity, 0)}</td>
+              <td className="border px-2 py-1 text-right whitespace-nowrap">{formatNumber2(detailOborot.start_quantity, 2)}</td>
               <td className="border px-2 py-1 text-right whitespace-nowrap">{formatNumber2(detailOborot.start_quantity * detailOborot.product_wholesale_price)}</td>
             </tr>
 
@@ -259,16 +259,16 @@ const DetailProductOborot = () => {
                   <td className="border px-2 py-1">{r.text || "-"}</td>
                   <td className="border px-2 py-1 text-right whitespace-nowrap">{formatNumber2(r.price)}</td>
 
-                  <td className="border px-2 py-1 text-right text-green-700 dark:text-greed-400 whitespace-nowrap">{formatNumber2(r.income_qty, 0)}</td>
+                  <td className="border px-2 py-1 text-right text-green-700 dark:text-greed-400 whitespace-nowrap">{formatNumber2(r.income_qty, 2)}</td>
                   <td className="border px-2 py-1 text-right text-green-700 dark:text-greed-400 whitespace-nowrap">{formatNumber2(r.income_sum)}</td>
 
-                  <td className="border px-2 py-1 text-right text-red-700 dark:text-red-400 whitespace-nowrap">{formatNumber2(r.return_qty, 0)}</td>
+                  <td className="border px-2 py-1 text-right text-red-700 dark:text-red-400 whitespace-nowrap">{formatNumber2(r.return_qty, 2)}</td>
                   <td className="border px-2 py-1 text-right text-red-700 dark:text-red-400 whitespace-nowrap">{formatNumber2(r.return_sum)}</td>
                   
-                  <td className="border px-2 py-1 text-right text-blue-700 dark:text-blue-400 whitespace-nowrap">{formatNumber2(r.outcome_qty, 0)}</td>
+                  <td className="border px-2 py-1 text-right text-blue-700 dark:text-blue-400 whitespace-nowrap">{formatNumber2(r.outcome_qty, 2)}</td>
                   <td className="border px-2 py-1 text-right text-blue-700 dark:text-blue-400 whitespace-nowrap">{formatNumber2(r.outcome_sum)}</td>
 
-                  <td className="border px-2 py-1 text-right font-medium whitespace-nowrap">{formatNumber2(r.balance_qty, 0)}</td>
+                  <td className="border px-2 py-1 text-right font-medium whitespace-nowrap">{formatNumber2(r.balance_qty, 2)}</td>
                   <td className="border px-2 py-1 text-right font-medium whitespace-nowrap">{formatNumber2(r.balance_sum)}</td>
                 </tr>
               ))}
@@ -278,11 +278,11 @@ const DetailProductOborot = () => {
               <td className="border px-2 py-1"></td>
               <td className="border px-2 py-1">{t("Total turnover")}</td>
               <td colSpan={3} className="border"></td>
-              <td className="border px-2 py-1 text-right whitespace-nowrap">{formatNumber2(detailOborot.turnover?.income_qty || 0, 0)}</td>
+              <td className="border px-2 py-1 text-right whitespace-nowrap">{formatNumber2(detailOborot.turnover?.income_qty || 0, 2)}</td>
               <td className="border px-2 py-1 text-right whitespace-nowrap">{formatNumber2(detailOborot.turnover?.income_sum || 0)}</td>
-              <td className="border px-2 py-1 text-right text-blue-600 dark:text-blue-400 whitespace-nowrap">{formatNumber2(detailOborot.turnover?.return_qty || 0, 0)}</td>
+              <td className="border px-2 py-1 text-right text-blue-600 dark:text-blue-400 whitespace-nowrap">{formatNumber2(detailOborot.turnover?.return_qty || 0, 2)}</td>
               <td className="border px-2 py-1 text-right text-blue-600 dark:text-blue-400 whitespace-nowrap">{formatNumber2(detailOborot.turnover?.return_sum || 0)}</td>
-              <td className="border px-2 py-1 text-right whitespace-nowrap">{formatNumber2(detailOborot.turnover?.outcome_qty || 0, 0)}</td>
+              <td className="border px-2 py-1 text-right whitespace-nowrap">{formatNumber2(detailOborot.turnover?.outcome_qty || 0, 2)}</td>
               <td className="border px-2 py-1 text-right whitespace-nowrap">{formatNumber2(detailOborot.turnover?.outcome_sum || 0)}</td>
               
               <td colSpan={2} className="border"></td>
@@ -295,7 +295,7 @@ const DetailProductOborot = () => {
                 {t("Closing balance")} {MyFormatDate(dateTo)}
               </td>
               <td colSpan={9} className="border"></td>
-              <td className="border px-2 py-1 text-right whitespace-nowrap">{formatNumber2(detailOborot.end?.quantity || 0, 0)}</td>
+              <td className="border px-2 py-1 text-right whitespace-nowrap">{formatNumber2(detailOborot.end?.quantity || 0, 2)}</td>
               <td className="border px-2 py-1 text-right whitespace-nowrap">{formatNumber2(detailOborot.end?.sum || 0)}</td>
             </tr>
           </tbody>

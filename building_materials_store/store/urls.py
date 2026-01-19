@@ -98,6 +98,7 @@ urlpatterns = [
     path("admin-import-partners/", import_partners, name="admin-import-partners"),
     path("delete_data/", delete_data, name="delete_data"),
     path("set_partner_to_entry/", admin_views.set_partner_to_entry, name="set_partner_to_entry"),
+    path("admin/universal/", admin_views.admin_universal, name="admin_universal"),
     
     # save universal invoice
     path("save-invoice/", save_invoice, name="save_invoice"),

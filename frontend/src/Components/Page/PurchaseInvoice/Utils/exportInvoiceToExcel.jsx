@@ -1,5 +1,6 @@
 import * as ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import { formatNumber2 } from "../../../UI/formatNumber2";
 
 const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibleColumns, t, awtoData, saldoForExcel, dateProwodok) => {
   console.log("values", values.partner?.name);
@@ -656,9 +657,9 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
         const openingRow = worksheet.getRow(currentRow);
         openingRow.getCell(1).value = "Начало";
         openingRow.getCell(2).value = "Остаток на начало";
-        openingRow.getCell(3).value = accountData.start?.[0] || "0";
+        openingRow.getCell(3).value = formatNumber2(accountData.start?.[0]) || "0";
         openingRow.getCell(3).style = { ...styles.saldoData, alignment: { horizontal: "right" } };
-        openingRow.getCell(4).value = accountData.start?.[1] || "0";
+        openingRow.getCell(4).value = formatNumber2(accountData.start?.[1]) || "0";
         openingRow.getCell(4).style = { ...styles.saldoData, alignment: { horizontal: "right" } };
         currentRow++;
 
@@ -670,9 +671,9 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
             const dataRow = worksheet.getRow(currentRow);
             dataRow.getCell(1).value = entry[0]?.split(" ")[0]?.replace(/-/g, ".") || "";
             dataRow.getCell(2).value = entry[1] || "";
-            dataRow.getCell(3).value = entry[2] !== "0" ? entry[2] : "-";
+            dataRow.getCell(3).value = entry[2] !== "0" ? formatNumber2(entry[2]) : "-";
             dataRow.getCell(3).style = { ...styles.saldoData, alignment: { horizontal: "right" } };
-            dataRow.getCell(4).value = entry[3] !== "0" ? entry[3] : "-";
+            dataRow.getCell(4).value = entry[3] !== "0" ? formatNumber2(entry[3]) : "-";
             dataRow.getCell(4).style = { ...styles.saldoData, alignment: { horizontal: "right" } };
             currentRow++;
           });
@@ -691,9 +692,9 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
         const totalRow = worksheet.getRow(currentRow);
         totalRow.getCell(1).value = "Оборот";
         totalRow.getCell(2).value = "Итого оборот";
-        totalRow.getCell(3).value = accountData.final?.[0] || "0";
+        totalRow.getCell(3).value = formatNumber2(accountData.final?.[0]) || "0";
         totalRow.getCell(3).style = { ...styles.saldoData, alignment: { horizontal: "right" }, font: { bold: true } };
-        totalRow.getCell(4).value = accountData.final?.[1] || "0";
+        totalRow.getCell(4).value = formatNumber2(accountData.final?.[1]) || "0";
         totalRow.getCell(4).style = { ...styles.saldoData, alignment: { horizontal: "right" }, font: { bold: true } };
         currentRow++;
 
@@ -701,9 +702,9 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
         const closingRow = worksheet.getRow(currentRow);
         closingRow.getCell(1).value = "Конец";
         closingRow.getCell(2).value = "Остаток на конец";
-        closingRow.getCell(3).value = accountData.saldo?.[0] !== "0" ? accountData.saldo?.[0] : "-";
+        closingRow.getCell(3).value = accountData.saldo?.[0] !== "0" ? formatNumber2(accountData.saldo?.[0]) : "-";
         closingRow.getCell(3).style = { ...styles.saldoData, alignment: { horizontal: "right" }, font: { bold: true } };
-        closingRow.getCell(4).value = accountData.saldo?.[1] !== "0" ? accountData.saldo?.[1] : "-";
+        closingRow.getCell(4).value = accountData.saldo?.[1] !== "0" ? formatNumber2(accountData.saldo?.[1]) : "-";
         closingRow.getCell(4).style = { ...styles.saldoData, alignment: { horizontal: "right" }, font: { bold: true } };
         currentRow += 2;
       };

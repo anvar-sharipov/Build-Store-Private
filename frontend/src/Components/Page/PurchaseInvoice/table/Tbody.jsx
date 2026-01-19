@@ -5,7 +5,8 @@ import Quantity from "./Quantity";
 import { useState, useRef, useEffect } from "react";
 import TDPrice from "./TDPrice";
 import { HiX } from "react-icons/hi";
-import MyDecimalPrice from "../../../UI/MyDecimalPrice";
+import { MyDecimalPrice } from "../../../UI/MyDecimalPrice";
+import Decimal from "decimal.js";
 
 // const BASE_URL = import.meta.env.VITE_BASE_URL;
 const BASE_URL = import.meta.env.VITE_BASE_URL || "";
@@ -55,8 +56,6 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
   return (
     <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
       {values.products.map((product, idx) => {
-       
-
         // const total_price = Number(product.selected_quantity) * Number(product.selected_price);
         // const total_purchase = Number(product.selected_quantity) * Number(product.purchase_price);
         // const income_1pc = Number(product.selected_price) - Number(product.purchase_price);
@@ -68,18 +67,25 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
         // const total_length = Number(product.length) * Number(product.selected_quantity);
         // const total_width = Number(product.width) * Number(product.selected_quantity);
         // const total_height = Number(product.height) * Number(product.selected_quantity);
-        const total_price = MyDecimalPrice(Number(product.selected_quantity) * Number(product.selected_price));
-        const total_purchase = MyDecimalPrice(Number(product.selected_quantity) * Number(product.purchase_price));
-        const income_1pc = Number(product.selected_price) - Number(product.purchase_price);
-        const discount_1pc = Number(product.selected_price) - Number(product.wholesale_price);
-        const income_total = MyDecimalPrice(income_1pc * Number(product.selected_quantity));
-        const total_discount = MyDecimalPrice(discount_1pc * Number(product.selected_quantity));
+
+        const total_price = MyDecimalPrice(product.selected_quantity, product.selected_price);
+
+        const total_purchase = MyDecimalPrice(product.selected_quantity, product.purchase_price);
+
+        const income_1pc = new Decimal(product.selected_price || 0).minus(product.purchase_price || 0);
+
+        const discount_1pc = new Decimal(product.selected_price || 0).minus(product.wholesale_price || 0).toDecimalPlaces(3, Decimal.ROUND_HALF_UP);
+
+        const income_total = MyDecimalPrice(product.selected_quantity, income_1pc);
+
+        const total_discount = MyDecimalPrice(product.selected_quantity, discount_1pc);
+
         const total_volume = Number(product.volume) * Number(product.selected_quantity);
         const total_weight = Number(product.weight) * Number(product.selected_quantity);
         const total_length = Number(product.length) * Number(product.selected_quantity);
         const total_width = Number(product.width) * Number(product.selected_quantity);
         const total_height = Number(product.height) * Number(product.selected_quantity);
-      
+
         return (
           <tr
             key={product.id}
@@ -144,81 +150,83 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
               setFocusedPriceRow={setFocusedPriceRow}
               setFocusedQuantityRow={setFocusedQuantityRow}
             />
-            <td className="pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 print:!text-black print:!border-black text-right whitespace-nowrap font-mono tabular-nums">{formatNumber(total_price, 2)}</td>
+            <td className="pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 print:!text-black print:!border-black text-right whitespace-nowrap font-mono tabular-nums">
+              {formatNumber(total_price, 2)}
+            </td>
             <td
-              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400  text-right whitespace-nowrap font-mono tabular-nums ${!visibleColumns.purchase ? "hidden" : "table-cell"} ${
-                !printVisibleColumns.purchase ? "print:hidden" : "print:table-cell"
-              } print:!text-black print:!border-black`}
+              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400  text-right whitespace-nowrap font-mono tabular-nums ${
+                !visibleColumns.purchase ? "hidden" : "table-cell"
+              } ${!printVisibleColumns.purchase ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
               {formatNumber(product.purchase_price, 3)}
             </td>
             <td
-              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${!visibleColumns.purchase ? "hidden" : "table-cell"} ${
-                !printVisibleColumns.purchase ? "print:hidden" : "print:table-cell"
-              } print:!text-black print:!border-black`}
+              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
+                !visibleColumns.purchase ? "hidden" : "table-cell"
+              } ${!printVisibleColumns.purchase ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
               {formatNumber(total_purchase, 2)}
             </td>
             <td
-              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${!visibleColumns.income ? "hidden" : "table-cell"} ${
-                !printVisibleColumns.income ? "print:hidden" : "print:table-cell"
-              } print:!text-black print:!border-black`}
+              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
+                !visibleColumns.income ? "hidden" : "table-cell"
+              } ${!printVisibleColumns.income ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
               {formatNumber(income_1pc, 3)}
             </td>
             <td
-              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${!visibleColumns.income ? "hidden" : "table-cell"} ${
-                !printVisibleColumns.income ? "print:hidden" : "print:table-cell"
-              } print:!text-black print:!border-black`}
+              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
+                !visibleColumns.income ? "hidden" : "table-cell"
+              } ${!printVisibleColumns.income ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
               {formatNumber(income_total, 2)}
             </td>
             <td
-              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${!visibleColumns.discount ? "hidden" : "table-cell"} ${
-                !printVisibleColumns.discount ? "print:hidden" : "print:table-cell"
-              } print:!text-black print:!border-black`}
+              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
+                !visibleColumns.discount ? "hidden" : "table-cell"
+              } ${!printVisibleColumns.discount ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
               {formatNumber(discount_1pc, 3)}
             </td>
             <td
-              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${!visibleColumns.discount ? "hidden" : "table-cell"} ${
-                !printVisibleColumns.discount ? "print:hidden" : "print:table-cell"
-              } print:!text-black print:!border-black`}
+              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
+                !visibleColumns.discount ? "hidden" : "table-cell"
+              } ${!printVisibleColumns.discount ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
               {formatNumber(total_discount, 2)}
             </td>
             <td
-              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${!visibleColumns.volume ? "hidden" : "table-cell"} ${
-                !printVisibleColumns.volume ? "print:hidden" : "print:table-cell"
-              } print:!text-black print:!border-black`}
+              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
+                !visibleColumns.volume ? "hidden" : "table-cell"
+              } ${!printVisibleColumns.volume ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
               {formatNumber(total_volume, 3)}
             </td>
             <td
-              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${!visibleColumns.weight ? "hidden" : "table-cell"} ${
-                !printVisibleColumns.weight ? "print:hidden" : "print:table-cell"
-              } print:!text-black print:!border-black`}
+              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
+                !visibleColumns.weight ? "hidden" : "table-cell"
+              } ${!printVisibleColumns.weight ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
               {formatNumber(total_weight, 3)}
             </td>
             <td
-              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${!visibleColumns.dimensions ? "hidden" : "table-cell"} ${
-                !printVisibleColumns.dimensions ? "print:hidden" : "print:table-cell"
-              } print:!text-black print:!border-black`}
+              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
+                !visibleColumns.dimensions ? "hidden" : "table-cell"
+              } ${!printVisibleColumns.dimensions ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
               {formatNumber(total_length, 3)}
             </td>
             <td
-              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${!visibleColumns.dimensions ? "hidden" : "table-cell"} ${
-                !printVisibleColumns.dimensions ? "print:hidden" : "print:table-cell"
-              } print:!text-black print:!border-black`}
+              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
+                !visibleColumns.dimensions ? "hidden" : "table-cell"
+              } ${!printVisibleColumns.dimensions ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
               {formatNumber(total_width, 3)}
             </td>
             <td
-              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${!visibleColumns.dimensions ? "hidden" : "table-cell"} ${
-                !printVisibleColumns.dimensions ? "print:hidden" : "print:table-cell"
-              } print:!text-black print:!border-black`}
+              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
+                !visibleColumns.dimensions ? "hidden" : "table-cell"
+              } ${!printVisibleColumns.dimensions ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
               {formatNumber(total_height, 3)}
             </td>

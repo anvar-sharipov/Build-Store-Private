@@ -4,6 +4,7 @@ import { MdPrint, MdPrintDisabled } from "react-icons/md";
 import myAxios from "../../../axios";
 import { ROUTES } from "../../../../routes";
 import { useTranslation } from "react-i18next";
+import { formatNumber2 } from "../../../UI/formatNumber2";
 
 const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
   const { values } = useFormikContext();
@@ -49,8 +50,8 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium" colSpan={2}>
                 {t("Opening balance")}
               </td>
-              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right">{accountData.start[0]}</td>
-              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right">{accountData.start[1]}</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right whitespace-nowrap">{formatNumber2(accountData.start[0])}</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right whitespace-nowrap">{formatNumber2(accountData.start[1])}</td>
             </tr>
 
             {/* Обороты за день */}
@@ -63,8 +64,8 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
                 >
                   <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black whitespace-nowrap">{e[0].split(" ")[0].replace(/-/g, ".")}</td>
                   <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black break-words min-w-[200px]">{e[1]}</td>
-                  <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-right whitespace-nowrap">{parseFloat(e[2]) !== 0 ? e[2] : "-"}</td>
-                  <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-right whitespace-nowrap">{parseFloat(e[3]) !== 0 ? e[3] : "-"}</td>
+                  <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-right whitespace-nowrap">{parseFloat(e[2]) !== 0 ? formatNumber2(e[2]) : "-"}</td>
+                  <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-right whitespace-nowrap">{parseFloat(e[3]) !== 0 ? formatNumber2(e[3]) : "-"}</td>
                 </tr>
               ))
             ) : (
@@ -81,8 +82,8 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold" colSpan={2}>
                 {t("Total turnover")}
               </td>
-              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">{accountData.final[0]}</td>
-              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">{accountData.final[1]}</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right whitespace-nowrap">{formatNumber2(accountData.final[0])}</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right whitespace-nowrap">{formatNumber2(accountData.final[1])}</td>
             </tr>
 
             {/* Конечное сальдо */}

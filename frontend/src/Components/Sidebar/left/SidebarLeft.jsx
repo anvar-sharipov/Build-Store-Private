@@ -131,6 +131,7 @@ export default function SidebarLeft() {
     { to: ADMIN_PANEL.DELETE_MODELS, label: t("delete models"), key: "admin3" },
     { to: ADMIN_PANEL.SET_PARTNER_TO_ENTRY, label: t("set partner to entry"), key: "admin4" },
     { to: ADMIN_PANEL.FIRST_PRIHOD, label: t("first prihod"), key: "admin5" },
+    { to: ADMIN_PANEL.UNIVERSAL, label: t("universal"), key: "admin6" },
   ];
 
   return (

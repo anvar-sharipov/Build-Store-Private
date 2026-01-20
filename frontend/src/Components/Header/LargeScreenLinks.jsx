@@ -137,7 +137,7 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
           <img src="/polisem.png" alt="polisem-icon" className="h-12 lg:h-14 w-auto" />
         </motion.div>
 
-        <motion.button
+        {/* <motion.button
           onClick={handleClick}
           whileTap={{ scale: 0.9, rotate: -10 }} // анимация при клике
           whileHover={{ scale: 1.05, rotate: 5 }} // анимация при ховере
@@ -152,7 +152,7 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
             <Trees className="w-5 h-5" />
           </motion.div>
           {isSnowfallOn ? "Snow On" : "Snow Off"}
-        </motion.button>
+        </motion.button> */}
 
         {/* Burger button */}
         <motion.button

@@ -340,10 +340,11 @@ class MySecureView(APIView):
 
     def get(self, request):
         user = request.user
+        groups = list(user.groups.values_list("name", flat=True))
         if user.groups.filter(name="admin").exists():
-            return Response({"authUser": f"{request.user}", "authGroup": "admin"})
+            return Response({"authUser": f"{request.user}", "authGroup": "admin", "authGroups": groups})
         elif user.groups.filter(name="worker").exists():
-            return Response({"authUser": f"{request.user}", "authGroup": "worker"})
+            return Response({"authUser": f"{request.user}", "authGroup": "worker", "authGroups": groups})
         else:
             return Response({"message": "Нет доступа"}, status=403)
         

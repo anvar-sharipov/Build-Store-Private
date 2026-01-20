@@ -203,8 +203,8 @@ const SearchInputWithLiBackend = forwardRef(
               className={`h-9 w-full pl-9 pr-3 text-sm rounded-lg border transition placeholder-gray-400
                 ${
                   disabled
-                    ? "bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed dark:bg-gray-800 dark:text-gray-500 dark:border-gray-700"
-                    : "bg-white text-gray-900 border-gray-300 hover:border-gray-400 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700 dark:hover:border-gray-600"
+                    ? onlyDarkModeInputStyle ? "bg-gray-800 text-gray-500 border-gray-700" : "bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed dark:bg-gray-800 dark:text-gray-500 dark:border-gray-700"
+                    : onlyDarkModeInputStyle ? "bg-gray-900 text-gray-100 border-gray-700 hover:border-gray-600" : "bg-white text-gray-900 border-gray-300 hover:border-gray-400 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700 dark:hover:border-gray-600"
                 }
             `}
             />

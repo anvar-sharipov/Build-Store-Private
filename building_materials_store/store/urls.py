@@ -14,7 +14,9 @@ from . views.query_views3 import *
 from . views import query_views4
 from . views import query_views5
 from . views import query_views6
-from . views import product_cards_views
+from . views import product_cards_views 
+from . views import skidka_nasenka_views 
+from . views import backend_input_queries_views
 from . views import admin_views
 from . views.sale_invoice_views import *
 from . views.report_views import *
@@ -165,6 +167,10 @@ urlpatterns = [
     # product_cards_views
     path('product_cards', product_cards_views.product_cards, name='product_cards'),
     
+    path('skidka_nasenka/', skidka_nasenka_views.skidka_nasenka, name='skidka_nasenka'),
+    
+    # query for SearchInputWithBackend.jsx
+    path('search-partner-for-backend-input-search', backend_input_queries_views.search_partner_for_backend_input_search, name='search-partner-for-backend-input-search'),
     
     
     

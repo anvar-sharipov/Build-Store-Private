@@ -4,6 +4,7 @@ import snowfallReducer from "./snowfallSlice";
 import warehouseReducer from "./warehouseSlice";
 import searchReducer from "./searchQuerySlice";
 import productSortReducer from "./ProductCardsSlice/productSortSlice";
+import skidkaFiltersReducer from "./skidkaFiltersSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,5 +13,6 @@ export const store = configureStore({
     warehouse: warehouseReducer,
     search: searchReducer,
     productSort: productSortReducer, 
+    skidkaFilters: skidkaFiltersReducer,
   },
 });

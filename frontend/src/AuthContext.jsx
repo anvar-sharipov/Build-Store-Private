@@ -8,6 +8,7 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [authUser, setAuthUser] = useState(null);
   const [authGroup, setAuthGroup] = useState(null);
+  const [authGroups, setAuthGroups] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,6 +17,7 @@ export const AuthProvider = ({ children }) => {
       .then((res) => {
         setAuthUser(res.data.authUser);
         setAuthGroup(res.data.authGroup);
+        setAuthGroups(res.data.authGroups);
       })
       .catch(() => {
         navigate("/login");
@@ -26,7 +28,7 @@ export const AuthProvider = ({ children }) => {
 // }, [authUser, authGroup]);
 
   return (
-    <AuthContext.Provider value={{ authUser, authGroup }}>
+    <AuthContext.Provider value={{ authUser, authGroup, authGroups }}>
       {children}
     </AuthContext.Provider>
   );

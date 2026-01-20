@@ -27,6 +27,7 @@ import ZakazListFilter from "./filters/Zakaz/ZakazListFilter";
 import ShowHideColums from "./filters/Zakaz/ShowHideColums";
 import ZakazNavigate from "./filters/Zakaz/ZakazNavigate";
 import ProductCardsFilter from "./filters/ProductCardsFilter/ProductCardsFilter";
+import SkidkaNasenkaFilter from "./filters/SkidkaNasenkaFilter/SkidkaNasenkaFilter";
 
 // настройки для разных страниц
 const FILTER_CONFIG = {
@@ -211,7 +212,9 @@ export default function SidebarRight() {
    currentPath !== "/main" && currentPath !== "/purchase_invoice" && currentPath !== "/detail-account-report-60-62" 
    && currentPath !== "/products-buh-oborot" && !currentPath.includes("zakaz") 
    && currentPath !== "/zakaz-list" 
-   && currentPath !== "/product-cards") return null;
+   && currentPath !== "/product-cards"
+   && !currentPath.includes("skidki-nasenki"))
+   return null;
 
   const typeOptions = config.type || [];
   const sortTmtOptions = config.sort_tmt || [];
@@ -446,6 +449,18 @@ export default function SidebarRight() {
               exit={{ opacity: 0, height: 0 }}
             >
               <ProductCardsFilter />              
+          
+              
+            </motion.div>
+          )}
+
+          {currentPath.includes("skidki-nasenki") && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+            >
+              <SkidkaNasenkaFilter />              
           
               
             </motion.div>

@@ -15,6 +15,9 @@ from datetime import date
 from django.shortcuts import get_object_or_404
 import time
 from django.db.models import Sum, F
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 
@@ -453,8 +456,20 @@ def get_zakaz_data(request, id):
         })
     
 
-
-
+@api_view(['GET'])
+@permission_classes([IsAuthenticated]) 
+def get_all_users(request):
+    data=[]
+    users = User.objects.prefetch_related("groups")
+    for u in users:
+        groups = [g.name for g in u.groups.all()]
+        
+        data.append({
+            "id": u.id,
+            "name": u.username,
+            "groups": groups,
+        })
+    return Response(data)
     
   
     

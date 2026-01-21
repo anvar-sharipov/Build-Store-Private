@@ -77,6 +77,7 @@ urlpatterns = [
     path('price-change-report/excel/', PriceChangeExcelDownloadView.as_view(), name='price-change-excel'),
     path('products-download/export-excel/', ProductExportExcelView.as_view(), name='products_export_excel'),
     path('universal_entries/', universal_entries, name='universal_entries'),
+    path('get_all_users/', query_views6.get_all_users, name='get_all_users'),
 
     # dlya poiska baalansa partnera po schetam
     path('partner/<int:partner_id>/entries/', PartnerEntriesView.as_view()),
@@ -171,6 +172,9 @@ urlpatterns = [
     
     # query for SearchInputWithBackend.jsx
     path('search-partner-for-backend-input-search', backend_input_queries_views.search_partner_for_backend_input_search, name='search-partner-for-backend-input-search'),
+    path('search-product-for-backend-input-search', backend_input_queries_views.search_product_for_backend_input_search, name='search-product-for-backend-input-search'),
+    path('search-user-for-backend-input-search', backend_input_queries_views.search_user_for_backend_input_search, name='search-user-for-backend-input-search'),
+    
     
     
     

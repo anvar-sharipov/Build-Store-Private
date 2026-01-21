@@ -661,7 +661,14 @@
   "category total": "Kategoriýa boýunça jemi",
   "TOTAL": "JEMI",
   "skidka_nasenka": "Skidka/Nasenka",
-  "select all": "Hemmesini saýla"
+  "select all": "Hemmesini saýla",
+  "choosed warehouses count": "Saýlanan ambarlaryň sany",
+  "choosed partner count": "Saýlanan partnerleriň sany",
+  "choosed agent count": "Saýlanan agentleriň sany",
+  "choosed product count": "Saýlanan harytlaryň sany",
+  "choosed user count": "Saýlanan kassirleriň sany",
+  "kassir": "Kassir",
+  "search kassir": "Kassiri gözlemek..."
 
 
 

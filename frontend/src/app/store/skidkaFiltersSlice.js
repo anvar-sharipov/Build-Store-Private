@@ -7,7 +7,6 @@ const initialState = {
   products: [],
   categories: [],
   warehouses: [],
-  only: null,        // "skidka" | "nasenka"
   sortPrice: null,  // "asc" | "desc"
 };
 
@@ -60,6 +59,36 @@ const skidkaFiltersSlice = createSlice({
         state.agents = state.agents.filter(a => a.id !== agentId);
     },
 
+    // ===== PRODUCTS =====
+    addProduct(state, action) {
+        const product = action.payload;
+        if (!product) return
+
+        const exists = state.products.some(a => a.id === product.id)
+        if (!exists) {
+            state.products.push(product)
+        }
+    },
+    removeProduct(state, action) {
+        const productId = action.payload
+        state.products = state.products.filter(p => p.id !== productId);
+    },
+
+    // ===== USERS =====
+    addUser(state, action) {
+        const user = action.payload;
+        if (!user) return
+
+        const exists = state.users.some(u => u.id === user.id)
+        if (!exists) {
+            state.users.push(user)
+        }
+    },
+    removeUser(state, action) {
+        const userId = action.payload
+        state.users = state.users.filter(u => u.id !== userId);
+    },
+
     // ===== USERS =====
     addUser(state, action) {
       const user = action.payload;
@@ -76,9 +105,6 @@ const skidkaFiltersSlice = createSlice({
     },
 
     // ===== COMMON =====
-    setOnly(state, action) {
-      state.only = action.payload; // null | "skidka" | "nasenka"
-    },
     setSortPrice(state, action) {
       state.sortPrice = action.payload; // null | "asc" | "desc"
     },
@@ -92,15 +118,19 @@ const skidkaFiltersSlice = createSlice({
 export const {
   addPartner,
   removePartner,
+  
   addWarehouse,
   removeWarehouse,
 
   addAgent,
   removeAgent,
 
+  addProduct,
+  removeProduct,
+
   addUser,
   removeUser,
-  setOnly,
+
   setSortPrice,
   resetSkidkaFilters,
 } = skidkaFiltersSlice.actions;

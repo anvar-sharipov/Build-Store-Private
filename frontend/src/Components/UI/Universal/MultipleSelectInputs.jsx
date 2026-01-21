@@ -26,7 +26,7 @@ const MultipleSelectInputs = ({ title, toggleSelectAll, toggleClearAll, list, ch
   };
 
   return (
-    <div className="relative w-full max-w-sm mt-3" ref={dropdownRef}>
+    <div className="relative w-full max-w-sm" ref={dropdownRef}>
       {/* HEADER */}
       <button
         type="button"

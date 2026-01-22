@@ -12,6 +12,8 @@ import {
   addUser,
   removeUser,
   setSortPrice,
+  setPrintExcel,
+  togglePrintExcel,
 } from "../../../../../app/store/skidkaFiltersSlice";
 import SearchInputWithLiBackend from "../../../../UI/Universal/SearchInputWithLiBackend";
 import myAxios from "../../../../axios";
@@ -29,7 +31,7 @@ const SkidkaNasenkaFilter = () => {
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
-  const { partners, warehouses, agents, products, users, sortPrice } = useSelector((state) => state.skidkaFilters);
+  const { partners, warehouses, agents, products, users, sortPrice, printExcel } = useSelector((state) => state.skidkaFilters);
   const [listWarehouses, setListWarehouses] = useState([]);
   const [listAgents, setListAgents] = useState([]);
 
@@ -101,7 +103,10 @@ const SkidkaNasenkaFilter = () => {
   return (
     <div>
       {warehouses.length > 0 && (
-        <div className="mt-3 text-gray-300 text-sm text-center">
+        <div className="mt-3 text-gray-300 text-sm text-center flex gap-3">
+          <MyButton variant="green" className="px-2" onClick={() => dispatch(setPrintExcel(true))}>
+            📊 Excel
+          </MyButton>
           <MyButton variant="red" className="px-2" onClick={() => dispatch(resetSkidkaFilters())}>
             {t("cancelFilter")}
           </MyButton>
@@ -109,7 +114,7 @@ const SkidkaNasenkaFilter = () => {
       )}
 
       {/* Select multiple warehouses ########################################################################################################### */}
-      <div className="border border-gray-300 p-1 rounded-sm">
+      <div className="border border-gray-300 p-1 rounded-sm mt-3">
         <MultipleSelectInputs
           title={t("warehouses")}
           list={listWarehouses}
@@ -265,5 +270,3 @@ const SkidkaNasenkaFilter = () => {
 };
 
 export default SkidkaNasenkaFilter;
-
-

@@ -668,7 +668,14 @@
   "choosed product count": "Saýlanan harytlaryň sany",
   "choosed user count": "Saýlanan kassirleriň sany",
   "kassir": "Kassir",
-  "search kassir": "Kassiri gözlemek..."
+  "search kassir": "Kassiri gözlemek...",
+
+  "deviation_from_wholesale_price_for": "Optom bahadan sowulma",
+  "revenue": "Girdeji",
+  "deviation": "Sowulma",
+  "discounts": "Arzanladyşlar",
+  "markups": "Goşmaçalar",
+  "deviation_percent": "% Sowulma"
 
 
 

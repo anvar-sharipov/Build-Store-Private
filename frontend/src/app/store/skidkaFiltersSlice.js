@@ -7,7 +7,8 @@ const initialState = {
   products: [],
   categories: [],
   warehouses: [],
-  sortPrice: null,  // "asc" | "desc"
+  sortPrice: null, // "asc" | "desc"
+  printExcel: false,
 };
 
 const skidkaFiltersSlice = createSlice({
@@ -19,74 +20,59 @@ const skidkaFiltersSlice = createSlice({
       const partner = action.payload;
       if (!partner) return;
 
-      const exists = state.partners.some(p => p.id === partner.id);
+      const exists = state.partners.some((p) => p.id === partner.id);
       if (!exists) {
         state.partners.push(partner);
       }
     },
     removePartner(state, action) {
       const partnerId = action.payload;
-      state.partners = state.partners.filter(p => p.id !== partnerId);
+      state.partners = state.partners.filter((p) => p.id !== partnerId);
     },
 
     // ===== WAREHOUSES =====
     addWarehouse(state, action) {
-        const warehouse = action.payload;
-        if (!warehouse) return
+      const warehouse = action.payload;
+      if (!warehouse) return;
 
-        const exists = state.warehouses.some(w=>w.id === warehouse.id)
-        if (!exists) {
-            state.warehouses.push(warehouse)
-        }
+      const exists = state.warehouses.some((w) => w.id === warehouse.id);
+      if (!exists) {
+        state.warehouses.push(warehouse);
+      }
     },
     removeWarehouse(state, action) {
-        const warehouseId = action.payload
-        state.warehouses = state.warehouses.filter(w => w.id !== warehouseId);
+      const warehouseId = action.payload;
+      state.warehouses = state.warehouses.filter((w) => w.id !== warehouseId);
     },
 
     // ===== AGENTS =====
     addAgent(state, action) {
-        const agent = action.payload;
-        if (!agent) return
+      const agent = action.payload;
+      if (!agent) return;
 
-        const exists = state.agents.some(a => a.id === agent.id)
-        if (!exists) {
-            state.agents.push(agent)
-        }
+      const exists = state.agents.some((a) => a.id === agent.id);
+      if (!exists) {
+        state.agents.push(agent);
+      }
     },
     removeAgent(state, action) {
-        const agentId = action.payload
-        state.agents = state.agents.filter(a => a.id !== agentId);
+      const agentId = action.payload;
+      state.agents = state.agents.filter((a) => a.id !== agentId);
     },
 
     // ===== PRODUCTS =====
     addProduct(state, action) {
-        const product = action.payload;
-        if (!product) return
+      const product = action.payload;
+      if (!product) return;
 
-        const exists = state.products.some(a => a.id === product.id)
-        if (!exists) {
-            state.products.push(product)
-        }
+      const exists = state.products.some((a) => a.id === product.id);
+      if (!exists) {
+        state.products.push(product);
+      }
     },
     removeProduct(state, action) {
-        const productId = action.payload
-        state.products = state.products.filter(p => p.id !== productId);
-    },
-
-    // ===== USERS =====
-    addUser(state, action) {
-        const user = action.payload;
-        if (!user) return
-
-        const exists = state.users.some(u => u.id === user.id)
-        if (!exists) {
-            state.users.push(user)
-        }
-    },
-    removeUser(state, action) {
-        const userId = action.payload
-        state.users = state.users.filter(u => u.id !== userId);
+      const productId = action.payload;
+      state.products = state.products.filter((p) => p.id !== productId);
     },
 
     // ===== USERS =====
@@ -94,14 +80,38 @@ const skidkaFiltersSlice = createSlice({
       const user = action.payload;
       if (!user) return;
 
-      const exists = state.users.some(u => u.id === user.id);
+      const exists = state.users.some((u) => u.id === user.id);
       if (!exists) {
         state.users.push(user);
       }
     },
     removeUser(state, action) {
       const userId = action.payload;
-      state.users = state.users.filter(u => u.id !== userId);
+      state.users = state.users.filter((u) => u.id !== userId);
+    },
+
+    // // ===== USERS =====
+    // addUser(state, action) {
+    //   const user = action.payload;
+    //   if (!user) return;
+
+    //   const exists = state.users.some(u => u.id === user.id);
+    //   if (!exists) {
+    //     state.users.push(user);
+    //   }
+    // },
+    // removeUser(state, action) {
+    //   const userId = action.payload;
+    //   state.users = state.users.filter(u => u.id !== userId);
+    // },
+
+    // ===== PRINT EXCEL =====
+    setPrintExcel(state, action) {
+      state.printExcel = action.payload; // true | false
+    },
+
+    togglePrintExcel(state) {
+      state.printExcel = !state.printExcel;
     },
 
     // ===== COMMON =====
@@ -118,7 +128,7 @@ const skidkaFiltersSlice = createSlice({
 export const {
   addPartner,
   removePartner,
-  
+
   addWarehouse,
   removeWarehouse,
 
@@ -130,6 +140,9 @@ export const {
 
   addUser,
   removeUser,
+
+  setPrintExcel,
+  togglePrintExcel,
 
   setSortPrice,
   resetSkidkaFilters,

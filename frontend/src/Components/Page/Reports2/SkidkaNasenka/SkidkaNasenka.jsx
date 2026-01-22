@@ -10,6 +10,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { resetSkidkaFilters } from "../../../../app/store/skidkaFiltersSlice";
 import { motion } from "framer-motion";
 import { formatNumber2 } from "../../../UI/formatNumber2";
+import MyFormatDate from "../../../UI/MyFormatDate";
+import { setPrintExcel } from "../../../../app/store/skidkaFiltersSlice";
 
 const SkidkaNasenka = () => {
   const { t } = useTranslation();
@@ -20,7 +22,7 @@ const SkidkaNasenka = () => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState(null);
   const [activeWarehouseIndex, setActiveWarehouseIndex] = useState(0);
-  const { partners, warehouses, agents, products, users, sortPrice } = useSelector((state) => state.skidkaFilters);
+  const { partners, warehouses, agents, products, users, sortPrice, printExcel } = useSelector((state) => state.skidkaFilters);
 
   useEffect(() => {
     console.log("partners from page", partners);
@@ -28,7 +30,7 @@ const SkidkaNasenka = () => {
 
   useEffect(() => {
     dispatch(resetSkidkaFilters());
-  }, [dispatch]);
+  }, []);
 
   const isAdmin = authGroups?.includes("admin") || false;
 
@@ -49,6 +51,7 @@ const SkidkaNasenka = () => {
           products: products.map((p) => p.id).join(","),
           users: users.map((u) => u.id).join(","),
           sortPrice: sortPrice,
+          printExcel: printExcel,
         },
       });
       console.log("res", res);
@@ -62,13 +65,48 @@ const SkidkaNasenka = () => {
     }
   };
 
+  const fetchExcel = async () => {
+    setLoading(true);
+    try {
+      const res = await myAxios.get("skidka_nasenka/", {
+        params: {
+          date_from: dateFrom,
+          date_to: dateTo,
+          partners: partners.map((p) => p.id).join(","),
+          warehouses: warehouses.map((w) => w.id).join(","),
+          agents: agents.map((a) => a.id).join(","),
+          products: products.map((p) => p.id).join(","),
+          users: users.map((u) => u.id).join(","),
+          sortPrice,
+          printExcel: true,
+        },
+        responseType: "blob", // 🔥 ОБЯЗАТЕЛЬНО
+      });
+
+      const url = window.URL.createObjectURL(res.data);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "skidka_nacenka.xlsx";
+      a.click();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      dispatch(setPrintExcel(false)); // 👈 сброс ТУТ
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!dateFrom || !dateTo || !warehouses?.length) return;
-    fetchSkidka();
-  }, [dateFrom, dateTo, partners, warehouses, agents, products, users, sortPrice]);
+    if (printExcel) {
+      fetchExcel();
+    } else {
+      fetchSkidka();
+    }
+  }, [dateFrom, dateTo, partners, warehouses, agents, products, users, sortPrice, printExcel]);
 
   const Stat = ({ label, value }) => (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-900">
+    <div className="rounded-lg border border-black dark:border-gray-700 p-2 bg-white dark:bg-gray-900 print:border-none">
       <div className="text-xs text-gray-500 dark:text-gray-400">{label}</div>
       <div className="font-semibold text-gray-900 dark:text-gray-100">{formatNumber2(value)}</div>
     </div>
@@ -77,11 +115,11 @@ const SkidkaNasenka = () => {
   const warehouse = data?.warehouses?.[activeWarehouseIndex];
 
   return (
-    <div className="text-sm text-gray-800 dark:text-gray-200">
+    <div className="text-sm text-gray-800 dark:text-gray-200 print:text-[10px] print:!text-black print:!bg-white">
       {warehouses.length > 0 ? (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap gap-6">
           {/* Warehouses */}
-          <div className="min-w-[200px] rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900 shadow-sm">
+          <div className="min-w-[200px] rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900 shadow-sm print:hidden">
             <div className="flex items-center gap-2 font-sm mb-2">
               <Warehouse size={16} />
               {t("choosed warehouses count")}: {warehouses.length}
@@ -100,7 +138,7 @@ const SkidkaNasenka = () => {
             <div className="flex flex-wrap gap-6">
               {/* Partners */}
               {partners.length > 0 && (
-                <div className="min-w-[200px] rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900 shadow-sm">
+                <div className="min-w-[200px] rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900 shadow-sm print:p-1 print:overflow-visible print:rounded-none print:shadow-none print:border-none">
                   <div className="flex items-center gap-2 font-sm mb-2">
                     <Users size={16} />
                     {t("choosed partner count")}: {partners.length}
@@ -118,7 +156,7 @@ const SkidkaNasenka = () => {
 
               {/* Users */}
               {users.length > 0 && (
-                <div className="min-w-[200px] rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900 shadow-sm">
+                <div className="min-w-[200px] rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900 shadow-sm print:p-1 print:overflow-visible print:rounded-none print:shadow-none print:border-none">
                   <div className="flex items-center gap-2 font-sm mb-2">
                     <Users size={16} />
                     {t("choosed user count")}: {users.length}
@@ -136,7 +174,7 @@ const SkidkaNasenka = () => {
 
               {/* Agents */}
               {agents.length > 0 && (
-                <div className="min-w-[200px] rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900 shadow-sm">
+                <div className="min-w-[200px] rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900 shadow-sm print:p-1 print:overflow-visible print:rounded-none print:shadow-none print:border-none">
                   <div className="flex items-center gap-2 font-sm mb-2">
                     <User size={16} />
                     {t("choosed agent count")}: {agents.length}
@@ -154,7 +192,7 @@ const SkidkaNasenka = () => {
 
               {/* Products */}
               {products.length > 0 && (
-                <div className="min-w-[200px] rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900 shadow-sm">
+                <div className="min-w-[200px] rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900 shadow-sm print:p-1 print:overflow-visible print:rounded-none print:shadow-none print:border-none">
                   <div className="flex items-center gap-2 font-sm mb-2">
                     <Package className="w-4 h-4" />
                     {t("choosed product count")}: {products.length}
@@ -180,30 +218,34 @@ const SkidkaNasenka = () => {
       {/* {loading ? <LoadingSip /> : <div>tut table doljno byt</div>} */}
       {loading ? (
         <LoadingSip />
-      ) : !data || data.warehouses?.length === 0 ? (
-        <div className="text-center mt-6">Нет данных</div>
+      ) : !data || data.warehouses?.length === 0 || warehouses.length === 0 ? (
+        // <div className="text-center mt-6">Нет данных</div>
+        <div></div>
       ) : (
         <>
-          <div className="flex gap-2 mt-6 flex-wrap">
+          <div className="flex gap-2 mt-6 flex-wrap items-center justify-center">
+            <div className="print:block text-[15px]">
+              {t("deviation_from_wholesale_price_for")} {MyFormatDate(dateFrom)} - {MyFormatDate(dateTo)}
+            </div>
             {data.warehouses.map((w, idx) => (
               <button
                 key={w.id}
                 onClick={() => setActiveWarehouseIndex(idx)}
-                className={`px-3 py-1 rounded-md text-sm border
-        ${idx === activeWarehouseIndex ? "bg-blue-600 text-white" : "bg-white dark:bg-gray-900"}
-      `}
+                className={`px-3 py-1 rounded-md text-sm border print:p-1 print:overflow-visible print:rounded-none print:shadow-none print:border-none print:text-[15px]
+                  ${idx === activeWarehouseIndex ? "bg-blue-600 text-white print:!text-black" : "bg-white dark:bg-gray-900 print:hidden"}
+                `}
               >
                 🏬 {w.name}
               </button>
             ))}
           </div>
 
-          <div className="mt-4 overflow-x-auto border rounded-xl">
-            <table className="min-w-full text-sm">
+          <div className="mt-4 overflow-x-auto border rounded-xl print:overflow-visible print:rounded-none print:shadow-none">
+            <table className="min-w-full text-sm border-collapse print:text-[10px]">
               <thead className="bg-gray-100 dark:bg-gray-800">
                 <tr>
                   {["№", "Партнер", "Комментарий", "Товар", "Ед.", "Опт", "Продажа", "Кол-во", "Сумма", "Разница"].map((h) => (
-                    <th key={h} className="px-2 py-2 text-left">
+                    <th key={h} className="border border-black dark:border-gray-700 px-2 py-1 text-left print:px-1 print:py-[2px] font-medium">
                       {h}
                     </th>
                   ))}
@@ -213,29 +255,33 @@ const SkidkaNasenka = () => {
               <tbody>
                 {warehouse.table.map((row, i) => (
                   <tr key={i} className="border-t">
-                    <td className="px-2">{i + 1}</td>
-                    <td className="px-2">{row.partner_name}</td>
-                    <td className="px-2">
+                    <td className="border border-black dark:border-gray-700 px-2 py-1 print:px-1 print:py-[1px] leading-tight">{i + 1}</td>
+                    <td className="border border-black dark:border-gray-700 px-2 py-1 print:px-1 print:py-[1px] leading-tight">{row.partner_name}</td>
+                    <td className="border border-black dark:border-gray-700 px-2 py-1 print:px-1 print:py-[1px] leading-tight">
                       №{row.invoice_id} {row.invoice_comment}
                     </td>
-                    <td className="px-2">{row.product_name}</td>
-                    <td className="px-2 text-center">{row.unit}</td>
-                    <td className="px-2 text-right">{formatNumber2(row.wholesale_price)}</td>
-                    <td className="px-2 text-right">{formatNumber2(row.selected_price)}</td>
-                    <td className="px-2 text-right">{formatNumber2(row.selected_quantity, 0)}</td>
-                    <td className="px-2 text-right">{formatNumber2(row.total_selected_price)}</td>
-                    <td className={`px-2 text-right font-semibold ${row.difference < 0 ? "text-red-500" : "text-green-600"}`}>{formatNumber2(row.difference)}</td>
+                    <td className="border border-black dark:border-gray-700 px-2 py-1 print:px-1 print:py-[1px] leading-tight">{row.product_name}</td>
+                    <td className="text-center border border-black dark:border-gray-700 px-2 py-1 print:px-1 print:py-[1px] leading-tight">{row.unit}</td>
+                    <td className="text-right border border-black dark:border-gray-700 px-2 py-1 print:px-1 print:py-[1px] leading-tight">{formatNumber2(row.wholesale_price)}</td>
+                    <td className="text-right border border-black dark:border-gray-700 px-2 py-1 print:px-1 print:py-[1px] leading-tight">{formatNumber2(row.selected_price)}</td>
+                    <td className="text-right border border-black dark:border-gray-700 px-2 py-1 print:px-1 print:py-[1px] leading-tight">{formatNumber2(row.selected_quantity, 0)}</td>
+                    <td className="text-right border border-black dark:border-gray-700 px-2 py-1 print:px-1 print:py-[1px] leading-tight">{formatNumber2(row.total_selected_price)}</td>
+                    <td
+                      className={`px-2 text-right font-semibold border border-black dark:border-gray-700 print:px-1 print:py-[1px] leading-tight ${row.difference < 0 ? "text-red-500" : "text-green-600"}`}
+                    >
+                      {formatNumber2(row.difference)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
-            <Stat label="Выручка" value={warehouse.total_all_price} />
-            <Stat label="Отклонение" value={warehouse.otkloneniy_wsego} />
-            <Stat label="Скидки" value={-warehouse.skidki} />
-            <Stat label="Наценки" value={warehouse.nasenki} />
-            <Stat label="% отклонения" value={warehouse.percent} />
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4 print:grid-cols-5">
+            <Stat label={t("revenue")} value={warehouse.total_all_price} />
+            <Stat label={t("deviation")} value={warehouse.otkloneniy_wsego} />
+            <Stat label={t("discounts")} value={-warehouse.skidki} />
+            <Stat label={t("markups")} value={warehouse.nasenki} />
+            <Stat label={t("deviation_percent")} value={warehouse.percent} />
           </div>
         </>
       )}

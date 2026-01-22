@@ -698,7 +698,13 @@
   "choosed product count": "Количество выбранных товаров",
   "choosed user count": "Количество выбранных кассиров",
   "kassir": "Кассир",
-  "search kassir": "Поиск кассира..."
+  "search kassir": "Поиск кассира...",
+  "deviation_from_wholesale_price_for": "Отклонение от оптовой цены за",
+  "revenue": "Выручка",
+  "deviation": "Отклонение",
+  "discounts": "Скидки",
+  "markups": "Наценки",
+  "deviation_percent": "% отклонения"
 
 
  

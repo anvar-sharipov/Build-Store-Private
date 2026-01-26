@@ -1184,7 +1184,7 @@ def close_day(request):
     
     #############################################################################################################################################################
     #############################################################################################################################################################
-    ####### start towar oborot otchet
+    ####### start towar oborot otchet i detail (2 otchyota)
     
     close_date_format = datetime.strptime(close_date, "%Y-%m-%d").date()
     convert_close_date = close_date_format.strftime("%d.%m.%Y") # dlya date w models.py
@@ -1202,6 +1202,7 @@ def close_day(request):
     unit_map = {pu.product_id: pu for pu in product_units}
 
     turnover_product = {}
+    turnover_product_detail = {}
 
     # ---------------------------------------------
     # 1) НАЧАЛЬНЫЕ ОСТАТКИ
@@ -1213,7 +1214,7 @@ def close_day(request):
     
     snap_map = {}
     #  and close_date != "2025-12-27"
-    if last_closing and close_date != "2025-12-27":
+    if last_closing:
         snapshots = StockSnapshot.objects.filter(closing=last_closing)
         snap_map = {
             (s.warehouse_id, s.product_id): s.quantity
@@ -1231,6 +1232,7 @@ def close_day(request):
         
         for pr in products:
             p = pr.product
+            
             
             pu = unit_map.get(p.id)
             if pu:
@@ -1263,12 +1265,14 @@ def close_day(request):
             }
             
         #  and close_date != "2025-12-27"
-        if last_closing and close_date != "2025-12-27":
+        if last_closing:
             for p_id, product_data in turnover_product[w.id].items():
+                
                 product_data["start_qty"] = snap_map.get(
                     (w.id, p_id),
                     Decimal("0")
                 )
+                
         else:
             
             # Считаем начальные остатки из всех операций ДО начала дня
@@ -1337,10 +1341,25 @@ def close_day(request):
             )
         )
 
+        products_map = {}
         for item in turnover_items:
             p = item.product
+            
+            if p.id not in products_map:
+                products_map[p.id] = {
+                    "product_id": p.id,
+                    "product_name": p.name,
+                    "wholesale_price": p.wholesale_price,
+                    "start_qty": turnover_product[w.id][p.id]["start_qty"],
+                    "prihod": Decimal("0"),
+                    "rashod": Decimal("0"),
+                    "wozwrat": Decimal("0"),
+                    "end_qty": Decimal("0"),
+                    "_ops_index": {},   # ← для invoice
+                }
+            product = products_map[p.id]
+    
             inv = item.invoice
-
             product_data = turnover_product[w.id].get(p.id)
 
             if not product_data:
@@ -1348,6 +1367,54 @@ def close_day(request):
 
             cf = product_data["conversion_factor"]
             qty = item.selected_quantity / cf
+            
+            op_type = inv.wozwrat_or_prihod
+            direction = None
+            if op_type == "transfer":
+                if inv.warehouse_id == w.id:
+                    # Текущий склад - источник (расход)
+                    direction = "out"
+                    op_type_for_detail = "rashod"
+                elif inv.warehouse2_id == w.id:
+                    # Текущий склад - получатель (приход)
+                    direction = "in"
+                    op_type_for_detail = "prihod"
+                else:
+                    # Не должно происходить, но на всякий случай
+                    continue
+            else:
+                # Для не-transfer операций направление не нужно
+                op_type_for_detail = op_type
+            if op_type_for_detail  == "prihod":
+                product["prihod"] += qty
+            elif op_type_for_detail  == "rashod":
+                product["rashod"] += qty
+            elif op_type_for_detail  == "wozwrat":
+                product["wozwrat"] += qty
+            # row_key = f"{inv.id}_{transfer_status}"
+            # row_key = (inv.id, p.id, w.id, direction)
+            # row_key = item.id
+            if direction:
+                row_key = (item.id, direction)
+            else:
+                row_key = item.id
+            ops = product["_ops_index"]
+            if row_key not in ops:
+                ops[row_key] = {
+                    "invoice_id": inv.id,
+                    "date": inv.entry_created_at_handle,
+                    "partner": inv.partner.name if inv.partner else "",
+                    "comment": inv.comment,
+                    "type": op_type_for_detail,
+                    "qty": Decimal("0"),
+                    "price": item.selected_price,
+                    "sum": Decimal("0"),
+                }
+            ops[row_key]["qty"] += qty
+            ops[row_key]["sum"] += qty * item.selected_price
+            
+            
+        
             price = qty * item.selected_price
 
             if inv.wozwrat_or_prihod == "prihod":
@@ -1372,6 +1439,26 @@ def close_day(request):
                 elif inv.warehouse2_id == w.id:
                     product_data["oborot_prihod_qty"] += qty
                     product_data["oborot_prihod_price"] += price
+                    
+        result_products = []
+        for product in products_map.values():
+            product["operations"] = sorted(
+                product["_ops_index"].values(),
+                key=lambda x: x["date"]
+            )
+            product["end_qty"] = (
+                product["start_qty"]
+                + product["prihod"]
+                + product["wozwrat"]
+                - product["rashod"]
+            )
+            del product["_ops_index"]
+            result_products.append(product)
+            
+        turnover_product_detail[w.id] = result_products
+                      
+      
+             
 
         # ---------------------------------------------
         # 3) КОНЕЧНЫЙ ОСТАТОК (END_QTY)
@@ -1384,7 +1471,17 @@ def close_day(request):
                 + product_data["oborot_wozwrat_qty"]
                 - product_data["oborot_rashod_qty"]
             )
-                 
+            
+    for warehouse_id, products in turnover_product_detail.items():
+        for product in products:
+            for op in product.get("operations", []):
+                comment = op.get("comment", "")
+                if comment and "test" in comment.lower():
+                    # ic(product)
+                    pass
+        if warehouse_id == 2:
+            ic(products)
+                
     # ------------------------------------------------
     # 6) Excel
     # ------------------------------------------------
@@ -1451,6 +1548,34 @@ def close_day(request):
         bold=True
     )
 
+    GRAY_FILL_0 = PatternFill(
+        fill_type="solid",
+        fgColor="F5F5F5"
+    )
+    
+    GRAY_FILL_1 = PatternFill(
+        fill_type="solid",
+        fgColor="EDEDED"
+    )
+    
+    GRAY_FILL_2 = PatternFill(
+        fill_type="solid",
+        fgColor="DCDCDC"
+    )
+    
+    GRAY_FILL_3 = PatternFill(
+        fill_type="solid",
+        fgColor="C8C8C8"
+    )
+    
+    GRAY_FILL_4 = PatternFill(
+        fill_type="solid",
+        fgColor="B0B0B0"
+    )
+    
+    RED_FONT = Font(color="FF0000")
+    GREEN_FONT = Font(color="006400")
+    BLUE_FONT = Font(color="0000FF")
     # ================== EXCEL ==================
 
     wb_oborot = Workbook()
@@ -1809,9 +1934,10 @@ def close_day(request):
     
     
 
-    ####### end towar oborot otchet    
+    ####### end towar oborot otchet i detail (2 otchyota)
     #############################################################################################################################################################
     #############################################################################################################################################################
+    
     
         
     #############################################################################################################################################################
@@ -2027,6 +2153,212 @@ def close_day(request):
     #############################################################################################################################################################
     #############################################################################################################################################################
     
+    
+    #############################################################################################################################################################
+    #############################################################################################################################################################
+    ####### start exel, buh oborot towarow detail
+    wb_detail = Workbook()
+    wb_detail.remove(wb_detail.active)
+    
+    
+    for warehouse_id, products in turnover_product_detail.items():
+        warehouse = Warehouse.objects.get(id=warehouse_id)
+        ws = wb_detail.create_sheet(title=warehouse.name[:31])
+        
+        ws.merge_cells("A1:L1")
+        ws.merge_cells("A2:L2")
+        ws["A1"] = "ДЕТАЛЬНЫЙ ОТЧЁТ ПО ТОВАРАМ"
+        ws["A2"] = str(convert_close_date)
+        ws["A1"].alignment = CENTER_ALIGN
+        ws["A2"].alignment = CENTER_ALIGN
+        ws["A1"].font = CATEGORY_FONT
+        ws["A2"].font = CATEGORY_FONT
+        
+        row = 4
+        
+        for product in products:
+            wholesale_price = product.get("wholesale_price", "")
+            ws.merge_cells(f"A{row}:L{row}")
+            ws[f"A{row}"] = f'{product["product_name"]} (Цена:{wholesale_price})'
+            ws[f"A{row}"].alignment = CENTER_ALIGN
+            ws[f"A{row}"].font = CATEGORY_FONT
+            
+            row += 1
+            ws[f"A{row}"] = "Дата"
+            ws[f"B{row}"] = "Партнёр"
+            ws[f"C{row}"] = "Комментарий"
+            ws[f"D{row}"] = "Цена"
+            
+            ws.column_dimensions["A"].width = 20
+            ws.column_dimensions["B"].width = 35
+            ws.column_dimensions["C"].width = 35
+            
+            for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"G{row}", f"I{row}", f"K{row}"]:
+                ws[i].fill = GRAY_FILL_1
+                ws[i].border = THIN_BORDER
+                ws[i].alignment = CENTER_ALIGN
+                ws[i].font = CATEGORY_FONT
+                
+            
+            
+            ws.merge_cells(f"E{row}:F{row}")
+            ws[f"E{row}"] = "Приход"
+            
+            ws.merge_cells(f"G{row}:H{row}")
+            ws[f"G{row}"] = "Возврат"
+            
+            ws.merge_cells(f"I{row}:J{row}")
+            ws[f"I{row}"] = "Расход"
+            
+            ws.merge_cells(f"K{row}:L{row}")
+            ws[f"K{row}"] = "Остаток"
+            
+            row += 1
+            ws[f"E{row}"] = "Кол-во"
+            ws[f"F{row}"] = "Всего"
+            ws[f"G{row}"] = "Кол-во"
+            ws[f"H{row}"] = "Всего"
+            ws[f"I{row}"] = "Кол-во"
+            ws[f"J{row}"] = "Всего"
+            ws[f"K{row}"] = "Кол-во"
+            ws[f"L{row}"] = "Всего"
+            
+            for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"F{row}", f"G{row}", f"H{row}", f"I{row}", f"J{row}", f"K{row}", f"L{row}"]:
+                ws[i].fill = GRAY_FILL_0
+                ws[i].border = THIN_BORDER
+                ws[i].alignment = CENTER_ALIGN
+                ws[i].font = CATEGORY_FONT
+                
+            
+            row += 1
+            ws[f"A{row}"] = "Остаток на начало"
+            ws[f"K{row}"] = product["start_qty"]
+            ws[f"L{row}"] = product["start_qty"] * product["wholesale_price"]
+            for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"F{row}", f"G{row}", f"H{row}", f"I{row}", f"J{row}", f"K{row}", f"L{row}"]:
+                ws[i].border = THIN_BORDER
+                ws[i].font = CATEGORY_FONT
+            
+            row += 1
+            running_qty = product["start_qty"]
+            rashod_total_qty = 0
+            rashod_total_price = 0
+            prihod_total_qty = 0
+            prihod_total_price = 0
+            wozwrat_total_qty = 0
+            wozwrat_total_price = 0
+            
+            ops = product.get("operations", [])
+            if not ops:
+                continue
+            
+            for op in product.get("operations", []):
+                ws[f"D{row}"].number_format = PRICE_FMT
+                ws[f"F{row}"].number_format = PRICE_FMT
+                ws[f"H{row}"].number_format = PRICE_FMT
+                ws[f"J{row}"].number_format = PRICE_FMT
+                ws[f"L{row}"].number_format = PRICE_FMT
+
+                ws[f"E{row}"].number_format = QTY_FMT
+                ws[f"G{row}"].number_format = QTY_FMT
+                ws[f"I{row}"].number_format = QTY_FMT
+                ws[f"K{row}"].number_format = QTY_FMT
+                
+                for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"F{row}", f"G{row}", f"H{row}", f"I{row}", f"J{row}", f"K{row}", f"L{row}"]:
+                    ws[i].border = THIN_BORDER
+
+                ws[f"A{row}"] = op["date"].strftime("%d.%m.%Y")
+                ws[f"B{row}"] = op["partner"]
+                ws[f"C{row}"] = f'№{op["invoice_id"]} {op["comment"]}'
+                
+                ws[f"D{row}"] = op["price"]
+       
+                if op["type"] == "prihod":
+                    # end_qty += op["qty"]
+                    ws[f"E{row}"] = op["qty"]
+                    ws[f"F{row}"] = op["qty"] * op["price"]
+                    ws[f"E{row}"].font = GREEN_FONT
+                    ws[f"F{row}"].font = GREEN_FONT
+                    running_qty += op["qty"]
+                    prihod_total_qty += op["qty"]
+                    prihod_total_price += op["qty"] * op["price"]
+                    
+                if op["type"] == "wozwrat":
+                    # end_qty += op["qty"]
+                    ws[f"G{row}"] = op["qty"]
+                    ws[f"H{row}"] = op["qty"] * op["price"]
+                    ws[f"G{row}"].font = RED_FONT
+                    ws[f"H{row}"].font = RED_FONT
+                    running_qty += op["qty"]
+                    wozwrat_total_qty += op["qty"]
+                    wozwrat_total_price += op["qty"] * op["price"]
+                    
+                    # ws[f"K{row}"] = product["start_qty"] + op["qty"]
+                    # ws[f"L{row}"] = (product["start_qty"] + op["qty"]) * op["price"]
+                    
+                if op["type"] == "rashod":
+                    # end_qty -= op["qty"]
+                    ws[f"I{row}"] = op["qty"]
+                    ws[f"J{row}"] = op["qty"] * op["price"]
+                    ws[f"I{row}"].font = BLUE_FONT
+                    ws[f"J{row}"].font = BLUE_FONT
+                    running_qty -= op["qty"]
+                    rashod_total_qty += op["qty"]
+                    rashod_total_price += op["qty"] * op["price"]
+                    
+                    # ws[f"K{row}"] = product["start_qty"] - op["qty"]
+                    # ws[f"L{row}"] = (product["start_qty"] - op["qty"]) * op["price"]
+                ws[f"K{row}"] = running_qty
+                ws[f"L{row}"] = running_qty * product["wholesale_price"]
+                    
+              
+                row += 1
+                
+            ws[f"A{row}"] = "Итого"
+            for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"F{row}", f"G{row}", f"H{row}", f"I{row}", f"J{row}", f"K{row}", f"L{row}"]:
+                ws[i].border = THIN_BORDER
+                ws[i].font = CATEGORY_FONT
+            
+            ws[f"D{row}"].number_format = PRICE_FMT
+            ws[f"F{row}"].number_format = PRICE_FMT
+            ws[f"H{row}"].number_format = PRICE_FMT
+            ws[f"J{row}"].number_format = PRICE_FMT
+            ws[f"L{row}"].number_format = PRICE_FMT
+
+            ws[f"E{row}"].number_format = QTY_FMT
+            ws[f"G{row}"].number_format = QTY_FMT
+            ws[f"I{row}"].number_format = QTY_FMT
+            ws[f"K{row}"].number_format = QTY_FMT
+            
+            ws[f"E{row}"] = prihod_total_qty if prihod_total_qty != 0 else ""
+            ws[f"F{row}"] = prihod_total_price if prihod_total_price != 0 else ""
+            
+            ws[f"G{row}"] = wozwrat_total_qty if wozwrat_total_qty != 0 else ""
+            ws[f"H{row}"] = wozwrat_total_price if wozwrat_total_price != 0 else ""
+            
+            ws[f"I{row}"] = rashod_total_qty if rashod_total_qty != 0 else ""
+            ws[f"J{row}"] = rashod_total_price if rashod_total_price != 0 else ""
+            
+            ws[f"K{row}"] = running_qty
+            ws[f"L{row}"] = running_qty * wholesale_price
+            
+            row += 1
+            row += 1
+     
+                
+
+    # ===== СОХРАНЕНИЕ =====
+    excel_buffer = BytesIO()
+    wb_detail.save(excel_buffer)
+    excel_buffer.seek(0)
+    detail_content = excel_buffer.read()
+    
+
+    
+    
+    ####### end exel, buh oborot towarow detail
+    #############################################################################################################################################################
+    #############################################################################################################################################################
+    
 
 
     try:
@@ -2131,6 +2463,23 @@ def close_day(request):
             report_skidka.file.save(
                 filename,
                 ContentFile(skidka_content),
+                save=True
+            )
+            
+            # oborot product detail
+            report_detail, _ = DayReport.objects.get_or_create(
+                date=close_date_format,
+                report_type="OBOROT_TOWAR_DETAIL",
+                defaults={
+                    "created_by": user,
+                    "comment": reason
+                }
+            )
+
+            filename = f"OBOROT_TOWAR_DETAIL_{convert_close_date}.xlsx"
+            report_detail.file.save(
+                filename,
+                ContentFile(detail_content),
                 save=True
             )
 

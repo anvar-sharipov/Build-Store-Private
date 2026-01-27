@@ -1472,15 +1472,15 @@ def close_day(request):
                 - product_data["oborot_rashod_qty"]
             )
             
-    for warehouse_id, products in turnover_product_detail.items():
-        for product in products:
-            for op in product.get("operations", []):
-                comment = op.get("comment", "")
-                if comment and "test" in comment.lower():
-                    # ic(product)
-                    pass
-        if warehouse_id == 2:
-            ic(products)
+    # for warehouse_id, products in turnover_product_detail.items():
+    #     for product in products:
+    #         for op in product.get("operations", []):
+    #             comment = op.get("comment", "")
+    #             if comment and "test" in comment.lower():
+    #                 # ic(product)
+    #                 pass
+    #     if warehouse_id == 2:
+    #         ic(products)
                 
     # ------------------------------------------------
     # 6) Excel
@@ -1578,15 +1578,15 @@ def close_day(request):
     BLUE_FONT = Font(color="0000FF")
     # ================== EXCEL ==================
 
-    wb_oborot = Workbook()
-    wb_oborot.remove(wb_oborot.active)
+    wb_product_oborot = Workbook()
+    wb_product_oborot.remove(wb_product_oborot.active)
     
     turnover_product_only_turnover = filter_turnover_products(turnover_product)
 
     # wse towary
     for warehouse_id, products in turnover_product.items():
         warehouse = Warehouse.objects.get(id=warehouse_id)
-        ws = wb_oborot.create_sheet(title=f"{warehouse.name[:31]}_all")
+        ws = wb_product_oborot.create_sheet(title=f"{warehouse.name[:31]}_all")
 
         # ширина колонок
         for col, width in COLUMN_WIDTHS.items():
@@ -1756,7 +1756,7 @@ def close_day(request):
     # towary tolko s oborotami za den
     for warehouse_id, products in turnover_product_only_turnover.items():
         warehouse = Warehouse.objects.get(id=warehouse_id)
-        ws = wb_oborot.create_sheet(title=warehouse.name[:31])
+        ws = wb_product_oborot.create_sheet(title=warehouse.name[:31])
 
         # ширина колонок
         for col, width in COLUMN_WIDTHS.items():
@@ -1928,9 +1928,9 @@ def close_day(request):
     
 
     excel_buffer = BytesIO()
-    wb_oborot.save(excel_buffer)
+    wb_product_oborot.save(excel_buffer)
     excel_buffer.seek(0)
-    oborot_content = excel_buffer.read()
+    product_oborot_content = excel_buffer.read()
     
     
 
@@ -2143,11 +2143,6 @@ def close_day(request):
     wb_skidka.save(excel_buffer)
     excel_buffer.seek(0)
     skidka_content = excel_buffer.read()
-        
-
-    
-        
-    
     
     ####### end, skidka, Отклонение от оптовой цены
     #############################################################################################################################################################
@@ -2157,13 +2152,13 @@ def close_day(request):
     #############################################################################################################################################################
     #############################################################################################################################################################
     ####### start exel, buh oborot towarow detail
-    wb_detail = Workbook()
-    wb_detail.remove(wb_detail.active)
+    wb_product_oborot_detail = Workbook()
+    wb_product_oborot_detail.remove(wb_product_oborot_detail.active)
     
     
     for warehouse_id, products in turnover_product_detail.items():
         warehouse = Warehouse.objects.get(id=warehouse_id)
-        ws = wb_detail.create_sheet(title=warehouse.name[:31])
+        ws = wb_product_oborot_detail.create_sheet(title=warehouse.name[:31])
         
         ws.merge_cells("A1:L1")
         ws.merge_cells("A2:L2")
@@ -2348,9 +2343,9 @@ def close_day(request):
 
     # ===== СОХРАНЕНИЕ =====
     excel_buffer = BytesIO()
-    wb_detail.save(excel_buffer)
+    wb_product_oborot_detail.save(excel_buffer)
     excel_buffer.seek(0)
-    detail_content = excel_buffer.read()
+    product_oborot_detail_content = excel_buffer.read()
     
 
     
@@ -2359,80 +2354,555 @@ def close_day(request):
     #############################################################################################################################################################
     #############################################################################################################################################################
     
+    #############################################################################################################################################################
+    #############################################################################################################################################################
+    ####### start card prowodok
+    
+    # =========================================================
+    # ОСНОВНОЙ ОСВ
+    # =========================================================
+    
+    
+    
+    accounts_OSW = {}
+    
+    for account in Account.objects.all():
+        accounts_OSW[account.id] = {
+            'id': account.id,
+            'number': account.number,
+            'name': account.name,
+            'parent_id': account.parent_id,
+            'debit_start': Decimal('0'),
+            'credit_start': Decimal('0'),
+            'opening_balance': Decimal('0'),
+            'debit_turnover': Decimal('0'),
+            'credit_turnover': Decimal('0'),
+            'closing_balance': Decimal('0'),
+        }
+        
+    
+        
+
+
+    opening_OSW = (
+        Entry.objects
+        .filter(transaction__date__lt=day_start)
+        .values('account')
+        .annotate(
+            debit_sum=Sum('debit'),
+            credit_sum=Sum('credit')
+        )
+    )
+
+    for o in opening_OSW:
+        debit = o['debit_sum'] or Decimal('0')
+        credit = o['credit_sum'] or Decimal('0')
+        
+
+        acc = accounts_OSW[o['account']]
+        acc['debit_start'] = debit
+        acc['credit_start'] = credit
+        acc['opening_balance'] = debit - credit
+        
+        
+    turnover_OSW = (
+        Entry.objects
+        .filter(transaction__date__gte=day_start, transaction__date__lt=day_end)
+        .values('account')
+        .annotate(
+            debit_sum=Sum('debit'),
+            credit_sum=Sum('credit')
+        )
+    )
+    
+    for t in turnover_OSW:
+        debit = t['debit_sum'] or Decimal('0')
+        credit = t['credit_sum'] or Decimal('0')
+
+        acc = accounts_OSW[t['account']]
+        acc['debit_turnover'] = debit
+        acc['credit_turnover'] = credit
+        
+    for acc in accounts_OSW.values():
+        acc['closing_balance'] = (
+            acc['opening_balance']
+            + acc['debit_turnover']
+            - acc['credit_turnover']
+        )
+        
+    total_debit = sum(acc['debit_turnover'] for acc in accounts_OSW.values())
+    total_credit = sum(acc['credit_turnover'] for acc in accounts_OSW.values())
+
+    if total_debit != total_credit:
+        raise ValueError("НАРУШЕНА ДВОЙНАЯ ЗАПИСЬ")
+        
+    # сортируем счета так, чтобы дети шли первыми
+    accounts_sorted = sorted(
+        accounts_OSW.values(),
+        key=lambda x: x['number'].count('.'),
+        reverse=True
+    )
+
+    for acc in accounts_sorted:
+        parent_id = acc['parent_id']
+        if parent_id:
+            parent = accounts_OSW[parent_id]
+
+            parent['debit_start'] += acc['debit_start']
+            parent['credit_start'] += acc['credit_start']
+            parent['opening_balance'] += acc['opening_balance']
+
+            parent['debit_turnover'] += acc['debit_turnover']
+            parent['credit_turnover'] += acc['credit_turnover']
+            parent['closing_balance'] += acc['closing_balance']
+     
+     
+     
+    wb_OSW = Workbook()
+    wb_OSW.remove(wb_OSW.active)
+    
+    ws = wb_OSW.create_sheet(title="ОСВ")
+    ws.merge_cells("A1:H1")
+    ws.merge_cells("A2:H2")
+    ws["A1"] = "Оборотно-сальдовая ведомость"
+    ws["A2"] = str(convert_close_date)
+    
+    ws["A1"].alignment = CENTER_ALIGN
+    ws["A2"].alignment = CENTER_ALIGN
+    
+    ws["A1"].font = CATEGORY_FONT
+    ws["A2"].font = CATEGORY_FONT
+    
+    
+    
+    # row += 1
+    
+    ws["A4"] = "Счёт"
+    ws["B4"] = "Название счёта"
+    ws.column_dimensions["B"].width = 35
+    ws.column_dimensions["C"].width = 15
+    ws.column_dimensions["D"].width = 15
+    ws.column_dimensions["E"].width = 15
+    ws.column_dimensions["F"].width = 15
+    ws.column_dimensions["G"].width = 15
+    ws.column_dimensions["H"].width = 15
+    
+    ws.merge_cells("C4:D4")
+    ws["C4"] = "Сальдо на начало"
+    
+    ws.merge_cells("E4:F4")
+    ws["E4"] = "Обороты за период"
+    
+    ws.merge_cells("G4:H4")
+    ws["G4"] = "Сальдо на конец"
+    
+    ws["C5"] = "Дебет"
+    ws["D5"] = "Кредит"
+    
+    ws["E5"] = "Дебет"
+    ws["F5"] = "Кредит"
+    
+    ws["G5"] = "Дебет"
+    ws["H5"] = "Кредит"
+    
+    for i in ["A4", "B4", "C4", "D4", "E4", "F4", "G4", "H4"]:
+        ws[i].alignment = CENTER_ALIGN
+        ws[i].font = CATEGORY_FONT
+        ws[i].fill = GRAY_FILL_1
+        ws[i].border = THIN_BORDER
+        
+    for i in ["A5", "B5", "C5", "D5", "E5", "F5", "G5", "H5"]:
+        ws[i].alignment = CENTER_ALIGN
+        ws[i].font = CATEGORY_FONT
+        ws[i].fill = GRAY_FILL_1
+        ws[i].border = THIN_BORDER
+        
+        
+        
+
+    row = 6
+    
+    # сначала найдём все parent_id
+    parent_ids = {
+        acc['parent_id']
+        for acc in accounts_OSW.values()
+        if acc['parent_id']
+    }
+
+    # листовые счета = те, кто не родитель
+    leaf_accounts = [
+        acc for acc_id, acc in accounts_OSW.items()
+        if acc_id not in parent_ids
+    ]
+    
+    detail_sheets = {}
+
+    for acc in leaf_accounts:
+        title=f"{acc['number']} {acc['name'][:20]}"
+        ws_detail = wb_OSW.create_sheet(title=title)
+        detail_sheets[acc["id"]] = ws_detail
+
+        ws_detail["A1"] = "← ОСВ"
+        ws_detail["A1"].font = Font(bold=True, color="0000FF")
+        ws_detail["A1"].hyperlink = f"#'ОСВ'!A1"
+        
+        ws_detail.merge_cells("A2:H2")
+        ws_detail["A2"] = f"Счёт {acc['number']} — {acc['name']}"
+        ws_detail["A2"].alignment = CENTER_ALIGN
+        ws_detail["A2"].font = TOTAL_FONT
+        
+        ws_detail.merge_cells("A3:H3")
+        ws_detail["A3"] = convert_close_date
+        ws_detail["A3"].alignment = CENTER_ALIGN
+        ws_detail["A3"].font = TOTAL_FONT
+        
+    
+        
+    for account_id, data in accounts_OSW.items():
+        cell = ws[f"B{row}"]
+        cell.value = data["number"]
+        
+        title=f"{data['number']} {data['name'][:20]}"
+        if data["id"] in detail_sheets:
+            cell.hyperlink = f"#'{title}'!A1"
+            cell.style = "Hyperlink"
+        
+        for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"F{row}", f"G{row}", f"H{row}"]:
+            ws[i].border = THIN_BORDER
+            
+        ws[f"C{row}"].number_format = PRICE_FMT
+        ws[f"D{row}"].number_format = PRICE_FMT
+        ws[f"E{row}"].number_format = PRICE_FMT
+        ws[f"F{row}"].number_format = PRICE_FMT
+        ws[f"G{row}"].number_format = PRICE_FMT
+        ws[f"H{row}"].number_format = PRICE_FMT
+
+     
+            
+        ws[f"A{row}"] = data["number"]
+        ws[f"B{row}"] = data["name"]
+        
+        ws[f"C{row}"] = data["debit_start"]
+        ws[f"D{row}"] = data["credit_start"]
+        
+        ws[f"E{row}"] = data["debit_turnover"]
+        ws[f"F{row}"] = data["credit_turnover"]
+        ws[f"E{row}"].font = GREEN_FONT
+        ws[f"F{row}"].font = RED_FONT
+        
+        
+        if data["closing_balance"] >= 0:
+            ws[f"G{row}"] = data["closing_balance"]   # дебет
+        else:
+            ws[f"H{row}"] = abs(data["closing_balance"])  # кредит
+            
+        row += 1
+        
+    grand_total = {
+        'debit_start': Decimal('0'),
+        'credit_start': Decimal('0'),
+        'debit_turnover': Decimal('0'),
+        'credit_turnover': Decimal('0'),
+        'closing_debit': Decimal('0'),
+        'closing_credit': Decimal('0'),
+    }
+    
+    for acc in accounts_OSW.values():
+        grand_total['debit_start'] += acc['debit_start']
+        grand_total['credit_start'] += acc['credit_start']
+        grand_total['debit_turnover'] += acc['debit_turnover']
+        grand_total['credit_turnover'] += acc['credit_turnover']
+
+        if acc['closing_balance'] >= 0:
+            grand_total['closing_debit'] += acc['closing_balance']
+        else:
+            grand_total['closing_credit'] += abs(acc['closing_balance'])
+            
+            
+    
+
+    grand_total = {
+        'debit_start': sum(a['debit_start'] for a in leaf_accounts),
+        'credit_start': sum(a['credit_start'] for a in leaf_accounts),
+        'debit_turnover': sum(a['debit_turnover'] for a in leaf_accounts),
+        'credit_turnover': sum(a['credit_turnover'] for a in leaf_accounts),
+        'closing_debit': sum(
+            a['closing_balance'] for a in leaf_accounts if a['closing_balance'] >= 0
+        ),
+        'closing_credit': sum(
+            abs(a['closing_balance']) for a in leaf_accounts if a['closing_balance'] < 0
+        ),
+    }
+            
+            
+    ws[f"A{row}"] = "ИТОГО"
+    ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=2)
+
+    ws[f"C{row}"] = grand_total['debit_start']
+    ws[f"D{row}"] = grand_total['credit_start']
+    ws[f"E{row}"] = grand_total['debit_turnover']
+    ws[f"F{row}"] = grand_total['credit_turnover']
+    ws[f"G{row}"] = grand_total['closing_debit']
+    ws[f"H{row}"] = grand_total['closing_credit']
+
+    for col in "ABCDEFGH":
+        ws[f"{col}{row}"].font = CATEGORY_FONT
+        ws[f"{col}{row}"].border = THIN_BORDER
+        ws[f"{col}{row}"].fill = GRAY_FILL_1
+        
+    for col in "CDEFGH":
+        ws[f"{col}{row}"].number_format = PRICE_FMT
+        
+    row += 1
+    
+    ws[f"A{row}"] = "САЛЬДО"
+    ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=2)
+
+    saldo_start = grand_total['debit_start'] - grand_total['credit_start']
+    saldo_turnover = grand_total['debit_turnover'] - grand_total['credit_turnover']
+    saldo_end = grand_total['closing_debit'] - grand_total['closing_credit']
+    if saldo_start > 0:
+        ws[f"C{row}"] = saldo_start
+    else:
+        ws[f"D{row}"] = abs(saldo_start)
+    if saldo_turnover > 0:
+        ws[f"E{row}"] = saldo_turnover
+    else:
+        ws[f"F{row}"] = abs(saldo_turnover)
+    if saldo_end > 0:    
+        ws[f"G{row}"] = saldo_end
+    else:
+        ws[f"H{row}"] = abs(saldo_end)
+
+    for col in "ABCDEFGH":
+        ws[f"{col}{row}"].font = CATEGORY_FONT
+        ws[f"{col}{row}"].border = THIN_BORDER
+        ws[f"{col}{row}"].fill = GRAY_FILL_1
+        
+    for col in "CDEFGH":
+        ws[f"{col}{row}"].number_format = PRICE_FMT
+        
+        
+    # =========================================================
+    # SUB ОТЧЁТЫ
+    # =========================================================
+    
+    # for account in Account.all():
+    #     ws_detail = detail_sheets[account.id]
+    
+    
+    
+    
+        
+        
+        
+        
+    
+    
+
+
+
+
+            
+        
+    excel_buffer = BytesIO()
+    wb_OSW.save(excel_buffer)
+    excel_buffer.seek(0)
+    OSW_content = excel_buffer.read()
+        
+        
+         
+    # ic(accounts_OSW)
+    
+    # # =========================
+    # # Данные (как будто из ОСВ)
+    # # =========================
+
+    # accounts = [
+    #     {
+    #         "number": "40",
+    #         "name": "Склад USD",
+    #         "balance": Decimal("684445.18"),
+    #         "children": ["40.1", "40.2"]
+    #     },
+    #     {
+    #         "number": "40.1",
+    #         "name": "Основной склад",
+    #         "balance": Decimal("684445.18"),
+    #         "entries": [
+    #             ("2026-01-25", "Поступление товара", Decimal("7854.11"), Decimal("0")),
+    #             ("2026-01-26", "Продажа", Decimal("0"), Decimal("0")),
+    #         ]
+    #     },
+    #     {
+    #         "number": "40.2",
+    #         "name": "Второй склад",
+    #         "balance": Decimal("0"),
+    #         "entries": []
+    #     },
+    # ]
+
+    # # =========================
+    # # Создание книги
+    # # =========================
+
+    # wb = Workbook()
+    # ws_osv = wb.active
+    # ws_osv.title = "ОСВ"
+
+    # link_style = Font(color="0000FF", underline="single")
+
+    # # =========================
+    # # Лист ОСВ
+    # # =========================
+
+    # ws_osv.append(["Счёт", "Наименование", "Сальдо"])
+
+    # row = 2
+    # for acc in accounts:
+    #     ws_osv.cell(row=row, column=1, value=acc["number"])
+    #     ws_osv.cell(row=row, column=2, value=acc["name"])
+    #     ws_osv.cell(row=row, column=3, value=float(acc["balance"]))
+
+    #     # делаем кликабельным
+    #     c = ws_osv.cell(row=row, column=1)
+    #     c.hyperlink = f"#'{acc['number']}'!A1"
+    #     c.font = link_style
+
+    #     row += 1
+
+    # # =========================
+    # # Лист 40 — субсчета
+    # # =========================
+
+    # ws_40 = wb.create_sheet("40")
+    # ws_40.append(["Субсчёт", "Наименование", "Сальдо"])
+
+    # row = 2
+    # for acc in accounts:
+    #     if acc["number"].startswith("40."):
+
+    #         ws_40.cell(row=row, column=1, value=acc["number"])
+    #         ws_40.cell(row=row, column=2, value=acc["name"])
+    #         ws_40.cell(row=row, column=3, value=float(acc["balance"]))
+
+    #         c = ws_40.cell(row=row, column=1)
+    #         c.hyperlink = f"#'{acc['number']}'!A1"
+    #         c.font = link_style
+
+    #         row += 1
+
+    # # =========================
+    # # Листы субсчетов (проводки)
+    # # =========================
+
+    # for acc in accounts:
+    #     if "." in acc["number"]:
+    #         ws = wb.create_sheet(acc["number"])
+    #         ws.append(["Дата", "Описание", "Дебет", "Кредит", "Сальдо"])
+
+    #         balance = Decimal("0")
+
+    #         for date, desc, debit, credit in acc.get("entries", []):
+    #             balance += debit - credit
+    #             ws.append([
+    #                 date,
+    #                 desc,
+    #                 float(debit),
+    #                 float(credit),
+    #                 float(balance)
+    #             ])
+
+    # # =========================
+    # # Сохранение
+    # # =========================
+
+    # wb.save("osv_demo.xlsx")
+
+    # print("Готово: osv_demo.xlsx")
+                
+    
+    
+    
+    ####### end card prowodok
+    #############################################################################################################################################################
+    #############################################################################################################################################################
+    
+    
 
 
     try:
         with transaction.atomic():
             # 1/0
             
-            day_closing = DayClosing.objects.create(date=close_date_format)
+            # day_closing = DayClosing.objects.create(date=close_date_format)
 
-            # обновляем статус
-            day_closing.closed_at = timezone.now()
-            day_closing.closed_by = user
-            day_closing.note = reason
-            day_closing.save()
+            # # обновляем статус
+            # day_closing.closed_at = timezone.now()
+            # day_closing.closed_by = user
+            # day_closing.note = reason
+            # day_closing.save()
 
-            # логируем
-            DayClosingLog.objects.create(
-                day_closing=day_closing,
-                action="close",
-                performed_by=user,
-                reason=reason
-            )
+            # # логируем
+            # DayClosingLog.objects.create(
+            #     day_closing=day_closing,
+            #     action="close",
+            #     performed_by=user,
+            #     reason=reason
+            # )
 
-            # ФУНКЦИИ ДЛЯ ВЫЧИСЛЕНИЯ БАЛАНСОВ ПО КАЖДОМУ СЧЕТУ
-            def calculate_balance_by_account(partner, target_date, account_number):
-                """Вычисляет баланс по конкретному счету"""
-                entries = Entry.objects.filter(
-                    transaction__partner=partner,
-                    transaction__date__lte=target_date,
-                    account__number=account_number
-                )
-                debit = entries.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
-                credit = entries.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
-                return debit - credit
+            # # ФУНКЦИИ ДЛЯ ВЫЧИСЛЕНИЯ БАЛАНСОВ ПО КАЖДОМУ СЧЕТУ
+            # def calculate_balance_by_account(partner, target_date, account_number):
+            #     """Вычисляет баланс по конкретному счету"""
+            #     entries = Entry.objects.filter(
+            #         transaction__partner=partner,
+            #         transaction__date__lte=target_date,
+            #         account__number=account_number
+            #     )
+            #     debit = entries.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
+            #     credit = entries.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
+            #     return debit - credit
 
-            # снимки балансов партнёров ОТДЕЛЬНО ПО КАЖДОМУ СЧЕТУ
-            for partner in Partner.objects.all():
-                balance_60_usd = calculate_balance_by_account(partner, close_date, '60')
-                balance_62_tmt = calculate_balance_by_account(partner, close_date, '62')
-                balance_75_usd = calculate_balance_by_account(partner, close_date, '75')
-                balance_76_tmt = calculate_balance_by_account(partner, close_date, '76')
+            # # снимки балансов партнёров ОТДЕЛЬНО ПО КАЖДОМУ СЧЕТУ
+            # for partner in Partner.objects.all():
+            #     balance_60_usd = calculate_balance_by_account(partner, close_date, '60')
+            #     balance_62_tmt = calculate_balance_by_account(partner, close_date, '62')
+            #     balance_75_usd = calculate_balance_by_account(partner, close_date, '75')
+            #     balance_76_tmt = calculate_balance_by_account(partner, close_date, '76')
                 
-                # Итоговые балансы по валютам (для обратной совместимости)
-                total_usd = balance_60_usd + balance_75_usd
-                total_tmt = balance_62_tmt + balance_76_tmt
+            #     # Итоговые балансы по валютам (для обратной совместимости)
+            #     total_usd = balance_60_usd + balance_75_usd
+            #     total_tmt = balance_62_tmt + balance_76_tmt
                 
-                PartnerBalanceSnapshot.objects.create(
-                    closing=day_closing,
-                    partner=partner,
-                    balance_60_usd=balance_60_usd,
-                    balance_62_tmt=balance_62_tmt,
-                    balance_75_usd=balance_75_usd,
-                    balance_76_tmt=balance_76_tmt,
-                    balance_usd=total_usd,
-                    balance_tmt=total_tmt,
-                    balance=Decimal('0.000')
-                )
+            #     PartnerBalanceSnapshot.objects.create(
+            #         closing=day_closing,
+            #         partner=partner,
+            #         balance_60_usd=balance_60_usd,
+            #         balance_62_tmt=balance_62_tmt,
+            #         balance_75_usd=balance_75_usd,
+            #         balance_76_tmt=balance_76_tmt,
+            #         balance_usd=total_usd,
+            #         balance_tmt=total_tmt,
+            #         balance=Decimal('0.000')
+            #     )
 
-            # снимки складов
-            for wp in WarehouseProduct.objects.all():
-                StockSnapshot.objects.create(
-                    closing=day_closing,
-                    warehouse=wp.warehouse,
-                    product=wp.product,
-                    purchase_price=wp.product.purchase_price,
-                    retail_price=wp.product.retail_price,
-                    wholesale_price=wp.product.wholesale_price,
-                    discount_price=wp.product.discount_price,
-                    firma_price=wp.product.firma_price,
-                    # quantity=wp.quantity
-                    quantity = turnover_product[wp.warehouse_id][wp.product_id]["end_qty"]
-                )
+            # # снимки складов
+            # for wp in WarehouseProduct.objects.all():
+            #     StockSnapshot.objects.create(
+            #         closing=day_closing,
+            #         warehouse=wp.warehouse,
+            #         product=wp.product,
+            #         purchase_price=wp.product.purchase_price,
+            #         retail_price=wp.product.retail_price,
+            #         wholesale_price=wp.product.wholesale_price,
+            #         discount_price=wp.product.discount_price,
+            #         firma_price=wp.product.firma_price,
+            #         # quantity=wp.quantity
+            #         quantity = turnover_product[wp.warehouse_id][wp.product_id]["end_qty"]
+            #     )
                 
-            # oborot excel
-            report_oborot, _ = DayReport.objects.get_or_create(
+            # oborot product excel
+            report_product_oborot, _ = DayReport.objects.get_or_create(
                 date=close_date_format,
                 report_type=f"OBOROT_TOWAR",
                 defaults={
@@ -2442,9 +2912,9 @@ def close_day(request):
             )
 
             filename = f"OBOROT_TOWAR_{convert_close_date}.xlsx"
-            report_oborot.file.save(
+            report_product_oborot.file.save(
                 filename,
-                ContentFile(oborot_content),
+                ContentFile(product_oborot_content),
                 save=True
             )
             
@@ -2467,7 +2937,7 @@ def close_day(request):
             )
             
             # oborot product detail
-            report_detail, _ = DayReport.objects.get_or_create(
+            report_product_oborot_detail, _ = DayReport.objects.get_or_create(
                 date=close_date_format,
                 report_type="OBOROT_TOWAR_DETAIL",
                 defaults={
@@ -2477,9 +2947,27 @@ def close_day(request):
             )
 
             filename = f"OBOROT_TOWAR_DETAIL_{convert_close_date}.xlsx"
-            report_detail.file.save(
+            report_product_oborot_detail.file.save(
                 filename,
-                ContentFile(detail_content),
+                ContentFile(product_oborot_detail_content),
+                save=True
+            )
+            
+            
+            # OSW
+            report_OSW, _ = DayReport.objects.get_or_create(
+                date=close_date_format,
+                report_type="OSW",
+                defaults={
+                    "created_by": user,
+                    "comment": reason
+                }
+            )
+
+            filename = f"OSW_{convert_close_date}.xlsx"
+            report_OSW.file.save(
+                filename,
+                ContentFile(OSW_content),
                 save=True
             )
 

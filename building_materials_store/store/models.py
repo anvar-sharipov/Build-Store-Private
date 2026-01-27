@@ -948,7 +948,9 @@ def day_report_upload_path(instance, filename):
 class DayReport(models.Model):
     REPORT_TYPES = (
         ("OBOROT_TOWAR", "OBOROT_TOWAR"),
-        ("SKIDKA", "SKIDKA")
+        ("OBOROT_TOWAR_DETAIL", "OBOROT_TOWAR_DETAIL"),
+        ("SKIDKA", "SKIDKA"),
+        ("OSW", "OSW"),
     )
 
     date = models.DateField()

@@ -267,7 +267,7 @@ def skidka_nasenka(request):
     
     print_excel = request.query_params.get("printExcel") == "true"
     
-    ic(print_excel)
+    # ic(print_excel)
     
     
     

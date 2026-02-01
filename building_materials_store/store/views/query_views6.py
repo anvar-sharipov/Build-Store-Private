@@ -304,7 +304,7 @@ def zakaz_list(request):
     dateTo = request.GET.get('dateTo')
     partner_id = request.GET.get('partner_id') 
     buyer_id = request.GET.get('buyer_id') 
-    ic(buyer_id)
+    # ic(buyer_id)
     
     # time.sleep(2)
     
@@ -403,7 +403,7 @@ def get_zakaz_data(request, id):
             "name": zakaz.partner.name,
         }
     if zakaz.buyer:
-        ic(zakaz.buyer)
+        # ic(zakaz.buyer)
         buyer = {
             "id": zakaz.buyer.id,
             "name": zakaz.buyer.name,

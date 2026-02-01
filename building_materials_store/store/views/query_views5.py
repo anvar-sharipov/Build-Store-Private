@@ -546,7 +546,7 @@ def upload_initial_stock(request):
     excel_file = request.FILES["file"]
     
     warehouse = Warehouse.objects.get(name="Sklad 1 USD")
-    ic(warehouse)
+    # ic(warehouse)
 
     try:
         # Читаем Excel

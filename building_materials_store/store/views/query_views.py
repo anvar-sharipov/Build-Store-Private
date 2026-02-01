@@ -3,7 +3,7 @@ from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from decimal import Decimal, ROUND_HALF_UP
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, Count
 from datetime import datetime, timedelta
 from django.utils.dateparse import parse_date
 
@@ -27,6 +27,13 @@ from openpyxl.worksheet.page import PageMargins
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
+from ..my_func.get_unit_map import get_unit_map 
+from ..my_func.get_unit_and_cf import get_unit_and_cf 
+
+def money(value: Decimal) -> Decimal:
+    return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
 
 
 
@@ -1189,7 +1196,6 @@ def close_day(request):
     close_date_format = datetime.strptime(close_date, "%Y-%m-%d").date()
     convert_close_date = close_date_format.strftime("%d.%m.%Y") # dlya date w models.py
     
-
     day_start = close_date_format
     day_end = close_date_format + timedelta(days=1)
 
@@ -2393,10 +2399,14 @@ def close_day(request):
             credit_sum=Sum('credit')
         )
     )
+    
+    
 
     for o in opening_OSW:
         debit = o['debit_sum'] or Decimal('0')
         credit = o['credit_sum'] or Decimal('0')
+        
+        
         
 
         acc = accounts_OSW[o['account']]
@@ -2686,23 +2696,612 @@ def close_day(request):
     # =========================================================
     # SUB ОТЧЁТЫ
     # =========================================================
-    
-    # for account in Account.all():
-    #     ws_detail = detail_sheets[account.id]
-    
-    
-    
-    
-        
-        
-        
-        
-    
+    # ic| account_id: 19, account_number: '25'
+    # ic| account_id: 20, account_number: '26'
+    # ic| account_id: 21, account_number: '27'
+    # ic| account_id: 22, account_number: '28'
+    # ic| account_id: 12, account_number: '40.1'
+    # ic| account_id: 13, account_number: '40.2'
+    # ic| account_id: 15, account_number: '42.1'
+    # ic| account_id: 6, account_number: '46.1'
+    # ic| account_id: 7, account_number: '46.2'
+    # ic| account_id: 9, account_number: '47.1'
+    # ic| account_id: 10, account_number: '47.2'
+    # ic| account_id: 16, account_number: '50'
+    # ic| account_id: 18, account_number: '52'
+    # ic| account_id: 1, account_number: '60'
+    # ic| account_id: 2, account_number: '62'
+    # ic| account_id: 3, account_number: '75'
+    # ic| account_id: 4, account_number: '76'
+    # ic| account_id: 17, account_number: '80'
     
 
+    osw_detail_level_1 = {}
+    partner_snap_map = {}
+    if last_closing:
+        partner_balance_snapshots = PartnerBalanceSnapshot.objects.filter(closing=last_closing).select_related("partner")
+        partner_snap_map = {
+            (s.partner.id): {
+                    "balance_60_usd": s.balance_60_usd, 
+                    "balance_62_tmt": s.balance_62_tmt, 
+                    "balance_75_usd": s.balance_75_usd, 
+                    "balance_76_tmt": s.balance_76_tmt,
+                    
+                    "balance_60_usd_credit": s.balance_60_usd_credit,
+                    "balance_60_usd_debit": s.balance_60_usd_debit,
+                    
+                    "balance_62_tmt_credit": s.balance_62_tmt_credit,
+                    "balance_62_tmt_debit": s.balance_62_tmt_debit,
+                    
+                    "balance_75_usd_credit": s.balance_75_usd_credit,
+                    "balance_75_usd_debit": s.balance_75_usd_debit,
+                    
+                    "balance_76_tmt_credit": s.balance_76_tmt_credit,
+                    "balance_76_tmt_debit": s.balance_76_tmt_debit,
 
+                }
+            for s in partner_balance_snapshots
+        }
+    
+    for acc in leaf_accounts:
+        account_id = acc["id"]
+        account_number = acc["number"]
+        
 
+        if account_number.startswith("60") or account_number.startswith("62"):
+            ic(account_id, account_number)
+            partners = Partner.objects.all().select_related("agent")
+            
+            account_60_62 = {}
+            for p in partners:
+                partner = {
+                    "id": p.id,
+                    "name": p.name,
+                    "type": p.type,
+                }
+                
+                if p.agent:
+                    agent = {
+                        "id": p.agent.id,
+                        "name": p.agent.name,
+                    }
+                else:
+                    agent = {}
+                    
+                account_60_62[p.id] = {
+                    "partner": partner,
+                    "agent": agent,
+                    "debit_start": Decimal("0.00"),
+                    "credit_start": Decimal("0.00"),
+                    "debit_turnover": Decimal("0.00"),
+                    "credit_turnover": Decimal("0.00"),
+                    "debit_end": Decimal("0.00"),
+                    "credit_end": Decimal("0.00"),
+                }
+            
+            if last_closing:
+                for p_id, value in partner_snap_map.items():
+                    if p_id not in account_60_62:
+                        continue
+                    if account_number == "60":
+                        account_60_62[p_id]["debit_start"] += value["balance_60_usd_debit"]
+                        account_60_62[p_id]["credit_start"] += value["balance_60_usd_credit"]
+                    else:
+                        account_60_62[p_id]["debit_start"] += value["balance_62_tmt_debit"]
+                        account_60_62[p_id]["credit_start"] += value["balance_62_tmt_credit"]
+                    
+            else:
+                entries_start = (
+                    Entry.objects
+                    .filter(
+                        account_id=account_id,
+                        transaction__date__lt=close_date_format
+                    )
+                    .select_related(
+                        'transaction',
+                        'partner__agent',
+                        'product',
+                        'warehouse',
+                        'transaction__invoice',
+                    )
+                    .order_by('transaction__date', 'id')
+                )
+                
+                for e in entries_start:
+                    if not e.partner:
+                        continue
+                    partner_id = e.partner.id
+                    
+                    
+                    account_60_62[partner_id]["debit_start"] += money(e.debit)
+                    account_60_62[partner_id]["credit_start"] += money(e.credit)
+                    
+            entries_turnover = (
+                Entry.objects
+                .filter(
+                    account_id=account_id,
+                    transaction__date__gte=day_start,
+                    transaction__date__lt=day_end,
+                )
+                .select_related(
+                    'transaction',
+                    'partner__agent',
+                    'product',
+                    'warehouse',
+                    'transaction__invoice',
+                )
+                .order_by('transaction__date', 'id')
+            )
+            
+            for e in entries_turnover:
+                    if not e.partner:
+                        continue
+                    partner_id = e.partner.id
+                    
+                    account_60_62[partner_id]["debit_turnover"] += money(e.debit)
+                    account_60_62[partner_id]["credit_turnover"] += money(e.credit)
+            
+            
+            
+            total_credit_start = Decimal("0.00")        
+            total_debit_start = Decimal("0.00")        
+            total_credit_turnover = Decimal("0.00")        
+            total_debit_turnover = Decimal("0.00")        
+            total_credit_end = Decimal("0.00")        
+            total_debit_end = Decimal("0.00")
+                    
+            for p_id, row in account_60_62.items():
+                debit_end_raw = row["debit_start"] + row["debit_turnover"]
+                credit_end_raw = row["credit_start"] + row["credit_turnover"]
 
+                saldo = debit_end_raw - credit_end_raw
+
+                if saldo >= 0:
+                    row["debit_end"] = saldo
+                    row["credit_end"] = Decimal("0.00")
+                else:
+                    row["debit_end"] = Decimal("0.00")
+                    row["credit_end"] = -saldo
+                    
+                # 👉 ИТОГИ СЧИТАЕМ ЗДЕСЬ
+                total_debit_start += row["debit_start"]
+                total_credit_start += row["credit_start"]
+
+                total_debit_turnover += row["debit_turnover"]
+                total_credit_turnover += row["credit_turnover"]
+
+                total_debit_end += row["debit_end"]
+                total_credit_end += row["credit_end"]
+                    
+            grand_total_60_62 =  {
+                "total_credit_start": total_credit_start,
+                "total_debit_start": total_debit_start,
+                "total_credit_turnover": total_credit_turnover,
+                "total_debit_turnover": total_debit_turnover,
+                "total_credit_end": total_credit_end,
+                "total_debit_end": total_debit_end,
+            }
+            
+            
+                    
+            ws_detail = detail_sheets[account_id]
+            ws_detail.freeze_panes = "A7"
+            ws_detail["A5"] = "№"
+            ws_detail.column_dimensions["A"].width = 5
+            ws_detail["B5"] = "Agent"
+            ws_detail.column_dimensions["B"].width = 20
+            ws_detail["C5"] = "Субконто"
+            ws_detail.column_dimensions["C"].width = 45
+            
+            ws_detail.merge_cells("D5:E5")
+            ws_detail["D5"] = "Сальдо на начало"
+
+            
+            ws_detail.merge_cells("F5:G5")
+            ws_detail["F5"] = "Обороты за период"
+         
+            
+            ws_detail.merge_cells("H5:I5")
+            ws_detail["H5"] = "Сальдо на конец"
+       
+            
+            
+            for i in ["A5", "B5", "C5", "D5", "E5", "F5", "G5", "H5", "I5", 
+                      "A6", "B6", "C6", "D6", "E6", "F6", "G6", "H6", "I6"]:
+                ws_detail[i].font = TOTAL_FONT
+                ws_detail[i].alignment = CENTER_ALIGN
+                ws_detail[i].fill = GRAY_FILL_1
+                ws_detail[i].border = THIN_BORDER
+                
+                
+            for i in ["D", "E", "F", "G", "H", "I"]:
+                ws_detail.column_dimensions[i].width = 15
+       
+                
+     
+            ws_detail["D6"] = "Дебит"
+            ws_detail["E6"] = "Кредит"
+            
+            ws_detail["F6"] = "Дебит"
+            ws_detail["G6"] = "Кредит"
+            
+            ws_detail["H6"] = "Дебит"
+            ws_detail["I6"] = "Кредит"
+            
+            
+            row = 7
+            count = 1
+            for p_id, v in account_60_62.items():
+                
+                ws_detail[f"D{row}"].number_format = PRICE_FMT
+                ws_detail[f"E{row}"].number_format = PRICE_FMT
+                ws_detail[f"F{row}"].number_format = PRICE_FMT
+                ws_detail[f"G{row}"].number_format = PRICE_FMT
+                ws_detail[f"H{row}"].number_format = PRICE_FMT
+                ws_detail[f"I{row}"].number_format = PRICE_FMT
+                
+                for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"F{row}", f"G{row}", f"H{row}", f"I{row}"]:
+                    ws_detail[i].border = THIN_BORDER
+                
+        
+        
+                ws_detail[f"A{row}"] = count
+                ws_detail[f"B{row}"] = v["agent"]["name"] if v["agent"] else ""
+                ws_detail[f"C{row}"] = v["partner"]["name"] if v["partner"] else ""
+                
+                ws_detail[f"D{row}"] = v["debit_start"]
+                ws_detail[f"E{row}"] = v["credit_start"]
+                
+                ws_detail[f"F{row}"] = v["debit_turnover"]
+                ws_detail[f"G{row}"] = v["credit_turnover"]
+                
+                ws_detail[f"H{row}"] = v["debit_end"]
+                ws_detail[f"I{row}"] = v["credit_end"]
+                
+                count += 1
+                row += 1
+                
+            
+            for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"F{row}", f"G{row}", f"H{row}", f"I{row}"]:
+                ws_detail[i].font = TOTAL_FONT
+                ws_detail[i].alignment = RIGHT_ALIGN
+                ws_detail[i].fill = GRAY_FILL_1
+                ws_detail[i].border = THIN_BORDER
+              
+            
+            ws_detail.merge_cells(f"A{row}:C{row}")
+            ws_detail[f"A{row}"].alignment = LEFT_ALIGN
+            ws_detail[f"A{row}"] = "Итого развернутое:"
+            
+            ws_detail[f"D{row}"].number_format = PRICE_FMT
+            ws_detail[f"E{row}"].number_format = PRICE_FMT
+            ws_detail[f"F{row}"].number_format = PRICE_FMT
+            ws_detail[f"G{row}"].number_format = PRICE_FMT
+            ws_detail[f"H{row}"].number_format = PRICE_FMT
+            ws_detail[f"I{row}"].number_format = PRICE_FMT
+            
+            ws_detail[f"D{row}"] = grand_total_60_62["total_debit_start"]
+            ws_detail[f"E{row}"] = grand_total_60_62["total_credit_start"]
+            
+            ws_detail[f"F{row}"] = grand_total_60_62["total_debit_turnover"]
+            ws_detail[f"G{row}"] = grand_total_60_62["total_credit_turnover"]
+            
+            ws_detail[f"H{row}"] = grand_total_60_62["total_debit_end"]
+            ws_detail[f"I{row}"] = grand_total_60_62["total_credit_end"]
+            
+            row += 1
+            
+            for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"F{row}", f"G{row}", f"H{row}", f"I{row}"]:
+                ws_detail[i].font = TOTAL_FONT
+                ws_detail[i].alignment = RIGHT_ALIGN
+                ws_detail[i].fill = GRAY_FILL_1
+                ws_detail[i].border = THIN_BORDER
+              
+            
+            ws_detail.merge_cells(f"A{row}:C{row}")
+            ws_detail[f"A{row}"].alignment = LEFT_ALIGN
+            ws_detail[f"A{row}"] = "Всего:"
+            
+            ws_detail[f"D{row}"].number_format = PRICE_FMT
+            ws_detail[f"E{row}"].number_format = PRICE_FMT
+            ws_detail[f"F{row}"].number_format = PRICE_FMT
+            ws_detail[f"G{row}"].number_format = PRICE_FMT
+            ws_detail[f"H{row}"].number_format = PRICE_FMT
+            ws_detail[f"I{row}"].number_format = PRICE_FMT
+            
+            saldo_start = grand_total_60_62["total_debit_start"] - grand_total_60_62["total_credit_start"]
+            ws_detail[f"D{row}"] = saldo_start if saldo_start > 0 else 0
+            ws_detail[f"E{row}"] = abs(saldo_start) if saldo_start < 0 else 0
+            
+            saldo_turnover = grand_total_60_62["total_debit_turnover"] - grand_total_60_62["total_credit_turnover"]
+            ws_detail[f"F{row}"] = saldo_turnover if saldo_turnover > 0 else 0
+            ws_detail[f"G{row}"] = abs(saldo_turnover) if saldo_turnover < 0 else 0
+            
+            saldo_end = grand_total_60_62["total_debit_end"] - grand_total_60_62["total_credit_end"]
+            ws_detail[f"H{row}"] = saldo_end if saldo_end > 0 else 0
+            ws_detail[f"I{row}"] = abs(saldo_end) if saldo_end < 0 else 0
+            
+ 
+        
+        elif account_number.startswith("40") or account_number.startswith("42"):
+            # w_acc = WarehouseAccount.objects.get(account_id=account_id)
+            w_acc = (
+                WarehouseAccount.objects
+                .select_related("warehouse")
+                .get(account_id=account_id)
+            )
+
+            products = Product.objects.filter(
+                warehouse_products__warehouse_id=w_acc.warehouse_id
+            ).distinct()
+
+            account_40_42 = {}
+            for p in products:
+                account_40_42[p.id] = {
+                    "product": {
+                        "id": p.id,
+                        "name": p.name,
+                        "category": p.category.name,
+                    },
+                    "debit_start": Decimal("0.00"),
+                    "credit_start": Decimal("0.00"),
+                    "debit_turnover": Decimal("0.00"),
+                    "credit_turnover": Decimal("0.00"),
+                    "debit_end": Decimal("0.00"),
+                    "credit_end": Decimal("0.00"),
+                }
+
+            entries_start = (
+                Entry.objects
+                .filter(
+                    account_id=account_id,
+                    warehouse_id=w_acc.warehouse_id,
+                    transaction__date__lt=close_date_format,
+                    product__isnull=False
+                )
+                .values("product_id")
+                .annotate(
+                    debit=Sum("debit"),
+                    credit=Sum("credit")
+                )
+            )
+
+            for row in entries_start:
+                pid = row["product_id"]
+                if pid not in account_40_42:
+                    continue
+
+                account_40_42[pid]["debit_start"] = row["debit"] or Decimal("0.00")
+                account_40_42[pid]["credit_start"] = row["credit"] or Decimal("0.00")
+                
+            entries_turnover = (
+                Entry.objects
+                .filter(
+                    account_id=account_id,
+                    warehouse_id=w_acc.warehouse_id,
+                    transaction__date__gte=day_start,
+                    transaction__date__lt=day_end,
+                    product__isnull=False
+                )
+                .values("product_id")
+                .annotate(
+                    debit=Sum("debit"),
+                    credit=Sum("credit")
+                )
+            )
+            
+            for row in entries_turnover:
+                pid = row["product_id"]
+                if pid not in account_40_42:
+                    continue
+
+                account_40_42[pid]["debit_turnover"] = row["debit"] or Decimal("0.00")
+                account_40_42[pid]["credit_turnover"] = row["credit"] or Decimal("0.00")
+                
+            total_credit_start = Decimal("0.00")        
+            total_debit_start = Decimal("0.00")        
+            total_credit_turnover = Decimal("0.00")        
+            total_debit_turnover = Decimal("0.00")        
+            total_credit_end = Decimal("0.00")        
+            total_debit_end = Decimal("0.00")
+                    
+            for p_id, row in account_40_42.items():
+                debit_end_raw = row["debit_start"] + row["debit_turnover"]
+                credit_end_raw = row["credit_start"] + row["credit_turnover"]
+
+                saldo = debit_end_raw - credit_end_raw
+
+                if saldo >= 0:
+                    row["debit_end"] = saldo
+                    row["credit_end"] = Decimal("0.00")
+                else:
+                    row["debit_end"] = Decimal("0.00")
+                    row["credit_end"] = -saldo
+                    
+                # 👉 ИТОГИ СЧИТАЕМ ЗДЕСЬ
+                total_debit_start += row["debit_start"]
+                total_credit_start += row["credit_start"]
+
+                total_debit_turnover += row["debit_turnover"]
+                total_credit_turnover += row["credit_turnover"]
+
+                total_debit_end += row["debit_end"]
+                total_credit_end += row["credit_end"]
+                    
+            grand_total_40_42 =  {
+                "total_credit_start": total_credit_start,
+                "total_debit_start": total_debit_start,
+                "total_credit_turnover": total_credit_turnover,
+                "total_debit_turnover": total_debit_turnover,
+                "total_credit_end": total_credit_end,
+                "total_debit_end": total_debit_end,
+            }
+            
+            
+            ws_detail = detail_sheets[account_id]
+            ws_detail.freeze_panes = "A7"
+            ws_detail["A5"] = "№"
+            ws_detail.column_dimensions["A"].width = 5
+            ws_detail["B5"] = "Категория"
+            ws_detail.column_dimensions["B"].width = 20
+            ws_detail["C5"] = "Субконто"
+            ws_detail.column_dimensions["C"].width = 45
+            
+            ws_detail.merge_cells("D5:E5")
+            ws_detail["D5"] = "Сальдо на начало"
+
+            
+            ws_detail.merge_cells("F5:G5")
+            ws_detail["F5"] = "Обороты за период"
+         
+            
+            ws_detail.merge_cells("H5:I5")
+            ws_detail["H5"] = "Сальдо на конец"
+       
+            
+            
+            for i in ["A5", "B5", "C5", "D5", "E5", "F5", "G5", "H5", "I5", 
+                      "A6", "B6", "C6", "D6", "E6", "F6", "G6", "H6", "I6"]:
+                ws_detail[i].font = TOTAL_FONT
+                ws_detail[i].alignment = CENTER_ALIGN
+                ws_detail[i].fill = GRAY_FILL_1
+                ws_detail[i].border = THIN_BORDER
+                
+                
+            for i in ["D", "E", "F", "G", "H", "I"]:
+                ws_detail.column_dimensions[i].width = 15
+       
+                
+     
+            ws_detail["D6"] = "Дебит"
+            ws_detail["E6"] = "Кредит"
+            
+            ws_detail["F6"] = "Дебит"
+            ws_detail["G6"] = "Кредит"
+            
+            ws_detail["H6"] = "Дебит"
+            ws_detail["I6"] = "Кредит"
+            
+            
+            row = 7
+            count = 1
+            for p_id, v in account_40_42.items():
+                
+                ws_detail[f"D{row}"].number_format = PRICE_FMT
+                ws_detail[f"E{row}"].number_format = PRICE_FMT
+                ws_detail[f"F{row}"].number_format = PRICE_FMT
+                ws_detail[f"G{row}"].number_format = PRICE_FMT
+                ws_detail[f"H{row}"].number_format = PRICE_FMT
+                ws_detail[f"I{row}"].number_format = PRICE_FMT
+                
+                for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"F{row}", f"G{row}", f"H{row}", f"I{row}"]:
+                    ws_detail[i].border = THIN_BORDER
+                
+        
+        
+                ws_detail[f"A{row}"] = count
+                ws_detail[f"B{row}"] = v["product"]["category"] if v["product"] else ""
+                ws_detail[f"C{row}"] = v["product"]["name"] if v["product"] else ""
+                
+                ws_detail[f"D{row}"] = v["debit_start"]
+                ws_detail[f"E{row}"] = v["credit_start"]
+                
+                ws_detail[f"F{row}"] = v["debit_turnover"]
+                ws_detail[f"G{row}"] = v["credit_turnover"]
+                
+                ws_detail[f"H{row}"] = v["debit_end"]
+                ws_detail[f"I{row}"] = v["credit_end"]
+                
+                count += 1
+                row += 1
+                
+            
+            for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"F{row}", f"G{row}", f"H{row}", f"I{row}"]:
+                ws_detail[i].font = TOTAL_FONT
+                ws_detail[i].alignment = RIGHT_ALIGN
+                ws_detail[i].fill = GRAY_FILL_1
+                ws_detail[i].border = THIN_BORDER
+              
+            
+            ws_detail.merge_cells(f"A{row}:C{row}")
+            ws_detail[f"A{row}"].alignment = LEFT_ALIGN
+            ws_detail[f"A{row}"] = "Итого развернутое:"
+            
+            ws_detail[f"D{row}"].number_format = PRICE_FMT
+            ws_detail[f"E{row}"].number_format = PRICE_FMT
+            ws_detail[f"F{row}"].number_format = PRICE_FMT
+            ws_detail[f"G{row}"].number_format = PRICE_FMT
+            ws_detail[f"H{row}"].number_format = PRICE_FMT
+            ws_detail[f"I{row}"].number_format = PRICE_FMT
+            
+            ws_detail[f"D{row}"] = grand_total_40_42["total_debit_start"]
+            ws_detail[f"E{row}"] = grand_total_40_42["total_credit_start"]
+            
+            ws_detail[f"F{row}"] = grand_total_40_42["total_debit_turnover"]
+            ws_detail[f"G{row}"] = grand_total_40_42["total_credit_turnover"]
+            
+            ws_detail[f"H{row}"] = grand_total_40_42["total_debit_end"]
+            ws_detail[f"I{row}"] = grand_total_40_42["total_credit_end"]
+            
+            row += 1
+            
+            for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"F{row}", f"G{row}", f"H{row}", f"I{row}"]:
+                ws_detail[i].font = TOTAL_FONT
+                ws_detail[i].alignment = RIGHT_ALIGN
+                ws_detail[i].fill = GRAY_FILL_1
+                ws_detail[i].border = THIN_BORDER
+              
+            
+            ws_detail.merge_cells(f"A{row}:C{row}")
+            ws_detail[f"A{row}"].alignment = LEFT_ALIGN
+            ws_detail[f"A{row}"] = "Всего:"
+            
+            ws_detail[f"D{row}"].number_format = PRICE_FMT
+            ws_detail[f"E{row}"].number_format = PRICE_FMT
+            ws_detail[f"F{row}"].number_format = PRICE_FMT
+            ws_detail[f"G{row}"].number_format = PRICE_FMT
+            ws_detail[f"H{row}"].number_format = PRICE_FMT
+            ws_detail[f"I{row}"].number_format = PRICE_FMT
+            
+            saldo_start = grand_total_40_42["total_debit_start"] - grand_total_40_42["total_credit_start"]
+            ws_detail[f"D{row}"] = saldo_start if saldo_start > 0 else 0
+            ws_detail[f"E{row}"] = abs(saldo_start) if saldo_start < 0 else 0
+            
+            saldo_turnover = grand_total_40_42["total_debit_turnover"] - grand_total_40_42["total_credit_turnover"]
+            ws_detail[f"F{row}"] = saldo_turnover if saldo_turnover > 0 else 0
+            ws_detail[f"G{row}"] = abs(saldo_turnover) if saldo_turnover < 0 else 0
+            
+            saldo_end = grand_total_40_42["total_debit_end"] - grand_total_40_42["total_credit_end"]
+            ws_detail[f"H{row}"] = saldo_end if saldo_end > 0 else 0
+            ws_detail[f"I{row}"] = abs(saldo_end) if saldo_end < 0 else 0
+                
+     
+                    
+           
+        else:
+            # poka drugie account continue potom dodelaem
+            continue
+    # for p_id, value in account_60_62.items():
+    #     if p_id == 79:
+    #         ic(value)
+    
+    # # ic(partner_balance_snapshots)
+            
+    # for p_id, value in partner_snap_map.items():
+    #     if p_id == 79:
+    #         ic(value)
+            
+    # entries = Entry.objects.filter(
+    #     partner_id=79,
+    #     transaction__date__lt=day_start,
+    #     account__number="60"
+    # )
+    # debit = entries.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
+    # credit = entries.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
+    # ic(debit)
+    # ic(credit)
+    # ic(debit - credit)
+    
             
         
     excel_buffer = BytesIO()
@@ -2711,117 +3310,7 @@ def close_day(request):
     OSW_content = excel_buffer.read()
         
         
-         
-    # ic(accounts_OSW)
-    
-    # # =========================
-    # # Данные (как будто из ОСВ)
-    # # =========================
 
-    # accounts = [
-    #     {
-    #         "number": "40",
-    #         "name": "Склад USD",
-    #         "balance": Decimal("684445.18"),
-    #         "children": ["40.1", "40.2"]
-    #     },
-    #     {
-    #         "number": "40.1",
-    #         "name": "Основной склад",
-    #         "balance": Decimal("684445.18"),
-    #         "entries": [
-    #             ("2026-01-25", "Поступление товара", Decimal("7854.11"), Decimal("0")),
-    #             ("2026-01-26", "Продажа", Decimal("0"), Decimal("0")),
-    #         ]
-    #     },
-    #     {
-    #         "number": "40.2",
-    #         "name": "Второй склад",
-    #         "balance": Decimal("0"),
-    #         "entries": []
-    #     },
-    # ]
-
-    # # =========================
-    # # Создание книги
-    # # =========================
-
-    # wb = Workbook()
-    # ws_osv = wb.active
-    # ws_osv.title = "ОСВ"
-
-    # link_style = Font(color="0000FF", underline="single")
-
-    # # =========================
-    # # Лист ОСВ
-    # # =========================
-
-    # ws_osv.append(["Счёт", "Наименование", "Сальдо"])
-
-    # row = 2
-    # for acc in accounts:
-    #     ws_osv.cell(row=row, column=1, value=acc["number"])
-    #     ws_osv.cell(row=row, column=2, value=acc["name"])
-    #     ws_osv.cell(row=row, column=3, value=float(acc["balance"]))
-
-    #     # делаем кликабельным
-    #     c = ws_osv.cell(row=row, column=1)
-    #     c.hyperlink = f"#'{acc['number']}'!A1"
-    #     c.font = link_style
-
-    #     row += 1
-
-    # # =========================
-    # # Лист 40 — субсчета
-    # # =========================
-
-    # ws_40 = wb.create_sheet("40")
-    # ws_40.append(["Субсчёт", "Наименование", "Сальдо"])
-
-    # row = 2
-    # for acc in accounts:
-    #     if acc["number"].startswith("40."):
-
-    #         ws_40.cell(row=row, column=1, value=acc["number"])
-    #         ws_40.cell(row=row, column=2, value=acc["name"])
-    #         ws_40.cell(row=row, column=3, value=float(acc["balance"]))
-
-    #         c = ws_40.cell(row=row, column=1)
-    #         c.hyperlink = f"#'{acc['number']}'!A1"
-    #         c.font = link_style
-
-    #         row += 1
-
-    # # =========================
-    # # Листы субсчетов (проводки)
-    # # =========================
-
-    # for acc in accounts:
-    #     if "." in acc["number"]:
-    #         ws = wb.create_sheet(acc["number"])
-    #         ws.append(["Дата", "Описание", "Дебет", "Кредит", "Сальдо"])
-
-    #         balance = Decimal("0")
-
-    #         for date, desc, debit, credit in acc.get("entries", []):
-    #             balance += debit - credit
-    #             ws.append([
-    #                 date,
-    #                 desc,
-    #                 float(debit),
-    #                 float(credit),
-    #                 float(balance)
-    #             ])
-
-    # # =========================
-    # # Сохранение
-    # # =========================
-
-    # wb.save("osv_demo.xlsx")
-
-    # print("Готово: osv_demo.xlsx")
-                
-    
     
     
     ####### end card prowodok
@@ -2835,71 +3324,100 @@ def close_day(request):
         with transaction.atomic():
             # 1/0
             
-            # day_closing = DayClosing.objects.create(date=close_date_format)
 
-            # # обновляем статус
-            # day_closing.closed_at = timezone.now()
-            # day_closing.closed_by = user
-            # day_closing.note = reason
-            # day_closing.save()
+            day_closing = DayClosing.objects.create(date=close_date_format)
 
-            # # логируем
-            # DayClosingLog.objects.create(
-            #     day_closing=day_closing,
-            #     action="close",
-            #     performed_by=user,
-            #     reason=reason
-            # )
+            # обновляем статус
+            day_closing.closed_at = timezone.now()
+            day_closing.closed_by = user
+            day_closing.note = reason
+            day_closing.save()
 
-            # # ФУНКЦИИ ДЛЯ ВЫЧИСЛЕНИЯ БАЛАНСОВ ПО КАЖДОМУ СЧЕТУ
-            # def calculate_balance_by_account(partner, target_date, account_number):
-            #     """Вычисляет баланс по конкретному счету"""
-            #     entries = Entry.objects.filter(
-            #         transaction__partner=partner,
-            #         transaction__date__lte=target_date,
-            #         account__number=account_number
-            #     )
-            #     debit = entries.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
-            #     credit = entries.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
-            #     return debit - credit
+            # логируем
+            DayClosingLog.objects.create(
+                day_closing=day_closing,
+                action="close",
+                performed_by=user,
+                reason=reason
+            )
 
-            # # снимки балансов партнёров ОТДЕЛЬНО ПО КАЖДОМУ СЧЕТУ
-            # for partner in Partner.objects.all():
-            #     balance_60_usd = calculate_balance_by_account(partner, close_date, '60')
-            #     balance_62_tmt = calculate_balance_by_account(partner, close_date, '62')
-            #     balance_75_usd = calculate_balance_by_account(partner, close_date, '75')
-            #     balance_76_tmt = calculate_balance_by_account(partner, close_date, '76')
+            # ФУНКЦИИ ДЛЯ ВЫЧИСЛЕНИЯ БАЛАНСОВ ПО КАЖДОМУ СЧЕТУ
+            def calculate_balance_by_account(partner, target_date, account_number):
+                entries = Entry.objects.filter(
+                    partner=partner,
+                    transaction__date__lte=target_date,
+                    account__number=account_number
+                )
+                debit = entries.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
+                credit = entries.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
+                balance = debit - credit
+                return balance, debit, credit
+
+            # снимки балансов партнёров ОТДЕЛЬНО ПО КАЖДОМУ СЧЕТУ
+            for partner in Partner.objects.all():
+                usd_60 = calculate_balance_by_account(partner, close_date, '60')
+                balance_60_usd = usd_60[0]
+                balance_60_usd_debit = usd_60[1]
+                balance_60_usd_credit = usd_60[2]
                 
-            #     # Итоговые балансы по валютам (для обратной совместимости)
-            #     total_usd = balance_60_usd + balance_75_usd
-            #     total_tmt = balance_62_tmt + balance_76_tmt
+                tmt_62 = calculate_balance_by_account(partner, close_date, '62')
+                balance_62_tmt = tmt_62[0]
+                balance_62_tmt_debit = tmt_62[1]
+                balance_62_tmt_credit = tmt_62[2]
                 
-            #     PartnerBalanceSnapshot.objects.create(
-            #         closing=day_closing,
-            #         partner=partner,
-            #         balance_60_usd=balance_60_usd,
-            #         balance_62_tmt=balance_62_tmt,
-            #         balance_75_usd=balance_75_usd,
-            #         balance_76_tmt=balance_76_tmt,
-            #         balance_usd=total_usd,
-            #         balance_tmt=total_tmt,
-            #         balance=Decimal('0.000')
-            #     )
+                usd_75 = calculate_balance_by_account(partner, close_date, '75')
+                balance_75_usd = usd_75[0]
+                balance_75_usd_debit = usd_75[1]
+                balance_75_usd_credit = usd_75[2]
+                
+                tmt_76 = calculate_balance_by_account(partner, close_date, '76')
+                balance_76_tmt = tmt_76[0]
+                balance_76_tmt_debit = tmt_76[1]
+                balance_76_tmt_credit = tmt_76[2]
+                
+                
+                # Итоговые балансы по валютам (для обратной совместимости)
+                total_usd = balance_60_usd + balance_75_usd
+                total_tmt = balance_62_tmt + balance_76_tmt
+                
+                PartnerBalanceSnapshot.objects.create(
+                    closing=day_closing,
+                    partner=partner,
+                    balance_60_usd=balance_60_usd,
+                    balance_62_tmt=balance_62_tmt,
+                    balance_75_usd=balance_75_usd,
+                    balance_76_tmt=balance_76_tmt,
+                    balance_usd=total_usd,
+                    balance_tmt=total_tmt,
+                    balance=Decimal('0.000'),
+                    
+                    balance_60_usd_credit=balance_60_usd_credit,
+                    balance_60_usd_debit=balance_60_usd_debit,
+                    
+                    balance_62_tmt_credit=balance_62_tmt_credit,
+                    balance_62_tmt_debit=balance_62_tmt_debit,
+                    
+                    balance_75_usd_credit=balance_75_usd_credit,
+                    balance_75_usd_debit=balance_75_usd_debit,
+                    
+                    balance_76_tmt_credit=balance_76_tmt_credit,
+                    balance_76_tmt_debit=balance_76_tmt_debit,
+                )
 
-            # # снимки складов
-            # for wp in WarehouseProduct.objects.all():
-            #     StockSnapshot.objects.create(
-            #         closing=day_closing,
-            #         warehouse=wp.warehouse,
-            #         product=wp.product,
-            #         purchase_price=wp.product.purchase_price,
-            #         retail_price=wp.product.retail_price,
-            #         wholesale_price=wp.product.wholesale_price,
-            #         discount_price=wp.product.discount_price,
-            #         firma_price=wp.product.firma_price,
-            #         # quantity=wp.quantity
-            #         quantity = turnover_product[wp.warehouse_id][wp.product_id]["end_qty"]
-            #     )
+            # снимки складов
+            for wp in WarehouseProduct.objects.all():
+                StockSnapshot.objects.create(
+                    closing=day_closing,
+                    warehouse=wp.warehouse,
+                    product=wp.product,
+                    purchase_price=wp.product.purchase_price,
+                    retail_price=wp.product.retail_price,
+                    wholesale_price=wp.product.wholesale_price,
+                    discount_price=wp.product.discount_price,
+                    firma_price=wp.product.firma_price,
+                    # quantity=wp.quantity
+                    quantity = turnover_product[wp.warehouse_id][wp.product_id]["end_qty"]
+                )
                 
             # oborot product excel
             report_product_oborot, _ = DayReport.objects.get_or_create(

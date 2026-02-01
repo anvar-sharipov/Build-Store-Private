@@ -239,7 +239,7 @@ class AgentAdmin(admin.ModelAdmin):
 # Партнеры
 @admin.register(Partner)
 class PartnerAdmin(admin.ModelAdmin):
-    list_display = ('name', 'type', 'agent', 'invoice_count')
+    list_display = ('id', 'name', 'type', 'agent', 'invoice_count')
     list_filter = ('type', 'agent')
     search_fields = ('name',)
     readonly_fields = ('balance_usd', 'balance_tmt')

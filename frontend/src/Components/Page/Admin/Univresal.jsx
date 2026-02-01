@@ -44,6 +44,7 @@ const Univresal = () => {
           <option value="">Select type</option>
           <option value="change_one_coin_1">change s 1 504 932,65 na 1 504 932,66</option>
           <option value="change_one_coin_1_for_account_75">change_one_coin_1_for_account_75</option>
+          <option value="recalc_all_partner_balance_snapshoots">recalc_all_partner_balance_snapshoots</option>
           
         </select>
 

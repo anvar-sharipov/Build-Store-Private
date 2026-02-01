@@ -490,7 +490,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         )
         
         turnover_data = {}
-        ic(start_items)
+        # ic(start_items)
         for item in start_items:
             p = item.product  
             inv = item.invoice
@@ -599,9 +599,9 @@ class ProductViewSet(viewsets.ModelViewSet):
             # if qty_end > 0:
             #     ic(qty_end)
         # ic(turnover_data)
-        for id, data in turnover_data.items():
-            if id == 606:
-                ic(data)
+        # for id, data in turnover_data.items():
+        #     if id == 606:
+        #         ic(data)
         # ic(turnover_data)
                 
     

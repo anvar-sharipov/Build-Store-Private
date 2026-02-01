@@ -63,8 +63,8 @@ def search_product_for_backend_input_search(request):
     # query = Partner.objects.filter(name__icontains=q).order_by('name')[:20]
     data = []
     
-    ic(q)
-    ic(warehouse_ids)
+    # ic(q)
+    # ic(warehouse_ids)
     
     qs = WarehouseProduct.objects.select_related(
         "product",

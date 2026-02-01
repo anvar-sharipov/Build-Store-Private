@@ -105,7 +105,7 @@ def save_invoice(request):
                 partner=partner_obj if needs_partner(debit_acc) else None,  # ⭐ УМНО
                 debit=amount,
             )
-            ic(amount)
+            # ic(amount)
             Entry.objects.create(
                 transaction=transaction_obj,
                 account=credit_acc,
@@ -1128,7 +1128,7 @@ def get_invoices(request):
             invoices = invoices.filter(is_entry=False, canceled_at__isnull=True)
         elif selectedEntry == "canceled":
             invoices = invoices.filter(canceled_at__isnull=False)
-    ic(dateFrom, dateTo)        
+    # ic(dateFrom, dateTo)        
     if dateFrom and dateTo:
         invoices = invoices.filter(invoice_date__range=[dateFrom, dateTo])
             
@@ -1228,7 +1228,7 @@ def get_invoice_data(request, id):
             status=status.HTTP_404_NOT_FOUND
         )
     
-    ic("invoice.comment", invoice.comment, id)
+    # ic("invoice.comment", invoice.comment, id)
     if invoice.awto:
         awto_json = {"id":invoice.awto.id, "name":invoice.awto.name}
     else:

@@ -446,7 +446,7 @@ def get_detail_account(request):
 
     # Итоговый список
     transactions = list(grouped.values())
-    ic(transactions)
+    # ic(transactions)
 
 
     # Итоги по оборотам и конечное сальдо

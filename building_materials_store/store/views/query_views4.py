@@ -6,12 +6,17 @@ from icecream import ic
 from django.utils.dateparse import parse_date
 from rest_framework.response import Response
 from datetime import datetime, date, time   
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from collections import defaultdict
 from django.db.models import Sum, F, Q
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.db import transaction as db_transaction
+
+MONEY_Q = Decimal("0.01")
+
+def money(v: Decimal) -> Decimal:
+    return v.quantize(MONEY_Q, rounding=ROUND_HALF_UP)
 
 
 
@@ -475,6 +480,10 @@ def get_entries_without_faktura(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_detail_account_60_62(request):
+    
+    def money(value: Decimal) -> Decimal:
+        return value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
     account_number = request.GET.get('account')
     date_from = request.GET.get('dateFrom')
     date_to = request.GET.get('dateTo')
@@ -484,8 +493,8 @@ def get_detail_account_60_62(request):
     show0 = request.GET.get('show0')
     hyphenOr0 = request.GET.get('hyphenOr0')
     
-    ic(show0)
-    ic(hyphenOr0)
+    # ic(show0)
+    # ic(hyphenOr0)
 
     account = Account.objects.get(number=account_number)
 
@@ -572,10 +581,10 @@ def get_detail_account_60_62(request):
         
         # Функция для обработки партнера и расчета показателей
         def process_partner(partner, totals_dict):
-            debit_before = 0
-            credit_before = 0
-            debit_oborot = 0
-            credit_oborot = 0
+            debit_before = Decimal("0.00")
+            credit_before = Decimal("0.00")
+            debit_oborot = Decimal("0.00")
+            credit_oborot = Decimal("0.00")
             
             # ⭐ ИЗМЕНЕНИЕ: Используем prefetched entries
             for entry in partner.filtered_entries:
@@ -584,11 +593,11 @@ def get_detail_account_60_62(request):
                 
                 # ИСПРАВЛЕНИЕ: Сравниваем нормализованные даты
                 if trans_date < date_from:
-                    debit_before += float(entry.debit)
-                    credit_before += float(entry.credit)
+                    debit_before += money(entry.debit)
+                    credit_before += money(entry.credit)
                 elif date_from <= trans_date <= date_to:
-                    debit_oborot += float(entry.debit)
-                    credit_oborot += float(entry.credit)
+                    debit_oborot += money(entry.debit)
+                    credit_oborot += money(entry.credit)
             
             # Остальной код без изменений...
             debit_end = debit_before + debit_oborot
@@ -600,6 +609,14 @@ def get_detail_account_60_62(request):
             else:
                 saldo_end_credit = abs(debit_end - credit_end)
                 saldo_end_debit = 0
+                
+            debit_before = money(debit_before)
+            credit_before = money(credit_before)
+            debit_oborot = money(debit_oborot)
+            credit_oborot = money(credit_oborot)
+
+            saldo_end_debit = money(saldo_end_debit)
+            saldo_end_credit = money(saldo_end_credit)
             
             # Обновляем итоги
             totals_dict['debit_before'] += debit_before
@@ -608,6 +625,8 @@ def get_detail_account_60_62(request):
             totals_dict['credit_oborot'] += credit_oborot
             totals_dict['saldo_end_debit'] += saldo_end_debit
             totals_dict['saldo_end_credit'] += saldo_end_credit
+            
+            
             
             partner_data = {
                 "partner_id": partner.id,
@@ -621,6 +640,7 @@ def get_detail_account_60_62(request):
                 "saldo_end_credit": saldo_end_credit,
                 "agent": {"id": partner.agent.id, "name": partner.agent.name} if partner.agent else {},
             }
+            
             
             return partner_data
 
@@ -795,7 +815,7 @@ def get_detail_account_60_62(request):
                         "saldo_summ_end_credit": saldo_summ_end_credit,
                     }]
 
-            ic(data)
+            # ic(data)
 
 
         return Response({
@@ -827,10 +847,10 @@ def get_detail_account_60_62(request):
                 if not partner.agent or str(partner.agent.id) != str(agent_id):
                     continue
             
-            debit_before = 0
-            credit_before = 0
-            debit_oborot = 0
-            credit_oborot = 0
+            debit_before = Decimal("0.00")
+            credit_before = Decimal("0.00")
+            debit_oborot = Decimal("0.00")
+            credit_oborot = Decimal("0.00")
             
             # ⭐ ИЗМЕНЕНИЕ: Используем prefetched entries вместо prefetched_transactions
             for entry in partner.filtered_entries:  # ← ИСПРАВИТЬ ЗДЕСЬ!
@@ -839,11 +859,13 @@ def get_detail_account_60_62(request):
                 
                 # ИСПРАВЛЕНИЕ: Сравниваем нормализованные даты
                 if trans_date < date_from:
-                    debit_before += float(entry.debit)
-                    credit_before += float(entry.credit)
+                    debit_before += money(entry.debit)
+                    credit_before += money(entry.credit)
                 elif date_from <= trans_date <= date_to:
-                    debit_oborot += float(entry.debit)
-                    credit_oborot += float(entry.credit)
+                    if partner.id == 79:
+                        ic(entry.debit)
+                    debit_oborot += money(entry.debit)
+                    credit_oborot += money(entry.credit)
             
             debit_end = debit_before + debit_oborot
             credit_end = credit_before + credit_oborot
@@ -941,7 +963,7 @@ def get_detail_account_60_62(request):
             "saldo_summ_end_credit": saldo_summ_end_credit,
         }
 
-        ic(data)
+        # ic(data)
 
         return Response({
             "items": data["data"],
@@ -1201,7 +1223,7 @@ def get_invoices_for_trip(request):
     date_to = request.GET.get('dateTo')
     driverId = request.GET.get('driverId')
     
-    ic(driverId)
+    # ic(driverId)
 
     if not date_from or not date_to:
         return JsonResponse({"status": "error", "message": "dateFrom и dateTo обязательны"}, status=400)

@@ -5,6 +5,9 @@ import { Warehouse, Check, X, Filter } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
 import { fetchCategories } from "../../../../fetchs/optionsFetchers";
+import MyButton from "../../../../UI/MyButton";
+import { useDispatch } from "react-redux";
+import { setPrintExcel } from "../../../../../app/store/buhOborotFiltersSlice";
 
 const BuhOborotTowarowFilter = () => {
   const { t } = useTranslation();
@@ -14,9 +17,16 @@ const BuhOborotTowarowFilter = () => {
   const [loading, setLoading] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(false);
 
+ 
+  const dispatch = useDispatch();
+
+  const handleClick = () => {
+    dispatch(setPrintExcel(true));
+  };
+
   const warehouseId = searchParams.get("warehouse");
   const warehouseIdsParam = searchParams.get("warehouses");
-  
+
   // Используем useMemo для предотвращения пересоздания массива
   const selectedWarehouses = useMemo(() => {
     return warehouseIdsParam ? warehouseIdsParam.split(",") : [];
@@ -28,7 +38,7 @@ const BuhOborotTowarowFilter = () => {
   const [categories, setCategories] = useState([]);
   const [searchCategory, setSearchCategory] = useState("");
   const selectedCategoriesParam = searchParams.get("categories");
-  
+
   const selectedCategories = useMemo(() => {
     return selectedCategoriesParam ? selectedCategoriesParam.split(",") : [];
   }, [selectedCategoriesParam]);
@@ -37,7 +47,7 @@ const BuhOborotTowarowFilter = () => {
   const [products, setProducts] = useState([]);
   const [searchProduct, setSearchProduct] = useState("");
   const selectedProductsParam = searchParams.get("products");
-  
+
   const selectedProducts = useMemo(() => {
     return selectedProductsParam ? selectedProductsParam.split(",") : [];
   }, [selectedProductsParam]);
@@ -83,7 +93,7 @@ const BuhOborotTowarowFilter = () => {
         // Вариант 1: Загружать продукты для всех выбранных складов
         // Вариант 2: Загружать только для первого (как сейчас)
         // Вариант 3: Запрашивать API, которое поддерживает несколько складов
-        
+
         // Пока оставляем как есть - берем первый склад
         const res = await myAxios.get("/get_all_products_id_and_name", {
           params: {
@@ -150,15 +160,9 @@ const BuhOborotTowarowFilter = () => {
     setSearchParams(params);
   };
 
-  const filteredCategories = categories.filter((cat) => 
-    cat.name.toLowerCase().includes(searchCategory.toLowerCase()) && 
-    !selectedCategories.includes(String(cat.id))
-  );
+  const filteredCategories = categories.filter((cat) => cat.name.toLowerCase().includes(searchCategory.toLowerCase()) && !selectedCategories.includes(String(cat.id)));
 
-  const filteredProducts = products.filter((prod) => 
-    prod.name.toLowerCase().includes(searchProduct.toLowerCase()) && 
-    !selectedProducts.includes(String(prod.id))
-  );
+  const filteredProducts = products.filter((prod) => prod.name.toLowerCase().includes(searchProduct.toLowerCase()) && !selectedProducts.includes(String(prod.id)));
 
   // Убрать эту строку, так как мы больше не используем одиночный выбор
   // const selectedWarehouse = activeWarehouses.find((w) => String(w.id) === warehouseId);
@@ -200,7 +204,7 @@ const BuhOborotTowarowFilter = () => {
   };
 
   return (
-    <div className="space-y-6 p-4 print:hidden">
+    <div className="space-y-6 p-4 print:hidden text-sm">
       {/* Заголовок */}
       <div className="flex items-center gap-3 pb-4 border-b border-gray-700">
         <div className="p-2 bg-blue-600 rounded-lg">
@@ -214,9 +218,7 @@ const BuhOborotTowarowFilter = () => {
 
       {/* Выбор складов */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">
-          {t("choose_warehouses") || "Выберите склады"}
-        </label>
+        <label className="block text-sm font-medium text-gray-300 mb-2">{t("choose_warehouses") || "Выберите склады"}</label>
 
         <div className="relative">
           <button
@@ -227,15 +229,9 @@ const BuhOborotTowarowFilter = () => {
           >
             <div className="flex items-center gap-3">
               <Warehouse className="w-5 h-5 text-blue-400" />
-              <span className="text-white">
-                {selectedWarehouses.length > 0 
-                  ? `Выбрано складов: ${selectedWarehouses.length}` 
-                  : "Выберите склады"}
-              </span>
+              <span className="text-white">{selectedWarehouses.length > 0 ? `Выбрано складов: ${selectedWarehouses.length}` : "Выберите склады"}</span>
             </div>
-            <div className={`transition-transform ${dropdownOpen ? "rotate-180" : ""}`}>
-              ▼
-            </div>
+            <div className={`transition-transform ${dropdownOpen ? "rotate-180" : ""}`}>▼</div>
           </button>
 
           <AnimatePresence>
@@ -259,14 +255,11 @@ const BuhOborotTowarowFilter = () => {
                          ${selectedWarehouses.includes(String(wh.id)) ? "bg-gray-800" : ""}`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`w-4 h-4 border flex items-center justify-center 
-                          ${selectedWarehouses.includes(String(wh.id)) 
-                            ? "bg-blue-500 border-blue-500" 
-                            : "border-gray-500"}`}
+                        <div
+                          className={`w-4 h-4 border flex items-center justify-center 
+                          ${selectedWarehouses.includes(String(wh.id)) ? "bg-blue-500 border-blue-500" : "border-gray-500"}`}
                         >
-                          {selectedWarehouses.includes(String(wh.id)) && 
-                            <Check className="w-3 h-3 text-white" />
-                          }
+                          {selectedWarehouses.includes(String(wh.id)) && <Check className="w-3 h-3 text-white" />}
                         </div>
                         <Warehouse className="w-4 h-4 text-gray-500" />
                         <span className="text-white">{wh.name}</span>
@@ -294,10 +287,7 @@ const BuhOborotTowarowFilter = () => {
                      text-blue-400 rounded-lg text-sm"
                 >
                   {wh.name}
-                  <button 
-                    onClick={() => handleWarehouseSelect({ id: Number(id) })} 
-                    className="ml-1 hover:text-white"
-                  >
+                  <button onClick={() => handleWarehouseSelect({ id: Number(id) })} className="ml-1 hover:text-white">
                     <X className="w-3 h-3" />
                   </button>
                 </div>
@@ -309,9 +299,7 @@ const BuhOborotTowarowFilter = () => {
 
       {/* Фильтр по категориям */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-300 mb-1">
-          {t("categories")}
-        </label>
+        <label className="block text-sm font-medium text-gray-300 mb-1">{t("categories")}</label>
 
         {/* Поиск категорий */}
         <input
@@ -366,9 +354,7 @@ const BuhOborotTowarowFilter = () => {
 
       {/* Поиск Продуктов */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-300 mb-1">
-          {t("products")}
-        </label>
+        <label className="block text-sm font-medium text-gray-300 mb-1">{t("products")}</label>
 
         <input
           type="text"
@@ -378,20 +364,14 @@ const BuhOborotTowarowFilter = () => {
           disabled={selectedWarehouses.length === 0 || loadingProducts}
           className={`w-full px-3 py-2 rounded-lg border text-white
                    placeholder-gray-500 focus:outline-none focus:border-blue-500
-                   ${selectedWarehouses.length === 0 || loadingProducts 
-                     ? "bg-gray-900 border-gray-800 cursor-not-allowed text-gray-500" 
-                     : "bg-gray-800 border-gray-700"}`}
+                   ${selectedWarehouses.length === 0 || loadingProducts ? "bg-gray-900 border-gray-800 cursor-not-allowed text-gray-500" : "bg-gray-800 border-gray-700"}`}
         />
 
         {/* Индикатор загрузки продуктов */}
-        {loadingProducts && (
-          <div className="text-center text-sm text-gray-400">Загрузка продуктов...</div>
-        )}
+        {loadingProducts && <div className="text-center text-sm text-gray-400">Загрузка продуктов...</div>}
 
         {/* Сообщение, если склады не выбраны */}
-        {selectedWarehouses.length === 0 && !loadingProducts && (
-          <div className="text-center text-sm text-gray-400">Сначала выберите склад(ы)</div>
-        )}
+        {selectedWarehouses.length === 0 && !loadingProducts && <div className="text-center text-sm text-gray-400">Сначала выберите склад(ы)</div>}
 
         {/* Список найденных Продуктов */}
         {searchProduct && filteredProducts.length > 0 && selectedWarehouses.length > 0 && !loadingProducts && (
@@ -412,16 +392,12 @@ const BuhOborotTowarowFilter = () => {
         )}
 
         {/* Сообщение если нет результатов */}
-        {searchProduct && filteredProducts.length === 0 && selectedWarehouses.length > 0 && !loadingProducts && (
-          <div className="text-center py-2 text-sm text-gray-500">Продукты не найдены</div>
-        )}
+        {searchProduct && filteredProducts.length === 0 && selectedWarehouses.length > 0 && !loadingProducts && <div className="text-center py-2 text-sm text-gray-500">Продукты не найдены</div>}
 
         {/* Выбранные продукты */}
         {selectedProducts.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
-            <div className="w-full text-xs text-gray-400 mb-1">
-              Выбрано продуктов: {selectedProducts.length}
-            </div>
+            <div className="w-full text-xs text-gray-400 mb-1">Выбрано продуктов: {selectedProducts.length}</div>
             {selectedProducts.map((id) => {
               const prod = products.find((p) => String(p.id) === id);
               return (
@@ -480,18 +456,14 @@ const BuhOborotTowarowFilter = () => {
 
       {/* Показывать/Не Показывать пустые обороты */}
       <div>
-        <label className="block text-sm font-medium text-gray-300 mb-3">
-          {t("Empty turnovers")}
-        </label>
+        <label className="block text-sm font-medium text-gray-300 mb-3">{t("Empty turnovers")}</label>
 
         <div className="flex gap-2">
           <button
             onClick={() => handleEmptyTurnovers(true)}
-            className={`flex-1 py-3 rounded-lg border transition-colors
+            className={`flex-1 py-1 rounded-lg border transition-colors
                      ${
-                       emptyTurnovers && searchParams.get("emptyTurnovers") === "1" 
-                         ? "border-blue-500 bg-blue-500/10 text-blue-400" 
-                         : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"
+                       emptyTurnovers && searchParams.get("emptyTurnovers") === "1" ? "border-blue-500 bg-blue-500/10 text-blue-400" : "border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600"
                      }`}
           >
             <div className="flex items-center justify-center gap-2">
@@ -502,7 +474,7 @@ const BuhOborotTowarowFilter = () => {
 
           <button
             onClick={() => handleEmptyTurnovers(false)}
-            className={`flex-1 py-3 rounded-lg border transition-colors
+            className={`flex-1 py-1 rounded-lg border transition-colors
                      ${
                        !emptyTurnovers || (searchParams.get("emptyTurnovers") !== "1" && searchParams.get("emptyTurnovers") !== "0")
                          ? "border-red-500 bg-red-500/10 text-red-400"
@@ -517,10 +489,13 @@ const BuhOborotTowarowFilter = () => {
         </div>
       </div>
 
+      <div className="mt-3 text-gray-300 text-sm text-center flex gap-3">
+        <MyButton variant="green" className="px-2" onClick={handleClick}>
+          📊 Excel
+        </MyButton>
+      </div>
       {/* Статус загрузки складов */}
-      {loading && (
-        <div className="text-center text-gray-400 text-sm">Загрузка складов...</div>
-      )}
+      {loading && <div className="text-center text-gray-400 text-sm">Загрузка складов...</div>}
     </div>
   );
 };

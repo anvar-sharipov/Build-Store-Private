@@ -368,6 +368,19 @@ def get_account_for_osw2(request):
     return Response(data, status=200)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_account_warehouse(request): 
+    warehouseAccount = WarehouseAccount.objects.all()
+    
+    data = []
+    for wa in warehouseAccount:
+        data.append({
+            "warehouse_id": wa.warehouse.id,
+            "account_number": wa.account.number,
+        })
+        
+    return Response(data)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

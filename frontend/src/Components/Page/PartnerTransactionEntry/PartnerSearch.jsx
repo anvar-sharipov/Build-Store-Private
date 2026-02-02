@@ -16,7 +16,7 @@ const PartnerSearch = ({ partnerInputRef, pertnerRefs, debitInputRef, X_partner_
     try {
       const response = await myAxios.get(`query-partners/?q=${query}`);
       setPartners(response.data);
-      console.log("Полученные партнеры:", response.data);
+
     } catch (error) {
       console.error("Ошибка при получении партнеров:", error);
     } finally {
@@ -142,12 +142,7 @@ const PartnerSearch = ({ partnerInputRef, pertnerRefs, debitInputRef, X_partner_
                 price_inputRef.current?.focus();
                 price_inputRef.current?.select();
               }}
-              // onClick={(e) => {
-              //   console.log("Click triggered!", e); // Добавьте объект события
-              //   console.log("Item:", item);
-              //   e.stopPropagation(); // Предотвратить всплытие
-              // }}
-              // onClick={() => console.log("dadad")}
+     
               onKeyDown={(e) => {
                 if (e.key === "ArrowDown") {
                   e.preventDefault();

@@ -52,39 +52,7 @@ const GetSaldo2 = ({ entries, setTotalDebit, totalDebit, totalPaySumm }) => {
     setLastSumKredit(sumKredit);
   }, [entries]);
 
-  // useEffect(() => {
-  //   console.log("lastSumDebit", lastSumDebit);
-  //   console.log("lastSumKredit", lastSumKredit);
-  // }, [lastSumDebit, lastSumKredit]);
-
-  // console.log("entries", entries);
-
-  // console.log("maxFakturas", maxFakturas);
-
-  // const lastBalance = useMemo(() => {
-  //   if (!Array.isArray(entries)) return [];
-  //   return entries.reduce((max, entry) => {
-  //     return entry.id > max.id ? entry: max
-  //   });
-  //   // if (!Array.isArray(entries) || entries.length === 0) return null;
-
-  //   // // Отфильтруем только записи до сегодняшнего дня (исключительно)
-  //   // // const pastEntries = entries.filter((entry) => {
-  //   // //   const entryDate = new Date(entry.date);
-  //   // //   return entryDate < startOfDay(today); // строго до today
-  //   // // });
-
-  //   // // if (pastEntries.length === 0) return null;
-
-  //   // // Найдём запись с самым большим invoice ID
-  //   // const sorted = [...entries].sort((a, b) => {
-  //   //   return b.transaction_obj.invoice - a.transaction_obj.invoice;
-  //   // });
-
-  //   // return sorted[0]; // Это будет последняя запись по invoice до today
-  // }, [entries, today]);
-
-  // console.log("lastBalance", lastBalance);
+  
 
   // Фильтруем по дате — только сегодня
   const entriesToday = useMemo(() => {
@@ -95,45 +63,7 @@ const GetSaldo2 = ({ entries, setTotalDebit, totalDebit, totalPaySumm }) => {
     });
   }, [entries, today]);
 
-  //   const combinedEntries = useMemo(() => {
-  //   const result = [];
-
-  //   if (lastBalanceBeforeToday) {
-  //     result.push({
-  //       ...lastBalanceBeforeToday,
-  //       isStartingBalance: true, // можно пометить
-  //     });
-  //   }
-
-  //   if (Array.isArray(entriesToday)) {
-  //     result.push(...entriesToday);
-  //   }
-
-  //   return result;
-  // }, [lastBalanceBeforeToday, entriesToday]);
-
-  // console.log('entriesToday', entriesToday);
-
-  // Объединяем проводки по условию
-  // const mergedEntries = useMemo(
-  //   () => mergeEntries(entriesToday),
-  //   [entriesToday]
-  // );
-
-  // Шаг 1: Собрать все уникальные номера и отсортировать их по убыванию
-  // const fakturaNumbers = Array.from(
-  //   new Set(entries.map((e) => e.transaction_obj.invoice))
-  // ).sort((a, b) => b - a);
-
-
-
-  // const maxFakturaNumber = Math.max(
-  //   ...entries.map((e) => e.transaction_obj.invoice)
-  // );
-
-  // const maxFakturas = entries.filter(
-  //   (e) => e.transaction_obj.invoice === maxFakturaNumber
-  // );
+  
 
   const mergedEntries = useMemo(() => mergeEntries(entries), [entries]);
 

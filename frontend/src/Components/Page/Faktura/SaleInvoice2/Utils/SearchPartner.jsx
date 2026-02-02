@@ -64,9 +64,7 @@ const SearchPartner = ({ partnerInputRef, awtoInputRef, productInputRef, warehou
     }, 0);
   };
 
-  useEffect(() => {
-    // console.log("list", list);
-  }, [list]);
+
 
   return (
     <div className="relative mt-2 print:mt-0">
@@ -103,7 +101,7 @@ const SearchPartner = ({ partnerInputRef, awtoInputRef, productInputRef, warehou
                   setList([]);
                   return;
                 }
-                // console.log("");
+        
 
                 const results = fuse
                   .search(value)

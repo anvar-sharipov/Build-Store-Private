@@ -122,6 +122,7 @@ urlpatterns = [
     path('set_date_focus/', set_date_focus, name='set_date_focus'),
     
     path('get_account_for_osw2/', get_account_for_osw2, name='get_account_for_osw2'),
+    path('get_account_warehouse/', get_account_warehouse, name='get_account_warehouse'),
     path('get_detail_account/', get_detail_account, name='get_detail_account'),
     path('get_detail_account_60_62/', query_views4.get_detail_account_60_62, name='get_detail_account_60_62'),
     # path('get_account_cards_by_partner/<str:account_number>/<str:partner_name>/', query_views4.get_account_cards_by_partner, name='get_account_cards_by_partner'),
@@ -154,6 +155,7 @@ urlpatterns = [
     
     # query_views5
     path('BuhOborotTowarow/', query_views5.BuhOborotTowarow, name='BuhOborotTowarow'),
+    path('BuhOborotTowarowExcel/', query_views5.BuhOborotTowarowExcel, name='BuhOborotTowarowExcel'),
     path('get_active_warehouses/', query_views5.get_active_warehouses, name='get_active_warehouses'),
     path('upload_initial_stock', query_views5.upload_initial_stock, name='upload_initial_stock'),
     path('get_all_products_id_and_name', query_views5.get_all_products_id_and_name, name='get_all_products_id_and_name'),

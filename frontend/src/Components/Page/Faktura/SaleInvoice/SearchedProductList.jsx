@@ -46,7 +46,7 @@ const SearchedProductList = ({
         // const res = await myAxios.get(`products/${p.id}`);
         const res = await myAxios.get(`search-products/?id=${p.id}&warehouse=${selectedWarehouseId}`)
         const free_product = res.data[0];
-        // console.log("res.data", res.data);
+      
 
         gift_results.push({
           ...free_product,
@@ -62,13 +62,12 @@ const SearchedProductList = ({
       // Добавляем каждый подарок в таблицу
       gift_results.forEach((gift) => {
         let selected_unit = null;
-        // console.log('gift.units', gift.units);
-        // console.log('gift.units', gift.units > 0);
+
         if (gift.units.length > 0) {
-          // console.log('tut', gift);
+     
 
           const defaultUnit = gift.units.find((u) => u.is_default_for_sale);
-          // console.log('defaultUnit', defaultUnit);
+      
 
           if (defaultUnit) {
             selected_unit = {
@@ -76,7 +75,7 @@ const SearchedProductList = ({
               name: defaultUnit.unit_name,
               conversion_factor: defaultUnit.conversion_factor,
             };
-            // console.log("selected_unit", selected_unit);
+          
           } else {
             selected_unit = {
               id: gift.base_unit_obj.id,
@@ -91,11 +90,7 @@ const SearchedProductList = ({
             conversion_factor: 1,
           };
         }
-        // console.log('gift', gift);
-        
-
-        // console.log("gift", gift);
-        // console.log("selected_unit", selected_unit);
+     
 
         setInvoiceTable((prev) => [
           ...prev,
@@ -161,7 +156,7 @@ const SearchedProductList = ({
 
   // esli najal na enter ili na click
   const handleSelectProduct = async (product) => {
-    // console.log('productttttt', product);
+   
 
     const alreadyExists = invoiceTable.some((p) => p.id === product.id);
 

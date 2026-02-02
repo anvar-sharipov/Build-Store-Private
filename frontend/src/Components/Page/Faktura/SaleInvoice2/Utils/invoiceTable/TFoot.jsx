@@ -4,7 +4,7 @@ import { formatNumber } from "../../../../../UI/formatNumber";
 
 const TFoot = ({ visibleColumns, printVisibleColumns }) => {
   const { values } = useFormikContext();
-  // console.log('val', values);
+
   
   const { t } = useTranslation();
   return (

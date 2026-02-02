@@ -126,7 +126,6 @@ const MainPage = () => {
       const saldo = await myAxios.get("get_saldo_for_partner_for_selected_date", {
         params: { date: date, partnerId: partnerId },
       });
-      console.log("saldo", saldo.data.saldo);
       setSaldo(saldo.data.saldo);
     } catch (error) {
       console.log("error get_saldo_for_partner_for_selected_date", error);
@@ -139,7 +138,7 @@ const MainPage = () => {
         try {
           const res = await myAxios.get(`sales-invoices/${id}/`);
           setDefaultValues(defaultInitialValues(fetchs, res.data, dateProwodok));
-          // console.log("updateaafafaf res.data", res.data);
+        
           getSaldo(res.data.invoice_date.split("T")[0], res.data.buyer.id);
         } catch (error) {
           console.log("oshobka pri zagrezke invoice", error);
@@ -149,13 +148,13 @@ const MainPage = () => {
       fetchInvoice();
     } else {
       setDefaultValues(defaultInitialValues(fetchs, false, dateProwodok));
-      // console.log("createaafafaf");
+     
       partnerInputRef.current?.focus();
     }
   }, [id, fetchs]);
 
   useEffect(() => {
-    // console.log('vcgdhc', globalPartnerId, globalDate);
+ 
     if (globalPartnerId && globalDate) {
       getSaldo(globalDate, globalPartnerId);
     } else {
@@ -193,7 +192,7 @@ const MainPage = () => {
         <Formik key={JSON.stringify(defaultValues)} initialValues={defaultValues} validationSchema={defaultValidationSchema(t)} onSubmit={onSubmit} validateOnChange={true} validateOnBlur={true}>
           {({ values, setFieldValue, errors, touched, handleBlur }) => {
             useEffect(() => {
-              // console.log("Formik values changed:", values.partner);
+         
             }, [values]);
 
             useEffect(() => {

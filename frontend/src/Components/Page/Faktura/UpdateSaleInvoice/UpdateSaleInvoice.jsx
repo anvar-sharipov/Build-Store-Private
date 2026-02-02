@@ -141,7 +141,7 @@ const UpdateSaleInvoice = () => {
                 `search-products/?id=${item.product.id}&warehouse=${warehouse_id}`
               )
               .then((res) => {
-                console.log("res", res);
+           
 
                 return {
                   data: res.data[0],
@@ -161,7 +161,6 @@ const UpdateSaleInvoice = () => {
 
       // ✅ Здесь уже точно всё обработано — ставим сумму
       if (invoice.total_pay_summ) {
-        // console.log('invoice.total_pay_summ', invoice.total_pay_summ);
 
         setTotalPaySumm(invoice.total_pay_summ);
       }
@@ -171,51 +170,7 @@ const UpdateSaleInvoice = () => {
     }
   };
 
-  // useEffect(() => {
-  //   const loadProducts = async () => {
-  //     try {
-  //       // const res = await myAxios.get(`search-products/?id=${p.id}&warehouse=${selectedWarehouseId}`)
 
-  //       const productResponses = await Promise.all(
-  //         invoice.items.map((item) => {
-  //           return (
-  //             // myAxios.get(`products/${item.product.id}`).then((res) => ({
-  //             myAxios
-  //               .get(
-  //                 `search-products/?id=${item.product.id}&warehouse=${selectedAwtoId}`
-  //               )
-  //               .then((res) => {
-  //                 console.log("res", res);
-
-  //                 return {
-  //                   data: res.data[0],
-  //                   quantity: item.quantity,
-  //                 };
-  //               })
-  //           );
-  //         })
-  //       );
-
-  //       for (const { data, quantity } of productResponses) {
-  //         if (parseFloat(data.purchase_price) !== 0) {
-  //           await handleSelectProduct(data, selectedAwtoId); // если она асинхронная
-  //           updateQuantity(data.id, quantity);
-  //         }
-  //       }
-
-  //       // ✅ Здесь уже точно всё обработано — ставим сумму
-  //       if (invoice.total_pay_summ) {
-  //         // console.log('invoice.total_pay_summ', invoice.total_pay_summ);
-
-  //         setTotalPaySumm(invoice.total_pay_summ);
-  //       }
-  //     } catch (error) {
-  //       console.log("Ошибка при загрузке продуктов:", error);
-  //     } finally {
-  //     }
-  //   };
-  //   loadProducts();
-  // }, [selectedWarehouseId]);
 
   // get all awto (employee) START
   useEffect(() => {
@@ -381,9 +336,7 @@ const UpdateSaleInvoice = () => {
 
           if (item.quantity_in_stok / factor < gift_quantity) {
             not_enough_gift = true;
-            console.log("gift_quantity", gift_quantity);
-            console.log("item.quantity_in_stok", item.quantity_in_stok);
-            console.log("item", item);
+    
             setShowStockMessageIds((prev) => [...prev, item.id]);
             setTimeout(() => {
               setShowStockMessageIds((prev) =>
@@ -412,7 +365,7 @@ const UpdateSaleInvoice = () => {
   //   ######################################################################################################################## invoice START
   useEffect(() => {
     if (!invoice) return;
-    // console.log("invoice", invoice);
+  
 
     searchPartnerInputRef.current?.focus();
     // setTimeout(() => {
@@ -472,7 +425,7 @@ const UpdateSaleInvoice = () => {
                   `search-products/?id=${item.product.id}&warehouse=${warehouse_id}`
                 )
                 .then((res) => {
-                  console.log("res", res);
+             
 
                   return {
                     data: res.data[0],
@@ -492,7 +445,7 @@ const UpdateSaleInvoice = () => {
 
         // ✅ Здесь уже точно всё обработано — ставим сумму
         if (invoice.total_pay_summ) {
-          // console.log('invoice.total_pay_summ', invoice.total_pay_summ);
+    
 
           setTotalPaySumm(invoice.total_pay_summ);
         }
@@ -547,7 +500,7 @@ const UpdateSaleInvoice = () => {
 
         const free_product = res.data[0];
 
-        // console.log("res.data", res.data);
+     
 
         gift_results.push({
           ...free_product,
@@ -557,18 +510,17 @@ const UpdateSaleInvoice = () => {
         });
       }
 
-      // console.log('gift_results', gift_results);
+      
 
       // Добавляем каждый подарок в таблицу
       gift_results.forEach((gift) => {
         let selected_unit = null;
-        // console.log('gift.units', gift.units);
-        // console.log('gift.units', gift.units > 0);
+   
         if (gift.units.length > 0) {
-          // console.log('tut', gift);
+    
 
           const defaultUnit = gift.units.find((u) => u.is_default_for_sale);
-          // console.log('defaultUnit', defaultUnit);
+         
 
           if (defaultUnit) {
             selected_unit = {
@@ -576,7 +528,7 @@ const UpdateSaleInvoice = () => {
               name: defaultUnit.unit_name,
               conversion_factor: defaultUnit.conversion_factor,
             };
-            // console.log("selected_unit", selected_unit);
+        
           } else {
             selected_unit = {
               id: gift.base_unit_obj.id,
@@ -591,7 +543,7 @@ const UpdateSaleInvoice = () => {
             conversion_factor: 1,
           };
         }
-        console.log("gift.base_quantity_in_stock", gift);
+      
 
         setInvoiceTable((prev) => [
           ...prev,
@@ -836,7 +788,7 @@ const UpdateSaleInvoice = () => {
 
   const handleChangeIsEntry = (event) => {
     setIsEntry(event.target.checked);
-    // console.log("Is Entry:", event.target.checked);
+ 
 
     // Здесь можешь вызвать функцию, которая будет проводить проводку
     // if (event.target.checked) postTransaction();
@@ -845,7 +797,7 @@ const UpdateSaleInvoice = () => {
   // for saldo END
 
   const handleSaveInvoice = async () => {
-    // console.log("invoiceTable:", invoiceTable);
+  
     setSaveLoading(true);
     const items = invoiceTable.map((item) => {
       // let productId;
@@ -860,7 +812,7 @@ const UpdateSaleInvoice = () => {
         sale_price: item.wholesale_price_1pc,
       };
     });
-    // console.log("totalPaySumm", totalPaySumm);
+
 
     const dataToSend = {
       buyer_id: selectedPartnerId,
@@ -879,14 +831,14 @@ const UpdateSaleInvoice = () => {
     //   dataToSend.entry_type = selectedEntry;
     // }
 
-    // console.log("dataToSend", dataToSend);
+  
 
     try {
       const res = await myAxios.put(
         `sales-invoices/${invoice.id}/`,
         dataToSend
       );
-      console.log("Успешно сохранено:", res.data);
+  
       navigate(ROUTES.MAIN);
     } catch (error) {
       console.error("Ошибка при сохранении:", error);

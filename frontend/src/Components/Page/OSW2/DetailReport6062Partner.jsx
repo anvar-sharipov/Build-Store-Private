@@ -14,8 +14,7 @@ const DetailReport6062Partner = () => {
   const { partner_id, account_id } = location.state || {};
 
 
-  console.log("partner_id", partner_id);
-  console.log("account_id", account_id);
+
   
 
   return (

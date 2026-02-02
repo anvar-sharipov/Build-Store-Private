@@ -85,7 +85,7 @@ const PartnerTransactionEntry = () => {
             setLoading(true);
             try {
               const res = await myAxios.post("partner-transaction/", values);
-              console.log("res.data.partner.balance:", res.data.partner.balance);
+         
               actions.setFieldValue("partner.balance", parseFloat(res.data.partner.balance));
               showNotification(t(res.data.detail), "success");
             } catch (error) {
@@ -96,7 +96,7 @@ const PartnerTransactionEntry = () => {
             }
           };
           sendTransactions();
-          console.log("Submit values:", values);
+
           actions.setSubmitting(false);
         }}
       >

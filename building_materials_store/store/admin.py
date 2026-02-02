@@ -185,7 +185,7 @@ class TagAdmin(admin.ModelAdmin):
 
 @admin.register(Warehouse)
 class WarehouseAdmin(admin.ModelAdmin):
-    list_display = ('name', 'location', 'currency', 'is_active')
+    list_display = ('id', 'name', 'location', 'currency', 'is_active')
     search_fields = ('name', 'location', 'currency__code')
     list_filter = ('is_active', 'currency')
     ordering = ('name',)

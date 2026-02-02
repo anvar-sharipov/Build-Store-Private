@@ -127,7 +127,7 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
           initialValues={partnerValue}
           validationSchema={PartnerSchema}
           onSubmit={(values) => {
-            console.log(values);
+       
             if (values.create) {
               setLoading(true);
               const handleCreate = async () => {
@@ -151,14 +151,11 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
             } else {
               setLoading(true);
               const handleUpdate = async () => {
-                // console.log('partnerValueggggg', partnerValue.id);
-                // console.log("URL for update:", `partners/${partnerValue?.id}/`);
-                // console.log("values.create:", values.create);
-                // console.log("agent before update:", values.agent);
+
 
                 try {
                   const res = await myAxios.put(`partners/${partnerValue?.id}/`, values);
-                  // console.log("res.data", res.data);
+     
                   const updatedPartner = res.data.partner;
                   setPartners((prev) => prev.map((p) => (p.id === updatedPartner.id ? updatedPartner : p)));
                   setFocusedPartnerId(updatedPartner.id);
@@ -461,7 +458,7 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                             setAccounts("");
                             setQueryAccount("");
                             accountRef.current?.focus();
-                            console.log("acc", acc);
+                 
                             const exists = values.accounts_id.some((a) => a.id === acc.id);
                             if (!exists) {
                               setFieldValue("accounts_id", [...values.accounts_id, acc]);

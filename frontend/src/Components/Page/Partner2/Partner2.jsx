@@ -64,7 +64,7 @@ const Partner2 = () => {
   // Обновляем URL при изменении page или query
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    console.log("tut", params);
+ 
 
     if (query) {
       params.set("search", query);
@@ -111,12 +111,6 @@ const Partner2 = () => {
       const agent = searchParams.get("agent");
       const sort = searchParams.get("sort");
 
-      console.log("🔍 Параметры запроса:", {
-        type,
-        isActive,
-        agent,
-        sort,
-      });
 
       if (type && type !== "all") {
         params.set("type", type);
@@ -133,13 +127,13 @@ const Partner2 = () => {
       // ✅ ИСПРАВЛЕНИЕ: передаём параметр sort как есть
       if (sort) {
         params.set("sort", sort);
-        console.log("✅ Добавлен параметр сортировки:", sort);
+     
       }
 
-      console.log("📤 Финальный URL:", `partners/?${params.toString()}`);
+  
 
       const res = await myAxios.get(`partners/?${params.toString()}`);
-      console.log("📥 Получено партнёров:", res.data.results?.length);
+   
 
       setPartners(res.data.results);
       setCount(res.data.count);

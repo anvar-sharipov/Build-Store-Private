@@ -46,6 +46,18 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
     setFieldValue("products", updatedProducts);
   };
 
+  useEffect(() => {
+    
+    if (values.wozwrat_or_prihod === "prihod") {
+      
+      const products_without_gifts = values.products.filter(p => p.is_gift === false)
+      setFieldValue("products", products_without_gifts)
+      console.log("products_without_gifts", products_without_gifts);
+    }
+  }, [values.wozwrat_or_prihod])
+  
+  
+
   const handleRemove = (id) => {
     const updatedProducts = values.products.filter((p) => p.id !== id);
     // setFieldValue("products", updatedProducts);

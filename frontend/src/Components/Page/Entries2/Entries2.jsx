@@ -253,9 +253,7 @@ const Entries2 = () => {
   };
 
   const handleEdit = (entry) => {
-    console.log("Editing entry:", entry);
-    console.log("Debit partner:", entry.debitPartner);
-    console.log("Credit partner:", entry.creditPartner);
+   
     setEditingEntry(entry);
 
     setEditFormData({
@@ -300,8 +298,7 @@ const Entries2 = () => {
         creditPartnerId: values.creditPartner?.id,
       };
 
-      console.log("Sending update payload:", payload); // Логирование
-      console.log("Updating transaction ID:", editingEntry.id); // Логирование
+ 
 
       const res = await myAxios.put(`/update_entry/${editingEntry.id}/`, payload);
       showNotification(t("entry_updated"), "success");

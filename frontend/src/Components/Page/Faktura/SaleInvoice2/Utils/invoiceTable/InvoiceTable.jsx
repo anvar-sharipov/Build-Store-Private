@@ -13,7 +13,7 @@ const InvoiceTable = ({ showNotification, productListRefs, productQuantityRefs, 
   const { t } = useTranslation();
   const { values, setFieldValue, validateField, setFieldTouched, errors } = useFormikContext();
   const navigate = useNavigate();
-  // console.log('val', values);
+
 
   const handleDeleteProduct = (id) => {
     const newProducts = values.products.filter((p) => p.id !== id);
@@ -24,7 +24,7 @@ const InvoiceTable = ({ showNotification, productListRefs, productQuantityRefs, 
   const handleDeleteInvoice = async (id) => {
     try {
       const res = await myAxios.delete(`sales-invoices/${id}/`);
-      console.log("res.data.detail", res);
+    
       // showNotification(t(res.data.detail), "success");
       // dispatch(showNotificationAction({ message: t(res.data.detail), type: 'success' }));
       // navigate(ROUTES.MAIN);
@@ -38,7 +38,7 @@ const InvoiceTable = ({ showNotification, productListRefs, productQuantityRefs, 
     } finally {
     }
 
-    console.log("invoice daleted, id = ", id);
+   
   };
 
   const handleDeleteGift = (id) => {

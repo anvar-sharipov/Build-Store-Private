@@ -23,7 +23,7 @@ const Univresal = () => {
     const sendData = async () => {
       try {
         const res = await myAxios.post("/admin/universal/", formData);
-        console.log("res", res);
+   
         showNotification(t(res.data.message), "success");
       } catch (error) {
         console.error("Error submitting form:", error);

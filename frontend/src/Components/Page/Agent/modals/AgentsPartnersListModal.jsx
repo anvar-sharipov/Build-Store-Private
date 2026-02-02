@@ -39,9 +39,7 @@ const AgentsPartnersListModal = ({ setOpenPartnerListModal, openPartnerListModal
     partners.map((p) => p.id) // начальное значение — связанные партнёры
   );
 
-  // useEffect(() => {
-  //   console.log("linkedIds", linkedIds);
-  // }, [linkedIds]);
+
 
   // fuse dlya poiska podklyuchennyh partnerow
   const fuse = useMemo(() => {
@@ -107,11 +105,6 @@ const AgentsPartnersListModal = ({ setOpenPartnerListModal, openPartnerListModal
     return filteredPartnersList.slice(start, end);
   }, [filteredPartnersList, currentPage, itemsPerPage]);
 
-  useEffect(() => {
-    console.log("partnerList:", partnerList);
-    console.log("filteredPartnersList:", filteredPartnersList);
-    console.log("Array.isArray:", Array.isArray(filteredPartnersList));
-  }, [partnerList, filteredPartnersList]);
 
   useEffect(() => {
     setHasMore(visibleItems.length < filteredPartnersList.length);

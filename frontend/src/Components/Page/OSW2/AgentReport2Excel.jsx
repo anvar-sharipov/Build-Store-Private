@@ -171,7 +171,7 @@ const AgentReport2Excel = async (data, totals, grandTotals, dateFrom, dateTo, ac
 
   // 5. Добавление данных по агентам
   Object.entries(data).forEach(([agentName, partners]) => {
-    console.log("agentName", agentName);
+
 
     const agentTotalsData = totals[agentName]?.[0];
     if (!partners || !Array.isArray(partners) || partners.length === 0) return;

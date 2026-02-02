@@ -5,6 +5,7 @@ import warehouseReducer from "./warehouseSlice";
 import searchReducer from "./searchQuerySlice";
 import productSortReducer from "./ProductCardsSlice/productSortSlice";
 import skidkaFiltersReducer from "./skidkaFiltersSlice";
+import buhOborotReducer from "./buhOborotFiltersSlice"; 
 
 export const store = configureStore({
   reducer: {
@@ -14,5 +15,6 @@ export const store = configureStore({
     search: searchReducer,
     productSort: productSortReducer, 
     skidkaFilters: skidkaFiltersReducer,
+    buhOborot: buhOborotReducer, 
   },
 });

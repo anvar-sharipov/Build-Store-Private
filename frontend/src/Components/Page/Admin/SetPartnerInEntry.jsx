@@ -12,10 +12,10 @@ const SetPartnerInEntry = () => {
   const [password, setPassword] = useState("");
   const { showNotification } = useNotification();
   const handleClickButton = async () => {
-    console.log("clicked");
+ 
     try {
       const res = await myAxios.post("/set_partner_to_entry/", { password });
-      console.log("res", res);
+
       showNotification(t(res.data.message), "success");
     } catch (err) {
       console.log("cant get ", err.response.data.message);
@@ -23,9 +23,6 @@ const SetPartnerInEntry = () => {
     }
   };
 
-  useEffect(() => {
-    console.log("password", password);
-  }, [password]);
 
   return (
     <div>

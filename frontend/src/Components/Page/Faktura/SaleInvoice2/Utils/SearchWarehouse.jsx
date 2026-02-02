@@ -28,7 +28,7 @@ const SearchWarehouse = ({
   const { t } = useTranslation();
   const [openParametrs, setOpenParametrs] = useState(false);
 
-  // console.log('values', values);
+
 
   // Исправленная логика showSearchInput
   const [showSearchInput, setShowSearchInput] = useState(() => {

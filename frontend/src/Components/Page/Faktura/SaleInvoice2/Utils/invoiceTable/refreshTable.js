@@ -1,7 +1,6 @@
 import myAxios from "../../../../../axios";
 const refreshTable = async (values, setFieldValue, warehouse, changedPriceType = false, refreshFrom = "") => {
   if (refreshFrom === "TDPrice") {
-    console.log('refreshFrom === "TDPrice"');
     let footerTotalPrice = 0;
     let footerTotalPricePurchae = 0;
     let footerTotalPriceDiscount = 0;
@@ -35,7 +34,7 @@ const refreshTable = async (values, setFieldValue, warehouse, changedPriceType =
     setFieldValue("footerTotalWidth", footerTotalWidth);
     setFieldValue("footerTotalHeight", footerTotalHeight);
   } else if (refreshFrom === "TDQuantity" || refreshFrom === "deleteProduct") {
-    console.log("tut TDQuantity");
+
 
     let footerTotalPrice = 0;
     let footerTotalPricePurchae = 0;

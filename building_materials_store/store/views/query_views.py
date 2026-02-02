@@ -1579,6 +1579,27 @@ def close_day(request):
         fgColor="B0B0B0"
     )
     
+    GREEN_FILL_0 = PatternFill(
+        fill_type="solid",
+        fgColor="E2F0D9"
+    )
+    
+    
+    GREEN_FILL_1 = PatternFill(
+        fill_type="solid",
+        fgColor="C6EFCE"
+    )
+    
+    GREEN_FILL_2 = PatternFill(
+        fill_type="solid",
+        fgColor="92D050"
+    )
+    
+    GREEN_FILL_3 = PatternFill(
+        fill_type="solid",
+        fgColor="006100"
+    )
+    
     RED_FONT = Font(color="FF0000")
     GREEN_FONT = Font(color="006400")
     BLUE_FONT = Font(color="0000FF")
@@ -2556,12 +2577,16 @@ def close_day(request):
         ws_detail["A1"].font = Font(bold=True, color="0000FF")
         ws_detail["A1"].hyperlink = f"#'ОСВ'!A1"
         
-        ws_detail.merge_cells("A2:H2")
+        if acc['number'].startswith(("40", "42")):
+            ws_detail.merge_cells("A2:N2")
+            ws_detail.merge_cells("A3:N3")
+        else:
+            ws_detail.merge_cells("A2:H2")
         ws_detail["A2"] = f"Счёт {acc['number']} — {acc['name']}"
         ws_detail["A2"].alignment = CENTER_ALIGN
         ws_detail["A2"].font = TOTAL_FONT
         
-        ws_detail.merge_cells("A3:H3")
+       
         ws_detail["A3"] = convert_close_date
         ws_detail["A3"].alignment = CENTER_ALIGN
         ws_detail["A3"].font = TOTAL_FONT
@@ -3025,6 +3050,7 @@ def close_day(request):
         
         elif account_number.startswith("40") or account_number.startswith("42"):
             # w_acc = WarehouseAccount.objects.get(account_id=account_id)
+            account_40_42 = {}
             w_acc = (
                 WarehouseAccount.objects
                 .select_related("warehouse")
@@ -3035,246 +3061,506 @@ def close_day(request):
                 warehouse_products__warehouse_id=w_acc.warehouse_id
             ).distinct()
 
-            account_40_42 = {}
+            
+            unit_map = get_unit_map()
+            
             for p in products:
-                account_40_42[p.id] = {
+                if not p.category:
+                    continue
+                unit, cf = get_unit_and_cf(unit_map, p)
+                category_id = p.category.id
+                category_name = p.category.name
+                # if p.id == 601:
+                #     ic(p.name, unit, cf)
+                if category_id not in account_40_42:
+                    account_40_42[category_id] = {
+                        "category": {
+                            "id": category_id,
+                            "name": category_name,
+                        },
+                        "totals": {
+                            "start_qty": Decimal("0.00"),
+                            "start_price": Decimal("0.00"),
+
+                            "prihod_qty": Decimal("0.00"),
+                            "prihod_price": Decimal("0.00"),
+
+                            "wozwrat_qty": Decimal("0.00"),
+                            "wozwrat_price": Decimal("0.00"),
+
+                            "rashod_qty": Decimal("0.00"),
+                            "rashod_price": Decimal("0.00"),
+
+                            "end_qty": Decimal("0.00"),
+                            "end_price": Decimal("0.00"),
+                        },
+                        "products": {}
+                    }
+
+                account_40_42[category_id]["products"][p.id] = {
                     "product": {
                         "id": p.id,
                         "name": p.name,
-                        "category": p.category.name,
+                        "unit": unit,
+                        "cf": Decimal(cf),
+                        "wholsale_price": p.wholesale_price,
                     },
-                    "debit_start": Decimal("0.00"),
-                    "credit_start": Decimal("0.00"),
-                    "debit_turnover": Decimal("0.00"),
-                    "credit_turnover": Decimal("0.00"),
-                    "debit_end": Decimal("0.00"),
-                    "credit_end": Decimal("0.00"),
+
+                    "start_qty": Decimal("0.00"),
+                    "start_price": Decimal("0.00"),
+
+                    "prihod_qty": Decimal("0.00"),
+                    "prihod_price": Decimal("0.00"),
+
+                    "wozwrat_qty": Decimal("0.00"),
+                    "wozwrat_price": Decimal("0.00"),
+
+                    "rashod_qty": Decimal("0.00"),
+                    "rashod_price": Decimal("0.00"),
+
+                    "end_qty": Decimal("0.00"),
+                    "end_price": Decimal("0.00"),
                 }
-
-            entries_start = (
-                Entry.objects
-                .filter(
-                    account_id=account_id,
-                    warehouse_id=w_acc.warehouse_id,
-                    transaction__date__lt=close_date_format,
-                    product__isnull=False
-                )
-                .values("product_id")
-                .annotate(
-                    debit=Sum("debit"),
-                    credit=Sum("credit")
-                )
-            )
-
-            for row in entries_start:
-                pid = row["product_id"]
-                if pid not in account_40_42:
-                    continue
-
-                account_40_42[pid]["debit_start"] = row["debit"] or Decimal("0.00")
-                account_40_42[pid]["credit_start"] = row["credit"] or Decimal("0.00")
                 
-            entries_turnover = (
-                Entry.objects
-                .filter(
-                    account_id=account_id,
-                    warehouse_id=w_acc.warehouse_id,
-                    transaction__date__gte=day_start,
-                    transaction__date__lt=day_end,
-                    product__isnull=False
-                )
-                .values("product_id")
-                .annotate(
-                    debit=Sum("debit"),
-                    credit=Sum("credit")
-                )
+            start_items = InvoiceItem.objects.filter(
+                invoice__entry_created_at_handle__lt=close_date_format,
+                invoice__canceled_at__isnull=True
+            ).filter(
+                Q(invoice__warehouse_id=w_acc.warehouse_id) |
+                Q(invoice__warehouse2_id=w_acc.warehouse_id)
+            ).select_related(
+                "product", "product__category", "product__base_unit", "invoice"
             )
             
-            for row in entries_turnover:
-                pid = row["product_id"]
-                if pid not in account_40_42:
-                    continue
+            grand_total = {
+                "start_qty": Decimal("0.00"),
+                "start_price": Decimal("0.00"),
 
-                account_40_42[pid]["debit_turnover"] = row["debit"] or Decimal("0.00")
-                account_40_42[pid]["credit_turnover"] = row["credit"] or Decimal("0.00")
-                
-            total_credit_start = Decimal("0.00")        
-            total_debit_start = Decimal("0.00")        
-            total_credit_turnover = Decimal("0.00")        
-            total_debit_turnover = Decimal("0.00")        
-            total_credit_end = Decimal("0.00")        
-            total_debit_end = Decimal("0.00")
-                    
-            for p_id, row in account_40_42.items():
-                debit_end_raw = row["debit_start"] + row["debit_turnover"]
-                credit_end_raw = row["credit_start"] + row["credit_turnover"]
+                "prihod_qty": Decimal("0.00"),
+                "prihod_price": Decimal("0.00"),
 
-                saldo = debit_end_raw - credit_end_raw
+                "wozwrat_qty": Decimal("0.00"),
+                "wozwrat_price": Decimal("0.00"),
 
-                if saldo >= 0:
-                    row["debit_end"] = saldo
-                    row["credit_end"] = Decimal("0.00")
-                else:
-                    row["debit_end"] = Decimal("0.00")
-                    row["credit_end"] = -saldo
-                    
-                # 👉 ИТОГИ СЧИТАЕМ ЗДЕСЬ
-                total_debit_start += row["debit_start"]
-                total_credit_start += row["credit_start"]
+                "rashod_qty": Decimal("0.00"),
+                "rashod_price": Decimal("0.00"),
 
-                total_debit_turnover += row["debit_turnover"]
-                total_credit_turnover += row["credit_turnover"]
-
-                total_debit_end += row["debit_end"]
-                total_credit_end += row["credit_end"]
-                    
-            grand_total_40_42 =  {
-                "total_credit_start": total_credit_start,
-                "total_debit_start": total_debit_start,
-                "total_credit_turnover": total_credit_turnover,
-                "total_debit_turnover": total_debit_turnover,
-                "total_credit_end": total_credit_end,
-                "total_debit_end": total_debit_end,
+                "end_qty": Decimal("0.00"),
+                "end_price": Decimal("0.00"),
             }
             
+            for item in start_items:
+                p = item.product
+                inv = item.invoice
+                
+                # Товар уже инициализирован выше
+                if not p.category:
+                    continue
+                if (p.category.id not in account_40_42 or p.id not in account_40_42[p.category.id]["products"]):
+                    continue
+                cat_totals = account_40_42[p.category.id]["totals"]
+                prod = account_40_42[p.category.id]["products"][p.id]
+                cf = prod["product"]["cf"]
+                qty = Decimal(item.selected_quantity) / cf
+                calculated_price = qty * Decimal(item.selected_price)
+                # Проверяем принадлежность к выбранным складам
+                if inv.wozwrat_or_prihod == "prihod":
+                    if inv.warehouse_id == w_acc.warehouse_id:
+                        prod["start_qty"] += qty
+                        prod["start_price"] += calculated_price
+                        
+                        cat_totals["start_qty"] += qty
+                        cat_totals["start_price"] += calculated_price
+                        
+                        grand_total["start_qty"] += qty
+                        grand_total["start_price"] += calculated_price
+
+                elif inv.wozwrat_or_prihod == "rashod":
+                    if inv.warehouse_id == w_acc.warehouse_id:
+                        prod["start_qty"] -= qty
+                        prod["start_price"] -= calculated_price
+                        
+                        cat_totals["start_qty"] -= qty
+                        cat_totals["start_price"] -= calculated_price
+                        
+                        grand_total["start_qty"] -= qty
+                        grand_total["start_price"] -= calculated_price
+
+                elif inv.wozwrat_or_prihod == "wozwrat":
+                    if inv.warehouse_id == w_acc.warehouse_id:
+                        prod["start_qty"] += qty
+                        prod["start_price"] += calculated_price
+                        
+                        cat_totals["start_qty"] += qty
+                        cat_totals["start_price"] += calculated_price
+                        
+                        grand_total["start_qty"] += qty
+                        grand_total["start_price"] += calculated_price
+                    
+                elif inv.wozwrat_or_prihod == "transfer":
+                    # если со склада (и склад в выбранных)
+                    if inv.warehouse_id == w_acc.warehouse_id:
+                        prod["start_qty"] -= qty
+                        prod["start_price"] -= calculated_price
+                        
+                        cat_totals["start_qty"] -= qty
+                        cat_totals["start_price"] -= calculated_price
+                        
+                        grand_total["start_qty"] -= qty
+                        grand_total["start_price"] -= calculated_price
+                        
+                    # если на склад (и склад в выбранных)
+                    elif inv.warehouse2_id == w_acc.warehouse_id:
+                        prod["start_qty"] += qty
+                        prod["start_price"] += calculated_price
+                        
+                        cat_totals["start_qty"] += qty
+                        cat_totals["start_price"] += calculated_price
+                        
+                        grand_total["start_qty"] += qty
+                        grand_total["start_price"] += calculated_price
+                        
+            turnover_items = InvoiceItem.objects.filter(
+                invoice__entry_created_at_handle__gte=day_start,
+                invoice__entry_created_at_handle__lt=day_end,
+                invoice__canceled_at__isnull=True
+            ).filter(
+                Q(invoice__warehouse_id=w_acc.warehouse_id) |
+                Q(invoice__warehouse2_id=w_acc.warehouse_id)
+            ).select_related(
+                "product", "product__category", "product__base_unit", "invoice"
+            ).order_by(
+                "product__category__name", "product__name"
+            )
+            
+            
+            for item in turnover_items:
+                p = item.product
+                inv = item.invoice
+                
+                # Товар уже инициализирован выше
+                if not p.category:
+                    continue
+                if (p.category.id not in account_40_42 or p.id not in account_40_42[p.category.id]["products"]):
+                    continue
+                cat_totals = account_40_42[p.category.id]["totals"]
+                prod = account_40_42[p.category.id]["products"][p.id]
+                cf = prod["product"]["cf"]
+                qty = Decimal(item.selected_quantity) / cf
+                calculated_price = qty * Decimal(item.selected_price)
+                # Проверяем принадлежность к выбранным складам
+                if inv.wozwrat_or_prihod == "prihod":
+                    if inv.warehouse_id == w_acc.warehouse_id:
+                        prod["prihod_qty"] += qty
+                        prod["prihod_price"] += calculated_price
+                        
+                        cat_totals["prihod_qty"] += qty
+                        cat_totals["prihod_price"] += calculated_price
+                        
+                        grand_total["prihod_qty"] += qty
+                        grand_total["prihod_price"] += calculated_price
+
+                elif inv.wozwrat_or_prihod == "rashod":
+                    if inv.warehouse_id == w_acc.warehouse_id:
+                        prod["rashod_qty"] += qty
+                        prod["rashod_price"] += calculated_price
+                        
+                        cat_totals["rashod_qty"] += qty
+                        cat_totals["rashod_price"] += calculated_price
+                        
+                        grand_total["rashod_qty"] += qty
+                        grand_total["rashod_price"] += calculated_price
+
+                elif inv.wozwrat_or_prihod == "wozwrat":
+                    if inv.warehouse_id == w_acc.warehouse_id:
+                        prod["wozwrat_qty"] += qty
+                        prod["wozwrat_price"] += calculated_price
+                        
+                        cat_totals["wozwrat_qty"] += qty
+                        cat_totals["wozwrat_price"] += calculated_price
+                        
+                        grand_total["wozwrat_qty"] += qty
+                        grand_total["wozwrat_price"] += calculated_price
+                    
+                elif inv.wozwrat_or_prihod == "transfer":
+                    # если со склада (и склад в выбранных)
+                    if inv.warehouse_id == w_acc.warehouse_id:
+                        prod["rashod_qty"] += qty
+                        prod["rashod_price"] += calculated_price
+                        
+                        cat_totals["rashod_qty"] += qty
+                        cat_totals["rashod_price"] += calculated_price
+                        
+                        grand_total["rashod_qty"] += qty
+                        grand_total["rashod_price"] += calculated_price
+                        
+                    # если на склад (и склад в выбранных)
+                    elif inv.warehouse2_id == w_acc.warehouse_id:
+                        prod["prihod_qty"] += qty
+                        prod["prihod_price"] += calculated_price
+                        
+                        cat_totals["prihod_qty"] += qty
+                        cat_totals["prihod_price"] += calculated_price
+                        
+                        grand_total["prihod_qty"] += qty
+                        grand_total["prihod_price"] += calculated_price
+                        
+            for cat in account_40_42.values():
+                for prod in cat["products"].values():
+                    prod["end_qty"] = (
+                        prod["start_qty"]
+                        + prod["prihod_qty"]
+                        - prod["rashod_qty"]
+                        + prod["wozwrat_qty"]
+                    )
+
+                    prod["end_price"] = (
+                        prod["start_price"]
+                        + prod["prihod_price"]
+                        - prod["rashod_price"]
+                        + prod["wozwrat_price"]
+                    )
+                    
+            for cat in account_40_42.values():
+                totals = cat["totals"]
+                totals["end_qty"] = (
+                    totals["start_qty"]
+                    + totals["prihod_qty"]
+                    - totals["rashod_qty"]
+                    + totals["wozwrat_qty"]
+                )
+                totals["end_price"] = (
+                    totals["start_price"]
+                    + totals["prihod_price"]
+                    - totals["rashod_price"]
+                    + totals["wozwrat_price"]
+                )
+
+            grand_total["end_qty"] = (
+                grand_total["start_qty"]
+                + grand_total["prihod_qty"]
+                - grand_total["rashod_qty"]
+                + grand_total["wozwrat_qty"]
+            )
+            grand_total["end_price"] = (
+                grand_total["start_price"]
+                + grand_total["prihod_price"]
+                - grand_total["rashod_price"]
+                + grand_total["wozwrat_price"]
+            )
+
             
             ws_detail = detail_sheets[account_id]
             ws_detail.freeze_panes = "A7"
-            ws_detail["A5"] = "№"
-            ws_detail.column_dimensions["A"].width = 5
-            ws_detail["B5"] = "Категория"
-            ws_detail.column_dimensions["B"].width = 20
-            ws_detail["C5"] = "Субконто"
-            ws_detail.column_dimensions["C"].width = 45
             
-            ws_detail.merge_cells("D5:E5")
-            ws_detail["D5"] = "Сальдо на начало"
+      
+            ws_detail["A5"] = "№"
+            ws_detail.column_dimensions["A"].width = 8
+            ws_detail["B5"] = "Наименование товара"
+            ws_detail.column_dimensions["B"].width = 55
+            ws_detail["C5"] = "Ед."
+            ws_detail.column_dimensions["C"].width = 8
+            
+            ws_detail["D5"] = "Цена"
+            ws_detail.column_dimensions["D"].width = 8
+            ws_detail[f"D5"].number_format = PRICE_FMT
+            
+            ws_detail.merge_cells("E5:F5")
+            ws_detail["E5"] = "Остаток на начало"
+   
 
             
-            ws_detail.merge_cells("F5:G5")
-            ws_detail["F5"] = "Обороты за период"
+            ws_detail.merge_cells("G5:H5")
+            ws_detail["G5"] = "Приход"
          
             
-            ws_detail.merge_cells("H5:I5")
-            ws_detail["H5"] = "Сальдо на конец"
+            ws_detail.merge_cells("I5:J5")
+            ws_detail["I5"] = "Возврат"
+            
+            ws_detail.merge_cells("K5:L5")
+            ws_detail["K5"] = "Расход"
+            
+            ws_detail.merge_cells("M5:N5")
+            ws_detail["M5"] = "Остаток на конец"
        
             
             
-            for i in ["A5", "B5", "C5", "D5", "E5", "F5", "G5", "H5", "I5", 
-                      "A6", "B6", "C6", "D6", "E6", "F6", "G6", "H6", "I6"]:
+            for i in ["A5", "B5", "C5", "D5", "E5", "F5", "G5", "H5", "I5", "J5", "K5", "L5", "M5", "N5", 
+                      "A6", "B6", "C6", "D6", "E6", "F6", "G6", "H6", "I6", "J6", "K6", "L6", "M6", "N6"]:
                 ws_detail[i].font = TOTAL_FONT
                 ws_detail[i].alignment = CENTER_ALIGN
                 ws_detail[i].fill = GRAY_FILL_1
                 ws_detail[i].border = THIN_BORDER
                 
                 
-            for i in ["D", "E", "F", "G", "H", "I"]:
-                ws_detail.column_dimensions[i].width = 15
+            for i in ["E", "F",  "G", "H", "I", "J", "K", "L", "M", "N"]:
+                ws_detail.column_dimensions[i].width = 11
        
                 
      
-            ws_detail["D6"] = "Дебит"
-            ws_detail["E6"] = "Кредит"
+            ws_detail["E6"] = "Кол-во"
+            ws_detail["F6"] = "Всего"
             
-            ws_detail["F6"] = "Дебит"
-            ws_detail["G6"] = "Кредит"
+            ws_detail["G6"] = "Кол-во"
+            ws_detail["H6"] = "Всего"
             
-            ws_detail["H6"] = "Дебит"
-            ws_detail["I6"] = "Кредит"
+            ws_detail["I6"] = "Кол-во"
+            ws_detail["J6"] = "Всего"
+            
+            ws_detail["K6"] = "Кол-во"
+            ws_detail["L6"] = "Всего"
+            
+            ws_detail["M6"] = "Кол-во"
+            ws_detail["N6"] = "Всего"
+            
+            
+            
+     
             
             
             row = 7
+            
+            
+                
             count = 1
-            for p_id, v in account_40_42.items():
+            # for cat_id, values in account_40_42.items():
+            for cat_id, values in sorted(
+                account_40_42.items(),
+                key=lambda item: item[1]["category"]["name"].lower()
+            ):
+                cat_name = values["category"]["name"]
+                totals = values["totals"]
+                ws_detail.merge_cells(f"A{row}:N{row}")
+                ws_detail[f"A{row}"].fill = GREEN_FILL_0
+                ws_detail[f"A{row}"].font = TOTAL_FONT
+                ws_detail[f"A{row}"].alignment = LEFT_ALIGN
+                ws_detail[f"A{row}"] = cat_name
                 
-                ws_detail[f"D{row}"].number_format = PRICE_FMT
-                ws_detail[f"E{row}"].number_format = PRICE_FMT
-                ws_detail[f"F{row}"].number_format = PRICE_FMT
-                ws_detail[f"G{row}"].number_format = PRICE_FMT
-                ws_detail[f"H{row}"].number_format = PRICE_FMT
-                ws_detail[f"I{row}"].number_format = PRICE_FMT
                 
-                for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"F{row}", f"G{row}", f"H{row}", f"I{row}"]:
-                    ws_detail[i].border = THIN_BORDER
                 
-        
-        
-                ws_detail[f"A{row}"] = count
-                ws_detail[f"B{row}"] = v["product"]["category"] if v["product"] else ""
-                ws_detail[f"C{row}"] = v["product"]["name"] if v["product"] else ""
+                for col in "FHJLN":
+                    ws_detail[f"{col}{row}"].number_format = PRICE_FMT
+                    
+                for col in "EGIKM":
+                    ws_detail[f"{col}{row}"].number_format = QTY_FMT
                 
-                ws_detail[f"D{row}"] = v["debit_start"]
-                ws_detail[f"E{row}"] = v["credit_start"]
-                
-                ws_detail[f"F{row}"] = v["debit_turnover"]
-                ws_detail[f"G{row}"] = v["credit_turnover"]
-                
-                ws_detail[f"H{row}"] = v["debit_end"]
-                ws_detail[f"I{row}"] = v["credit_end"]
-                
-                count += 1
                 row += 1
                 
-            
-            for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"F{row}", f"G{row}", f"H{row}", f"I{row}"]:
-                ws_detail[i].font = TOTAL_FONT
-                ws_detail[i].alignment = RIGHT_ALIGN
-                ws_detail[i].fill = GRAY_FILL_1
-                ws_detail[i].border = THIN_BORDER
-              
-            
-            ws_detail.merge_cells(f"A{row}:C{row}")
-            ws_detail[f"A{row}"].alignment = LEFT_ALIGN
-            ws_detail[f"A{row}"] = "Итого развернутое:"
-            
-            ws_detail[f"D{row}"].number_format = PRICE_FMT
-            ws_detail[f"E{row}"].number_format = PRICE_FMT
-            ws_detail[f"F{row}"].number_format = PRICE_FMT
-            ws_detail[f"G{row}"].number_format = PRICE_FMT
-            ws_detail[f"H{row}"].number_format = PRICE_FMT
-            ws_detail[f"I{row}"].number_format = PRICE_FMT
-            
-            ws_detail[f"D{row}"] = grand_total_40_42["total_debit_start"]
-            ws_detail[f"E{row}"] = grand_total_40_42["total_credit_start"]
-            
-            ws_detail[f"F{row}"] = grand_total_40_42["total_debit_turnover"]
-            ws_detail[f"G{row}"] = grand_total_40_42["total_credit_turnover"]
-            
-            ws_detail[f"H{row}"] = grand_total_40_42["total_debit_end"]
-            ws_detail[f"I{row}"] = grand_total_40_42["total_credit_end"]
-            
-            row += 1
-            
-            for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"F{row}", f"G{row}", f"H{row}", f"I{row}"]:
-                ws_detail[i].font = TOTAL_FONT
-                ws_detail[i].alignment = RIGHT_ALIGN
-                ws_detail[i].fill = GRAY_FILL_1
-                ws_detail[i].border = THIN_BORDER
-              
-            
-            ws_detail.merge_cells(f"A{row}:C{row}")
-            ws_detail[f"A{row}"].alignment = LEFT_ALIGN
-            ws_detail[f"A{row}"] = "Всего:"
-            
-            ws_detail[f"D{row}"].number_format = PRICE_FMT
-            ws_detail[f"E{row}"].number_format = PRICE_FMT
-            ws_detail[f"F{row}"].number_format = PRICE_FMT
-            ws_detail[f"G{row}"].number_format = PRICE_FMT
-            ws_detail[f"H{row}"].number_format = PRICE_FMT
-            ws_detail[f"I{row}"].number_format = PRICE_FMT
-            
-            saldo_start = grand_total_40_42["total_debit_start"] - grand_total_40_42["total_credit_start"]
-            ws_detail[f"D{row}"] = saldo_start if saldo_start > 0 else 0
-            ws_detail[f"E{row}"] = abs(saldo_start) if saldo_start < 0 else 0
-            
-            saldo_turnover = grand_total_40_42["total_debit_turnover"] - grand_total_40_42["total_credit_turnover"]
-            ws_detail[f"F{row}"] = saldo_turnover if saldo_turnover > 0 else 0
-            ws_detail[f"G{row}"] = abs(saldo_turnover) if saldo_turnover < 0 else 0
-            
-            saldo_end = grand_total_40_42["total_debit_end"] - grand_total_40_42["total_credit_end"]
-            ws_detail[f"H{row}"] = saldo_end if saldo_end > 0 else 0
-            ws_detail[f"I{row}"] = abs(saldo_end) if saldo_end < 0 else 0
+                for products, value in values["products"].items():
+                    product = value["product"]
+                    unit = product["unit"]
+                    wholesale_price = product["wholsale_price"]
+                    
+                    start_qty = value["start_qty"]
+                    start_price = value["start_price"]
+                    
+                    prihod_qty = value["prihod_qty"]
+                    prihod_price = value["prihod_price"]
+                    
+                    
+                    wozwrat_qty = value["wozwrat_qty"]
+                    wozwrat_price = value["wozwrat_price"]
+                    
+                    rashod_qty = value["rashod_qty"]
+                    rashod_price = value["rashod_price"]
+                    
+                    end_qty = value["end_qty"]
+                    end_price = value["end_price"] 
+                    
+                    ws_detail[f"G{row}"].font = GREEN_FONT
+                    ws_detail[f"H{row}"].font = GREEN_FONT
+                    ws_detail[f"I{row}"].font = RED_FONT
+                    ws_detail[f"J{row}"].font = RED_FONT
+                    ws_detail[f"K{row}"].font = BLUE_FONT
+                    ws_detail[f"L{row}"].font = BLUE_FONT
+                    
+                    for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"F{row}", f"G{row}", f"H{row}", f"I{row}", f"J{row}", f"K{row}", f"L{row}", f"M{row}", f"N{row}"]:
+                        ws_detail[i].border = THIN_BORDER
+                        
+                    for col in "FHJLN":
+                        ws_detail[f"{col}{row}"].number_format = PRICE_FMT
+                        
+                    for col in "EGIKM":
+                        ws_detail[f"{col}{row}"].number_format = QTY_FMT
                 
+                    ws_detail[f"A{row}"] = count
+                    ws_detail[f"B{row}"] = product["name"]
+                    ws_detail[f"C{row}"] = unit
+                    ws_detail[f"D{row}"] = wholesale_price
+                    
+                    ws_detail[f"E{row}"] = start_qty
+                    ws_detail[f"F{row}"] = start_price
+                    
+                    ws_detail[f"G{row}"] = prihod_qty
+                    ws_detail[f"H{row}"] = prihod_price
+                    
+                    ws_detail[f"I{row}"] = wozwrat_qty
+                    ws_detail[f"J{row}"] = wozwrat_price
+                    
+                    ws_detail[f"K{row}"] = rashod_qty
+                    ws_detail[f"L{row}"] = rashod_price
+                    
+                    ws_detail[f"M{row}"] = end_qty
+                    ws_detail[f"N{row}"] = end_price
+                    
+                
+                    count += 1
+                    row += 1
+            
+                for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"F{row}", f"G{row}", f"H{row}", f"I{row}", f"J{row}", f"K{row}", f"L{row}", f"M{row}", f"N{row}"]:
+                        ws_detail[i].border = THIN_BORDER
+                        
+                ws_detail.merge_cells(f"A{row}:D{row}")
+                for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"F{row}", f"G{row}", f"H{row}", f"I{row}", f"J{row}", f"K{row}", f"L{row}", f"M{row}", f"N{row}"]:
+                        ws_detail[i].fill = GRAY_FILL_0
+                ws_detail[f"A{row}"].font = TOTAL_FONT
+                ws_detail[f"A{row}"].alignment = RIGHT_ALIGN
+                ws_detail[f"A{row}"] = f"Итого по категории: {cat_name}"
+                
+              
+                ws_detail[f"E{row}"] = totals["start_qty"]
+                ws_detail[f"F{row}"] = totals["start_price"]
+                ws_detail[f"G{row}"] = totals["prihod_qty"]
+                ws_detail[f"H{row}"] = totals["prihod_price"]
+                ws_detail[f"I{row}"] = totals["wozwrat_qty"]
+                ws_detail[f"J{row}"] = totals["wozwrat_price"]
+                ws_detail[f"K{row}"] = totals["rashod_qty"]
+                ws_detail[f"L{row}"] = totals["rashod_price"]
+                ws_detail[f"M{row}"] = totals["end_qty"]
+                ws_detail[f"N{row}"] = totals["end_price"]
+                                
+                row += 1
+                
+            ws_detail[f"E{row}"] = grand_total["start_qty"]
+            ws_detail[f"F{row}"] = grand_total["start_price"]
+            ws_detail[f"G{row}"] = grand_total["prihod_qty"]
+            ws_detail[f"H{row}"] = grand_total["prihod_price"]
+            ws_detail[f"I{row}"] = grand_total["wozwrat_qty"]
+            ws_detail[f"J{row}"] = grand_total["wozwrat_price"]
+            ws_detail[f"K{row}"] = grand_total["rashod_qty"]
+            ws_detail[f"L{row}"] = grand_total["rashod_price"]
+            ws_detail[f"M{row}"] = grand_total["end_qty"]
+            ws_detail[f"N{row}"] = grand_total["end_price"]
+            
+            for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"F{row}", f"G{row}", f"H{row}", f"I{row}", f"J{row}", f"K{row}", f"L{row}", f"M{row}", f"N{row}"]:
+                ws_detail[i].border = THIN_BORDER
+                
+            for col in "FHJLN":
+                ws_detail[f"{col}{row}"].number_format = PRICE_FMT
+                
+            for col in "EGIKM":
+                ws_detail[f"{col}{row}"].number_format = QTY_FMT
+                        
+            ws_detail.merge_cells(f"A{row}:D{row}")
+            for i in [f"A{row}", f"B{row}", f"C{row}", f"D{row}", f"E{row}", f"F{row}", f"G{row}", f"H{row}", f"I{row}", f"J{row}", f"K{row}", f"L{row}", f"M{row}", f"N{row}"]:
+                ws_detail[i].fill = GREEN_FILL_1
+       
+            ws_detail[f"A{row}"].font = TOTAL_FONT
+            ws_detail[f"A{row}"].alignment = RIGHT_ALIGN
+            ws_detail[f"A{row}"] = "ВСЕГО:"
+        
+            
+       
      
                     
            

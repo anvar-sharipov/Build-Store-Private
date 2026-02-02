@@ -30,7 +30,7 @@ const Zakaz = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = Boolean(id);
-  console.log("isEdit", isEdit);
+
 
   const { t } = useTranslation();
   const { showNotification } = useNotification();
@@ -97,7 +97,7 @@ const Zakaz = () => {
     const loadWarehouses = async () => {
       try {
         const res = await myAxios.get("get_active_warehouses");
-        // console.log(res.data.data);
+   
         const results = res.data.data;
         if (results.length > 0) {
           setSelectedWarehouse(results[0]);
@@ -124,7 +124,7 @@ const Zakaz = () => {
     const loadZakaz = async () => {
       try {
         const res = await myAxios.get(`/zakaz/${id}`);
-        console.log("res loadZakaz", res.data.data);
+   
         setSelectedWarehouse(res.data.data.warehouse);
         setSelectedPartner(res.data.data.partner);
         setSelectedBuyer(res.data.data.buyer);
@@ -138,17 +138,9 @@ const Zakaz = () => {
     loadZakaz();
   }, [id]);
 
-  // useEffect(() => {
-  //   console.log("selectedPartner", selectedPartner);
-  // }, [selectedPartner]);
-
-  // useEffect(() => {
-  //   console.log("selectedBuyer", selectedBuyer);
-  // }, [selectedBuyer]);
-
   useEffect(() => {
     if (!selectedProduct) return;
-    console.log("selectedProduct", selectedProduct);
+;
 
     handleAddProduct(selectedProduct);
   }, [selectedProduct]);
@@ -281,7 +273,7 @@ const Zakaz = () => {
 
     try {
       const res = await myAxios.post("/save_zakaz/", value);
-      console.log("res", res.data.zakaz_id);
+
       showNotification(t(res.data.message), "success");
       setSavedZakazId(res.data.zakaz_id);
     } catch (err) {
@@ -291,7 +283,7 @@ const Zakaz = () => {
         showNotification(t(err.response.data.message), "error");
       }
 
-      // console.log("cant save zakaz", err);
+     
     } finally {
     }
   };

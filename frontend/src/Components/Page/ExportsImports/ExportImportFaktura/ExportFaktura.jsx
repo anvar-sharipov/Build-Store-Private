@@ -234,7 +234,7 @@ const ExportFaktura = () => {
         params: { dateFrom, dateTo },
       });
       setInvoices(res.data.data || []);
-      console.log("res.data.data", res.data.data);
+  
 
       setSelectedIds([]);
     } catch (err) {
@@ -343,7 +343,7 @@ const ExportFaktura = () => {
       const originalImportData = { ...importData };
 
       for (const invoiceData of importData.invoices) {
-        // console.log("invoiceData", invoiceData);
+  
         try {
           if (invoiceData.status === "error") {
             results.details.push({
@@ -371,9 +371,7 @@ const ExportFaktura = () => {
             wozwrat_or_prihod: invoiceData.wozwrat_or_prihod,
             comment: invoiceData.comment,
           };
-          console.log("invoiceData.id_test_faktura", invoiceData.id_test_faktura);
 
-          console.log("Sending clean data to save-invoice:", cleanData);
 
           const response = await myAxios.post("/save-invoice/", cleanData);
 
@@ -407,8 +405,7 @@ const ExportFaktura = () => {
           results.errors++;
         }
       }
-      // console.log("results", results);
-
+    
       setImportResults(results);
 
       // Автоматически сохраняем результаты после импорта

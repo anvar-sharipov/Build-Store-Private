@@ -90,8 +90,7 @@ const Partner = () => {
         const res = await myAxios.get("accounts/");
 
         // const filteredAccounts = res.data.filter((acc) => parseFloat(acc.number) === 75 || parseFloat(acc.number) === 60);
-        // console.log('accounts res.data', res.data);
-        // console.log("filteredAccounts", filteredAccounts);
+   
         // По умолчанию выбрать счёт с number = "60"
         // const account60 = filteredAccounts.find((acc) => acc.number === "60");
         // if (account60) {
@@ -177,7 +176,7 @@ const Partner = () => {
     try {
       const res = await myAxios.get("partners/");
       setPartnersRaw(res.data);
-      console.log("res.data", res.data);
+    
     } catch (e) {
       console.error("Ошибка при загрузке:", e);
       showNotification("partnerLoadError", "error");
@@ -188,7 +187,7 @@ const Partner = () => {
 
   const addPartner = async () => {
     if (!newPartner.trim()) {
-      console.log("da2");
+   
 
       showNotification(t("inputCantBeEmpty"), "error");
       return;
@@ -332,7 +331,7 @@ const Partner = () => {
       setEditName(p.name);
       setEditBalance(p.balance);
       setEditAgent(p.agent_name);
-      console.log("addadadd agent_name", p.agent_name);
+
 
       setEditType(p.type);
       setEditId(p.id);
@@ -386,7 +385,7 @@ const Partner = () => {
     if (e.key === "Enter") {
       e.preventDefault();
       if (!selectedAgent && editAgent) {
-        console.log("editAgent", editAgent);
+  
 
         showNotification(t("agentNotFound"), "error");
       } else {

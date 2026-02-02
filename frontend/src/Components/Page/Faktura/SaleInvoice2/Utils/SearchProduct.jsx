@@ -26,12 +26,12 @@ const SearchProduct = ({ partnerInputRef, productInputRef, showNotification, pro
   }, [productInputRef]);
 
   useEffect(() => {
-    // console.log("query", query);
+  
     if (query) {
       const fetchProduct = async () => {
         try {
           const res = await myAxios.get(`search-products/?search=${query}&warehouse=${values.warehouses.id}`);
-          //   console.log("res.data", res.data);
+       
           setList(res.data);
         } catch (error) {
           console.log("oshibka pri query product", error);
@@ -43,7 +43,7 @@ const SearchProduct = ({ partnerInputRef, productInputRef, showNotification, pro
   }, [query]);
 
   const handleSelectItem = async (item) => {
-    console.log("Выбран", item);
+
 
     const already_exists = values.products.some((p) => p.id === item.id);
     if (already_exists) {

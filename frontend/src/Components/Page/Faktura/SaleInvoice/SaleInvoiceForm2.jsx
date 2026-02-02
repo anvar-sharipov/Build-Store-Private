@@ -35,7 +35,7 @@ const SaleInvoiceForm2 = ({
   // const [isOpen, setIsOpen] = useState(false); // dlya galochek
   const [showStockMessageIds, setShowStockMessageIds] = useState([]);
   const [numerateRow, setNumerateRow] = useState(1);
-  // console.log("invoiceTable", invoiceTable);
+
 
   const td_basic_class =
     "leading-tight border border-gray-300 dark:border-gray-700 " +
@@ -59,7 +59,7 @@ const SaleInvoiceForm2 = ({
       }, {})
   );
 
-  // console.log("gifts", gifts);
+
 
   const totalPurchaseSum = products.reduce(
     (sum, p) => sum + (p.purchase_price_summ || 0),

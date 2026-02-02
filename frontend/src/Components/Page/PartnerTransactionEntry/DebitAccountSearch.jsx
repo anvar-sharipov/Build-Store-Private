@@ -15,7 +15,6 @@ const DebitAccountSearch = ({ debitInputRef, partnerInputRef, debetRefs, X_partn
     try {
       const response = await myAxios.get(`search-accounts/?q=${query}`);
       setAccounts(response.data);
-      console.log("Полученные scheta:", response.data);
     } catch (error) {
       console.error("Ошибка при получении schetow:", error);
     } finally {
@@ -146,7 +145,7 @@ const DebitAccountSearch = ({ debitInputRef, partnerInputRef, debetRefs, X_partn
                   }
                 } else if (e.key === "Enter") {
                   e.preventDefault();
-                  console.log(item);
+       
                   setFieldValue("debet", { ...item });
                   setAccounts([]);
 

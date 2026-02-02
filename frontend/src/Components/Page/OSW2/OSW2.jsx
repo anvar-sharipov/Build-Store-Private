@@ -19,8 +19,26 @@ const OSW2 = () => {
   const [viewMode, setViewMode] = useState("modern"); // "modern" или "word"
   const navigate = useNavigate();
 
+  const [warehouseAccount, setWarehouseAccount] = useState([])
+
+  const fetchWarehouseAccount  = async () => {
+    try {
+      const getWA = await myAxios.get("get_account_warehouse")
+      console.log("getWA.data", getWA.data);
+      
+      setWarehouseAccount(getWA.data)
+      
+    } catch (err) {
+      console.log("cant get warehouseAccount", err);
+      
+    }
+  }
+
   useEffect(() => {
     document.title = `${t("osw")}`;
+    fetchWarehouseAccount()
+
+    
   }, []);
 
   useEffect(() => {
@@ -33,7 +51,6 @@ const OSW2 = () => {
             dateTo: dateTo,
           },
         });
-        console.log("res.data ===", res.data);
         setOsw(res.data);
       } catch (error) {
         console.log("cant get_account_for_osw2 GGG", error);
@@ -53,12 +70,26 @@ const OSW2 = () => {
   };
 
   const handleRowClick = (accountNumber) => {
-    if (accountNumber !== "60" && accountNumber !== "62") {
+    if (accountNumber === "60" || accountNumber === "62") {
+      navigate(`/detail-account-report-60-62?accountNumber=${accountNumber}`);
+    } else if (accountNumber.startsWith("40.") || accountNumber.startsWith("42.")) {
+      console.log("accountNumber", accountNumber);
+      console.log("ROUTE:", ROUTES_RAPORT.PRODUCTS_BUH_OBOROT);
+      const warehouseObj = warehouseAccount.find(wa => wa.account_number === accountNumber);
+      console.log("warehouseObj", warehouseObj);
+      
+
+      const params = new URLSearchParams();
+      params.set("dateFrom", dateFrom);
+      params.set("dateTo", dateTo);
+      params.set("warehouses", warehouseObj?.warehouse_id);
+
+      navigate(`${ROUTES_RAPORT.PRODUCTS_BUH_OBOROT}?${params.toString()}`);
+      return;
+    } else {
       navigate(ROUTES_RAPORT.DETAIL_REPORT_1, {
         state: { accountNumber, dateFrom, dateTo },
       });
-    } else {
-      navigate(`/detail-account-report-60-62?accountNumber=${accountNumber}`);
     }
   };
 
@@ -83,8 +114,6 @@ const OSW2 = () => {
       </motion.div>
     );
   }
-
-  console.log("osw", osw);
 
   return (
     <>
@@ -157,7 +186,7 @@ const OSW2 = () => {
                       if (o.is_parent) return sum;
                       const balance = parseFloat(o.final_balance) || 0;
                       return sum + (balance > 0 ? balance : 0);
-                    }, 0)
+                    }, 0),
                   )}
                 </td>
                 <td className="border-2 border-black px-3 py-2 text-right">
@@ -166,7 +195,7 @@ const OSW2 = () => {
                       if (o.is_parent) return sum;
                       const balance = parseFloat(o.final_balance) || 0;
                       return sum + (balance < 0 ? Math.abs(balance) : 0);
-                    }, 0)
+                    }, 0),
                   )}
                 </td>
               </tr>
@@ -325,7 +354,7 @@ const OSW2 = () => {
                           if (o.is_parent) return sum;
                           const balance = parseFloat(o.final_balance) || 0;
                           return sum + (balance > 0 ? balance : 0);
-                        }, 0)
+                        }, 0),
                       )}
                     </td>
                     <td className="px-4 py-4 text-right dark:text-gray-200">
@@ -334,7 +363,7 @@ const OSW2 = () => {
                           if (o.is_parent) return sum;
                           const balance = parseFloat(o.final_balance) || 0;
                           return sum + (balance < 0 ? Math.abs(balance) : 0);
-                        }, 0)
+                        }, 0),
                       )}
                     </td>
                   </tr>
@@ -537,7 +566,7 @@ const OSW2 = () => {
                         if (o.is_parent) return sum;
                         const balance = parseFloat(o.final_balance) || 0;
                         return sum + (balance > 0 ? balance : 0);
-                      }, 0)
+                      }, 0),
                     )}
                   </td>
                   <td className="border border-black dark:border-gray-400 px-3 py-2 text-right dark:text-white">
@@ -546,7 +575,7 @@ const OSW2 = () => {
                         if (o.is_parent) return sum;
                         const balance = parseFloat(o.final_balance) || 0;
                         return sum + (balance < 0 ? Math.abs(balance) : 0);
-                      }, 0)
+                      }, 0),
                     )}
                   </td>
                 </tr>

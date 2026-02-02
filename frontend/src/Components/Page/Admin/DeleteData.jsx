@@ -20,7 +20,7 @@ const DeleteData = () => {
           password: password, // отправляем пароль на бэкенд
         },
       });
-      console.log("Response:", res.data.date_focus);
+      
       if (res.data.date_focus) {
         const today = new Date();
         const formattedDate = today.toISOString().split("T")[0]; // "2025-10-04"

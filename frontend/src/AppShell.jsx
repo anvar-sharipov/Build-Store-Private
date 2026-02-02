@@ -67,7 +67,6 @@ function AppShell() {
     location.pathname.includes("/purchase-invoices/create");
 
   const hideRightBar = location.pathname === "/prochee/qr-list-print" || location.pathname === "/prochee" || location.pathname === "/reports" || location.pathname === "/entries2";
-  // console.log("hideRightBar", hideRightBar);
 
   return (
     <>

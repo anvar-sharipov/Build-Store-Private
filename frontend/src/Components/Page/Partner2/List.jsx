@@ -40,7 +40,6 @@ const List = ({
   const fetchSaldo = async (date, partnerId) => {
     try {
       const saldo = await getSaldoForPartner(date, partnerId);
-      console.log("saldo", saldo);
       setSaldo(saldo);
     } catch (err) {
       console.log("Ошибка при получении сальдо", err);
@@ -49,7 +48,6 @@ const List = ({
 
   useEffect(() => {
     if (!openPartnerCardModal.partnerId) return;
-    console.log("openPartnerCardModal", openPartnerCardModal);
     fetchSaldo(dateProwodok, openPartnerCardModal.partnerId);
   }, [openPartnerCardModal]);
 
@@ -391,7 +389,6 @@ export default List;
 //   const { t } = useTranslation();
 //   const sound_up_down = new Audio("/sounds/up_down.mp3");
 //   const openPartnerModal = (partner) => {
-//     // console.log("partner", partner);
 
 //     let agent_obj = null;
 //     if (partner.agent) {

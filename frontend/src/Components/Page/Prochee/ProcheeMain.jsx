@@ -165,7 +165,7 @@ const ProcheeMain = () => {
                     transition-all duration-300 cursor-pointer
                     hover:translate-x-2 focus:translate-x-2
                     focus:outline-none focus:ring-4 ${colorConfig.ring} focus:ring-offset-2 dark:focus:ring-offset-gray-950`}
-                  //   onClick={() => console.log(`Выбрано: ${item.name}`)}
+       
                   onClick={() => {
                     if (to) {
                       change_type.currentTime = 0;
@@ -179,8 +179,7 @@ const ProcheeMain = () => {
                       change_type.currentTime = 0;
                       change_type.play().catch(() => {});
                       navigate(to);
-                      //   console.log(`Выбрано: ${item.name}`);
-                      //   listRefs.current[id].querySelector("a")?.click();
+         
                     } else if (e.key === "ArrowDown") {
                       e.preventDefault();
                       handleNavigation(item.id, "down");

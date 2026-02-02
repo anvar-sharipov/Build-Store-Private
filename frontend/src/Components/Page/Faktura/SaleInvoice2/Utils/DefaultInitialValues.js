@@ -8,7 +8,7 @@ import * as Yup from "yup";
 
 const defaultInitialValues = (fetchs, data, dateProwodok) => {
   if (data) {
-    console.log("data", data);
+ 
 
     let footerTotalPricePurchae = 0;
     let footerTotalPriceProfit = 0;
@@ -102,7 +102,7 @@ const defaultInitialValues = (fetchs, data, dateProwodok) => {
           unit_name_on_selected_warehouses: unit_name_on_selected_warehouses,
         };
       });
-      // console.log('updatedadad', new Date(data.invoice_date).toISOString().slice(0, 10));
+    
       
     return {
       invoice_date: new Date(data.invoice_date).toISOString().slice(0, 10),
@@ -139,12 +139,12 @@ const defaultInitialValues = (fetchs, data, dateProwodok) => {
   } else {
     // Получаем склад из localStorage
     const savedWarehouse = JSON.parse(localStorage.getItem("selectedWarehouse"));
-    // console.log("savedWarehouse", savedWarehouse);
+ 
 
     // Находим первый активный склад
     const firstActiveWarehouse = fetchs.AllWarehouses.find((w) => w.is_active);
 
-    // console.log('firstActiveWarehouse', firstActiveWarehouse);
+  
 
     if (savedWarehouse === null && firstActiveWarehouse) {
       const selectedWarehouse = { id: firstActiveWarehouse.id, name: firstActiveWarehouse.name };
@@ -152,7 +152,7 @@ const defaultInitialValues = (fetchs, data, dateProwodok) => {
       localStorage.setItem("selectedWarehouse", JSON.stringify(selectedWarehouse));
     }
 
-    // console.log('createdadad', new Date().toISOString().slice(0, 10));
+    
 
     return {
       invoice_date: dateProwodok, // localStorage.getItem("dateProwodok"), //new Date().toISOString().slice(0, 10),

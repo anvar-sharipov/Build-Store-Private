@@ -278,7 +278,7 @@ const DetailReport6062 = () => {
           params: { account: accountNumber, dateFrom, dateTo, agent, sortByAgent, show0, hyphenOr0 },
         });
 
-        console.log("API Response:", res.data);
+  
 
         if (sortByAgent === "true") {
           // Данные с группировкой по агентам
@@ -982,7 +982,7 @@ const DetailReport6062 = () => {
               <tbody className="print:dark:[&_td]:!text-black">
                 <AnimatePresence>
                   {sortedData.map((row, index) => {
-                    // console.log("agent", row.agent?.id);
+             
 
                     return (
                       <motion.tr
@@ -992,7 +992,7 @@ const DetailReport6062 = () => {
                         animate="visible"
                         exit="hidden"
                         onDoubleClick={() => {
-                          // console.log("klicked partner", row.partner_name, row.partner_id, row.account_id);
+                
                           handleRowClick(row.partner_id, row.account_id);
                         }}
                         className="hover:bg-gray-100 dark:hover:bg-gray-700/50

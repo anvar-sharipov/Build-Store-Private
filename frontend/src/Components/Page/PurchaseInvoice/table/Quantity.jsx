@@ -23,6 +23,10 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
     }
   }, [product.selected_quantity, setFieldValue, t, values.wozwrat_or_prihod]);
 
+  //   useEffect(() => {
+  //   console.log("values", values);
+  // }, [values.wozwrat_or_prihod])
+
   useEffect(() => {
     setLocalValue(product.selected_quantity?.toString() || "");
   }, [product.selected_quantity]);

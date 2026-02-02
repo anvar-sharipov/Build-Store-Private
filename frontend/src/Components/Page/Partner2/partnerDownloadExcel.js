@@ -3,8 +3,7 @@ import { saveAs } from "file-saver";
 
 
 export const partnerDownloadExcel = (data, t) => {
-  console.log('data', data);
-  
+
   const worksheetData = data.map((emp, idx) => ({
     // "№": idx + 1,
     [t("id")]: emp.id,

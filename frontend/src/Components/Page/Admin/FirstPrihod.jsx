@@ -26,7 +26,7 @@ const FirstPrihod = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      console.log(res.data);
+   
       alert("Загрузка завершена!");
     } catch (err) {
       console.error(err);

@@ -370,7 +370,7 @@ const ExportImportEntries = () => {
             partnerId: entryData.partner?.id || entryData.partner_id,
           };
 
-          console.log("Sending clean data to create_entry:", cleanData);
+
 
           const response = await myAxios.post("/create_entry/", cleanData);
 

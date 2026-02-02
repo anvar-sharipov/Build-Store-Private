@@ -48,7 +48,7 @@ const UpdateInvoiceForm2 = ({
 
   // dlya tfoot summ START
   const products = invoiceTable.filter((p) => !p.is_gift);
-  // console.log("products", products);
+
 
   // const gifts = invoiceTable.filter((p) => p.is_gift);
   const gifts = Object.values(

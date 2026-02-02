@@ -88,7 +88,7 @@ const AddSaleInvoicePage = () => {
   // Сохраняем в localStorage при изменении
   useEffect(() => {
     localStorage.setItem("hiddenPrintSaldo", hiddenPrintSaldo.toString());
-    console.log('hiddenPrintSaldo', hiddenPrintSaldo, typeof hiddenPrintSaldo);
+  
     
   }, [hiddenPrintSaldo]);
 
@@ -189,15 +189,14 @@ const AddSaleInvoicePage = () => {
     const delayDebounce = setTimeout(() => {
       const fetchProducts = async () => {
         if (query.length >= 2) {
-          // console.log("tut");
+ 
 
           setLoading(true);
           try {
             const res = await myAxios.get(`search-products/?search=${query}&warehouse=${selectedWarehouseId}`);
-            console.log('res', res);
-            
+      
             setResults(res.data);
-            // console.log("res.data", res.data);
+         
 
             setFocusedIndex(0);
           } catch (error) {
@@ -255,8 +254,7 @@ const AddSaleInvoicePage = () => {
     async function fetchPartners() {
       try {
         const res = await myAxios.get("partners/");
-        // console.log("res.data", res.data);
-
+   
         setAllPartners(res.data);
       } catch (error) {
         console.error("Ошибка при загрузке партнёров", error);
@@ -340,7 +338,7 @@ const AddSaleInvoicePage = () => {
   }
 
   const handleSaveInvoice = async () => {
-    // console.log("invoiceTable:", invoiceTable);
+
     setSaveLoading(true);
     const items = invoiceTable.map((item) => {
       // let productId;
@@ -355,7 +353,7 @@ const AddSaleInvoicePage = () => {
         sale_price: item.wholesale_price_1pc,
       };
     });
-    // console.log("totalPaySumm", totalPaySumm);
+ 
 
     const dataToSend = {
       buyer_id: selectedPartnerId,
@@ -374,11 +372,9 @@ const AddSaleInvoicePage = () => {
     //   dataToSend.entry_type = selectedEntry;
     // }
 
-    // console.log("dataToSend", dataToSend);
 
     try {
       const res = await myAxios.post("sales-invoices/", dataToSend);
-      console.log("Успешно сохранено:", res.data);
       navigate(ROUTES.MAIN);
     } catch (error) {
       console.error("Ошибка при сохранении:", error);
@@ -402,7 +398,7 @@ const AddSaleInvoicePage = () => {
       try {
         setError(null);
         const res = await myAxios.get(`partner/${selectedPartnerId}/entries/`);
-        // console.log("resssssss.data", res.data.entries);
+
 
         setEntries(res.data.entries);
       } catch (e) {
@@ -457,11 +453,11 @@ const AddSaleInvoicePage = () => {
   //   return result;
   // }
 
-  // console.log("entriesWithBalance", entriesWithBalance);
+
 
   const handleChangeIsEntry = (event) => {
     setIsEntry(event.target.checked);
-    // console.log("Is Entry:", event.target.checked);
+  
 
     // Здесь можешь вызвать функцию, которая будет проводить проводку
     // if (event.target.checked) postTransaction();

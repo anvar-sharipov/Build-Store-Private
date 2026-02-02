@@ -53,7 +53,7 @@ function Head({getSaldo, setGlobalDate, id}) {
 
 
             if (!isNaN(parsedDate.getTime()) && values.partner?.id) {
-              // console.log("Дата выбрана:", e.target.value);
+       
               getSaldo(e.target.value, values.partner.id)
               
             }

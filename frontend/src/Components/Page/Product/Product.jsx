@@ -247,11 +247,11 @@ const Harytlar = () => {
       // если это первая страница — заменяем
       if (!url) {
         listItemRefs.current = []; // очищаем ссылки при смене фильтра
-        console.log("res.data.results", res.data.results);
+        // console.log("res.data.results", res.data.results);
 
         setProducts(res.data.results);
-        console.log("products res.data.results == ", res.data.results);
-        console.log("products res.data.results == ", res.data.meta);
+        // console.log("products res.data.results == ", res.data.results);
+        // console.log("products res.data.results == ", res.data.meta);
         
         setTotalCount(res.data.count);
         // console.log(res.data.results);

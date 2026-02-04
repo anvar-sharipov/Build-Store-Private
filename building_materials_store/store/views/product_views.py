@@ -440,6 +440,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     #         })
     
     def list(self, request, *args, **kwargs):
+        # ic("tutut")
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         
@@ -622,12 +623,12 @@ class ProductViewSet(viewsets.ModelViewSet):
         )
 
         meta = {"test1": 1}
-
+        # ic("tut2", serializer.data)
         if page is not None:
             response = self.get_paginated_response(serializer.data)
             response.data["meta"] = meta
             return response
-
+        
         return Response({
             "results": serializer.data,
             "meta": meta,

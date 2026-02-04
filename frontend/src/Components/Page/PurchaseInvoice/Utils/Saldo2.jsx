@@ -33,6 +33,17 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
     const accountData = saldo2[accountKey];
     if (!accountData) return null;
 
+    let start_debit = 0;
+    let start_credit = 0;
+
+    const start_saldo = accountData.start[0] - accountData.start[1];
+
+    if (start_saldo > 0) {
+      start_debit = start_saldo;
+    } else if (start_saldo < 0) {
+      start_credit = Math.abs(start_saldo);
+    }
+
     return (
       <div key={accountKey} className="mb-4 print:mb-2 print:w-1/2 print:inline-block print:align-top print:px-1">
         <table className="w-full table-auto border-collapse print:text-[8px]">
@@ -50,8 +61,8 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium" colSpan={2}>
                 {t("Opening balance")}
               </td>
-              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right whitespace-nowrap">{formatNumber2(accountData.start[0])}</td>
-              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right whitespace-nowrap">{formatNumber2(accountData.start[1])}</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right whitespace-nowrap">{formatNumber2(start_debit)}</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right whitespace-nowrap">{formatNumber2(start_credit)}</td>
             </tr>
 
             {/* Обороты за день */}
@@ -92,10 +103,10 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
                 {t("Closing balance")}
               </td>
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">
-                {parseFloat(accountData.saldo[0]) !== 0 ? accountData.saldo[0] : "-"}
+                {formatNumber2(accountData.saldo[0], 2) !== 0 ? formatNumber2(accountData.saldo[0]) : "-"}
               </td>
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">
-                {parseFloat(accountData.saldo[1]) !== 0 ? accountData.saldo[1] : "-"}
+                {formatNumber2(accountData.saldo[1], 2) !== 0 ? formatNumber2(accountData.saldo[1]) : "-"}
               </td>
             </tr>
           </tbody>

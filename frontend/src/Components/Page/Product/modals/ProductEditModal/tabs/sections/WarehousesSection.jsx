@@ -67,7 +67,7 @@ const WarehousesSection = ({ options, t, warehouses }) => {
                   <div key={index} className="flex gap-2 items-center mb-2">
                     <Field
                       as="select"
-                      disabled={true}
+                      // disabled={true}
                       name={`warehouses.${index}.warehouse`}
                       className={myClass.input2}
                       required

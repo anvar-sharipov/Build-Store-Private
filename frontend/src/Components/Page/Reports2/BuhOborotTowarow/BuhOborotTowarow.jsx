@@ -65,7 +65,6 @@ export const BuhOborotTowarow = () => {
 
         link.remove();
         window.URL.revokeObjectURL(url);
-        
       } catch (e) {
         console.error("Excel error", e);
       } finally {
@@ -237,7 +236,8 @@ export const BuhOborotTowarow = () => {
         categoryTotal.totalAmountWozwrat += parseFloat(product.oborot_wozwrat_price) || 0; // ← ФАКТИЧЕСКАЯ СУММА
 
         categoryTotal.end_selected_quantity += endQty;
-        categoryTotal.totalAmountEnd += price * endQty; // конечный остаток по текущей цене
+        // categoryTotal.totalAmountEnd += price * endQty; // конечный остаток по текущей цене
+        categoryTotal.totalAmountEnd = categoryTotal.totalAmountStart + categoryTotal.totalAmountIncome - categoryTotal.totalAmountOutcome + categoryTotal.totalAmountWozwrat;
 
         // Если это последний товар
         if (idx === sortedProducts.length - 1) {
@@ -275,7 +275,8 @@ export const BuhOborotTowarow = () => {
               grandTotal.oborot_selected_quantity_wozwrat += item.oborot_selected_quantity_wozwrat;
               grandTotal.totalAmountWozwrat += item.totalAmountWozwrat;
               grandTotal.end_selected_quantity += item.end_selected_quantity;
-              grandTotal.totalAmountEnd += item.totalAmountEnd;
+              // grandTotal.totalAmountEnd += item.totalAmountEnd;
+              grandTotal.totalAmountEnd = grandTotal.totalAmountStart + grandTotal.totalAmountIncome - grandTotal.totalAmountOutcome + grandTotal.totalAmountWozwrat;
             }
           });
 
@@ -563,7 +564,10 @@ export const BuhOborotTowarow = () => {
                       </td>
 
                       <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(endQty, 2)}</td>
-                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>{formatNumber2(price * endQty)}</td>
+                      <td className={`border border-black dark:border-gray-700 px-1 py-0.5 text-right whitespace-nowrap ${printStylesThTd}`}>
+                        {/* {formatNumber2(price * endQty)}ggg */}
+                        {formatNumber2(price * selectedQty + (parseFloat(p.oborot_girdeji_price) || 0) - (parseFloat(p.oborot_chykdajy_price) || 0) + (parseFloat(p.oborot_wozwrat_price) || 0))}
+                      </td>
                     </tr>
                   );
                 }

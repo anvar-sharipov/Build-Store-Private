@@ -34,7 +34,10 @@ const ProductList = ({
   //   params.set("selected", productId);
   //   navigate(ROUTES_RAPORT.DETAIL_PRODUCT_OBOROT.replace(":id", productId).replace(":warehouseId", warehouseId));
   // };
+  // console.log("products", products);
+  
 
+  
   const sound_up_down = new Audio("/sounds/up_down.mp3");
 
   return (
@@ -45,6 +48,8 @@ const ProductList = ({
             {products.map((p, index) => {
               let unit_name = p.base_unit_obj.name;
               let quantity = parseFloat(p.quantity_on_selected_warehouses || p.total_quantity || 0);
+              const currency = p.warehouses_data[0].warehouse_currency
+              
 
               if (p.units.length > 0) {
                 p.units.forEach((u) => {
@@ -310,9 +315,9 @@ const ProductList = ({
                           {myFormatNumber(quantity)} {unit_name}
                         </span>
                       </div>
-
+                      
                       <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-lg">
-                        <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{myFormatNumber(p.retail_price)}</span>
+                        <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{formatNumber2(p.wholesale_price)} {currency}</span>
                       </div>
 
                       <div className="flex items-center gap-0.5">

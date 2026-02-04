@@ -108,10 +108,11 @@ class WarehouseProductSerializer(serializers.ModelSerializer):
 class WarehouseProductReadSerializer(serializers.ModelSerializer):
     warehouse_name = serializers.CharField(source='warehouse.name', read_only=True)
     warehouse_id = serializers.IntegerField(source='warehouse.id', read_only=True)
+    warehouse_currency = serializers.CharField(source='warehouse.currency.code',read_only=True)
 
     class Meta:
         model = WarehouseProduct
-        fields = ['warehouse_id', 'warehouse_name', 'quantity']
+        fields = ['warehouse_id', 'warehouse_name', 'quantity', "warehouse_currency"]
 
 
 
@@ -195,6 +196,7 @@ class ProductSerializer(serializers.ModelSerializer):
         # })
 
     def get_quantity_on_selected_warehouses(self, obj):
+        
         # warehouse_ids = self.context.get('warehouse_ids', [])
         if self.context:
 

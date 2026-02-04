@@ -3162,7 +3162,11 @@ def close_day(request):
                 prod = account_40_42[p.category.id]["products"][p.id]
                 cf = prod["product"]["cf"]
                 qty = Decimal(item.selected_quantity) / cf
-                calculated_price = qty * Decimal(item.selected_price)
+                calculated_price = qty * Decimal(p.wholesale_price)
+                if p.name == 'UYP-231, Srup 6.3*70 "PAiiA" (2kg/5guty)':
+                    ic(qty)
+                    ic(item.wholesale_price)
+                    ic(calculated_price)
                 # Проверяем принадлежность к выбранным складам
                 if inv.wozwrat_or_prihod == "prihod":
                     if inv.warehouse_id == w_acc.warehouse_id:

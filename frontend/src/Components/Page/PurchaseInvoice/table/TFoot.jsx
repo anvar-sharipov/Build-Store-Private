@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useFormikContext } from "formik";
 import { formatNumber } from "../../../UI/formatNumber";
 import { MyDecimalPrice, sumDiffMoney, sumMoney } from "../../../UI/MyDecimalPrice";
+import { formatNumber2 } from "../../../UI/formatNumber2";
 
 const TFoot = ({ printVisibleColumns, visibleColumns }) => {
   const { t } = useTranslation();
@@ -63,7 +64,7 @@ const TFoot = ({ printVisibleColumns, visibleColumns }) => {
         <th
           className={`px-1 text-right font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black whitespace-nowrap font-mono tabular-nums`}
         >
-          {formatNumber(total_selected_price, 2)}
+          {formatNumber2(total_selected_price, 2)}
         </th>
         <th
           className={`px-1 text-right font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black whitespace-nowrap font-mono tabular-nums ${
@@ -75,7 +76,7 @@ const TFoot = ({ printVisibleColumns, visibleColumns }) => {
             !visibleColumns.purchase ? "hidden" : "table-cell"
           } ${!printVisibleColumns.purchase ? "print:hidden" : "print:table-cell"}`}
         >
-          {formatNumber(total_purchase, 2)}
+          {formatNumber2(total_purchase, 2)}
         </th>
         <th
           className={`px-1 text-right font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black whitespace-nowrap font-mono tabular-nums ${
@@ -87,7 +88,7 @@ const TFoot = ({ printVisibleColumns, visibleColumns }) => {
             !visibleColumns.income ? "hidden" : "table-cell"
           } ${!printVisibleColumns.income ? "print:hidden" : "print:table-cell"}`}
         >
-          {formatNumber(total_income, 2)}
+          {formatNumber2(total_income, 2)}
         </th>
         <th
           className={`px-1 text-right font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black whitespace-nowrap font-mono tabular-nums ${
@@ -99,42 +100,42 @@ const TFoot = ({ printVisibleColumns, visibleColumns }) => {
             !visibleColumns.discount ? "hidden" : "table-cell"
           } ${!printVisibleColumns.discount ? "print:hidden" : "print:table-cell"}`}
         >
-          {formatNumber(total_discount_price, 2)}
+          {formatNumber2(total_discount_price, 2)}
         </th>
         <th
           className={`px-1 text-right font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black whitespace-nowrap font-mono tabular-nums ${
             !visibleColumns.volume ? "hidden" : "table-cell"
           } ${!printVisibleColumns.volume ? "print:hidden" : "print:table-cell"}`}
         >
-          {formatNumber(total_volume_price, 3)}
+          {formatNumber2(total_volume_price, 3)}
         </th>
         <th
           className={`px-1 text-right font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black whitespace-nowrap font-mono tabular-nums ${
             !visibleColumns.weight ? "hidden" : "table-cell"
           } ${!printVisibleColumns.weight ? "print:hidden" : "print:table-cell"}`}
         >
-          {formatNumber(total_weight_price, 3)}
+          {formatNumber2(total_weight_price, 3)}
         </th>
         <th
           className={`px-1 text-right font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black whitespace-nowrap font-mono tabular-nums ${
             !visibleColumns.dimensions ? "hidden" : "table-cell"
           } ${!printVisibleColumns.dimensions ? "print:hidden" : "print:table-cell"}`}
         >
-          {formatNumber(total_length_price, 3)}
+          {formatNumber2(total_length_price, 3)}
         </th>
         <th
           className={`px-1 text-right font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black whitespace-nowrap font-mono tabular-nums ${
             !visibleColumns.dimensions ? "hidden" : "table-cell"
           } ${!printVisibleColumns.dimensions ? "print:hidden" : "print:table-cell"}`}
         >
-          {formatNumber(total_width_price, 3)}
+          {formatNumber2(total_width_price, 3)}
         </th>
         <th
           className={`px-1 text-right font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black whitespace-nowrap font-mono tabular-nums ${
             !visibleColumns.dimensions ? "hidden" : "table-cell"
           } ${!printVisibleColumns.dimensions ? "print:hidden" : "print:table-cell"}`}
         >
-          {formatNumber(total_height_price, 3)}
+          {formatNumber2(total_height_price, 3)}
         </th>
       </tr>
     </tfoot>

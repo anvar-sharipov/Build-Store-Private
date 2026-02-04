@@ -179,6 +179,10 @@ urlpatterns = [
     
     
     
+    path('get_sum_for_header', get_sum_for_header, name='get_sum_for_header'),
+    
+    
+    
     
 ]
 

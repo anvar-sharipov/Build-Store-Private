@@ -9,6 +9,7 @@ import { useNotification } from "../../context/NotificationContext";
 import { getSaldoForPartner } from "../../../services/saldoService";
 // import Saldo2 from "../PurchaseInvoice/Utils/Saldo2";
 import Saldo2 from "../../UI/Saldo2";
+import { formatNumber2 } from "../../UI/formatNumber2";
 
 const List = ({
   partners,
@@ -249,7 +250,7 @@ const List = ({
                       <DollarSign className="w-4 h-4 text-green-500" />
                       USD
                     </div>
-                    <div className="text-lg font-bold text-gray-900 dark:text-white">{formatNumber(partner.balance_usd)}</div>
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">{formatNumber2(partner.balance_usd)}</div>
                   </motion.div>
 
                   <motion.div variants={balanceVariants} className="text-right">
@@ -257,7 +258,7 @@ const List = ({
                       <TrendingUp className="w-4 h-4 text-orange-500" />
                       TMT
                     </div>
-                    <div className="text-lg font-bold text-gray-900 dark:text-white">{formatNumber(partner.balance_tmt)}</div>
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">{formatNumber2(partner.balance_tmt)}</div>
                   </motion.div>
 
                   {/* Actions */}

@@ -708,7 +708,7 @@ def BuhOborotTowarowExcel(request):
         prod = account_40_42[p.category.id]["products"][p.id]
         cf = prod["product"]["cf"]
         qty = Decimal(item.selected_quantity) / cf
-        calculated_price = qty * Decimal(item.selected_price)
+        calculated_price = qty * Decimal(p.wholesale_price)
         # Проверяем принадлежность к выбранным складам
         if inv.wozwrat_or_prihod == "prihod":
             if inv.warehouse_id in warehouse_ids:

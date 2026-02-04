@@ -482,6 +482,7 @@ def get_entries_without_faktura(request):
 def get_detail_account_60_62(request):
     
     def money(value: Decimal) -> Decimal:
+        value = Decimal(value)
         return value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
     account_number = request.GET.get('account')

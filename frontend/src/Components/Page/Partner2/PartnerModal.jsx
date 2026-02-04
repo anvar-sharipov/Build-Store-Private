@@ -111,8 +111,14 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
       {/* <Notification message={t(notification.message)} type={notification.type} onClose={() => setNotification({ message: "", type: "" })} /> */}
       <MyModal2
         onClose={() => {
-          partnersListRefs.current[focusedPartnerIndex].focus()
-          setFocusedPartnerIndex(null)
+          const el = partnersListRefs?.current?.[focusedPartnerIndex];
+
+          if (el && typeof el.focus === "function") {
+            el.focus();
+          }
+
+          // partnersListRefs.current[focusedPartnerIndex].focus();
+          setFocusedPartnerIndex(null);
 
           return setOpenModal(false);
         }}
@@ -127,7 +133,6 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
           initialValues={partnerValue}
           validationSchema={PartnerSchema}
           onSubmit={(values) => {
-       
             if (values.create) {
               setLoading(true);
               const handleCreate = async () => {
@@ -151,11 +156,9 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
             } else {
               setLoading(true);
               const handleUpdate = async () => {
-
-
                 try {
                   const res = await myAxios.put(`partners/${partnerValue?.id}/`, values);
-     
+
                   const updatedPartner = res.data.partner;
                   setPartners((prev) => prev.map((p) => (p.id === updatedPartner.id ? updatedPartner : p)));
                   setFocusedPartnerId(updatedPartner.id);
@@ -204,10 +207,6 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                       />
                       <span className="text-gray-700 dark:text-gray-300">{t("klient")}</span>
                     </label>
-
- 
-
- 
 
                     <label className="inline-flex items-center space-x-2">
                       <input
@@ -285,7 +284,6 @@ const PartnerModal = ({ partnerValue, PartnerSchema, setOpenModal, setPartners, 
                   </div>
                   {touched.name && errors.name && <div className="text-sm text-red-500 mt-1">{errors.name}</div>}
                 </div>
-
 
                 {/* Name agent */}
                 <div className={myClass.border}>

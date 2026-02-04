@@ -7,6 +7,7 @@ import TDPrice from "./TDPrice";
 import { HiX } from "react-icons/hi";
 import { MyDecimalPrice } from "../../../UI/MyDecimalPrice";
 import Decimal from "decimal.js";
+import { formatNumber2 } from "../../../UI/formatNumber2";
 
 // const BASE_URL = import.meta.env.VITE_BASE_URL;
 const BASE_URL = import.meta.env.VITE_BASE_URL || "";
@@ -163,84 +164,84 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
               setFocusedQuantityRow={setFocusedQuantityRow}
             />
             <td className="pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 print:!text-black print:!border-black text-right whitespace-nowrap font-mono tabular-nums">
-              {formatNumber(total_price, 2)}
+              {formatNumber2(total_price, 2)}
             </td>
             <td
               className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400  text-right whitespace-nowrap font-mono tabular-nums ${
                 !visibleColumns.purchase ? "hidden" : "table-cell"
               } ${!printVisibleColumns.purchase ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
-              {formatNumber(product.purchase_price, 3)}
+              {formatNumber2(product.purchase_price, 3)}
             </td>
             <td
               className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
                 !visibleColumns.purchase ? "hidden" : "table-cell"
               } ${!printVisibleColumns.purchase ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
-              {formatNumber(total_purchase, 2)}
+              {formatNumber2(total_purchase, 2)}
             </td>
             <td
               className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
                 !visibleColumns.income ? "hidden" : "table-cell"
               } ${!printVisibleColumns.income ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
-              {formatNumber(income_1pc, 3)}
+              {formatNumber2(income_1pc, 3)}
             </td>
             <td
               className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
                 !visibleColumns.income ? "hidden" : "table-cell"
               } ${!printVisibleColumns.income ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
-              {formatNumber(income_total, 2)}
+              {formatNumber2(income_total, 2)}
             </td>
             <td
               className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
                 !visibleColumns.discount ? "hidden" : "table-cell"
               } ${!printVisibleColumns.discount ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
-              {formatNumber(discount_1pc, 3)}
+              {formatNumber2(discount_1pc, 3)}
             </td>
             <td
               className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
                 !visibleColumns.discount ? "hidden" : "table-cell"
               } ${!printVisibleColumns.discount ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
-              {formatNumber(total_discount, 2)}
+              {formatNumber2(total_discount, 2)}
             </td>
             <td
               className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
                 !visibleColumns.volume ? "hidden" : "table-cell"
               } ${!printVisibleColumns.volume ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
-              {formatNumber(total_volume, 3)}
+              {formatNumber2(total_volume, 3)}
             </td>
             <td
               className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
                 !visibleColumns.weight ? "hidden" : "table-cell"
               } ${!printVisibleColumns.weight ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
-              {formatNumber(total_weight, 3)}
+              {formatNumber2(total_weight, 3)}
             </td>
             <td
               className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
                 !visibleColumns.dimensions ? "hidden" : "table-cell"
               } ${!printVisibleColumns.dimensions ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
-              {formatNumber(total_length, 3)}
+              {formatNumber2(total_length, 3)}
             </td>
             <td
               className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
                 !visibleColumns.dimensions ? "hidden" : "table-cell"
               } ${!printVisibleColumns.dimensions ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
-              {formatNumber(total_width, 3)}
+              {formatNumber2(total_width, 3)}
             </td>
             <td
               className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 text-right whitespace-nowrap font-mono tabular-nums ${
                 !visibleColumns.dimensions ? "hidden" : "table-cell"
               } ${!printVisibleColumns.dimensions ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
             >
-              {formatNumber(total_height, 3)}
+              {formatNumber2(total_height, 3)}
             </td>
           </tr>
         );

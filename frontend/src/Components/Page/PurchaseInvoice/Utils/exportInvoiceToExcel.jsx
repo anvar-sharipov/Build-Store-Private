@@ -10,7 +10,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
   try {
     // 1. Создание книги и листа
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Накладная с сальдо");
+    const worksheet = workbook.addWorksheet("Фактура с сальдо");
 
     // 2. Добавление логотипа (маленький как во втором примере)
     try {
@@ -138,7 +138,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
 
       // Данные товаров - с ПОЛНОЙ РАМКОЙ
       dataRow: {
-        font: { size: 9 },
+        font: { size: 12 },
         alignment: { horizontal: "left", vertical: "middle" },
         border: {
           top: { style: "thin", color: { argb: "FF000000" } },
@@ -149,7 +149,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
       },
 
       numberCell: {
-        font: { size: 9 },
+        font: { size: 12 },
         alignment: { horizontal: "center", vertical: "middle" },
         border: {
           top: { style: "thin", color: { argb: "FF000000" } },
@@ -160,7 +160,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
       },
 
       numberRightCell: {
-        font: { size: 9 },
+        font: { size: 12 },
         alignment: { horizontal: "right", vertical: "middle" },
         border: {
           top: { style: "thin", color: { argb: "FF000000" } },
@@ -204,6 +204,11 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
 
       boldInfoCell: {
         font: { size: 10, bold: true },
+        alignment: { horizontal: "left", vertical: "middle" },
+      },
+
+      partnerCell: {
+        font: { size: 16, bold: true },
         alignment: { horizontal: "left", vertical: "middle" },
       },
 
@@ -296,15 +301,15 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
       partnerInfo.getCell(1).style = styles.boldInfoCell;
 
       let partnerText = values.partner.name;
-      if (values.partner?.phone) {
-        partnerText += ` (Тел: ${values.partner.phone})`;
-      }
-      if (values.partner?.address) {
-        partnerText += `, Адрес: ${values.partner.address}`;
-      }
+      // if (values.partner?.phone) {
+      //   partnerText += ` (Тел: ${values.partner.phone})`;
+      // }
+      // if (values.partner?.address) {
+      //   partnerText += `, Адрес: ${values.partner.address}`;
+      // }
 
       partnerInfo.getCell(2).value = partnerText;
-      partnerInfo.getCell(2).style = styles.infoCell;
+      partnerInfo.getCell(2).style = styles.partnerCell;
       currentRow++;
     }
 
@@ -358,14 +363,14 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
 
       // Расчет значений для строки
       const qty = formatNumber(product.selected_quantity);
-      const price = formatNumber(product.selected_price);
-      const purchasePrice = formatNumber(product.purchase_price);
-      const wholesalePrice = formatNumber(product.wholesale_price);
-      const volume = formatNumber(product.volume);
-      const weight = formatNumber(product.weight);
-      const length = formatNumber(product.length);
-      const width = formatNumber(product.width);
-      const height = formatNumber(product.height);
+      const price = formatNumber2(product.selected_price);
+      const purchasePrice = formatNumber2(product.purchase_price);
+      const wholesalePrice = formatNumber2(product.wholesale_price);
+      const volume = formatNumber2(product.volume);
+      const weight = formatNumber2(product.weight);
+      const length = formatNumber2(product.length);
+      const width = formatNumber2(product.width);
+      const height = formatNumber2(product.height);
 
       const totalPrice = qty * price;
       const totalPurchase = qty * purchasePrice;
@@ -619,15 +624,34 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
     // }
 
     currentRow += 2;
+    const applySaldoRowBorder = (row, bold = false) => {
+      for (let col = 1; col <= 4; col++) {
+        const cell = row.getCell(col);
+
+        // важно: если ячейка пустая — создаём
+        if (cell.value === undefined) {
+          cell.value = "";
+        }
+
+        cell.style = {
+          ...styles.saldoData,
+          font: bold ? { bold: true } : styles.saldoData.font,
+          alignment: {
+            horizontal: col >= 3 ? "right" : "left",
+            vertical: "middle",
+          },
+        };
+      }
+    };
 
     // 14. Добавляем КОМПАКТНОЕ САЛЬДО если есть данные
     if (saldo && (saldo["60_USD"] || saldo["75_USD"])) {
       // Заголовок сальдо с указанием партнера
-      const saldoTitleRow = worksheet.getRow(currentRow);
-      saldoTitleRow.getCell(1).value = `Карточка сальдо: ${values.partner?.name || "Партнер"}`;
-      saldoTitleRow.getCell(1).style = styles.saldoHeader;
-      worksheet.mergeCells(currentRow, 1, currentRow, 4);
-      currentRow++;
+      // const saldoTitleRow = worksheet.getRow(currentRow);
+      // saldoTitleRow.getCell(1).value = `Карточка сальдо: ${values.partner?.name || "Партнер"}`;
+      // saldoTitleRow.getCell(1).style = styles.saldoHeader;
+      // worksheet.mergeCells(currentRow, 1, currentRow, 4);
+      // currentRow++;
 
       // Компактная функция для добавления таблицы счета
       const addCompactAccountTable = (accountKey, accountName) => {
@@ -635,11 +659,11 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
         if (!accountData) return;
 
         // Название счета (компактно)
-        const accountNameRow = worksheet.getRow(currentRow);
-        accountNameRow.getCell(1).value = accountName;
-        accountNameRow.getCell(1).style = { ...styles.boldInfoCell, fill: { type: "pattern", pattern: "solid", fgColor: { argb: "FFF2F2F2" } } };
-        worksheet.mergeCells(currentRow, 1, currentRow, 4);
-        currentRow++;
+        // const accountNameRow = worksheet.getRow(currentRow);
+        // accountNameRow.getCell(1).value = accountName;
+        // accountNameRow.getCell(1).style = { ...styles.boldInfoCell, fill: { type: "pattern", pattern: "solid", fgColor: { argb: "FFF2F2F2" } } };
+        // worksheet.mergeCells(currentRow, 1, currentRow, 4);
+        // currentRow++;
 
         // Заголовки таблицы
         const saldoHeaderRow = worksheet.getRow(currentRow);
@@ -657,10 +681,19 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
         const openingRow = worksheet.getRow(currentRow);
         openingRow.getCell(1).value = "Начало";
         openingRow.getCell(2).value = "Остаток на начало";
-        openingRow.getCell(3).value = formatNumber2(accountData.start?.[0]) || "0";
+        const start_calc = accountData.start?.[0] - accountData.start?.[1]
+        let start_debit = 0 
+        let start_credit = 0 
+        if (start_calc > 0) {
+          start_debit = start_calc
+        } else if (start_calc < 0) {
+          start_credit = Math.abs(start_calc)
+        }
+        openingRow.getCell(3).value = formatNumber2(start_debit) || "0";
         openingRow.getCell(3).style = { ...styles.saldoData, alignment: { horizontal: "right" } };
-        openingRow.getCell(4).value = formatNumber2(accountData.start?.[1]) || "0";
+        openingRow.getCell(4).value = formatNumber2(start_credit) || "0";
         openingRow.getCell(4).style = { ...styles.saldoData, alignment: { horizontal: "right" } };
+        applySaldoRowBorder(openingRow);
         currentRow++;
 
         // Обороты за день (максимум 5 последних операций)
@@ -675,6 +708,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
             dataRow.getCell(3).style = { ...styles.saldoData, alignment: { horizontal: "right" } };
             dataRow.getCell(4).value = entry[3] !== "0" ? formatNumber2(entry[3]) : "-";
             dataRow.getCell(4).style = { ...styles.saldoData, alignment: { horizontal: "right" } };
+            applySaldoRowBorder(dataRow);
             currentRow++;
           });
 
@@ -686,6 +720,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
             worksheet.mergeCells(currentRow, 2, currentRow, 4);
             currentRow++;
           }
+     
         }
 
         // Итоговый оборот (одна строка)
@@ -696,6 +731,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
         totalRow.getCell(3).style = { ...styles.saldoData, alignment: { horizontal: "right" }, font: { bold: true } };
         totalRow.getCell(4).value = formatNumber2(accountData.final?.[1]) || "0";
         totalRow.getCell(4).style = { ...styles.saldoData, alignment: { horizontal: "right" }, font: { bold: true } };
+        applySaldoRowBorder(totalRow, true);
         currentRow++;
 
         // Конечное сальдо (одна строка)
@@ -706,6 +742,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
         closingRow.getCell(3).style = { ...styles.saldoData, alignment: { horizontal: "right" }, font: { bold: true } };
         closingRow.getCell(4).value = accountData.saldo?.[1] !== "0" ? formatNumber2(accountData.saldo?.[1]) : "-";
         closingRow.getCell(4).style = { ...styles.saldoData, alignment: { horizontal: "right" }, font: { bold: true } };
+        applySaldoRowBorder(closingRow, true);
         currentRow += 2;
       };
 
@@ -722,7 +759,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
     // 15. Автонастройка ширины колонок для сальдо
     worksheet.columns = [
       { width: 10 }, // A: Дата/Тип
-      { width: 30 }, // B: Описание
+      { width: 60 }, // B: Описание
       { width: 12 }, // C: Дебет
       { width: 12 }, // D: Кредит
       ...columnMapping.slice(4).map((col) => ({ width: col.width })), // Остальные колонки основной таблицы

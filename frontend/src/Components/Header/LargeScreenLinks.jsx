@@ -10,11 +10,13 @@ import { useNotification } from "../context/NotificationContext";
 import CloseDayModal from "./modals/CloseDayModal";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleSnowfall } from "../../app/store/snowfallSlice";
+import { formatNumber2 } from "../UI/formatNumber2";
 
 const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDarkMode, darkMode, i18n, user, setShowAvatarModal }) => {
   const { dateFrom, setDateFrom, dateTo, setDateTo, dateProwodok, setDateProwodok } = useContext(DateContext);
   const { showNotification } = useNotification();
   const { authUser, authGroup } = useContext(AuthContext);
+  const [totalSum, setTotalSum] = useState(null);
 
   const jingleBells = useRef(null);
 
@@ -33,6 +35,25 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
 
     dispatch(toggleSnowfall());
   };
+
+  // berem faktura i prihod summy
+  useEffect(() => {
+    const fetchSum = async () => {
+      try {
+        const res = await myAxios.get("get_sum_for_header", {
+          params: {
+            dateFrom: dateFrom,
+            dateTo: dateTo, // отправляем пароль на бэкенд
+          },
+        });
+
+        setTotalSum(res.data);
+      } catch (err) {
+        console.log("can't getSum");
+      }
+    };
+    fetchSum();
+  }, [dateFrom, dateTo]);
 
   // // const jingleBells = useRef(new Audio("/audio/Christmas-jingle-bells-melody.mp3"));
   // const jingleBells = new Audio("/sounds/Christmas-jingle-bells-melody.mp3");
@@ -168,6 +189,19 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
         <div className="hidden lg:flex items-center gap-4 xl:gap-6">
           {/* Date Sections */}
           <div className="flex  items-center gap-3 xl:gap-4">
+            {totalSum && (
+              <div className="text-gray-300 flex flex-col text-sm">
+                <div className="flex gap-3">
+                  <span>{t("faktura")}:</span>
+                  <span>{totalSum?.credit_40 ? `${formatNumber2(totalSum.credit_40)} USD` : ""} {totalSum.credit_42 ? `${formatNumber2(totalSum.credit_42)}TMT` : ""}</span>
+                </div>
+                <div className="flex gap-4">
+                  <span>{t("prihod")}:</span>
+                  <span>{totalSum.debit_50 ? `${formatNumber2(totalSum.debit_50)} USD` : ""} {totalSum.debit_52 ? `${formatNumber2(totalSum.debit_52)}TMT` : ""}</span>
+                </div>
+              </div>
+            )}
+
             {/* Дата проводок */}
             <motion.div
               initial={{ opacity: 0, y: -10 }}

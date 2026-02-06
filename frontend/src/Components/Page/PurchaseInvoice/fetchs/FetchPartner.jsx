@@ -129,7 +129,7 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo, getSaldo, saldo2, g
 
   if (values.partner?.id) {
     return (
-      <div className="w-full flex items-center justify-between print:hidden my-1 gap-3 mt-5">
+      <div className="w-full flex items-center justify-between print:hidden my-1 gap-3 mt-5 text-sm">
         <div
           className={`flex items-center gap-2 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 dark:bg-gray-800 shadow-sm flex-1 ${
             isFocused ? "bg-indigo-200 dark:bg-indigo-600" : "bg-white"

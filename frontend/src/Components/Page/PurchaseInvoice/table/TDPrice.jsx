@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { forwardRef, useEffect, useState } from "react";
 import { useFormikContext } from "formik";
 import { formatNumber } from "../../../UI/formatNumber";
+import { formatNumber2 } from "../../../UI/formatNumber2";
 
 const TDPrice = forwardRef(({ product, onFocusPriceRow, onBlurPriceRow, setFocusedPriceRow, setFocusedQuantityRow, refs }, ref) => {
   const { values, setFieldValue } = useFormikContext();
@@ -77,7 +78,7 @@ const TDPrice = forwardRef(({ product, onFocusPriceRow, onBlurPriceRow, setFocus
         type="text"
         inputMode="decimal" // для мобильных клавиатур с цифрами
         className={`my-1 dark:bg-gray-900 w-[90%] ${product.is_custom_price ? "bg-green-300 dark:bg-green-900" : "bg-white dark:bg-gray-900"} print:hidden`}
-        value={values.products[productIndex]?.selected_price ?? ""}
+        value={formatNumber2(values.products[productIndex]?.selected_price, 3) ?? ""}
         onFocus={() => {
           onFocusPriceRow(); // родительская функция
           setFocusedPriceRow(product.id);
@@ -103,7 +104,7 @@ const TDPrice = forwardRef(({ product, onFocusPriceRow, onBlurPriceRow, setFocus
         }}
         onKeyDown={handleKeyNavigation}
       />
-      <div className="hidden print:block">{formatNumber(values.products[productIndex]?.selected_price, 3)}</div>
+      <div className="hidden print:block">{formatNumber2(values.products[productIndex]?.selected_price, 3)}</div>
       {localError && <div className="text-red-500 text-xs print:hidden">{localError}</div>}
     </td>
   );

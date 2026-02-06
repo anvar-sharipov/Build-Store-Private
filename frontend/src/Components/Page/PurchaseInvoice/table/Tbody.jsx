@@ -116,7 +116,7 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
                 >
                   <HiX className="w-4 h-4" />
                 </button>
-                <span>{idx + 1}</span>
+                <span className="print:pl-2">{idx + 1}</span>
               </div>
             </td>
 

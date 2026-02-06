@@ -249,7 +249,7 @@ const DetailReport6062 = () => {
             dateTo,
             accountNumber,
             t,
-            hyphenOr0
+            hyphenOr0,
           );
         }
       } catch (error) {
@@ -277,8 +277,6 @@ const DetailReport6062 = () => {
         const res = await myAxios.get("get_detail_account_60_62", {
           params: { account: accountNumber, dateFrom, dateTo, agent, sortByAgent, show0, hyphenOr0 },
         });
-
-  
 
         if (sortByAgent === "true") {
           // Данные с группировкой по агентам
@@ -574,42 +572,51 @@ const DetailReport6062 = () => {
 
                       <tbody className="print:dark:[&_td]:!text-black">
                         <AnimatePresence>
-                          {partners.map((row, index) => (
-                            <motion.tr
-                              key={`${agentName}-${row.partner_id}`}
-                              variants={tableRowVariants}
-                              initial="hidden"
-                              animate="visible"
-                              exit="hidden"
-                              onDoubleClick={() => handleRowClick(row.partner_id, row.account_id)}
-                              className="hover:bg-gray-100 dark:hover:bg-gray-700/50 print:hover:bg-transparent print:break-inside-avoid print:dark:!bg-white"
-                            >
-                              <td className="px-1 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-center dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                                {index + 1}
-                              </td>
-                              <td className="px-2 py-2 text-gray-800 border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-1 print:py-1 print:text-xs print:dark:!text-black">
-                                {row.partner_name}
-                              </td>
-                              <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                                {formatNumber2(row.debit_before, 2, hyphenOr0)}
-                              </td>
-                              <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                                {formatNumber2(row.credit_before, 2, hyphenOr0)}
-                              </td>
-                              <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                                {formatNumber2(row.debit_oborot, 2, hyphenOr0)}
-                              </td>
-                              <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                                {formatNumber2(row.credit_oborot, 2, hyphenOr0)}
-                              </td>
-                              <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                                {formatNumber2(row.saldo_end_debit, 2, hyphenOr0)}
-                              </td>
-                              <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                                {formatNumber2(row.saldo_end_credit, 2, hyphenOr0)}
-                              </td>
-                            </motion.tr>
-                          ))}
+                          {partners.map((row, index) => {
+                            let start_saldo_debit = 0;
+                            let start_saldo_credit = 0;
+                            if (row.debit_before - row.credit_before > 0) {
+                              start_saldo_debit = row.debit_before - row.credit_before;
+                            } else if (row.debit_before - row.credit_before < 0) {
+                              start_saldo_credit = Math.abs(row.debit_before - row.credit_before);
+                            }
+                            return (
+                              <motion.tr
+                                key={`${agentName}-${row.partner_id}`}
+                                variants={tableRowVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="hidden"
+                                onDoubleClick={() => handleRowClick(row.partner_id, row.account_id)}
+                                className="hover:bg-gray-100 dark:hover:bg-gray-700/50 print:hover:bg-transparent print:break-inside-avoid print:dark:!bg-white"
+                              >
+                                <td className="px-1 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-center dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                                  {index + 1}
+                                </td>
+                                <td className="px-2 py-2 text-gray-800 border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-1 print:py-1 print:text-xs print:dark:!text-black">
+                                  {row.partner_name}
+                                </td>
+                                <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                                  {formatNumber2(start_saldo_debit, 2, hyphenOr0)}
+                                </td>
+                                <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                                  {formatNumber2(start_saldo_credit, 2, hyphenOr0)}
+                                </td>
+                                <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                                  {formatNumber2(row.debit_oborot, 2, hyphenOr0)}
+                                </td>
+                                <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                                  {formatNumber2(row.credit_oborot, 2, hyphenOr0)}
+                                </td>
+                                <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                                  {formatNumber2(row.saldo_end_debit, 2, hyphenOr0)}
+                                </td>
+                                <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                                  {formatNumber2(row.saldo_end_credit, 2, hyphenOr0)}
+                                </td>
+                              </motion.tr>
+                            );
+                          })}
                         </AnimatePresence>
                       </tbody>
 
@@ -982,8 +989,13 @@ const DetailReport6062 = () => {
               <tbody className="print:dark:[&_td]:!text-black">
                 <AnimatePresence>
                   {sortedData.map((row, index) => {
-             
-
+                    let start_saldo_debit = 0;
+                    let start_saldo_credit = 0;
+                    if (row.debit_before - row.credit_before > 0) {
+                      start_saldo_debit = row.debit_before - row.credit_before;
+                    } else if (row.debit_before - row.credit_before < 0) {
+                      start_saldo_credit = Math.abs(row.debit_before - row.credit_before);
+                    }
                     return (
                       <motion.tr
                         key={index}
@@ -992,7 +1004,6 @@ const DetailReport6062 = () => {
                         animate="visible"
                         exit="hidden"
                         onDoubleClick={() => {
-                
                           handleRowClick(row.partner_id, row.account_id);
                         }}
                         className="hover:bg-gray-100 dark:hover:bg-gray-700/50
@@ -1022,7 +1033,7 @@ const DetailReport6062 = () => {
                                    print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                    print:dark:!text-black"
                         >
-                          {formatNumber2(row.debit_before, 2, hyphenOr0)}
+                          {formatNumber2(start_saldo_debit, 2, hyphenOr0)}
                         </td>
                         <td
                           className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right
@@ -1030,7 +1041,7 @@ const DetailReport6062 = () => {
                                    print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                    print:dark:!text-black"
                         >
-                          {formatNumber2(row.credit_before, 2, hyphenOr0)}
+                          {formatNumber2(start_saldo_credit, 2, hyphenOr0)}
                         </td>
 
                         <td

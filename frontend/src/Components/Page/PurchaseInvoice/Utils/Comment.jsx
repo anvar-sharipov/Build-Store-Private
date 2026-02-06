@@ -14,7 +14,7 @@ const Comment = ({ id = "comment", rows = 1, maxLength = 500 }) => {
   
 
   return (
-    <div className="w-full">
+    <div className="w-full text-sm">
       <label
         htmlFor={id}
         className={`block mb-1 text-sm font-medium 

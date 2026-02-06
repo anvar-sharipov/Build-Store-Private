@@ -446,6 +446,18 @@ def get_saldo2(partner_obj, getDate):
         debit_start = entries_start.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
         credit_start = entries_start.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
         
+        start_saldo_debit = Decimal("0.00")
+        start_saldo_credit = Decimal("0.00")
+        if (debit_start - credit_start) > 0:
+            start_saldo_debit = debit_start - credit_start
+        elif (debit_start - credit_start) < 0:
+            start_saldo_credit = abs(debit_start - credit_start)
+            
+        # if account.number == "60":
+        #     ic(debit_start)
+        #     ic(credit_start)
+        #     ic(debit_start - credit_start)
+        
         # Обороты за выбранную дату
         entries_oborot = Entry.objects.filter(
             partner=partner_obj,  # ← ИЗМЕНИЛИ
@@ -454,6 +466,10 @@ def get_saldo2(partner_obj, getDate):
         
         debit_oborot = entries_oborot.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
         credit_oborot = entries_oborot.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
+        # if account.number == "60":
+        #     ic(debit_oborot)
+        #     ic(credit_oborot)
+        #     ic(debit_oborot - credit_oborot)
         
         # Детали операций за день (аналогично оригинальной функции)
         today_entries = []
@@ -477,8 +493,14 @@ def get_saldo2(partner_obj, getDate):
                 desc += "\n"
         
         # Итоговые расчеты
-        debit_end = debit_start + debit_oborot
-        credit_end = credit_start + credit_oborot
+        
+        # debit_end = debit_start + debit_oborot
+        debit_end = start_saldo_debit + debit_oborot
+        if account.number == "60":
+            ic(debit_end)
+            # ic(credit_oborot)
+            # ic(debit_oborot - credit_oborot)
+        credit_end = start_saldo_credit + credit_oborot
         saldo = debit_end - credit_end
         saldo_debit = abs(saldo) if saldo > 0 else 0
         saldo_credit = abs(saldo) if saldo < 0 else 0
@@ -491,6 +513,7 @@ def get_saldo2(partner_obj, getDate):
             "saldo": [saldo_debit, saldo_credit],
             "today_entries": today_entries
         }
+        # ic(results)
     
     return results
 

@@ -10,6 +10,9 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
   const { values } = useFormikContext();
   const { t } = useTranslation();
 
+  console.log("saldo2", saldo2);
+  
+
   const handleOpenInvoice = (id) => {
     const url = id ? `/purchase-invoices/update/${id}` : ROUTES.PURCHASE_INVOICE_CREATE;
     window.open(url, "invoiceWindow", "width=1000,height=700,scrollbars=yes,resizable=yes");
@@ -45,8 +48,8 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
     }
 
     return (
-      <div key={accountKey} className="mb-4 print:mb-2 print:w-1/2 print:inline-block print:align-top print:px-1">
-        <table className="w-full table-auto border-collapse print:text-[8px]">
+      <div key={accountKey} className="mb-4 print:mb-2 print:w-1/2 print:inline-block print:align-top print:px-1 text-sm">
+        <table className="w-full table-auto border-collapse print:text-sm">
           <thead>
             <tr className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 print:bg-white print:!text-black">
               <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">{t("Date")}</th>
@@ -123,7 +126,7 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
     >
       {/* Header with Print Icon */}
       <div className="flex items-center justify-center gap-2 mb-3 print:mb-1">
-        <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100 print:!text-black print:text-xs">
+        <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100 print:!text-black print:hidden">
           {t("card")}: {values.partner?.name}
         </h2>
         <div className="print:hidden">

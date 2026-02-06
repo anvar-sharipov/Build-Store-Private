@@ -24,6 +24,7 @@ import exportInvoiceWithSaldoToExcel from "./exportInvoiceToExcel";
 import { FileDown } from "lucide-react";
 import { DateContext } from "../../../UI/DateProvider";
 import { getSaldoForPartner } from "../../../../services/saldoService";
+import MyFormatDate from "../../../UI/MyFormatDate";
 
 
 const InvoiceHead = ({
@@ -41,11 +42,13 @@ const InvoiceHead = ({
   id,
   authGroup,
 
-  Saldo2,
+  saldo2,
   letPrintSaldo,
   setLetPrintSaldo,
   setSaldo2,
 }) => {
+  console.log("saldo2222", saldo2);
+  
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { dateProwodok } = useContext(DateContext);
@@ -70,6 +73,7 @@ const InvoiceHead = ({
     try {
       const saldo = await getSaldoForPartner(date, partnerId);
       console.log("saldo", saldo);
+      
       setSaldoForExcel(saldo);
     } catch (err) {
       console.log("Ошибка при получении сальдо", err);
@@ -198,7 +202,7 @@ const InvoiceHead = ({
   };
 
   return (
-    <div className={`flex justify-between items-center border-b-2 border-gray-700 dark:border-gray-500 print:!border-black p-2 ${fakturaBgDynamic}`}>
+    <div className={`flex justify-between items-center border-b-2 border-gray-700 dark:border-gray-500 print:!border-black p-2 ${fakturaBgDynamic} text-sm`}>
       {openModal && (
         <SettingsModal
           setOpenModal={setOpenModal}
@@ -244,7 +248,8 @@ const InvoiceHead = ({
               printVisibleColumns,
               t,// передаем данные сальдо
               values.awto,
-              saldoForExcel
+              saldoForExcel,
+              saldo2,
             )
           }
           className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 print:hidden"
@@ -402,10 +407,11 @@ const InvoiceHead = ({
     focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
     focus:border-blue-500 dark:focus:border-blue-400
     disabled:opacity-50 disabled:cursor-not-allowed
-    print:border-0 print:bg-transparent print:shadow-none print:outline-none
+    print:hidden
   `}
           />
           {/* {touched.invoice_date && errors.invoice_date && <div className="text-red-500 text-sm mt-1">{errors.invoice_date}</div>} */}
+          <div className="hidden print:!text-black print:block">{MyFormatDate(values.invoice_date2)}</div>
         </div>
       ) : (
         <div>
@@ -420,7 +426,7 @@ const InvoiceHead = ({
               }
             }}
             value={values.invoice_date}
-            className={invoiceClasses.dateInput}
+            className={`${invoiceClasses.dateInput}`}
           />
           {/* {touched.invoice_date && errors.invoice_date && <div className="text-red-500 text-sm mt-1">{errors.invoice_date}</div>} */}
         </div>
@@ -439,20 +445,19 @@ const InvoiceHead = ({
         </div>
       )}
 
-      {values.already_entry && dayIsClosed && (
+      {/* {values.already_entry && dayIsClosed && (
         <div className="print:hidden">
           <MyButton type="button" disabled="disabled" variant="red">
             {t("Day already closed")}
           </MyButton>
         </div>
-      )}
+      )} */}
 
-      {values.products && values.products.length > 0 && (
+      {/* {values.products && values.products.length > 0 && (
         <div className="print:hidden">
-          {/* <FaReceipt /> */}
           <PrintInvoiceButton invoiceData={values} />
         </div>
-      )}
+      )} */}
 
       {/* Логотип */}
       <div>

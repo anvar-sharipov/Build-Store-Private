@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import myAxios from "../../../axios";
 import { DateContext } from "../../../UI/DateProvider";
 import { Printer } from "lucide-react";
+import MyFormatDate from "../../../UI/MyFormatDate";
 
 const formatNumber = (v) => {
   const num = Number(v) || 0;
@@ -39,9 +40,9 @@ const AccountCardDetail = () => {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-900 p-2 max-w-7xl mx-auto print:p-1 print:bg-white print:text-xs min-h-screen">
+    <div className="bg-white dark:bg-gray-900 p-2 w-full mx-auto print:p-1 print:bg-white text-sm print:!text-[14px] min-h-screen">
       {/* Кнопка печати */}
-      <div className="mb-2 print:hidden flex justify-end">
+      {/* <div className="mb-2 print:hidden flex justify-end">
         <button
           type="button"
           onClick={handlePrint}
@@ -50,24 +51,30 @@ const AccountCardDetail = () => {
           <Printer className="w-3 h-3" />
           Печать
         </button>
+      </div> */}
+      <div className="text-center text-[20px]">
+        <div className="font-bold">Карточки клиентов</div>
+        <div>
+          Период с {MyFormatDate(dateFrom)} по {MyFormatDate(dateTo)}
+        </div>
       </div>
 
       {/* Карточки */}
-      <div className="space-y-4 print:space-y-2">
+      <div className="space-y-4 print:space-y-2 mt-3">
         {cards.map((data, i) => (
           <div key={i} className="print:break-inside-avoid print:mb-1">
             {/* Таблица */}
-            <table className="w-full border-collapse border border-gray-800 dark:border-gray-400 print:text-xs print:leading-tight">
+            <table className="w-full border-collapse border border-gray-800 dark:border-gray-400 print:leading-tight">
               <thead>
                 <tr className="bg-gray-200 dark:bg-gray-800 print:bg-gray-200">
                   <th colSpan={5} className="border border-gray-800 dark:border-gray-400 p-1 text-left dark:text-white print:text-black print:border-gray-800">
                     <div>
-                      <h2 className="text-sm font-semibold mb-0 print:text-xs">
+                      <h2 className="text-sm font-semibold mb-0 text-center">
                         Карточка счёта: {data.account} {data.partner && `— ${data.partner}`}
                       </h2>
-                      <p className="text-xs mb-0 text-gray-700 dark:text-gray-300 print:text-gray-700 print:text-xs">
+                      {/* <p className="text-xs mb-0 text-gray-700 dark:text-gray-300 print:text-gray-700">
                         Период с {data.date_from} по {data.date_to}
-                      </p>
+                      </p> */}
                     </div>
                   </th>
                 </tr>
@@ -84,13 +91,9 @@ const AccountCardDetail = () => {
                 <tr className="font-semibold bg-gray-50 dark:bg-gray-800 print:bg-gray-100">
                   <td className="border border-gray-800 dark:border-gray-400 p-1 dark:text-gray-200 print:text-black print:border-gray-800">{data.date_from}</td>
                   <td className="border border-gray-800 dark:border-gray-400 p-1 dark:text-gray-200 print:text-black print:border-gray-800">Saldo на начало</td>
-                  <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-200 print:text-black print:border-gray-800">
-                    {formatNumber(data.saldo_start)}
-                  </td>
+                  <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-200 print:text-black print:border-gray-800">{formatNumber(data.saldo_start)}</td>
                   <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-200 print:text-black print:border-gray-800">—</td>
-                  <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-200 print:text-black print:border-gray-800">
-                    {formatNumber(data.saldo_start)}
-                  </td>
+                  <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-200 print:text-black print:border-gray-800">{formatNumber(data.saldo_start)}</td>
                 </tr>
 
                 {/* Операции */}
@@ -99,15 +102,11 @@ const AccountCardDetail = () => {
                     <tr key={idx} className="dark:bg-gray-900">
                       <td className="border border-gray-800 dark:border-gray-400 p-1 dark:text-gray-300 print:text-black print:border-gray-800">{m.date}</td>
                       <td className="border border-gray-800 dark:border-gray-400 p-1 dark:text-gray-300 print:text-black print:border-gray-800">{m.description}</td>
-                      <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-300 print:text-black print:border-gray-800">
-                        {m.debit ? formatNumber(m.debit) : "—"}
-                      </td>
+                      <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-300 print:text-black print:border-gray-800">{m.debit ? formatNumber(m.debit) : "—"}</td>
                       <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-300 print:text-black print:border-gray-800">
                         {m.credit ? formatNumber(m.credit) : "—"}
                       </td>
-                      <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-300 print:text-black print:border-gray-800">
-                        {formatNumber(m.saldo)}
-                      </td>
+                      <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-300 print:text-black print:border-gray-800">{formatNumber(m.saldo)}</td>
                     </tr>
                   ))
                 ) : (
@@ -122,12 +121,8 @@ const AccountCardDetail = () => {
                 <tr className="font-semibold bg-gray-100 dark:bg-gray-800 print:bg-gray-200">
                   <td className="border border-gray-800 dark:border-gray-400 p-1 dark:text-gray-200 print:text-black print:border-gray-800"></td>
                   <td className="border border-gray-800 dark:border-gray-400 p-1 dark:text-gray-200 print:text-black print:border-gray-800">Обороты за период</td>
-                  <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-200 print:text-black print:border-gray-800">
-                    {formatNumber(data.debit_turnover)}
-                  </td>
-                  <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-200 print:text-black print:border-gray-800">
-                    {formatNumber(data.credit_turnover)}
-                  </td>
+                  <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-200 print:text-black print:border-gray-800">{formatNumber(data.debit_turnover)}</td>
+                  <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-200 print:text-black print:border-gray-800">{formatNumber(data.credit_turnover)}</td>
                   <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-200 print:text-black print:border-gray-800">—</td>
                 </tr>
 
@@ -135,13 +130,9 @@ const AccountCardDetail = () => {
                 <tr className="font-semibold bg-gray-50 dark:bg-gray-800 print:bg-gray-100">
                   <td className="border border-gray-800 dark:border-gray-400 p-1 dark:text-gray-200 print:text-black print:border-gray-800">{data.date_to}</td>
                   <td className="border border-gray-800 dark:border-gray-400 p-1 dark:text-gray-200 print:text-black print:border-gray-800">Saldo на конец</td>
-                  <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-200 print:text-black print:border-gray-800">
-                    {formatNumber(data.saldo_end)}
-                  </td>
+                  <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-200 print:text-black print:border-gray-800">{formatNumber(data.saldo_end)}</td>
                   <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-200 print:text-black print:border-gray-800">—</td>
-                  <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-200 print:text-black print:border-gray-800">
-                    {formatNumber(data.saldo_end)}
-                  </td>
+                  <td className="border border-gray-800 dark:border-gray-400 p-1 text-right dark:text-gray-200 print:text-black print:border-gray-800">{formatNumber(data.saldo_end)}</td>
                 </tr>
               </tbody>
             </table>
@@ -151,7 +142,7 @@ const AccountCardDetail = () => {
 
       {/* Дата формирования */}
       {cards.length > 0 && (
-        <div className="mt-4 text-xs text-gray-600 dark:text-gray-400 print:text-gray-600 print:mt-2">
+        <div className="mt-4 text-xs text-gray-600 dark:text-gray-400 print:text-black print:mt-2">
           <p>Дата формирования: {new Date().toLocaleDateString("ru-RU")}</p>
         </div>
       )}

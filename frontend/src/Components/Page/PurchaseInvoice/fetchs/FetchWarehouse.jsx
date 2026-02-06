@@ -71,7 +71,7 @@ function FetchWarehouse() {
   
 
   return (
-    <div className="w-full flex-1 print:hidden">
+    <div className="w-full flex-1 print:hidden text-sm">
       {values.wozwrat_or_prihod === "transfer" ? (
         <label className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">{t("from warehouse")}</label>
       ) : (

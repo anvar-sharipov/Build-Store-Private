@@ -4,6 +4,7 @@ import { FileText, ArrowUpCircle, ArrowDownCircle, RefreshCw, User, DollarSign, 
 import { motion, AnimatePresence } from "framer-motion";
 import { formatNumber } from "../../UI/formatNumber";
 import { GiCoins } from "react-icons/gi";
+import { formatNumber2 } from "../../UI/formatNumber2";
 
 const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
   const { t } = useTranslation();
@@ -185,15 +186,15 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                       <div className="grid grid-cols-2 gap-2 mb-2">
                         <div className="px-2 py-1 bg-blue-50 dark:bg-blue-900/30 rounded-md text-right">
                           <span className="block text-[10px] text-blue-600 dark:text-blue-400">{t("Price")}</span>
-                          <span className="text-sm font-bold text-blue-700 dark:text-blue-300">{formatNumber(invoice.total_selected_price, 2)}</span>
+                          <span className="text-sm font-bold text-blue-700 dark:text-blue-300">{formatNumber2(invoice.total_selected_price, 2)}</span>
                         </div>
                         <div className="px-2 py-1 bg-emerald-50 dark:bg-emerald-900/30 rounded-md text-right">
                           <span className="block text-[10px] text-emerald-600 dark:text-emerald-400">{t("Revenue")}</span>
-                          <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">{formatNumber(invoice.total_income_price, 2)}</span>
+                          <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">{formatNumber2(invoice.total_income_price, 2)}</span>
                         </div>
                         <div className="px-2 py-1 bg-amber-50 dark:bg-amber-900/30 rounded-md text-right">
                           <span className="block text-[10px] text-amber-600 dark:text-amber-400">{t("Discount")}</span>
-                          <span className="text-sm font-bold text-amber-700 dark:text-amber-300">{formatNumber(invoice.total_dicount_price, 2)}</span>
+                          <span className="text-sm font-bold text-amber-700 dark:text-amber-300">{formatNumber2(invoice.total_dicount_price, 2)}</span>
                         </div>
                         <div className="px-2 py-1 bg-gray-50 dark:bg-gray-800/30 rounded-md text-right">
                           <span className="block text-[10px] text-gray-600 dark:text-gray-400">{t("Date")}</span>
@@ -395,7 +396,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                               <GiCoins className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
                               <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase">{t("Price")}</span>
                             </div>
-                            <span className="text-xs font-bold text-blue-700 dark:text-blue-300">{formatNumber(invoice.total_selected_price, 2)}</span>
+                            <span className="text-xs font-bold text-blue-700 dark:text-blue-300">{formatNumber2(invoice.total_selected_price, 2)}</span>
                           </div>
 
                           {/* Доход */}
@@ -404,7 +405,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                               <TrendingUp className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
                               <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">{t("Revenue")}</span>
                             </div>
-                            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">{formatNumber(invoice.total_income_price, 2)}</span>
+                            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">{formatNumber2(invoice.total_income_price, 2)}</span>
                           </div>
 
                           {/* Скидка */}
@@ -413,7 +414,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                               <Tag className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
                               <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase">{t("Discount")}</span>
                             </div>
-                            <span className="text-xs font-bold text-amber-700 dark:text-amber-300">{formatNumber(invoice.total_dicount_price, 2)}</span>
+                            <span className="text-xs font-bold text-amber-700 dark:text-amber-300">{formatNumber2(invoice.total_dicount_price, 2)}</span>
                           </div>
                         </div>
                       </div>
@@ -662,7 +663,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                               <GiCoins className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                               <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide">{t("Price")}</span>
                             </div>
-                            <div className="text-lg font-extrabold text-blue-700 dark:text-blue-300">{formatNumber(invoice.total_selected_price, 3)}</div>
+                            <div className="text-lg font-extrabold text-blue-700 dark:text-blue-300">{formatNumber2(invoice.total_selected_price, 3)}</div>
                           </div>
                         </div>
 
@@ -674,7 +675,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                               <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">{t("Revenue")}</span>
                             </div>
-                            <div className="text-lg font-extrabold text-emerald-700 dark:text-emerald-300">{formatNumber(invoice.total_income_price, 3)}</div>
+                            <div className="text-lg font-extrabold text-emerald-700 dark:text-emerald-300">{formatNumber2(invoice.total_income_price, 3)}</div>
                           </div>
                         </div>
 
@@ -686,7 +687,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                               <Tag className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                               <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide">{t("Discount")}</span>
                             </div>
-                            <div className="text-lg font-extrabold text-amber-700 dark:text-amber-300">{formatNumber(invoice.total_dicount_price, 3)}</div>
+                            <div className="text-lg font-extrabold text-amber-700 dark:text-amber-300">{formatNumber2(invoice.total_dicount_price, 3)}</div>
                           </div>
                         </div>
                       </div>
@@ -839,7 +840,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                               <GiCoins className="w-3 h-3 text-blue-500" />
                               <span className="text-[10px] font-medium text-blue-600 dark:text-blue-400 uppercase">{t("Price")}</span>
                             </div>
-                            <span className="text-sm font-bold text-blue-700 dark:text-blue-300">{formatNumber(invoice.total_selected_price, 3)}</span>
+                            <span className="text-sm font-bold text-blue-700 dark:text-blue-300">{formatNumber2(invoice.total_selected_price, 3)}</span>
                           </div>
 
                           {/* Доход */}
@@ -848,7 +849,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                               <TrendingUp className="w-3 h-3 text-emerald-500" />
                               <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 uppercase">{t("Revenue")}</span>
                             </div>
-                            <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">{formatNumber(invoice.total_income_price, 3)}</span>
+                            <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">{formatNumber2(invoice.total_income_price, 3)}</span>
                           </div>
 
                           {/* Скидка */}
@@ -857,7 +858,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                               <Tag className="w-3 h-3 text-amber-500" />
                               <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400 uppercase">{t("Discount")}</span>
                             </div>
-                            <span className="text-sm font-bold text-amber-700 dark:text-amber-300">{formatNumber(invoice.total_dicount_price, 3)}</span>
+                            <span className="text-sm font-bold text-amber-700 dark:text-amber-300">{formatNumber2(invoice.total_dicount_price, 3)}</span>
                           </div>
 
                           {/* Статус проведения */}

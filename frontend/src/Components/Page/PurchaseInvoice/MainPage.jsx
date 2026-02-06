@@ -279,6 +279,8 @@ const MainPage = () => {
       });
       // console.log("saldo", saldo.data.saldo);
       setSaldo2(saldo.data.saldo);
+      // console.log("saldo.data.saldo", saldo.data.saldo);
+      
       // console.log('DADADADAD');
     } catch (error) {
       console.log("error get_saldo_for_partner_for_selected_date2 from fetchPartner", error);
@@ -385,7 +387,7 @@ const MainPage = () => {
                 id={id}
                 showNotification={showNotification}
                 authGroup={authGroup}
-                Saldo2={Saldo2}
+                saldo2={saldo2}
                 letPrintSaldo={letPrintSaldo}
                 setLetPrintSaldo={setLetPrintSaldo} 
                 setSaldo2={setSaldo2}

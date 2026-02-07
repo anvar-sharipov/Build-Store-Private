@@ -6,6 +6,8 @@ import { useEffect, useRef, useState, useContext } from "react";
 import { motion } from "framer-motion";
 import myAxios from "../../../axios";
 import { AuthContext } from "../../../../AuthContext";
+import { sumMoney } from "../../../UI/MyDecimalPrice";
+import { formatNumber2 } from "../../../UI/formatNumber2";
 
 const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
   const { values, setFieldValue } = useFormikContext();
@@ -14,6 +16,27 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
   const [dayIsClosed, setDayIsClosed] = useState(false);
   const [lastDayIsNotClosed, setLastDayIsNotClosed] = useState(false);
   const { authUser, authGroup } = useContext(AuthContext);
+  const [currency, setCurrency] = useState("");
+
+  useEffect(() => {
+    const fetchWarehouseCurrency = async () => {
+      try {
+        const res = await myAxios.get("get_warehouse_id_and_currency");
+        if (!values.warehouse?.id) {
+          setCurrency("");
+          return;
+        }
+        const warehouse = res.data.find((w) => w.warehouse_id === values.warehouse.id);
+
+        setCurrency(warehouse?.currency_code || "");
+      } catch (e) {
+        console.error("Ошибка при загрузке fetchWarehouseCurrency:", e);
+      }
+    };
+    fetchWarehouseCurrency();
+  }, [values.warehouse]);
+
+  const total_selected_price = sumMoney(values.products, "selected_price", "selected_quantity");
 
   const formatDateToDDMMYYYY = (dateStr) => {
     if (!dateStr) return "";
@@ -74,6 +97,8 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
   }, []);
 
   if (authGroup !== "admin") return;
+
+  console.log("value gggg", values);
 
   return (
     <div className="flex items-center sm:flex-row gap-4 mt-6 sm:mr-6 ml-5 print:hidden text-sm">
@@ -268,7 +293,52 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
             className="flex flex-col items-center gap-6 p-8"
           >
             {/* Header with icon */}
-            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1, type: "spring", stiffness: 200 }} className="flex flex-col items-center gap-4">
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1, type: "spring", stiffness: 200 }} className="grid grid-cols-1 place-items-center gap-4">
+              {/* Иконка */}
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 rounded-full flex items-center justify-center shadow-lg">
+                <motion.svg
+                  initial={{ y: -5, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="w-8 h-8 text-blue-600 dark:text-blue-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </motion.svg>
+              </div>
+
+              {/* Текстовый контент - одна колонка сетки */}
+              <div className="grid grid-cols-1 gap-2 w-full max-w-md place-items-center">
+                {/* Заголовок с датой */}
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="grid grid-cols-1 gap-2 place-items-center w-full">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 text-center">
+                    {t("save")} {t(fakturaType)} {t("faktura")} {values?.id}
+                  </h3>
+
+                  <span className="px-3 py-1.5 bg-blue-100 text-blue-800 font-semibold rounded-md shadow-sm dark:bg-blue-900 dark:text-blue-200 text-center w-auto">
+                    {values.id ? formatDateToDDMMYYYY(values.invoice_date2) : formatDateToDDMMYYYY(dateProwodok)}
+                  </span>
+                </motion.div>
+
+                {/* Информация о партнере и цене */}
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="grid grid-cols-1 gap-1 place-items-center w-full">
+                  <div className="text-lg text-gray-900 dark:text-gray-100 text-center">
+                    {t("partner")}: {values?.partner?.name}
+                  </div>
+                  <div className="text-lg text-gray-900 dark:text-gray-100 text-center">
+                    {t(values.type_price)}: <span className="font-bold text-red-800 dark:text-red-500">{formatNumber2(total_selected_price, 2, false)}</span> {currency}
+                  </div>
+                </motion.div>
+
+                {/* Подтверждающее сообщение */}
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-sm text-gray-600 dark:text-gray-400 text-center mt-2">
+                  {t("confirm_save_document")}
+                </motion.p>
+              </div>
+            </motion.div>
+            {/* <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1, type: "spring", stiffness: 200 }} className="flex flex-col items-center gap-4">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 rounded-full flex items-center justify-center shadow-lg">
                 <motion.svg
                   initial={{ y: -5, opacity: 0 }}
@@ -290,16 +360,24 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
                     {values.id ? formatDateToDDMMYYYY(values.invoice_date2) : formatDateToDDMMYYYY(dateProwodok)}
                   </span>
                 </motion.h3>
+                <motion.h3 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="text-xl text-gray-900 dark:text-gray-100 mb-2 flex flex-col">
+                  <span>
+                    {t("partner")}: {values?.partner?.name}
+                  </span>
+                  <span>
+                    {t("wholesale_price")}: {total_selected_price} {currency}
+                  </span>
+                </motion.h3>
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-sm text-gray-600 dark:text-gray-400">
                   {t("confirm_save_document")}
                 </motion.p>
               </div>
-            </motion.div>
+            </motion.div> */}
 
             {/* Action buttons */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="flex gap-4 w-full max-w-xs">
               {/* Cancel button */}
-              <motion.button
+              {/* <motion.button
                 type="button"
                 ref={modalNoBtn}
                 onKeyDown={(e) => {
@@ -320,7 +398,7 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
                   </motion.svg>
                   {t("cancel")}
                 </div>
-              </motion.button>
+              </motion.button> */}
 
               {/* Save button */}
               <motion.button

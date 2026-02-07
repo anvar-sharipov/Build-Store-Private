@@ -298,6 +298,7 @@ def get_account_for_osw2(request):
         initial_debit = entries_before.aggregate(total=Sum('debit'))['total'] or 0
         initial_credit = entries_before.aggregate(total=Sum('credit'))['total'] or 0
         initial_balance = initial_debit - initial_credit
+        
 
         # Проводки в период
         entries_period = Entry.objects.filter(account=a)

@@ -121,5 +121,26 @@ def get_sum_for_header(request):
     return Response(data)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_warehouse_id_and_currency(request):
+    
+    warehouses = Warehouse.objects.all()
+    data = []
+    
+    for w in warehouses:
+        d = {
+            "warehouse_id": w.id,
+            "currency_code": w.currency.code if w.currency else "",
+            "currency_name": w.currency.name if w.currency else "",
+        }
+        data.append(d)
+    
+    
+    
+    return Response(data)
+    
+
+
 
 

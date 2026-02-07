@@ -26,7 +26,11 @@ const Partner2 = () => {
 
   // paginations i query
   const [searchParams] = useSearchParams();
+
+  const [inputValue, setInputValue] = useState("");
   const [query, setQuery] = useState("");
+
+
 
   const [count, setCount] = useState(0);
   const [next, setNext] = useState(null);
@@ -235,6 +239,9 @@ const Partner2 = () => {
         partners={partners}
         setUpdateMode={setUpdateMode}
         count={count}
+
+        inputValue={inputValue}
+        setInputValue={setInputValue}
       />
       {openModal && (
         <PartnerModal

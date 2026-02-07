@@ -704,7 +704,10 @@
   "deviation": "Отклонение",
   "discounts": "Скидки",
   "markups": "Наценки",
-  "deviation_percent": "% отклонения"
+  "deviation_percent": "% отклонения",
+  "choose diapazon date": "Выберите диапазон дат",
+  "invalid diapazon date format": "Неверный формат диапазона дат",
+  "date start must be <= date end": "Дата начала должна быть меньше или равна дате окончания"
 
 
  

@@ -309,6 +309,7 @@ class PartnerViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         queryset = super().get_queryset()
+   
         
         queryset = queryset.annotate(
             computed_balance_usd=Coalesce(

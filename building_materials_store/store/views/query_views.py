@@ -2640,8 +2640,15 @@ def close_day(request):
         ws[f"A{row}"] = data["number"]
         ws[f"B{row}"] = data["name"]
         
-        ws[f"C{row}"] = data["debit_start"]
-        ws[f"D{row}"] = data["credit_start"]
+        start_osw_debit = Decimal("0.00")
+        start_osw_credit = Decimal("0.00")
+        if (data["debit_start"] - data["credit_start"]) > 0:
+            start_osw_debit = data["debit_start"] - data["credit_start"]
+        elif (data["debit_start"] - data["credit_start"]) < 0:
+            start_osw_credit = abs(data["debit_start"] - data["credit_start"])
+        
+        ws[f"C{row}"] = start_osw_debit
+        ws[f"D{row}"] = start_osw_credit
         
         ws[f"E{row}"] = data["debit_turnover"]
         ws[f"F{row}"] = data["credit_turnover"]
@@ -2651,8 +2658,10 @@ def close_day(request):
         
         if data["closing_balance"] >= 0:
             ws[f"G{row}"] = data["closing_balance"]   # дебет
+            ws[f"H{row}"] = Decimal("0.00") 
         else:
             ws[f"H{row}"] = abs(data["closing_balance"])  # кредит
+            ws[f"G{row}"] = Decimal("0.00") 
             
         row += 1
         

@@ -24,6 +24,8 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
     jingleBells.current = new Audio("/sounds/Christmas-jingle-bells-melody.mp3");
   }, []);
 
+
+
   const handleClick = () => {
     if (!isSnowfallOn) {
       jingleBells.current.currentTime = 0;

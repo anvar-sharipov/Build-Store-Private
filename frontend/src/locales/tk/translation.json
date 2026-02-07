@@ -675,7 +675,10 @@
   "deviation": "Sowulma",
   "discounts": "Arzanladyşlar",
   "markups": "Goşmaçalar",
-  "deviation_percent": "% Sowulma"
+  "deviation_percent": "% Sowulma",
+  "choose diapazon date": "Sene aralygyny saýlaň",
+  "invalid diapazon date format": "Sene aralygynyň formady nädogry",
+  "date start must be <= date end": "Başlangyç senesi gutarýan seneden kiçi ýa-da deň bolmaly"
 
 
 

@@ -22,6 +22,7 @@ const ProductAddAndSearchSection = ({ t, products, listItemRefs, totalCount, sea
   const debounceTimeoutRef = useRef(null);
 
   const handleSearchChange = (e) => {
+    
     const value = e.target.value;
     setTempSearch(value);
 

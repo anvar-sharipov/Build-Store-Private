@@ -3,31 +3,36 @@ import { saveAs } from "file-saver";
 import MyFormatDate from "../../UI/MyFormatDate";
 import { formatNumber2 } from "../../UI/formatNumber2";
 
+const toNumber = (v) => {
+  if (v === "-" || v === null || v === undefined) return null;
+  return Number(String(v).replace(",", "."));
+};
+
 const AgentReport2Excel = async (data, totals, grandTotals, dateFrom, dateTo, accountNumber, sortByAgent, t, hyphenOr0) => {
   // 1. Создание книги и листа
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("ОСВ по агентам");
 
   // 2. Добавление логотипа
-  try {
-    const logoUrl = `${window.location.origin}/polisem.png`;
-    const response = await fetch(logoUrl);
-    const blob = await response.blob();
-    const buffer = await blob.arrayBuffer();
+  // try {
+  //   const logoUrl = `${window.location.origin}/polisem.png`;
+  //   const response = await fetch(logoUrl);
+  //   const blob = await response.blob();
+  //   const buffer = await blob.arrayBuffer();
 
-    const imageId = workbook.addImage({
-      buffer: buffer,
-      extension: "png",
-    });
+  //   const imageId = workbook.addImage({
+  //     buffer: buffer,
+  //     extension: "png",
+  //   });
 
-    worksheet.addImage(imageId, {
-      tl: { col: 0, row: 0 },
-      br: { col: 2, row: 5 },
-      editAs: "oneCell",
-    });
-  } catch (error) {
-    console.warn("Логотип не загружен:", error);
-  }
+  //   worksheet.addImage(imageId, {
+  //     tl: { col: 0, row: 0 },
+  //     br: { col: 2, row: 5 },
+  //     editAs: "oneCell",
+  //   });
+  // } catch (error) {
+  //   console.warn("Логотип не загружен:", error);
+  // }
 
   // 3. Настройка колонок
   worksheet.columns = [
@@ -98,10 +103,10 @@ const AgentReport2Excel = async (data, totals, grandTotals, dateFrom, dateTo, ac
         wrapText: (col) => col === 2,
       },
       border: {
-        top: { style: "thin", color: { argb: "FFD9D9D9" } },
-        bottom: { style: "thin", color: { argb: "FFD9D9D9" } },
-        left: { style: "thin", color: { argb: "FFD9D9D9" } },
-        right: { style: "thin", color: { argb: "FFD9D9D9" } },
+        top: { style: "thin", color: { argb: "FF000000" } },
+        bottom: { style: "thin", color: { argb: "FF000000" } },
+        left: { style: "thin", color: { argb: "FF000000" } },
+        right: { style: "thin", color: { argb: "FF000000" } },
       },
       fill: rowIndex % 2 === 0 ? { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFFFF" } } : { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8F8F8" } },
     }),
@@ -144,45 +149,49 @@ const AgentReport2Excel = async (data, totals, grandTotals, dateFrom, dateTo, ac
   const formatDate = MyFormatDate;
 
   // Главный заголовок (строка 6)
-  const titleRow = worksheet.getRow(6);
+  const titleRow = worksheet.getRow(1);
+  worksheet.mergeCells("A1:H1");
   titleRow.getCell(1).value = "Оборотно-сальдовая ведомость по счету (группировка по агентам)";
-  titleRow.getCell(1).style = styles.header1;
-  worksheet.mergeCells("A6:H6");
+  titleRow.getCell(1).font = { size: 12, bold: true };
+  titleRow.getCell(1).alignment = { horizontal: "center", vertical: "middle" };
+
+  // titleRow.getCell(1).style = styles.header1;
+  worksheet.mergeCells("A2:H2");
 
   // Подзаголовок периода (строка 7)
-  const periodRow = worksheet.getRow(7);
+  const periodRow = worksheet.getRow(2);
   periodRow.getCell(1).value = `Период: ${formatDate(dateFrom)} - ${formatDate(dateTo)} | Счет: ${accountNumber}`;
-  periodRow.getCell(1).style = styles.header2;
-  worksheet.mergeCells("A7:H7");
+  periodRow.getCell(1).font = { size: 12, bold: true };
+  periodRow.getCell(1).alignment = { horizontal: "center", vertical: "middle" };
+  // periodRow.getCell(1).style = styles.header2;
+  // worksheet.mergeCells("A7:H7");
 
   // Дата формирования и дополнительная информация (строка 8)
-  const infoRow = worksheet.getRow(8);
-  infoRow.getCell(2).value = "Дата формирования:";
-  infoRow.getCell(2).style = { ...styles.infoCell, font: { ...styles.infoCell.font, bold: true } };
+  // const infoRow = worksheet.getRow(8);
+  // infoRow.getCell(2).value = "Дата формирования:";
+  // infoRow.getCell(2).style = { ...styles.infoCell, font: { ...styles.infoCell.font, bold: true } };
 
-  infoRow.getCell(3).value = formatDate(new Date().toISOString());
-  infoRow.getCell(3).style = styles.infoCell;
+  // infoRow.getCell(3).value = formatDate(new Date().toISOString());
+  // infoRow.getCell(3).style = styles.infoCell;
 
-  worksheet.mergeCells("C8:H8");
-  infoRow.getCell(3).style = styles.infoCell;
+  // worksheet.mergeCells("C8:H8");
+  // infoRow.getCell(3).style = styles.infoCell;
 
-  let currentRow = 10;
+  let currentRow = 3;
   const formatNumber = (num) => parseFloat(num || 0).toFixed(2);
 
   // 5. Добавление данных по агентам
   Object.entries(data).forEach(([agentName, partners]) => {
-
-
     const agentTotalsData = totals[agentName]?.[0];
     if (!partners || !Array.isArray(partners) || partners.length === 0) return;
 
     const displayAgentName = agentName === "no_agent" ? t("noAgent") || "Без агента" : agentName;
 
     // Заголовок агента (строка для названия агента)
-    const agentHeaderRow = worksheet.getRow(currentRow);
-    agentHeaderRow.getCell(2).value = displayAgentName;
-    agentHeaderRow.getCell(2).style = styles.agentHeader;
-    worksheet.mergeCells(`B${currentRow}:H${currentRow}`);
+    // const agentHeaderRow = worksheet.getRow(currentRow);
+    // agentHeaderRow.getCell(2).value = displayAgentName;
+    // agentHeaderRow.getCell(2).style = styles.agentHeader;
+    // worksheet.mergeCells(`B${currentRow}:H${currentRow}`);
     currentRow++;
 
     // Заголовки таблицы
@@ -206,15 +215,44 @@ const AgentReport2Excel = async (data, totals, grandTotals, dateFrom, dateTo, ac
     // Данные контрагентов
     partners.forEach((row, index) => {
       const dataRow = worksheet.getRow(currentRow);
+      // for (let i = 1; i <= 8; i++) {
+      //   dataRow.getCell(i).border = {
+      //     top: { style: "thin", color: { argb: "FF000000" } },
+      //     bottom: { style: "thin", color: { argb: "FF000000" } },
+      //     left: { style: "thin", color: { argb: "FF000000" } },
+      //     right: { style: "thin", color: { argb: "FF000000" } },
+      //   };
+      // }
 
       dataRow.getCell(1).value = index + 1;
       dataRow.getCell(2).value = row.partner_name;
-      dataRow.getCell(3).value = formatNumber2(row.debit_before, 2, hyphenOr0) // parseFloat(row.debit_before || 0);
-      dataRow.getCell(4).value = formatNumber2(row.credit_before, 2, hyphenOr0) // parseFloat(row.credit_before || 0);
-      dataRow.getCell(5).value = formatNumber2(row.debit_oborot, 2, hyphenOr0) // parseFloat(row.debit_oborot || 0);
-      dataRow.getCell(6).value = formatNumber2(row.credit_oborot, 2, hyphenOr0) // parseFloat(row.credit_oborot || 0);
-      dataRow.getCell(7).value = formatNumber2(row.saldo_end_debit, 2, hyphenOr0) // parseFloat(row.saldo_end_debit || 0);
-      dataRow.getCell(8).value = formatNumber2(row.saldo_end_credit, 2, hyphenOr0) // parseFloat(row.saldo_end_credit || 0);
+
+      // // Зелёный
+      // dataRow.getCell(5).font = { color: { argb: "FF00B050" } };
+      // // Красный
+      // dataRow.getCell(6).font = { color: { argb: "FFFF0000" } };
+
+      let start_saldo_debit = 0;
+      let start_saldo_credit = 0;
+      if (row.debit_before - row.credit_before > 0) {
+        start_saldo_debit = row.debit_before - row.credit_before;
+      } else if (row.debit_before - row.credit_before < 0) {
+        start_saldo_credit = Math.abs(row.debit_before - row.credit_before);
+      }
+
+      // dataRow.getCell(3).value = formatNumber2(start_saldo_debit, 2, hyphenOr0); // parseFloat(row.debit_before || 0);
+      // dataRow.getCell(4).value = formatNumber2(start_saldo_credit, 2, hyphenOr0); // parseFloat(row.credit_before || 0);
+      // dataRow.getCell(5).value = formatNumber2(row.debit_oborot, 2, hyphenOr0); // parseFloat(row.debit_oborot || 0);
+      // dataRow.getCell(6).value = formatNumber2(row.credit_oborot, 2, hyphenOr0); // parseFloat(row.credit_oborot || 0);
+      // dataRow.getCell(7).value = formatNumber2(row.saldo_end_debit, 2, hyphenOr0); // parseFloat(row.saldo_end_debit || 0);
+      // dataRow.getCell(8).value = formatNumber2(row.saldo_end_credit, 2, hyphenOr0); // parseFloat(row.saldo_end_credit || 0);
+
+      dataRow.getCell(3).value = toNumber(start_saldo_debit); // parseFloat(row.debit_before || 0);
+      dataRow.getCell(4).value = toNumber(start_saldo_credit); // parseFloat(row.credit_before || 0);
+      dataRow.getCell(5).value = toNumber(row.debit_oborot); // parseFloat(row.debit_oborot || 0);
+      dataRow.getCell(6).value = toNumber(row.credit_oborot); // parseFloat(row.credit_oborot || 0);
+      dataRow.getCell(7).value = toNumber(row.saldo_end_debit); // parseFloat(row.saldo_end_debit || 0);
+      dataRow.getCell(8).value = toNumber(row.saldo_end_credit); // parseFloat(row.saldo_end_credit || 0);
 
       // Применение стилей
       for (let i = 1; i <= 8; i++) {
@@ -225,6 +263,14 @@ const AgentReport2Excel = async (data, totals, grandTotals, dateFrom, dateTo, ac
         if (i >= 3) {
           cell.numFmt = "# ##0.00;[Red]-# ##0.00";
         }
+        if (i == 5) {
+          // Зелёный
+          dataRow.getCell(5).font = { color: { argb: "FF00B050" } };
+        }
+        if (i == 6) {
+          // Красный
+          dataRow.getCell(6).font = { color: { argb: "FFFF0000" } };
+        }
       }
 
       currentRow++;
@@ -232,50 +278,54 @@ const AgentReport2Excel = async (data, totals, grandTotals, dateFrom, dateTo, ac
 
     // Итоги по агенту (развернутые)
     if (agentTotalsData) {
+      // console.log("agentTotalsData", agentTotalsData);
+      
       const subtotalExpandedRow = worksheet.getRow(currentRow);
-      subtotalExpandedRow.getCell(2).value = `Итого развернуто ${displayAgentName}:`;
-      subtotalExpandedRow.getCell(3).value = formatNumber2(agentTotalsData.debit_before_total, 2, hyphenOr0) // parseFloat(agentTotalsData.debit_before_total || 0);
-      subtotalExpandedRow.getCell(4).value = formatNumber2(agentTotalsData.credit_before_total, 2, hyphenOr0) // parseFloat(agentTotalsData.credit_before_total || 0);
-      subtotalExpandedRow.getCell(5).value = formatNumber2(agentTotalsData.debit_oborot_total, 2, hyphenOr0) // parseFloat(agentTotalsData.debit_oborot_total || 0);
-      subtotalExpandedRow.getCell(6).value = formatNumber2(agentTotalsData.credit_oborot_total, 2, hyphenOr0) // parseFloat(agentTotalsData.credit_oborot_total || 0);
-      subtotalExpandedRow.getCell(7).value = formatNumber2(agentTotalsData.saldo_end_debit_total, 2, hyphenOr0) // parseFloat(agentTotalsData.saldo_end_debit_total || 0);
-      subtotalExpandedRow.getCell(8).value = formatNumber2(agentTotalsData.saldo_end_credit_total, 2, hyphenOr0) // parseFloat(agentTotalsData.saldo_end_credit_total || 0);
+      subtotalExpandedRow.getCell(2).value = `Итого ${displayAgentName}:`;
+      // subtotalExpandedRow.getCell(2).value = `Итого развернуто ${displayAgentName}:`;
+      subtotalExpandedRow.getCell(3).value = toNumber(agentTotalsData.debit_before_total); // parseFloat(agentTotalsData.debit_before_total || 0);
+      subtotalExpandedRow.getCell(4).value = toNumber(agentTotalsData.credit_before_total); // parseFloat(agentTotalsData.credit_before_total || 0);
+      subtotalExpandedRow.getCell(5).value = toNumber(agentTotalsData.debit_oborot_total); // parseFloat(agentTotalsData.debit_oborot_total || 0);
+      subtotalExpandedRow.getCell(6).value = toNumber(agentTotalsData.credit_oborot_total); // parseFloat(agentTotalsData.credit_oborot_total || 0);
+      subtotalExpandedRow.getCell(7).value = toNumber(agentTotalsData.saldo_end_debit_total); // parseFloat(agentTotalsData.saldo_end_debit_total || 0);
+      subtotalExpandedRow.getCell(8).value = toNumber(agentTotalsData.saldo_end_credit_total); // parseFloat(agentTotalsData.saldo_end_credit_total || 0);
 
       for (let i = 1; i <= 8; i++) {
         const cell = subtotalExpandedRow.getCell(i);
-        cell.style = styles.subtotalRow;
-        if (i >= 3) {
-          cell.numFmt = "# ##0.00;[Red]-# ##0.00";
-        }
-      }
-      worksheet.mergeCells(`A${currentRow}:B${currentRow}`);
-      currentRow++;
-
-      // Итоги по агенту (сальдированные)
-      const subtotalRow = worksheet.getRow(currentRow);
-      subtotalRow.getCell(2).value = `Итого ${displayAgentName}:`;
-      subtotalRow.getCell(3).value = parseFloat(agentTotalsData.saldo_summ_before_debit || 0);
-      subtotalRow.getCell(4).value = parseFloat(agentTotalsData.saldo_summ_before_credit || 0);
-      subtotalRow.getCell(5).value = parseFloat(agentTotalsData.saldo_summ_oborot_debit || 0);
-      subtotalRow.getCell(6).value = parseFloat(agentTotalsData.saldo_summ_oborot_credit || 0);
-      subtotalRow.getCell(7).value = parseFloat(agentTotalsData.saldo_summ_end_debit || 0);
-      subtotalRow.getCell(8).value = parseFloat(agentTotalsData.saldo_summ_end_credit || 0);
-
-      for (let i = 1; i <= 8; i++) {
-        const cell = subtotalRow.getCell(i);
         cell.style = styles.totalRow;
         if (i >= 3) {
           cell.numFmt = "# ##0.00;[Red]-# ##0.00";
         }
       }
-      worksheet.mergeCells(`A${currentRow}:B${currentRow}`);
-      currentRow++;
+      // worksheet.mergeCells(`A${currentRow}:B${currentRow}`);
+      // currentRow++;
+
+      // // Итоги по агенту (сальдированные)
+      // const subtotalRow = worksheet.getRow(currentRow);
+      // subtotalRow.getCell(2).value = `Итого ${displayAgentName}:`;
+      // subtotalRow.getCell(3).value = parseFloat(agentTotalsData.saldo_summ_before_debit || 0);
+      // subtotalRow.getCell(4).value = parseFloat(agentTotalsData.saldo_summ_before_credit || 0);
+      // subtotalRow.getCell(5).value = parseFloat(agentTotalsData.saldo_summ_oborot_debit || 0);
+      // subtotalRow.getCell(6).value = parseFloat(agentTotalsData.saldo_summ_oborot_credit || 0);
+      // subtotalRow.getCell(7).value = parseFloat(agentTotalsData.saldo_summ_end_debit || 0);
+      // subtotalRow.getCell(8).value = parseFloat(agentTotalsData.saldo_summ_end_credit || 0);
+
+      // for (let i = 1; i <= 8; i++) {
+      //   const cell = subtotalRow.getCell(i);
+      //   cell.style = styles.totalRow;
+      //   if (i >= 3) {
+      //     cell.numFmt = "# ##0.00;[Red]-# ##0.00";
+      //   }
+      // }
+      // worksheet.mergeCells(`A${currentRow}:B${currentRow}`);
+      // currentRow++;
     }
 
     // Пустая строка между агентами
     currentRow++;
   });
 
+  
   // 6. Общие итоги
   if (grandTotals) {
     // Пустая строка перед общими итогами
@@ -348,23 +398,24 @@ const AgentReport2Excel = async (data, totals, grandTotals, dateFrom, dateTo, ac
     worksheet.mergeCells(`A${currentRow}:B${currentRow}`);
   }
 
+
   // 7. Заморозка строк
   worksheet.views = [
     {
       state: "frozen",
-      ySplit: 9, // Замораживаем до строки с информацией
-      xSplit: 2, // Замораживаем первые 2 колонки (№ и Контрагент)
-      topLeftCell: "C10",
-      activeCell: "C10",
+      ySplit: 5, // Замораживаем до строки с информацией
+      // xSplit: 2, // Замораживаем первые 2 колонки (№ и Контрагент)
+      // topLeftCell: "C10",
+      // activeCell: "C10",
     },
   ];
 
   // 8. Автофильтр для заголовков таблиц
   // Добавляем автофильтр к первой таблице (можно адаптировать для каждой таблицы агента)
-  worksheet.autoFilter = {
-    from: { row: 10, column: 1 },
-    to: { row: 10, column: 8 },
-  };
+  // worksheet.autoFilter = {
+  //   from: { row: 10, column: 1 },
+  //   to: { row: 10, column: 8 },
+  // };
 
   // 9. Сохранение файла
   const buffer = await workbook.xlsx.writeBuffer();

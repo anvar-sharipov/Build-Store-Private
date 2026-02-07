@@ -8,9 +8,47 @@ import { RiFileExcel2Fill } from "react-icons/ri";
 import { partnerDownloadExcel } from "./partnerDownloadExcel";
 import myAxios from "../../axios";
 
-const Head = ({ setOpenModal, openModal, searchInputRef, setQuery, query, createButtonRef, fetchPartners, page, setPage, partnersListRefs, partners, setUpdateMode, count }) => {
+const Head = ({
+  setOpenModal,
+  openModal,
+  searchInputRef,
+  setQuery,
+  query,
+  createButtonRef,
+  fetchPartners,
+  page,
+  setPage,
+  partnersListRefs,
+  partners,
+  setUpdateMode,
+  count,
+  inputValue,
+  setInputValue,
+}) => {
   const { t } = useTranslation();
   const [isAnimating, setIsAnimating] = useState(false);
+
+  const debounceTimeoutRef = useRef(null);
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+
+    // 1️⃣ обновляем input сразу
+    setInputValue(value);
+
+    // 2️⃣ debounce для реального поиска
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    debounceTimeoutRef.current = setTimeout(() => {
+      setQuery(value);
+    }, 600);
+  };
+
+  useEffect(() => {
+    return () => clearTimeout(debounceTimeoutRef.current);
+  }, []);
 
   const sound_up_down = new Audio("/sounds/up_down.mp3");
 
@@ -81,7 +119,7 @@ const Head = ({ setOpenModal, openModal, searchInputRef, setQuery, query, create
           }}
           onKeyDown={(e) => {
             if (e.key === "ArrowDown") {
-              e.preventDefault()
+              e.preventDefault();
               sound_up_down.currentTime = 0;
               sound_up_down.play();
               searchInputRef.current?.focus();
@@ -107,8 +145,8 @@ const Head = ({ setOpenModal, openModal, searchInputRef, setQuery, query, create
           ref={searchInputRef}
           name="search_partner"
           type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          value={inputValue}
+          onChange={handleSearchChange}
           placeholder={t("search")}
           autoComplete="off"
           onKeyDown={(e) => {

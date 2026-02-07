@@ -13,7 +13,8 @@ from . views.query_views2 import *
 from . views.query_views3 import *
 from . views import query_views4
 from . views import query_views5
-from . views import query_views6
+from . views import query_views6 
+from . views import excel_downloads_views 
 from . views import product_cards_views 
 from . views import skidka_nasenka_views 
 from . views import backend_input_queries_views
@@ -180,6 +181,14 @@ urlpatterns = [
     
     
     path('get_sum_for_header', get_sum_for_header, name='get_sum_for_header'),
+    
+    
+    path('download_osw_excel', excel_downloads_views.download_osw_excel, name='download_osw_excel'),
+    
+    path('get_warehouse_id_and_currency', get_warehouse_id_and_currency, name='get_warehouse_id_and_currency'),
+    
+    
+    
     
     
     

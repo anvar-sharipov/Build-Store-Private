@@ -99,6 +99,7 @@ class ProductImageViewSet(viewsets.ModelViewSet):
 @api_view(["GET"])
 def search_products(request):
     
+    
  
     query = request.GET.get("search", "")
     warehouse = request.GET.get("warehouse", "")
@@ -107,6 +108,7 @@ def search_products(request):
     search_in_invoice = request.GET.get("search_in_invoice", "")
     
     if query:
+        
         
         
         # # 🔹 1. Сначала ищем по qr_code
@@ -172,24 +174,36 @@ def search_products(request):
 
         # --- 2) Если по QR ничего не найдено — ищем по имени ---
         if not finded_from_qr:
+            
 
-            # Создаём базовый queryset без slice
+            # # Создаём базовый queryset без slice
+            # tmp_results = Product.objects.annotate(
+            #     rank=Case(
+            #         # 1: Полное совпадение
+            #         When(name__iexact=query, then=Value(1)),
+            #         # 2: Начинается с query
+            #         When(name__istartswith=query, then=Value(2)),
+            #         # 3: Содержит query
+            #         When(name__icontains=query, then=Value(3)),
+            #         # 4: всё остальное — триграммы
+            #         default=Value(4),
+            #         output_field=IntegerField()
+            #     ),
+            #     similarity=TrigramSimilarity("name", query)
+            # ).filter(
+            #     Q(name__icontains=query) | Q(similarity__gt=0.1)
+            # ).order_by("rank", "-similarity")
+            
             tmp_results = Product.objects.annotate(
-                rank=Case(
-                    # 1: Полное совпадение
-                    When(name__iexact=query, then=Value(1)),
-                    # 2: Начинается с query
-                    When(name__istartswith=query, then=Value(2)),
-                    # 3: Содержит query
-                    When(name__icontains=query, then=Value(3)),
-                    # 4: всё остальное — триграммы
-                    default=Value(4),
-                    output_field=IntegerField()
-                ),
-                similarity=TrigramSimilarity("name", query)
-            ).filter(
-                Q(name__icontains=query) | Q(similarity__gt=0.1)
-            ).order_by("rank", "-similarity")
+                    rank=Case(
+                        When(name__iexact=query, then=Value(1)),
+                        When(name__istartswith=query, then=Value(2)),
+                        When(name__icontains=query, then=Value(3)),
+                        output_field=IntegerField()
+                    )
+                ).filter(
+                    name__icontains=query
+                ).order_by("rank")
 
             # --- Фильтрация по складу ---
             if warehouse:
@@ -388,6 +402,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
 
         qs = Product.objects.all()
+        
         
         # qs = qs.annotate(
         #     test_qty=Coalesce(

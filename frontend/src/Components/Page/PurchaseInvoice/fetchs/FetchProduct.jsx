@@ -78,6 +78,7 @@ const FetchProduct = ({ refs }) => {
 
   useEffect(() => {
     const fetchProduct = async () => {
+      
       if (!query) return setProducts([]);
       try {
         // console.log("values.warehouse.id", values.warehouse.id);

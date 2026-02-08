@@ -23,6 +23,8 @@ from . views.sale_invoice_views import *
 from . views.report_views import *
 from . views.utils import *
 from . views.invoice_views import *
+from . views import download_faktura_views
+from . views import download_products_views
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 
@@ -186,6 +188,14 @@ urlpatterns = [
     path('download_osw_excel', excel_downloads_views.download_osw_excel, name='download_osw_excel'),
     
     path('get_warehouse_id_and_currency', get_warehouse_id_and_currency, name='get_warehouse_id_and_currency'),
+    
+    path('download_excel_fakturs_diapazon', download_faktura_views.download_excel_fakturs_diapazon, name='download_excel_fakturs_diapazon'),
+    
+    path('download_excel_products_diapazon', download_products_views.download_excel_products_diapazon, name='download_excel_products_diapazon'),
+    
+    
+    
+    
     
     
     

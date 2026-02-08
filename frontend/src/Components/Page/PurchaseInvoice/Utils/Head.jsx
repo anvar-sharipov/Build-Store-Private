@@ -1,17 +1,24 @@
 import { useTranslation } from "react-i18next";
 // import SmartTooltip from "../../../SmartTooltip";
 // import MySearchInput from "../../../UI/MySearchInput";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useContext, useState } from "react";
 import { FaPlus } from "react-icons/fa";
 import invoiceClasses from "./classes";
 // import { useFormikContext } from "formik";
 import MySearchInput from "../../../UI/MySearchInput";
 import { motion } from "framer-motion";
+import ExcelButton from "../../../UI/Universal/ExcelButton";
+import myAxios from "../../../axios";
+import { DateContext } from "../../../UI/DateProvider";
+import { useNotification } from "../../../context/NotificationContext";
 
 const Head = ({ mainRefs, handleOpenInvoice, setQuery, query, invoices }) => {
+  const { dateFrom, dateTo } = useContext(DateContext);
   const { t } = useTranslation();
   const buttonRef = useRef(null);
   const sound = new Audio("/sounds/up_down.mp3");
+  const { showNotification } = useNotification();
+  const [downloadExcel, setDownloadExcel] = useState(false);
   // const sound_open_faktura = new Audio("/sounds/open_faktura.mp3");
 
   //   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
@@ -35,6 +42,96 @@ const Head = ({ mainRefs, handleOpenInvoice, setQuery, query, invoices }) => {
     };
   }, []);
 
+  // const downloadExcelFakturs = async () => {
+  //   if (!dateFrom || !dateTo) {
+  //     showNotification(t("choose diapazon date"), "error");
+  //     return;
+  //   }
+  //   setDownloadExcel(true);
+
+  //   const searchParams = new URLSearchParams(window.location.search);
+
+  //   const wozwrat_or_prihod = searchParams.get("wozwrat_or_prihod");
+  //   const partner_id = searchParams.get("partner_id");
+  //   const selectedEntry = searchParams.get("selectedEntry");
+  //   const sortInvoice = searchParams.get("sortInvoice");
+
+  //   const params = new URLSearchParams({
+  //     dateFrom,
+  //     dateTo,
+  //     wozwrat_or_prihod,
+  //     partner_id,
+  //     selectedEntry,
+  //     sortInvoice,
+  //   }).toString();
+
+  //   try {
+  //     const res = await myAxios.get(`download_excel_fakturs_diapazon?${params}`);
+  //     console.log("res", res);
+  //   } catch (err) {
+  //     showNotification(t(err.response.data.error), "error");
+  //     console.log("cant downloadExcelFakturs", err);
+  //   } finally {
+  //     setTimeout(() => {
+  //       setDownloadExcel(false);
+  //     }, 1000);
+  //   }
+  // };
+
+  const downloadExcelFakturs = async () => {
+    if (!dateFrom || !dateTo) {
+      showNotification(t("choose diapazon date"), "error");
+      return;
+    }
+
+    setDownloadExcel(true);
+
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+
+      const params = new URLSearchParams();
+
+      params.append("dateFrom", dateFrom);
+      params.append("dateTo", dateTo);
+
+      const wozwrat_or_prihod = searchParams.get("wozwrat_or_prihod");
+      const partner_id = searchParams.get("partner_id");
+      const selectedEntry = searchParams.get("selectedEntry");
+      const sortInvoice = searchParams.get("sortInvoice");
+
+      if (wozwrat_or_prihod) params.append("wozwrat_or_prihod", wozwrat_or_prihod);
+      if (partner_id) params.append("partner_id", partner_id);
+      if (selectedEntry) params.append("selectedEntry", selectedEntry);
+      if (sortInvoice) params.append("sortInvoice", sortInvoice);
+
+      const res = await myAxios.get(`download_excel_fakturs_diapazon?${params.toString()}`, {
+        responseType: "blob", // 🔥 ОБЯЗАТЕЛЬНО
+      });
+
+      // 👇 скачивание файла
+      const blob = new Blob([res.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `faktury_${dateFrom}_${dateTo}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("cant downloadExcelFakturs", err);
+      showNotification(err?.response?.data?.error || "Excel download error", "error");
+    } finally {
+      setTimeout(() => {
+        setDownloadExcel(false);
+      }, 1000);
+    }
+  };
+
   return (
     <div className="bg-gray-200 dark:bg-gray-800 rounded-lg shadow-md p-1 mb-2 flex items-center justify-between px-2 print:hidden">
       <motion.button
@@ -57,13 +154,16 @@ const Head = ({ mainRefs, handleOpenInvoice, setQuery, query, invoices }) => {
     dark:focus:ring-offset-gray-800
   "
       >
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-1 text-sm">
           <motion.div whileHover={{ rotate: 90 }} transition={{ duration: 0.3 }}>
             <FaPlus className="text-base" />
           </motion.div>
           <span>{t("add")}</span>
         </div>
       </motion.button>
+      <div>
+        <ExcelButton classname="px-3 py-2" onClick={() => downloadExcelFakturs()} disabled={downloadExcel} />
+      </div>
       <div>
         <MySearchInput
           ref={mainRefs.searchInputRef}

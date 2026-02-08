@@ -5,6 +5,10 @@ import Tooltip from "../../../ToolTip";
 import { RiFileExcel2Fill } from "react-icons/ri";
 import MySearchInput from "../../../UI/MySearchInput";
 import { SearchContext } from "../../../context/SearchContext";
+import ExcelButton from "../../../UI/Universal/ExcelButton";
+import { DateContext } from "../../../UI/DateProvider";
+import { useNotification } from "../../../context/NotificationContext";
+import myAxios from "../../../axios";
 
 const ProductAddAndSearchSection = ({ t, products, listItemRefs, totalCount, searchInputRef, setProductAddModalOpen, downloadFilteredExcel }) => {
   const { searchQuery, setSearchQuery, searchParams, setSearchParams } = useContext(SearchContext);
@@ -12,17 +16,85 @@ const ProductAddAndSearchSection = ({ t, products, listItemRefs, totalCount, sea
   const hoverTimeoutRef = useRef(null);
   const [addIconHovered, setAddIconHovered] = useState(false);
   const [openAddModal, setOpenAddModal] = useState(false);
-  const [excelIconIsAnimating, setExcelIconIsAnimating] = useState(false);
-  const excelIconRef = useRef(null);
-  const [excelIconHovered, setExcelIconHovered] = useState(false);
+  const { dateFrom, dateTo } = useContext(DateContext);
+  const { showNotification } = useNotification();
+  // const [excelIconIsAnimating, setExcelIconIsAnimating] = useState(false);
+  // const excelIconRef = useRef(null);
+  // const [excelIconHovered, setExcelIconHovered] = useState(false);
+
+  const [downloadExcel, setDownloadExcel] = useState(false);
 
   const sound_up_down = new Audio("/sounds/up_down.mp3");
   // Вместо прямого вызова setSearchQuery и setSearchParams при каждом onChange — запустим задержку (например, 300 мс).
   const [tempSearch, setTempSearch] = useState(searchQuery);
   const debounceTimeoutRef = useRef(null);
 
+  const downloadExcelProducts = async () => {
+    if (!dateFrom || !dateTo) {
+      showNotification(t("choose diapazon date"), "error");
+      return;
+    }
+
+    setDownloadExcel(true);
+
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+
+      const params = new URLSearchParams();
+
+      params.append("dateFrom", dateFrom);
+      params.append("dateTo", dateTo);
+
+      const warehouse = searchParams.get("warehouse");
+      const categories = searchParams.get("categories");
+      const search = searchParams.get("search");
+      const is_active = searchParams.get("is_active");
+
+      if (warehouse) params.append("warehouse", warehouse);
+      if (categories) params.append("categories", categories);
+      if (search) params.append("search", search);
+      if (is_active) params.append("is_active", is_active);
+
+      const res = await myAxios.get(`download_excel_products_diapazon?${params.toString()}`, {
+        responseType: "blob", // 🔥 ОБЯЗАТЕЛЬНО
+      });
+
+      // 👇 скачивание файла
+      const blob = new Blob([res.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `products_${dateFrom}_${dateTo}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.log("cant downloadExcelFakturs", err);
+
+      if (err.response?.data instanceof Blob) {
+        const text = await err.response.data.text(); // 👈 ВАЖНО
+        try {
+          const json = JSON.parse(text);
+          showNotification(t(json.error), "error");
+        } catch {
+          showNotification("Excel download error", "error");
+        }
+      } else {
+        showNotification(err?.response?.data?.error || "Excel download error", "error");
+      }
+    } finally {
+      setTimeout(() => {
+        setDownloadExcel(false);
+      }, 1000);
+    }
+  };
+
   const handleSearchChange = (e) => {
-    
     const value = e.target.value;
     setTempSearch(value);
 
@@ -85,7 +157,12 @@ const ProductAddAndSearchSection = ({ t, products, listItemRefs, totalCount, sea
         </Tooltip>
       </div>
 
-      <div className="text-gray-600 dark:text-gray-400 hidden lg:flex items-center gap-3">
+      {/* onClick={() => downloadExcelFakturs()}  disabled={downloadExcel}*/}
+      <div>
+        <ExcelButton classname="px-3 py-1" onClick={() => downloadExcelProducts()} disabled={downloadExcel} />
+      </div>
+
+      {/* <div className="text-gray-600 dark:text-gray-400 hidden lg:flex items-center gap-3">
         <div>
           {products.length > 0 && (
             <div className="flex gap-3 items-center">
@@ -113,7 +190,7 @@ const ProductAddAndSearchSection = ({ t, products, listItemRefs, totalCount, sea
             {t("downloadExcel")} (CTRL+E)
           </Tooltip>
         </div>
-      </div>
+      </div> */}
 
       <div className="flex items-end gap-3">
         <MySearchInput

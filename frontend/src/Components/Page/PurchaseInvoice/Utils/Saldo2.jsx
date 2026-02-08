@@ -10,7 +10,7 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
   const { values } = useFormikContext();
   const { t } = useTranslation();
 
-  console.log("saldo2", saldo2);
+  // console.log("saldo2", saldo2);
   
 
   const handleOpenInvoice = (id) => {
@@ -33,8 +33,14 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
 
   // Функция для рендеринга таблицы для каждого счета
   const renderAccountTable = (accountKey, accountName) => {
+    // console.log("accountKey", accountKey);
+    // console.log("accountName", accountName);
+    
     const accountData = saldo2[accountKey];
     if (!accountData) return null;
+    // console.log("accountData", accountData);
+    // const oborot_total = 
+    
 
     let start_debit = 0;
     let start_credit = 0;
@@ -96,8 +102,8 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold" colSpan={2}>
                 {t("Total turnover")}
               </td>
-              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right whitespace-nowrap">{formatNumber2(accountData.final[0])}</td>
-              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right whitespace-nowrap">{formatNumber2(accountData.final[1])}</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right whitespace-nowrap">{formatNumber2(accountData.oborot[0])}</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right whitespace-nowrap">{formatNumber2(accountData.oborot[1])}</td>
             </tr>
 
             {/* Конечное сальдо */}

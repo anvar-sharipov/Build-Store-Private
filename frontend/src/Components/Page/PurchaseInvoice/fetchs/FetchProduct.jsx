@@ -60,7 +60,7 @@ const FetchProduct = ({ refs }) => {
   const getProduct = async (productId, warehouseId, mainProductId) => {
     try {
       const res = await myAxios.get("/get-product/", { params: { product_id: productId, warehouse_id: warehouseId, main_product_id: mainProductId } });
-      // console.log("res.data gift", res.data);
+ 
 
       return res.data; // важно
     } catch (error) {
@@ -81,7 +81,7 @@ const FetchProduct = ({ refs }) => {
       
       if (!query) return setProducts([]);
       try {
-        // console.log("values.warehouse.id", values.warehouse.id);
+       
         const res = await myAxios.get(`search-products/?search=${query}&warehouse=${values.warehouse.id}`);
         const activeProducts = res.data.filter((prod) => prod.is_active);
 
@@ -95,7 +95,7 @@ const FetchProduct = ({ refs }) => {
           setProducts(activeProducts);
         }
 
-        // console.log("activeProducts", activeProducts);
+      
       } catch (error) {
         console.log("oshibka pri query product", error);
       } finally {
@@ -109,7 +109,7 @@ const FetchProduct = ({ refs }) => {
   // ###### onKeydown li START
   // вынесенная функция
   const handleAddProduct = async (product, values, setFieldValue, refs, showNotification, getProduct) => {
-    // console.log("main product", product);
+
 
     const exists = values.products.some((p) => p.id === product.id);
     if (exists) {
@@ -185,7 +185,7 @@ const FetchProduct = ({ refs }) => {
   // ################################################################################################################################################################
 
   if (values.warehouse?.id) {
-    // console.log("values.warehouse", values.warehouse);
+ 
 
     return (
       <div className="w-full flex-1 print:hidden relative" ref={wrapperRef}>
@@ -210,15 +210,14 @@ const FetchProduct = ({ refs }) => {
                 e.preventDefault();
                 sound.currentTime = 0;
                 sound.play();
-                // console.log('tttttttt ===');
+        
                 if (refs.productListRef.current.length > 0) {
-                  // console.log("values.products", values.products);
-                  // console.log("refs.productListRef", refs.productListRef);
+       
                   setTimeout(() => {
                     refs.productListRef.current[0]?.focus();
                   }, 0);
                 } else if (values.products.length > 0) {
-                  // console.log("aaafaffa");
+         
 
                   refs.quantityRefs.current[values.products[0].id]?.focus();
                   refs.quantityRefs.current[values.products[0].id]?.select();

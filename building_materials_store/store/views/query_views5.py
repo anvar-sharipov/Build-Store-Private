@@ -1,7 +1,7 @@
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime
 from rest_framework.decorators import api_view, permission_classes
-from ..models import Partner, Invoice, Transaction, WarehouseProduct, Entry, Account, Warehouse, FreeItemForInvoiceItem, UnitForInvoiceItem, Product, UnitOfMeasurement, Employee, ProductUnit, ProductImage, InvoiceItem, WarehouseAccount
+from ..models import Partner, Invoice, Transaction, DayClosing, StockSnapshot, WarehouseProduct, Entry, Account, Warehouse, FreeItemForInvoiceItem, UnitForInvoiceItem, Product, UnitOfMeasurement, Employee, ProductUnit, ProductImage, InvoiceItem, WarehouseAccount
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
@@ -15,6 +15,7 @@ from datetime import date
 from ..my_func.get_unit_map import get_unit_map 
 from ..my_func.get_unit_and_cf import get_unit_and_cf 
 from ..my_func.date_convert_for_excel import format_date_ru 
+from ..my_func.date_str_to_dateFormat import date_str_to_dateFormat
 
 from openpyxl import Workbook
 from django.http import HttpResponse
@@ -311,8 +312,11 @@ GREEN_FILL_1 = PatternFill(
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def BuhOborotTowarow(request):
-    dateFrom = request.GET.get("dateFrom")
-    dateTo = request.GET.get("dateTo")
+    date_from = request.GET.get("dateFrom")
+    date_to = request.GET.get("dateTo")
+    
+    dateFrom = date_str_to_dateFormat(date_from)
+    dateTo = date_str_to_dateFormat(date_to)
     
     # Поддержка нового параметра warehouses и старого warehouse
     warehouses_param = request.GET.get("warehouses", "")
@@ -437,52 +441,87 @@ def BuhOborotTowarow(request):
     # ---------------------------------------------
     # 1) SQL №1 — начальные остатки (суммируем по всем складам сразу)
     # ---------------------------------------------
-    start_items = InvoiceItem.objects.filter(
-        invoice__entry_created_at_handle__lt=dateFrom,
-        invoice__canceled_at__isnull=True
-    ).filter(
-        Q(invoice__warehouse_id__in=warehouse_ids) |
-        Q(invoice__warehouse2_id__in=warehouse_ids)
-    ).select_related(
-        "product", "product__category", "product__base_unit", "invoice"
-    )
     
-    if category_ids:
-        start_items = start_items.filter(product__category_id__in=category_ids)
-        
-    if product_ids:
-        start_items = start_items.filter(product__id__in=product_ids)
+    closing = (
+            DayClosing.objects
+            .filter(date__lt=dateFrom)
+            .order_by("-date")
+            .first()
+        )
+    
+    if closing:
+        ic("start balance from snapshot")
 
-    for item in start_items:
-        p = item.product
-        inv = item.invoice
-        
-        # Товар уже инициализирован выше
-        if p.id not in balance:
-            continue
-        
-        cf = Decimal(balance[p.id]["conversion_factor"])
-        
-        # Проверяем принадлежность к выбранным складам
-        if inv.wozwrat_or_prihod == "prihod":
-            if inv.warehouse_id in warehouse_ids:
-                balance[p.id]["selected_quantity"] += (item.selected_quantity / cf)
+        snapshots = (
+            StockSnapshot.objects
+            .filter(
+                closing=closing,
+                warehouse_id__in=warehouse_ids,
+                product_id__in=balance.keys(),  # ⚠️ важно для скорости
+            )
+            .values("product_id", "product__wholesale_price")
+            .annotate(qty=Sum("quantity"))
+        )
 
-        elif inv.wozwrat_or_prihod == "rashod":
-            if inv.warehouse_id in warehouse_ids:
-                balance[p.id]["selected_quantity"] -= (item.selected_quantity / cf)
+        for row in snapshots:
+            p_id = row["product_id"]
 
-        elif inv.wozwrat_or_prihod == "wozwrat":
-            if inv.warehouse_id in warehouse_ids:
-                balance[p.id]["selected_quantity"] += (item.selected_quantity / cf)
+            if p_id in balance:
+                balance[p_id]["selected_quantity"] = row["qty"] or Decimal("0")
+                
+        ic(
+            "product 2 start qty:",
+            balance.get(413, {}).get("selected_quantity")
+        )
+    else:
+        
+        start_items = InvoiceItem.objects.filter(
+            invoice__entry_created_at_handle__lt=dateFrom,
+            invoice__canceled_at__isnull=True
+        ).filter(
+            Q(invoice__warehouse_id__in=warehouse_ids) |
+            Q(invoice__warehouse2_id__in=warehouse_ids)
+        ).select_related(
+            "product", "product__category", "product__base_unit", "invoice"
+        )
+        
+        if category_ids:
+            start_items = start_items.filter(product__category_id__in=category_ids)
             
-        elif inv.wozwrat_or_prihod == "transfer":
-            # если со склада (и склад в выбранных)
-            if inv.warehouse_id in warehouse_ids:
-                balance[p.id]["selected_quantity"] -= (item.selected_quantity / cf)
-            # если на склад (и склад в выбранных)
-            elif inv.warehouse2_id in warehouse_ids:
-                balance[p.id]["selected_quantity"] += (item.selected_quantity / cf)
+        if product_ids:
+            start_items = start_items.filter(product__id__in=product_ids)
+
+        for item in start_items:
+            p = item.product
+            inv = item.invoice
+            
+            # Товар уже инициализирован выше
+            if p.id not in balance:
+                continue
+            
+            cf = Decimal(balance[p.id]["conversion_factor"])
+            qty = item.selected_quantity
+            
+            # Проверяем принадлежность к выбранным складам
+            if inv.wozwrat_or_prihod == "prihod":
+                if inv.warehouse_id in warehouse_ids:
+                    balance[p.id]["selected_quantity"] += qty
+
+            elif inv.wozwrat_or_prihod == "rashod":
+                if inv.warehouse_id in warehouse_ids:
+                    balance[p.id]["selected_quantity"] -= qty
+
+            elif inv.wozwrat_or_prihod == "wozwrat":
+                if inv.warehouse_id in warehouse_ids:
+                    balance[p.id]["selected_quantity"] += qty
+                
+            elif inv.wozwrat_or_prihod == "transfer":
+                # если со склада (и склад в выбранных)
+                if inv.warehouse_id in warehouse_ids:
+                    balance[p.id]["selected_quantity"] -= qty
+                # если на склад (и склад в выбранных)
+                elif inv.warehouse2_id in warehouse_ids:
+                    balance[p.id]["selected_quantity"] += qty
 
     # ---------------------------------------------
     # 2) SQL №2 — обороты в периоде (суммируем по всем складам)
@@ -515,7 +554,8 @@ def BuhOborotTowarow(request):
             continue
         
         cf = Decimal(balance[p.id]["conversion_factor"])
-        qty = item.selected_quantity / cf
+        # ic(cf)
+        qty = item.selected_quantity
         price = qty * item.selected_price  # ФАКТИЧЕСКАЯ ЦЕНА ИЗ НАКЛАДНОЙ
         
         if inv.wozwrat_or_prihod == "prihod":

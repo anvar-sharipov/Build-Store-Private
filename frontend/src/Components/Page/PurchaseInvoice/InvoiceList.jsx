@@ -5,10 +5,32 @@ import { motion, AnimatePresence } from "framer-motion";
 import { formatNumber } from "../../UI/formatNumber";
 import { GiCoins } from "react-icons/gi";
 import { formatNumber2 } from "../../UI/formatNumber2";
+import { useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useRef, useEffect } from "react";
 
 const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
   const { t } = useTranslation();
-  const sound = new Audio("/sounds/up_down.mp3");
+  // const sound = new Audio("/sounds/up_down.mp3");
+  const soundRef = useRef(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    soundRef.current = new Audio("/sounds/up_down.mp3");
+  }, []);
+
+  // const handleOpenInvoice = (invoiceId) => {
+  //   if (searchParams.get("invoice_id") === String(invoiceId)) return;
+
+  //   const params = new URLSearchParams(searchParams);
+  //   params.set("invoice_id", invoiceId);
+
+  //   navigate({
+  //     pathname: `/purchase-invoices/update/${invoiceId}`,
+  //     search: params.toString(),
+  //   });
+  // };
 
   if (!invoices || invoices.length === 0) {
     return (
@@ -141,8 +163,8 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                         handleOpenInvoice(invoice.id);
                       } else if (e.key === "ArrowDown") {
                         e.preventDefault();
-                        sound.currentTime = 0;
-                        sound.play();
+                        soundRef.current.currentTime = 0;
+                        soundRef.current.play();
                         const ids = invoices.map((inv) => inv.id);
                         const currentIndex = ids.indexOf(invoice.id);
                         const nextIndex = currentIndex + 1;
@@ -151,8 +173,8 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                         }
                       } else if (e.key === "ArrowUp") {
                         e.preventDefault();
-                        sound.currentTime = 0;
-                        sound.play();
+                        soundRef.current.currentTime = 0;
+                        soundRef.current.play();
                         const ids = invoices.map((inv) => inv.id);
                         const currentIndex = ids.indexOf(invoice.id);
                         const prevIndex = currentIndex - 1;
@@ -297,8 +319,8 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                         handleOpenInvoice(invoice.id);
                       } else if (e.key === "ArrowDown") {
                         e.preventDefault();
-                        sound.currentTime = 0;
-                        sound.play();
+                        soundRef.current.currentTime = 0;
+                        soundRef.current.play();
                         const ids = invoices.map((inv) => inv.id);
                         const currentIndex = ids.indexOf(invoice.id);
                         const nextIndex = currentIndex + 1;
@@ -311,8 +333,8 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                         }
                       } else if (e.key === "ArrowUp") {
                         e.preventDefault();
-                        sound.currentTime = 0;
-                        sound.play();
+                        soundRef.current.currentTime = 0;
+                        soundRef.current.play();
                         const ids = invoices.map((inv) => inv.id);
                         const currentIndex = ids.indexOf(invoice.id);
                         const prevIndex = currentIndex - 1;
@@ -498,8 +520,8 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                         handleOpenInvoice(invoice.id);
                       } else if (e.key === "ArrowDown") {
                         e.preventDefault();
-                        sound.currentTime = 0;
-                        sound.play();
+                        soundRef.current.currentTime = 0;
+                        soundRef.current.play();
                         const ids = invoices.map((inv) => inv.id);
                         const currentIndex = ids.indexOf(invoice.id);
                         const nextIndex = currentIndex + 1;
@@ -512,8 +534,8 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                         }
                       } else if (e.key === "ArrowUp") {
                         e.preventDefault();
-                        sound.currentTime = 0;
-                        sound.play();
+                        soundRef.current.currentTime = 0;
+                        soundRef.current.play();
                         const ids = invoices.map((inv) => inv.id);
                         const currentIndex = ids.indexOf(invoice.id);
                         const prevIndex = currentIndex - 1;
@@ -535,8 +557,8 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                         invoice.wozwrat_or_prihod === "rashod"
                           ? "from-emerald-400 via-teal-500 to-cyan-500"
                           : invoice.wozwrat_or_prihod === "wozwrat"
-                          ? "from-rose-400 via-pink-500 to-fuchsia-500"
-                          : "from-blue-400 via-indigo-500 to-violet-500"
+                            ? "from-rose-400 via-pink-500 to-fuchsia-500"
+                            : "from-blue-400 via-indigo-500 to-violet-500"
                       }`}
                     ></div>
 
@@ -766,8 +788,8 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                         handleOpenInvoice(invoice.id);
                       } else if (e.key === "ArrowDown") {
                         e.preventDefault();
-                        sound.currentTime = 0;
-                        sound.play();
+                        soundRef.current.currentTime = 0;
+                        soundRef.current.play();
                         const ids = invoices.map((inv) => inv.id);
                         const currentIndex = ids.indexOf(invoice.id);
                         const nextIndex = currentIndex + 1;
@@ -780,8 +802,8 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                         }
                       } else if (e.key === "ArrowUp") {
                         e.preventDefault();
-                        sound.currentTime = 0;
-                        sound.play();
+                        soundRef.current.currentTime = 0;
+                        soundRef.current.play();
                         const ids = invoices.map((inv) => inv.id);
                         const currentIndex = ids.indexOf(invoice.id);
                         const prevIndex = currentIndex - 1;

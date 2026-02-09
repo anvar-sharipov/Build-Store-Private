@@ -15,6 +15,11 @@ from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404
 from decimal import Decimal, ROUND_HALF_UP
 
+from ..my_func.get_unit_map import get_unit_map 
+from ..my_func.get_unit_and_cf import get_unit_and_cf 
+# from ..my_func.str_to_int_list import str_to_int_list
+# from ..my_func.date_convert_for_excel import format_date_ru 
+
 
 
 def normalize_date(date_str: str) -> str:
@@ -1422,6 +1427,7 @@ def cancel_entry(request):
         if not request.user.groups.filter(name="admin").exists():
             return JsonResponse({"status": "error", "message": "permission denied"}, status=403)
 
+        # unit_map = get_unit_map()
         try:
             data = json.loads(request.body)
             invoice_id = data.get("id")
@@ -1434,9 +1440,14 @@ def cancel_entry(request):
             if not invoice_id:
                 return JsonResponse({"status": "error", "message": "no invoice id"}, status=400)
 
+            
+                
+                
             with transaction.atomic():
                 invoice = Invoice.objects.select_for_update().get(id=invoice_id)
-
+                if invoice.entry_created_by.id != request.user.id:
+                    return JsonResponse({"status": "error", "message": "can cancel only", "entry_by": request.user.username}, status=400)
+        
                 if not invoice.is_entry:
                     return JsonResponse({"status": "error", "message": "entry not found"}, status=400)
                 if invoice.canceled_at:
@@ -1457,15 +1468,20 @@ def cancel_entry(request):
                     quantity = Decimal(item.selected_quantity)
 
                     # safer unit handling
-                    conversion_factor = Decimal(1)
-                    u_set = getattr(item, 'unitforinvoiceitem_set', None)
-                    if u_set:
-                        u = u_set.filter(is_default_for_sale=True).first()
-                        if u:
-                            conversion_factor = Decimal(u.conversion_factor)
+                    # unit, cf = get_unit_and_cf(unit_map, product)
+                    # conversion_factor = Decimal(1)
+                    # u_set = getattr(item, 'unitforinvoiceitem_set', None)
+                    # if u_set:
+                    #     u = u_set.filter(is_default_for_sale=True).first()
+                    #     ic("tut")
+                    #     if u:
+                    #         ic("tut1", u.conversion_factor)
+                    #         conversion_factor = Decimal(u.conversion_factor)
 
-                    qty = conversion_factor * quantity
+                    qty = quantity
+          
                     sale_price = Decimal(item.selected_price) * Decimal(item.selected_quantity)
+                
 
                     # logic by document type
                     if wozwrat_or_prihod == "rashod":
@@ -1487,9 +1503,9 @@ def cancel_entry(request):
                         wp.save()
                         
                         if warehouse_obj.currency.code == "TMT":
-                            partner_obj.balance_tmt -= Decimal(sale_price * quantity)
+                            partner_obj.balance_tmt -= sale_price
                         else:
-                            partner_obj.balance_usd -= Decimal(sale_price * quantity)
+                            partner_obj.balance_usd -= sale_price
                         partner_obj.save()
 
                     elif wozwrat_or_prihod == "wozwrat":
@@ -1525,9 +1541,12 @@ def cancel_entry(request):
                 Entry.objects.filter(transaction=transaction_obj).delete()
 
                 # отметить отмену
-                invoice.canceled_by = request.user
-                invoice.canceled_at = timezone.now()
+                # invoice.canceled_by = request.user
+                # invoice.canceled_at = timezone.now()
                 invoice.canceled_comment = canceled_comment
+                invoice.entry_created_at = None
+                invoice.entry_created_at_handle = None
+                invoice.entry_created_by = None
                 invoice.is_entry = False
                 invoice.save()
 

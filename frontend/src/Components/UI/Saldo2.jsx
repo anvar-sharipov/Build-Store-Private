@@ -15,6 +15,7 @@ const Saldo2 = ({
   accountType = "debit", // "debit" или "credit"
 }) => {
   const { t } = useTranslation();
+  
 
   const handleExportToExcel = async () => {
     try {
@@ -40,6 +41,8 @@ const Saldo2 = ({
     try {
       const res = await myAxios.get(`transaction_detail/${transactionId}/`);
       if (res.data.invoice_id) {
+        
+        
         handleOpenInvoice(res.data.invoice_id);
       }
     } catch (error) {
@@ -60,6 +63,16 @@ const Saldo2 = ({
   const renderAccountTable = (accountKey, accountName) => {
     const accountData = saldo2[accountKey];
     if (!accountData) return null;
+    let start_debit = 0;
+    let start_credit = 0;
+
+    const start_saldo = accountData.start[0] - accountData.start[1];
+
+    if (start_saldo > 0) {
+      start_debit = start_saldo;
+    } else if (start_saldo < 0) {
+      start_credit = Math.abs(start_saldo);
+    }
 
     return (
       <div key={accountKey} className="mb-4 print:mb-2 print:w-1/2 print:inline-block print:align-top print:px-1">
@@ -78,8 +91,8 @@ const Saldo2 = ({
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium" colSpan={2}>
                 {t("Opening balance")}
               </td>
-              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right whitespace-nowrap">{formatNumber2(accountData.start[0])}</td>
-              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right whitespace-nowrap">{formatNumber2(accountData.start[1])}</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right whitespace-nowrap">{formatNumber2(start_debit, 2, false)}</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right whitespace-nowrap">{formatNumber2(start_credit, 2, false)}</td>
             </tr>
 
             {/* Обороты за день */}
@@ -110,8 +123,8 @@ const Saldo2 = ({
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold" colSpan={2}>
                 {t("Total turnover")}
               </td>
-              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">{formatNumber2(accountData.final[0])}</td>
-              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">{formatNumber2(accountData.final[1])}</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">{formatNumber2(accountData.oborot[0])}</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">{formatNumber2(accountData.oborot[1])}</td>
             </tr>
 
             {/* Конечное сальдо */}

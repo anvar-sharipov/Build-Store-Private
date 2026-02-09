@@ -10,7 +10,7 @@ import { ROUTES } from "../../../routes";
 import { DateContext } from "../../UI/DateProvider";
 import { useNotification } from "../../context/NotificationContext";
 import { AuthContext } from "../../../AuthContext";
- 
+
 const PurchaseInvoice = () => {
   const { t } = useTranslation();
   const { showNotification } = useNotification();
@@ -23,7 +23,7 @@ const PurchaseInvoice = () => {
 
   // useEffect(() => {
   //   console.log("query", searchParams);
-    
+
   // },[searchParams])
 
   const { dateProwodok } = useContext(DateContext);
@@ -116,18 +116,27 @@ const PurchaseInvoice = () => {
 
   useEffect(() => {
     // Каждый раз при изменении фильтров из URL — перезагружаем список
+    console.log("tut1");
+    const dateFrom = searchParams.get("dateFrom");
+    const dateTo = searchParams.get("dateTo");
+
+    if (!dateFrom || !dateTo) {
+      return; // ⛔ ждём, пока фильтры появятся в URL
+    }
+
     fetchInvoices(false);
   }, [searchParams]);
 
   useEffect(() => {
     const newParams = new URLSearchParams(searchParams); // клонируем
+    console.log("tut2");
 
     if (query) {
       newParams.set("query", query);
     } else {
       newParams.delete("query");
     }
-    
+
     setSearchParams(newParams); // именно это триггерит обновление
   }, [query, setSearchParams]);
 
@@ -151,6 +160,8 @@ const PurchaseInvoice = () => {
   const handleOpenInvoice = (id) => {
     sound_open_faktura.currentTime = 0;
     sound_open_faktura.play();
+    console.log("iddd", id);
+
     if (id) {
       navigate(`/purchase-invoices/update/${id}`);
     } else {

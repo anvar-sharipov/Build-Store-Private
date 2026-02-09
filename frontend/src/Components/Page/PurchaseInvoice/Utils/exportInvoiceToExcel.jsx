@@ -3,7 +3,7 @@ import { saveAs } from "file-saver";
 import { formatNumber2 } from "../../../UI/formatNumber2";
 
 const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibleColumns, t, awtoData, saldoForExcel, saldo2) => {
-  console.log("ryryryr");
+  // console.log("ryryryr");
 
   const safeNumber = (v, decimals = null) => {
     if (v === null || v === undefined || v === "") return null;
@@ -313,12 +313,12 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
       currentRow++;
     }
 
-    const priceTypeInfo = worksheet.getRow(currentRow);
-    priceTypeInfo.getCell(1).value = "Тип цены:";
-    priceTypeInfo.getCell(1).style = styles.boldInfoCell;
-    priceTypeInfo.getCell(2).value = values.type_price === "retail_price" ? "Розничная" : "Оптовая";
-    priceTypeInfo.getCell(2).style = styles.infoCell;
-    currentRow++;
+    // const priceTypeInfo = worksheet.getRow(currentRow);
+    // priceTypeInfo.getCell(1).value = "Тип цены:";
+    // priceTypeInfo.getCell(1).style = styles.boldInfoCell;
+    // priceTypeInfo.getCell(2).value = values.type_price === "retail_price" ? "Розничная" : "Оптовая";
+    // priceTypeInfo.getCell(2).style = styles.infoCell;
+    // currentRow++;
 
     if (awtoData && awtoData.name) {
       const awtoInfo = worksheet.getRow(currentRow);
@@ -702,7 +702,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
 
     // 14. Добавляем КОМПАКТНОЕ САЛЬДО если есть данные
     if (saldo && (saldo["60_USD"] || saldo["75_USD"])) {
-      console.log("sesesese");
+      // console.log("sesesese");
 
       const addCompactAccountTable = (accountKey, accountName) => {
         const accountData = saldo[accountKey];
@@ -866,7 +866,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
 
     saveAs(blob, fileName);
 
-    console.log("Excel файл успешно создан!");
+    // console.log("Excel файл успешно создан!");
   } catch (error) {
     console.error("Ошибка при экспорте в Excel:", error);
     alert(`Ошибка при экспорте: ${error.message}`);

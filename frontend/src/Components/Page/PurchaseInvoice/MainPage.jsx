@@ -251,12 +251,25 @@ const MainPage = () => {
     return <div>{t("loading")}...</div>; // пока грузится
   }
 
-  const handleOpenInvoice = (id) => {
-    if (id) {
-      navigate(`/purchase-invoices/update/${id}`);
-    } else {
+  // const handleOpenInvoice = (id) => {
+  //   if (id) {
+  //     navigate(`/purchase-invoices/update/${id}`);
+  //   } else {
+  //     navigate(ROUTES.PURCHASE_INVOICE_CREATE);
+  //   }
+  // };
+
+  const handleOpenInvoice = (newId) => {
+    console.log("newId", newId);
+    
+    if (!newId) {
       navigate(ROUTES.PURCHASE_INVOICE_CREATE);
+      return;
     }
+
+    if (String(id) === String(newId)) return;
+
+    navigate(`/purchase-invoices/update/${newId}`);
   };
 
   const getSaldo = async (date, partnerId) => {
@@ -280,7 +293,7 @@ const MainPage = () => {
       // console.log("saldo", saldo.data.saldo);
       setSaldo2(saldo.data.saldo);
       // console.log("saldo.data.saldo", saldo.data.saldo);
-      
+
       // console.log('DADADADAD');
     } catch (error) {
       console.log("error get_saldo_for_partner_for_selected_date2 from fetchPartner", error);
@@ -293,7 +306,7 @@ const MainPage = () => {
         initialValues={initialValues}
         enableReinitialize={true}
         validationSchema={validationSchema}
-        onSubmit={async (values, { resetForm, setFieldValue  }) => {
+        onSubmit={async (values, { resetForm, setFieldValue }) => {
           // console.log("Успешно отправлено values", values);
           const date_margin = localStorage.getItem("date_margin"); // "2025-10-04"
           const today = new Date();
@@ -319,7 +332,7 @@ const MainPage = () => {
 
             // console.log("Успешно отправлено", response.data);
             if (response.data.already_entry) {
-              setFieldValue("already_entry", true)
+              setFieldValue("already_entry", true);
             }
             if (response.data?.is_updated) {
               showNotification(`${t("faktura")} № ${response.data.id} ${t("saved")}`, "success");
@@ -333,7 +346,7 @@ const MainPage = () => {
 
             // console.log("response.data.id", response.data);
             handleOpenInvoice(response.data.id);
-            if(values.partner?.id) {
+            if (values.partner?.id) {
               getSaldo(values.invoice_date2, values.partner?.id);
               // getSaldo2(values.invoice_date2, values.partner?.id);
             }
@@ -389,7 +402,7 @@ const MainPage = () => {
                 authGroup={authGroup}
                 saldo2={saldo2}
                 letPrintSaldo={letPrintSaldo}
-                setLetPrintSaldo={setLetPrintSaldo} 
+                setLetPrintSaldo={setLetPrintSaldo}
                 setSaldo2={setSaldo2}
               />
               <fieldset disabled={values.already_entry || authGroup !== "admin" || values.canceled_at}>

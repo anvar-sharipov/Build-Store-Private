@@ -64,9 +64,9 @@ function FetchWarehouse() {
     }
   };
 
-  useEffect(() => {
-    console.log("values", values);
-  }, [selectedWarehouse2])
+  // useEffect(() => {
+  //   console.log("values", values);
+  // }, [selectedWarehouse2])
 
   
 

@@ -53,6 +53,11 @@ from django.db.models.functions import Coalesce
 
 from . base_views import IsInAdminOrWarehouseGroup, CustomPageNumberPagination
 
+from ..my_func.get_unit_map import get_unit_map 
+from ..my_func.get_unit_and_cf import get_unit_and_cf
+from ..my_func.date_str_to_dateFormat import date_str_to_dateFormat
+import re
+
 
 
 class ProductUnitViewSet(viewsets.ModelViewSet):
@@ -98,6 +103,7 @@ class ProductImageViewSet(viewsets.ModelViewSet):
 # dlya poiska producta for free add
 @api_view(["GET"])
 def search_products(request):
+    
     
     
  
@@ -171,6 +177,7 @@ def search_products(request):
         # --- 1) Поиск по QR-коду ---
         results = Product.objects.filter(qr_code=query)
         finded_from_qr = results.exists()
+        
 
         # --- 2) Если по QR ничего не найдено — ищем по имени ---
         if not finded_from_qr:
@@ -194,16 +201,81 @@ def search_products(request):
             #     Q(name__icontains=query) | Q(similarity__gt=0.1)
             # ).order_by("rank", "-similarity")
             
-            tmp_results = Product.objects.annotate(
+            
+            
+            # tmp_results = Product.objects.annotate(
+            #         rank=Case(
+            #             When(name__iexact=query, then=Value(1)),
+            #             When(name__istartswith=query, then=Value(2)),
+            #             When(name__icontains=query, then=Value(3)),
+            #             output_field=IntegerField()
+            #         )
+            #     ).filter(
+            #         name__icontains=query
+            #     ).order_by("rank")
+            
+            
+            
+            # нормализация
+            # query2 = query.lower().strip()
+            # query2 = re.sub(r"[^\w\s]", " ", query2)
+            # words = query2.split()
+            
+            # ic("aga")
+
+            # # AND поиск по каждому слову
+            # q = Q()
+            # for word in words:
+            #     q &= Q(name__icontains=word)
+
+            # tmp_results = (
+            #     Product.objects
+            #     .annotate(
+            #         rank=Case(
+            #             When(name__icontains=query, then=Value(1)),
+            #             When(name__istartswith=query, then=Value(2)),
+            #             When(name__iexact=query, then=Value(3)),
+            #             default=Value(4),
+            #             output_field=IntegerField(),
+            #         )
+            #     )
+            #     .filter(q)
+            #     .order_by("rank", "name")
+            # )
+            
+            
+            raw_query = query.strip()                # "ab-3"
+            norm_query = raw_query.lower()
+            norm_query = re.sub(r"[^\w\s-]", "", norm_query)
+
+            words = norm_query.replace("-", " ").split()
+
+            # AND поиск
+            q = Q()
+            for word in words:
+                q &= Q(name__icontains=word)
+
+            tmp_results = (
+                Product.objects
+                .annotate(
                     rank=Case(
-                        When(name__iexact=query, then=Value(1)),
-                        When(name__istartswith=query, then=Value(2)),
-                        When(name__icontains=query, then=Value(3)),
-                        output_field=IntegerField()
+                        # 1️⃣ точное совпадение
+                        When(name__iexact=raw_query, then=Value(1)),
+
+                        # 2️⃣ начинается с ab-3
+                        When(name__istartswith=raw_query, then=Value(2)),
+
+                        # 3️⃣ содержит ab-3
+                        When(name__icontains=raw_query, then=Value(3)),
+
+                        default=Value(4),
+                        output_field=IntegerField(),
                     )
-                ).filter(
-                    name__icontains=query
-                ).order_by("rank")
+                )
+                .filter(q)
+                .order_by("rank", "name")
+            )
+            
 
             # --- Фильтрация по складу ---
             if warehouse:
@@ -455,107 +527,186 @@ class ProductViewSet(viewsets.ModelViewSet):
     #         })
     
     def list(self, request, *args, **kwargs):
+        ic("ddada")
+        
+        
+        
+        unit_map = get_unit_map()
      
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         
-        date_from = request.query_params.get('date_from')
-        date_to = request.query_params.get('date_to')
+        dateFrom = request.query_params.get('date_from')
+        dateTo = request.query_params.get('date_to')
+        
+        
+        if not dateFrom or not dateTo:
+            return Response(
+                {"error": "date_from and date_to are required"},
+                status=400
+            )
+            
+        # if date_from > date_to:
+        #     return Response(
+        #         {"error": "date_from must be less than or equal to date_to"},
+        #         status=400
+        #     )
+        
+        date_from = date_str_to_dateFormat(dateFrom)
+        date_to = date_str_to_dateFormat(dateTo)
+        
+        closing = (
+            DayClosing.objects
+            .filter(date__lt=date_from)
+            .order_by("-date")
+            .first()
+        )
+        
+        ic(date_from)
+        ic(date_to)
+        
         warehouse_ids = request.query_params.get('warehouse')
         warehouse_ids = warehouse_ids.split(',') if warehouse_ids else []
         warehouse_ids = list(map(int, warehouse_ids))
         
         if not warehouse_ids:
             warehouse_ids = [w.id for w in Warehouse.objects.all()]
-        
-        # ic(date_from)
-        # ic(date_to)
-        # ic(warehouse_ids)
-        
-        product_units = (
-            ProductUnit.objects
-            .filter(is_default_for_sale=True)
-            .select_related("unit")
-        )
-        
-        unit_map = {
-            pu.product_id: pu
-            for pu in product_units
-        }
-        
-        # ic(warehouse_ids)
-        
-        # остаток на начало периода
-        start_items = InvoiceItem.objects.filter(
-            invoice__entry_created_at_handle__lt=date_from
-            ).filter(
-                Q(invoice__warehouse_id__in=warehouse_ids) |
-                Q(invoice__warehouse2_id__in=warehouse_ids)
-            ).select_related(
-                "product", "product__category", "product__base_unit", "invoice"
+       
+
+        start_data = {}
+        turnover_data = {}
+
+        if closing:
+            ic("start from snapshot")
+
+            snapshots = (
+                StockSnapshot.objects
+                .filter(
+                    closing=closing,
+                    warehouse_id__in=warehouse_ids
+                )
+                .select_related("product")
+                .values(
+                    "product_id",
+                    "product__wholesale_price"
+                )
+                .annotate(qty=Sum("quantity"))
             )
+
+            for row in snapshots:
+                p_id = row["product_id"]
+
+                turnover_data[p_id] = {
+                    "id": p_id,
+                    "start_quantity": row["qty"] or Decimal("0"),
+                    "turnover_quantity_prihod": Decimal("0"),
+                    "turnover_quantity_rashod": Decimal("0"),
+                    "turnover_quantity_wozwrat": Decimal("0"),
+                    "price": row["product__wholesale_price"],
+                    # unit и cf добавим позже, когда понадобится product
+                    "unit": "",
+                    "conversion_factor": Decimal("1"),
+                }
+
+            ic("snapshot products:", len(turnover_data))
             
+            # qty_2 = start_data.get(413)
+
+            # ic("product_id=2 qty:", qty_2)
+            
+        else:
+            ic("tutssss2 start_items")
+            
+        
+            # остаток на начало периода
+            start_items = InvoiceItem.objects.filter(
+                invoice__entry_created_at_handle__lt=date_from,
+                invoice__canceled_at__isnull=True
+                ).filter(
+                    Q(invoice__warehouse_id__in=warehouse_ids) |
+                    Q(invoice__warehouse2_id__in=warehouse_ids)
+                ).select_related(
+                    "product", "product__base_unit", "invoice"
+                )
+            
+            for item in start_items:
+                p = item.product  
+                inv = item.invoice
+                # if inv.canceled_at != None:
+                #     continue
+                
+                unit, cf = get_unit_and_cf(unit_map, p)
+
+                if p.id not in turnover_data:
+                    # pu = unit_map.get(p.id)
+                    # if pu:
+                    #     unit = pu.unit.name
+                    #     conversion_factor = pu.conversion_factor
+                    # else:
+                    #     unit = p.base_unit.name if p.base_unit else ""
+                    #     conversion_factor = 1
+                    
+                    
+                    
+                    turnover_data[p.id] = {
+                        "id": p.id,
+                        "start_quantity": Decimal("0"),
+                        "turnover_quantity_prihod": Decimal("0"),
+                        "turnover_quantity_rashod": Decimal("0"),
+                        "turnover_quantity_wozwrat": Decimal("0"),
+                        # "total_price": Decimal("0"),
+                        "price": p.wholesale_price,
+                        "unit": unit,
+                        "conversion_factor": cf,
+                    }
+                    
+                cf = Decimal(turnover_data[p.id]["conversion_factor"])
+                # if p.id == 2:
+                #     ic(unit)
+                #     ic(cf)
+                #     ic(item.selected_quantity)
+                qty = item.selected_quantity
+                
+                if inv.wozwrat_or_prihod == "prihod":
+                    
+                    if inv.warehouse_id in warehouse_ids:
+                        # if p.id == 2:
+                        #     ic("prihod")
+                        #     ic(unit)
+                        #     ic(cf)
+                        #     ic(item.selected_quantity)
+                        turnover_data[p.id]["start_quantity"] += qty
+                elif inv.wozwrat_or_prihod == "rashod":
+                    
+                    if inv.warehouse_id in warehouse_ids:
+                        # if p.id == 2:
+                        #     ic("rashod")
+                        #     ic(unit)
+                        #     ic(cf)
+                        #     ic(item.selected_quantity)
+                        turnover_data[p.id]["start_quantity"] -= qty
+                elif inv.wozwrat_or_prihod == "wozwrat":
+                    if inv.warehouse_id in warehouse_ids:
+                        turnover_data[p.id]["start_quantity"] += qty
+                elif inv.wozwrat_or_prihod == "transfer":
+                    # если со склада (и склад в выбранных)
+                    if inv.warehouse_id in warehouse_ids:
+                        turnover_data[p.id]["start_quantity"] -= qty
+                    # если на склад (и склад в выбранных)
+                    elif inv.warehouse2_id in warehouse_ids:
+                        turnover_data[p.id]["start_quantity"] += qty
+        
+
         # оборот за период
+       
         period_items = InvoiceItem.objects.filter(
             invoice__entry_created_at_handle__range=[date_from, date_to]
         ).filter(
             Q(invoice__warehouse_id__in=warehouse_ids) |
             Q(invoice__warehouse2_id__in=warehouse_ids)
         ).select_related(
-            "product", "product__category", "product__base_unit", "invoice"
+            "product", "product__base_unit", "invoice"
         )
-        
-        turnover_data = {}
-        # ic(start_items)
-        for item in start_items:
-            p = item.product  
-            inv = item.invoice
-            if inv.canceled_at != None:
-                continue
-    
-            if p.id not in turnover_data:
-                pu = unit_map.get(p.id)
-                if pu:
-                    unit = pu.unit.name
-                    conversion_factor = pu.conversion_factor
-                else:
-                    unit = p.base_unit.name if p.base_unit else ""
-                    conversion_factor = 1
-                
-                turnover_data[p.id] = {
-                    "id": p.id,
-                    "start_quantity": Decimal("0"),
-                    "turnover_quantity_prihod": Decimal("0"),
-                    "turnover_quantity_rashod": Decimal("0"),
-                    "turnover_quantity_wozwrat": Decimal("0"),
-                    # "total_price": Decimal("0"),
-                    "price": p.wholesale_price,
-                    "unit": unit,
-                    "conversion_factor": conversion_factor,
-                }
-                
-            cf = Decimal(turnover_data[p.id]["conversion_factor"])
-            # if p.id == 606:
-            #     # ic(cf)
-            #     ic(item.selected_quantity)
-            
-            if inv.wozwrat_or_prihod == "prihod":
-                if inv.warehouse_id in warehouse_ids:
-                    turnover_data[p.id]["start_quantity"] += (item.selected_quantity / cf)
-            elif inv.wozwrat_or_prihod == "rashod":
-                if inv.warehouse_id in warehouse_ids:
-                    turnover_data[p.id]["start_quantity"] -= (item.selected_quantity / cf)
-            elif inv.wozwrat_or_prihod == "wozwrat":
-                if inv.warehouse_id in warehouse_ids:
-                    turnover_data[p.id]["start_quantity"] += (item.selected_quantity / cf)
-            elif inv.wozwrat_or_prihod == "transfer":
-                # если со склада (и склад в выбранных)
-                if inv.warehouse_id in warehouse_ids:
-                    turnover_data[p.id]["start_quantity"] -= (item.selected_quantity / cf)
-                # если на склад (и склад в выбранных)
-                elif inv.warehouse2_id in warehouse_ids:
-                    turnover_data[p.id]["start_quantity"] += (item.selected_quantity / cf)
-                    
         
         for item in period_items:
             p = item.product  
@@ -564,13 +715,16 @@ class ProductViewSet(viewsets.ModelViewSet):
                 continue
             
             if p.id not in turnover_data:
-                pu = unit_map.get(p.id)
-                if pu:
-                    # unit = pu.unit.name
-                    conversion_factor = pu.conversion_factor
-                else:
-                    # unit = p.base_unit.name if p.base_unit else ""
-                    conversion_factor = 1
+                # pu = unit_map.get(p.id)
+                # if pu:
+                #     # unit = pu.unit.name
+                #     conversion_factor = pu.conversion_factor
+                # else:
+                #     # unit = p.base_unit.name if p.base_unit else ""
+                #     conversion_factor = 1
+                
+                unit, cf = get_unit_and_cf(unit_map, p)
+                # ic(unit, cf)
                     
                 turnover_data[p.id] = {
                     "id": p.id,
@@ -581,27 +735,29 @@ class ProductViewSet(viewsets.ModelViewSet):
                     # "total_price": Decimal("0"),
                     "price": p.wholesale_price,
                     # "unit": unit,
-                    "conversion_factor": conversion_factor,
+                    "conversion_factor": cf,
                 }
+            # ic(unit, cf)
                 
             cf = Decimal(turnover_data[p.id]["conversion_factor"])
+            qty = item.selected_quantity
             
             if inv.wozwrat_or_prihod == "prihod":
                 if inv.warehouse_id in warehouse_ids:
-                    turnover_data[p.id]["turnover_quantity_prihod"] += (item.selected_quantity / cf)
+                    turnover_data[p.id]["turnover_quantity_prihod"] += qty
             elif inv.wozwrat_or_prihod == "rashod":
                 if inv.warehouse_id in warehouse_ids:
-                    turnover_data[p.id]["turnover_quantity_rashod"] += (item.selected_quantity / cf)
+                    turnover_data[p.id]["turnover_quantity_rashod"] += qty
             elif inv.wozwrat_or_prihod == "wozwrat":
                 if inv.warehouse_id in warehouse_ids:
-                    turnover_data[p.id]["turnover_quantity_wozwrat"] += (item.selected_quantity / cf)
+                    turnover_data[p.id]["turnover_quantity_wozwrat"] += qty
             elif inv.wozwrat_or_prihod == "transfer":
                 # если со склада (и склад в выбранных)
                 if inv.warehouse_id in warehouse_ids:
-                    turnover_data[p.id]["turnover_quantity_rashod"] += (item.selected_quantity / cf)
+                    turnover_data[p.id]["turnover_quantity_rashod"] += qty
                 # если на склад (и склад в выбранных)
                 elif inv.warehouse2_id in warehouse_ids:
-                    turnover_data[p.id]["turnover_quantity_prihod"] += (item.selected_quantity / cf)
+                    turnover_data[p.id]["turnover_quantity_prihod"] += qty
         
         
         for id, data in turnover_data.items():

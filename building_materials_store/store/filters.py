@@ -3,6 +3,7 @@ from django.contrib.postgres.search import TrigramSimilarity
 import django_filters
 from .models import *
 from icecream import ic
+import re
 
 
 # Для фильтрации по списку значений (например, ?categories=1,2)
@@ -68,27 +69,99 @@ class ProductFilter(django_filters.FilterSet):
     #         Q(name__icontains=value) | Q(similarity__gt=0.1)
     #     ).order_by('rank', '-similarity')
     
+    # def filter_search(self, queryset, name, value):
+    #     ic("reeeee")
+    #     if not value:
+    #         return queryset
+
+    #     value = value.strip()
+
+    #     return queryset.annotate(
+    #         rank=Case(
+    #             When(name__iexact=value, then=Value(1)),
+    #             When(name__istartswith=value, then=Value(2)),
+    #             When(name__icontains=value, then=Value(3)),
+    #             default=Value(4),
+    #             output_field=IntegerField()
+    #         )
+    #     ).filter(
+    #         name__icontains=value
+    #     ).order_by('rank', 'name')
+
+    # class Meta:
+    #     model = Product
+    #     fields = []
+    
+    # def filter_search(self, queryset, name, value):
+    #     if not value:
+    #         return queryset
+
+    #     # нормализация
+    #     value = value.lower().strip()
+    #     value = value.replace("d.", "")
+    #     value = re.sub(r"[^\w\s]", " ", value)
+    #     words = value.split()
+    #     ic("ewewe")
+
+    #     if not words:
+    #         return queryset
+
+    #     # AND поиск по каждому слову
+    #     q = Q()
+    #     for word in words:
+    #         q &= Q(name__icontains=word)
+
+    #     return (
+    #         queryset
+    #         .annotate(
+    #             rank=Case(
+    #                 When(name__icontains=value, then=Value(1)),
+    #                 When(name__istartswith=value, then=Value(2)),
+    #                 When(name__iexact=value, then=Value(3)),
+    #                 default=Value(4),
+    #                 output_field=IntegerField(),
+    #             )
+    #         )
+    #         .filter(q)
+    #         .order_by("rank", "name")
+    #     )
+    
     def filter_search(self, queryset, name, value):
         if not value:
             return queryset
 
-        value = value.strip()
+        raw_value = value.strip()
+        norm_value = raw_value.lower()
+        norm_value = re.sub(r"[^\w\s-]", "", norm_value)
 
-        return queryset.annotate(
-            rank=Case(
-                When(name__iexact=value, then=Value(1)),
-                When(name__istartswith=value, then=Value(2)),
-                When(name__icontains=value, then=Value(3)),
-                default=Value(4),
-                output_field=IntegerField()
+        words = norm_value.replace("-", " ").split()
+
+        q = Q()
+        for word in words:
+            q &= Q(name__icontains=word)
+
+        return (
+            queryset
+            .annotate(
+                rank=Case(
+                    # 1️⃣ точное совпадение
+                    When(name__iexact=raw_value, then=Value(1)),
+
+                    # 2️⃣ начинается с ab-3
+                    When(name__istartswith=raw_value, then=Value(2)),
+
+                    # 3️⃣ содержит ab-3
+                    When(name__icontains=raw_value, then=Value(3)),
+
+                    # 4️⃣ просто подходит по словам
+                    default=Value(4),
+                    output_field=IntegerField(),
+                )
             )
-        ).filter(
-            name__icontains=value
-        ).order_by('rank', 'name')
-
-    class Meta:
-        model = Product
-        fields = []
+            .filter(q)
+            .order_by("rank", "name")
+        )
+       
 
 
 

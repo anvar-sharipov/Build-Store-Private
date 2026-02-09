@@ -54,7 +54,7 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
     }
 
     return (
-      <div key={accountKey} className="mb-4 print:mb-2 print:w-1/2 print:inline-block print:align-top print:px-1 text-sm">
+      <div key={accountKey} className="mb-4 print:mb-2 print:inline-block print:align-top print:px-1 text-sm">
         <table className="w-full table-auto border-collapse print:text-sm">
           <thead>
             <tr className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 print:bg-white print:!text-black">
@@ -111,10 +111,10 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold" colSpan={2}>
                 {t("Closing balance")}
               </td>
-              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right whitespace-nowrap">
                 {formatNumber2(accountData.saldo[0], 2) !== 0 ? formatNumber2(accountData.saldo[0]) : "-"}
               </td>
-              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right whitespace-nowrap">
                 {formatNumber2(accountData.saldo[1], 2) !== 0 ? formatNumber2(accountData.saldo[1]) : "-"}
               </td>
             </tr>

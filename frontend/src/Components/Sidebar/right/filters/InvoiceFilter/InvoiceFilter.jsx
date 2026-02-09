@@ -14,20 +14,24 @@ const InvoiceFilter = () => {
   const { dateFrom, dateTo } = useContext(DateContext);
   const [searchParams, setSearchParams] = useSearchParams();
   const [wozwratOrPrihod, setWozwratOrPrihod] = useState(searchParams.get("wozwrat_or_prihod") || "");
+
+  const [selectedEntry, setSelectedEntry] = useState(searchParams.get("selectedEntry") || "");
+  const [sortInvoice, setSortInvoice] = useState(searchParams.get("sortInvoice") || "");
+
   const [allPartners, setAllPartners] = useState([]);
   const partnerInputRef = useRef(null);
   const partnerListRef = useRef([]);
   const partnerX_Ref = useRef(null);
   const [filteredPartners, setFilteredPartners] = useState([]);
   const [selectedPartner, setSelectedPartner] = useState(null);
-  const [selectedEntry, setSelectedEntry] = useState("");
-  const [sortInvoice, setSortInvoice] = useState("");
+  // const [selectedEntry, setSelectedEntry] = useState("");
+  // const [sortInvoice, setSortInvoice] = useState("");
   const change_type = new Audio("/sounds/change_type.mp3");
 
   const fetchPartners = async () => {
     try {
       const res = await myAxios.get("/partners/?no_pagination=1");
-      console.log("res.data", res.data);
+      // console.log("res.data", res.data);
       setAllPartners(res.data);
     } catch (error) {
       console.log("Ошибка при загрузке Partners", error);
@@ -39,7 +43,31 @@ const InvoiceFilter = () => {
   }, []);
 
   useEffect(() => {
+    const partnerId = searchParams.get("partner_id");
+
+    if (!partnerId) {
+      setSelectedPartner(null);
+      return;
+    }
+
+    if (!allPartners.length) return;
+
+    const partner = allPartners.find((p) => String(p.id) === String(partnerId));
+
+    if (partner) {
+      setSelectedPartner(partner);
+    }
+  }, [searchParams, allPartners]);
+
+  useEffect(() => {
     const params = new URLSearchParams(searchParams.toString());
+    console.log("params", console.log("params obj", Object.fromEntries(params.entries())));
+    console.log("selectedPartner", selectedPartner);
+    const partner_id = params.get("partner_id");
+    // if (partner_id) {
+    //   setSelectedPartner
+    // }
+
     if (wozwratOrPrihod) {
       params.set("wozwrat_or_prihod", wozwratOrPrihod);
     } else {
@@ -47,9 +75,10 @@ const InvoiceFilter = () => {
     }
     if (selectedPartner?.id) {
       params.set("partner_id", selectedPartner.id);
-    } else {
-      params.delete("partner_id");
-    }
+    } 
+    // else {
+    //   params.delete("partner_id");
+    // }
     if (selectedEntry === "entried" || selectedEntry === "notEntried" || selectedEntry === "canceled") {
       params.set("selectedEntry", selectedEntry);
     } else {

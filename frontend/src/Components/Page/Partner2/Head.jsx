@@ -2,11 +2,13 @@ import { IoIosAddCircleOutline } from "react-icons/io";
 import { myClass } from "../../tailwindClasses";
 import SmartTooltip from "../../SmartTooltip";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, useContext } from "react";
 import MySearchInput from "../../UI/MySearchInput";
 import { RiFileExcel2Fill } from "react-icons/ri";
 import { partnerDownloadExcel } from "./partnerDownloadExcel";
 import myAxios from "../../axios";
+import ExcelButton from "../../UI/Universal/ExcelButton";
+import { DateContext } from "../../UI/DateProvider";
 
 const Head = ({
   setOpenModal,
@@ -27,6 +29,77 @@ const Head = ({
 }) => {
   const { t } = useTranslation();
   const [isAnimating, setIsAnimating] = useState(false);
+  const [downloadExcel, setDownloadExcel] = useState(false);
+  const { dateFrom, dateTo } = useContext(DateContext);
+
+
+
+
+  const downloadExcelPartners = async () => {
+    if (!dateFrom || !dateTo) {
+      showNotification(t("choose diapazon date"), "error");
+      return;
+    }
+
+    setDownloadExcel(true);
+
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+
+      const params = new URLSearchParams();
+
+      params.append("dateFrom", dateFrom);
+      params.append("dateTo", dateTo);
+
+      const type = searchParams.get("type"); // founder klient
+      const is_active = searchParams.get("is_active");
+      const sort = searchParams.get("sort"); // balance_tmt_asc balance_tmt_desc balance_usd_asc balance_usd_desc
+      const search = searchParams.get("search");
+
+
+      if (type) params.append("type", type);
+      if (is_active) params.append("is_active", is_active);
+      if (search) params.append("search", search);
+      if (sort) params.append("sort", sort);
+
+      const res = await myAxios.get(`download_excel_partners_diapazon?${params.toString()}`, {
+        responseType: "blob", // 🔥 ОБЯЗАТЕЛЬНО
+      });
+
+      // 👇 скачивание файла
+      const blob = new Blob([res.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `partners_${dateFrom}_${dateTo}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.log("cant downloadExcelPartners", err);
+
+      if (err.response?.data instanceof Blob) {
+        const text = await err.response.data.text(); // 👈 ВАЖНО
+        try {
+          const json = JSON.parse(text);
+          showNotification(t(json.error), "error");
+        } catch {
+          showNotification("Excel download error", "error");
+        }
+      } else {
+        showNotification(err?.response?.data?.error || "Excel download error", "error");
+      }
+    } finally {
+      setTimeout(() => {
+        setDownloadExcel(false);
+      }, 1000);
+    }
+  };
 
   const debounceTimeoutRef = useRef(null);
 
@@ -130,7 +203,7 @@ const Head = ({
         </button>
       </SmartTooltip>
 
-      <div className="flex gap-3 items-center">
+      {/* <div className="flex gap-3 items-center">
         {t("total")}: {count}
         <RiFileExcel2Fill
           role="button"
@@ -138,6 +211,9 @@ const Head = ({
           className={`cursor-pointer rounded transition-transform duration-300 text-green-700 hover:text-green-600 ${isAnimating ? "scale-125" : "scale-100"}`}
           onClick={handleDownload}
         />
+      </div> */}
+      <div>
+        <ExcelButton onClick={downloadExcelPartners} disabled={downloadExcel} />
       </div>
 
       <div className="flex items-end gap-3">

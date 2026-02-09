@@ -35,9 +35,7 @@ const ProductList = ({
   //   navigate(ROUTES_RAPORT.DETAIL_PRODUCT_OBOROT.replace(":id", productId).replace(":warehouseId", warehouseId));
   // };
   // console.log("products", products);
-  
 
-  
   const sound_up_down = new Audio("/sounds/up_down.mp3");
 
   return (
@@ -48,8 +46,7 @@ const ProductList = ({
             {products.map((p, index) => {
               let unit_name = p.base_unit_obj.name;
               let quantity = parseFloat(p.quantity_on_selected_warehouses || p.total_quantity || 0);
-              const currency = p.warehouses_data[0].warehouse_currency
-              
+              const currency = p.warehouses_data[0].warehouse_currency;
 
               if (p.units.length > 0) {
                 p.units.forEach((u) => {
@@ -227,8 +224,8 @@ const ProductList = ({
                   </div>
 
                   {/* Tablet/Desktop layout (>= 640px) */}
-                  <div className="hidden sm:flex justify-between">
-                    <div className="flex items-center gap-3 min-w-0">
+                  <div className="hidden sm:flex justify-between sm:flex-col">
+                    <div className="flex items-center gap-3 min-w-0 mx-auto w-full">
                       <div className="flex-shrink-0 w-6 h-6 bg-gray-100 dark:bg-gray-800 rounded-md flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
                         <span className="text-xs font-medium text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400">{index + 1}</span>
                       </div>
@@ -242,7 +239,7 @@ const ProductList = ({
                       )}
 
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{p.name}</h3>
+                        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{p.name}</h3>
                         {p.category_name_obj?.name && (
                           <div className="flex items-center gap-1 mt-0.5">
                             <FolderOpen className="w-3 h-3 text-gray-400" />
@@ -250,9 +247,52 @@ const ProductList = ({
                           </div>
                         )}
                       </div>
+
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg">
+                          <Package className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                          <span className="text-sm font-medium text-amber-700 dark:text-amber-300 whitespace-nowrap">
+                            {myFormatNumber(quantity)} {unit_name}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+                          <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                            {formatNumber2(p.wholesale_price)} {currency}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-0.5">
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="p-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setProductEditModal2({ open: true, data: p, index });
+                            }}
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </motion.button>
+
+                          {authUser === "anvar" && (
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-950/50 rounded-lg transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenDeleteModal({ open: true, data: p, index });
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </motion.button>
+                          )}
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto w-2/3 mx-auto">
                       <table className="w-full text-sm border border-gray-300 border-collapse">
                         <thead>
                           <tr>
@@ -262,11 +302,11 @@ const ProductList = ({
                             <th className="border border-gray-300 px-2 py-1 text-left font-normal" colSpan={2}>
                               Оборот приход
                             </th>
-                            
+
                             <th className="border border-gray-300 px-2 py-1 text-left font-normal" colSpan={2}>
                               Оборот возврат
                             </th>
-                            
+
                             <th className="border border-gray-300 px-2 py-1 text-left font-normal" colSpan={2}>
                               Оборот расход
                             </th>
@@ -306,47 +346,6 @@ const ProductList = ({
                           </tr>
                         </tbody>
                       </table>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg">
-                        <Package className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                        <span className="text-sm font-medium text-amber-700 dark:text-amber-300 whitespace-nowrap">
-                          {myFormatNumber(quantity)} {unit_name}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-lg">
-                        <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{formatNumber2(p.wholesale_price)} {currency}</span>
-                      </div>
-
-                      <div className="flex items-center gap-0.5">
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="p-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-950/50 rounded-lg transition-colors"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setProductEditModal2({ open: true, data: p, index });
-                          }}
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </motion.button>
-
-                        {authUser === "anvar" && (
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-100 dark:text-red-400 dark:hover:bg-red-950/50 rounded-lg transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenDeleteModal({ open: true, data: p, index });
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </motion.button>
-                        )}
-                      </div>
                     </div>
                   </div>
                 </motion.li>

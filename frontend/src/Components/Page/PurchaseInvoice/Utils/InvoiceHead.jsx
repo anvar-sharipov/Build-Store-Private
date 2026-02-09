@@ -26,7 +26,6 @@ import { DateContext } from "../../../UI/DateProvider";
 import { getSaldoForPartner } from "../../../../services/saldoService";
 import MyFormatDate from "../../../UI/MyFormatDate";
 
-
 const InvoiceHead = ({
   refs,
   fakturaBgDynamic,
@@ -47,8 +46,8 @@ const InvoiceHead = ({
   setLetPrintSaldo,
   setSaldo2,
 }) => {
-  console.log("saldo2222", saldo2);
-  
+  // console.log("saldo2222", saldo2);
+
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { dateProwodok } = useContext(DateContext);
@@ -60,11 +59,25 @@ const InvoiceHead = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [dayIsClosed, setDayIsClosed] = useState(false);
   const sound_open_faktura = new Audio("/sounds/open_faktura.mp3");
+
   const handleClick = () => {
     sound_open_faktura.currentTime = 0;
     sound_open_faktura.play();
     navigate(-1); // возвращаемся на предыдущую страницу
   };
+
+  // const handleClick = () => {
+  //   sound_open_faktura.currentTime = 0;
+  //   sound_open_faktura.play();
+
+  //   navigate("/purchase_invoice", {
+  //     replace: true,
+  //     state: {
+  //       focusInvoiceId: values.id, // ← ВОТ ОН
+  //     },
+  //   });
+  // };
+
   const { showNotification } = useNotification();
 
   const [saldoForExcel, setSaldoForExcel] = useState(null);
@@ -72,8 +85,8 @@ const InvoiceHead = ({
   const fetchSaldo = async (date, partnerId) => {
     try {
       const saldo = await getSaldoForPartner(date, partnerId);
-      console.log("saldo", saldo);
-      
+      // console.log("saldo", saldo);
+
       setSaldoForExcel(saldo);
     } catch (err) {
       console.log("Ошибка при получении сальдо", err);
@@ -83,8 +96,7 @@ const InvoiceHead = ({
   useEffect(() => {
     if (!values.partner?.id) return;
     fetchSaldo(dateProwodok, values.partner.id);
-  }, [values.partner?.id,dateProwodok]);
-
+  }, [values.partner?.id, dateProwodok]);
 
   // const { dateProwodok } = useContext(DateContext);
 
@@ -95,7 +107,7 @@ const InvoiceHead = ({
         comment: comment,
       });
 
-      console.log("Entry canceled successfully:", res.data);
+      // console.log("Entry canceled successfully:", res.data);
       // при успехе можно закрыть модалку или обновить данные
       setEntryCancelModal(false);
       setCancelComment("");
@@ -106,8 +118,12 @@ const InvoiceHead = ({
     } catch (error) {
       console.error("Can't cancel invoice entry:", error);
       console.log("error ===", error);
-
-      showNotification(`${t(error.response.data.message)}`, "error");
+      if (error.response.data.message == "can cancel only") {
+        showNotification(`${t(error.response.data.message)} ${error.response.data.entry_by}`, "error");
+      } else {
+        showNotification(`${t(error.response.data.message)}`, "error");
+      }
+      
     }
   };
 
@@ -246,7 +262,7 @@ const InvoiceHead = ({
               values,
               visibleColumns,
               printVisibleColumns,
-              t,// передаем данные сальдо
+              t, // передаем данные сальдо
               values.awto,
               saldoForExcel,
               saldo2,

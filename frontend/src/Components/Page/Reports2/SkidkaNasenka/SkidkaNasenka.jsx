@@ -54,7 +54,7 @@ const SkidkaNasenka = () => {
           printExcel: printExcel,
         },
       });
-      console.log("res", res);
+      // console.log("res", res);
       setData(res.data);
       setActiveWarehouseIndex(0); // первый склад активный
     } catch (error) {

@@ -235,6 +235,10 @@ const Harytlar = () => {
   }, []);
 
   const fetchProducts = async (url = null) => {
+    console.log("dateFrom", dateFrom);
+    console.log("dateTo", dateTo);
+    
+    
     setLoading(true);
 
     // если url не передан — значит, это первая загрузка (с фильтрами)
@@ -243,6 +247,8 @@ const Harytlar = () => {
 
     try {
       const res = await myAxios.get(fullUrl);
+      console.log("dadadada");
+      
 
       // если это первая страница — заменяем
       if (!url) {
@@ -294,6 +300,7 @@ const Harytlar = () => {
   }, [productAddModalOpen]);
 
   useEffect(() => {
+    if (!dateFrom || !dateTo) return;
     const load = async () => {
       await fetchProducts();
       searchInputRef.current?.focus();

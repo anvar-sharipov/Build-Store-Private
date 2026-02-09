@@ -134,11 +134,11 @@ def download_excel_products_diapazon(request):
   
     
     
-    ic(warehouse_list)
-    ic(categories_list)
-    ic(search)
-    ic(is_active)
-    ic(request)
+    # ic(warehouse_list)
+    # ic(categories_list)
+    # ic(search)
+    # ic(is_active)
+    # ic(request)
     
 
     if not date_from or not date_to:
@@ -166,15 +166,15 @@ def download_excel_products_diapazon(request):
     day_end_str = day_end.strftime("%d.%m.%Y")
     
     if not warehouse_list:
-        ic('tut')
+        # ic('tut')
         return Response(
             {"error": "select_warehouse"},
             status=status.HTTP_400_BAD_REQUEST
         )
         
     
-    ic(day_start)
-    ic(day_end)
+    # ic(day_start)
+    # ic(day_end)
     
     products = Product.objects.filter(
         Q(warehouse_products__warehouse_id__in=warehouse_list) |

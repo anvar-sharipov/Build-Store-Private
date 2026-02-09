@@ -98,7 +98,7 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
 
   if (authGroup !== "admin") return;
 
-  console.log("value gggg", values);
+  // console.log("value gggg", values);
 
   return (
     <div className="flex items-center sm:flex-row gap-4 mt-6 sm:mr-6 ml-5 print:hidden text-sm">

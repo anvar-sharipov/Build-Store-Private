@@ -676,8 +676,15 @@ def download_osw_excel(request):
                 ws_detail[f"B{row}"] = v["agent"]["name"] if v["agent"] else ""
                 ws_detail[f"C{row}"] = v["partner"]["name"] if v["partner"] else ""
                 
-                ws_detail[f"D{row}"] = v["debit_start"]
-                ws_detail[f"E{row}"] = v["credit_start"]
+                start_saldo_debit = Decimal("0")
+                start_saldo_credit = Decimal("0")
+                saldo_start_row = v["debit_start"] - v["credit_start"]
+                if saldo_start_row > 0:
+                    start_saldo_debit = saldo_start_row
+                elif saldo_start_row < 0:
+                    start_saldo_credit = abs(saldo_start_row)
+                ws_detail[f"D{row}"] = start_saldo_debit
+                ws_detail[f"E{row}"] = start_saldo_credit
                 
                 ws_detail[f"F{row}"] = v["debit_turnover"]
                 ws_detail[f"G{row}"] = v["credit_turnover"]

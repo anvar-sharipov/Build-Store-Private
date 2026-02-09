@@ -82,7 +82,7 @@ const getDefaultValues = async (id = null, dateProwodok = null, setDateProwodok)
       localStorage.setItem("type_price", type_price);
 
       const warehouse = data.warehouse;
-      console.log("data", data);
+      // console.log("data", data);
       
       const warehouse2 = data.warehouse2;
       localStorage.setItem("purchaseWarehouse", JSON.stringify(warehouse));

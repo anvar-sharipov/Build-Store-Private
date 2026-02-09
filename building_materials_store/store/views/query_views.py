@@ -496,10 +496,10 @@ def get_saldo2(partner_obj, getDate):
         
         # debit_end = debit_start + debit_oborot
         debit_end = start_saldo_debit + debit_oborot
-        if account.number == "60":
-            ic(debit_end)
-            # ic(credit_oborot)
-            # ic(debit_oborot - credit_oborot)
+        # if account.number == "60":
+        #     ic(debit_end)
+        #     # ic(credit_oborot)
+        #     # ic(debit_oborot - credit_oborot)
         credit_end = start_saldo_credit + credit_oborot
         saldo = debit_end - credit_end
         saldo_debit = abs(saldo) if saldo > 0 else 0
@@ -2806,7 +2806,7 @@ def close_day(request):
         
 
         if account_number.startswith("60") or account_number.startswith("62"):
-            ic(account_id, account_number)
+            # ic(account_id, account_number)
             partners = Partner.objects.all().select_related("agent")
             
             account_60_62 = {}
@@ -3006,8 +3006,18 @@ def close_day(request):
                 ws_detail[f"B{row}"] = v["agent"]["name"] if v["agent"] else ""
                 ws_detail[f"C{row}"] = v["partner"]["name"] if v["partner"] else ""
                 
-                ws_detail[f"D{row}"] = v["debit_start"]
-                ws_detail[f"E{row}"] = v["credit_start"]
+                start_saldo_debit = Decimal("0")
+                start_saldo_credit = Decimal("0")
+                saldo_start_row = v["debit_start"] - v["credit_start"]
+                if saldo_start_row > 0:
+                    start_saldo_debit = saldo_start_row
+                elif saldo_start_row < 0:
+                    start_saldo_credit = abs(saldo_start_row)
+                ws_detail[f"D{row}"] = start_saldo_debit
+                ws_detail[f"E{row}"] = start_saldo_credit
+                
+                # ws_detail[f"D{row}"] = v["debit_start"]
+                # ws_detail[f"E{row}"] = v["credit_start"]
                 
                 ws_detail[f"F{row}"] = v["debit_turnover"]
                 ws_detail[f"G{row}"] = v["credit_turnover"]
@@ -3195,10 +3205,10 @@ def close_day(request):
                 cf = prod["product"]["cf"]
                 qty = Decimal(item.selected_quantity) / cf
                 calculated_price = qty * Decimal(p.wholesale_price)
-                if p.name == 'UYP-231, Srup 6.3*70 "PAiiA" (2kg/5guty)':
-                    ic(qty)
-                    ic(item.wholesale_price)
-                    ic(calculated_price)
+                # if p.name == 'UYP-231, Srup 6.3*70 "PAiiA" (2kg/5guty)':
+                #     ic(qty)
+                #     ic(item.wholesale_price)
+                #     ic(calculated_price)
                 # Проверяем принадлежность к выбранным складам
                 if inv.wozwrat_or_prihod == "prihod":
                     if inv.warehouse_id == w_acc.warehouse_id:

@@ -38,11 +38,11 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo, getSaldo, saldo2, g
   //     const saldo = await myAxios.get("get_saldo_for_partner_for_selected_date", {
   //       params: { date: date, partnerId: partnerId },
   //     });
-  //     console.log("saldo", saldo.data.saldo);
+
   //     setSaldo(saldo.data.saldo);
-  //     // console.log('DADADADAD');
+
   //   } catch (error) {
-  //     console.log("error get_saldo_for_partner_for_selected_date from fetchPartner", error);
+
   //   }
   // };
 
@@ -124,7 +124,7 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo, getSaldo, saldo2, g
           .map((r) => r.item)
       : allPartners;
     setFilteredPartners(results);
-    // console.log("results", results);
+   
   };
 
   if (values.partner?.id) {

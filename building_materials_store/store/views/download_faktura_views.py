@@ -120,11 +120,11 @@ def download_excel_fakturs_diapazon(request):
     
     
     
-    ic(wozwrat_or_prihod)
-    ic(sortInvoice)
-    ic(selectedEntry)
-    ic(partner_id)
-    ic(request)
+    # ic(wozwrat_or_prihod)
+    # ic(sortInvoice)
+    # ic(selectedEntry)
+    # ic(partner_id)
+    # ic(request)
     
 
     if not date_from or not date_to:
@@ -151,8 +151,8 @@ def download_excel_fakturs_diapazon(request):
     day_start_str = day_start.strftime("%d.%m.%Y")
     day_end_str = day_end.strftime("%d.%m.%Y")
     
-    ic(day_start)
-    ic(day_end)
+    # ic(day_start)
+    # ic(day_end)
     
     #  entry_created_at_handle created_at_handle updated_at_handle invoice_date
     qs = Invoice.objects.filter(
@@ -256,7 +256,7 @@ def download_excel_fakturs_diapazon(request):
         price_type = "Оптовая" if q.type_price == "wholesale_price" else "Розница"
         awto = q.awto.name if q.awto else ""
         warehouse_name = q.warehouse.name if q.warehouse else ""
-        warehouse_name2 = q.warehouse2.name if q.warehouse else ""
+        warehouse_name2 = q.warehouse2.name if q.warehouse2 else ""
     
         faktura_type = "Черновик"
         if q.wozwrat_or_prihod == "rashod":
@@ -305,10 +305,10 @@ def download_excel_fakturs_diapazon(request):
         
         row += 1
         
-        ws[f"A{row}"] = "Тип цены:"
-        ws[f"B{row}"] = price_type
+        # ws[f"A{row}"] = "Тип цены:"
+        # ws[f"B{row}"] = price_type
         
-        row += 1
+        # row += 1
         
         ws[f"A{row}"] = "Авто:"
         ws[f"B{row}"] = awto

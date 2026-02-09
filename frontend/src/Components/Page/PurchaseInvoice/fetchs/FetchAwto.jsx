@@ -31,7 +31,7 @@ const FetchAwto = ({ refs }) => {
       //   const activeEmployeers = res.data.filter((emp) => emp.is_active).sort((a, b) => a.name.localeCompare(b.name));
       setAllEmployeers(res.data);
       //   setFilteredEmployeers(activeEmployeers);
-      //   console.log("res.data", res.data);
+      
     } catch (error) {
       console.log("Ошибка при загрузке employeers", error);
     }
@@ -84,7 +84,7 @@ const FetchAwto = ({ refs }) => {
           .map((r) => r.item)
       : allEmployeers;
     setFilteredEmployeers(results);
-    // console.log("results", results);
+    
   };
 
   if (values.awto?.id) {

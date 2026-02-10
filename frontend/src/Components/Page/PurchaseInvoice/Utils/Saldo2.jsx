@@ -54,19 +54,20 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
     }
 
     return (
-      <div key={accountKey} className="mb-4 print:mb-2 print:inline-block print:align-top print:px-1 text-sm">
-        <table className="w-full table-auto border-collapse print:text-sm">
+      // print:inline-block
+      <div key={accountKey} className="mb-4 print:mb-2 print:block text-sm">
+        <table className="w-full table-fixed border-collapse print:text-sm">
           <thead>
-            <tr className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 print:bg-white print:!text-black">
-              <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">{t("Date")}</th>
+            <tr className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 print:bg-white print:!text-black print:pointer-events-none">
+              <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold w-24">{t("Date")}</th>
               <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">{accountName}</th>
-              <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">{t("Debit")}</th>
-              <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">{t("Credit")}</th>
+              <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold w-20">{t("Debit")}</th>
+              <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold w-20">{t("Credit")}</th>
             </tr>
           </thead>
           <tbody>
             {/* Начальное сальдо */}
-            <tr className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
+            <tr className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white print:pointer-events-none">
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium" colSpan={2}>
                 {t("Opening balance")}
               </td>
@@ -79,7 +80,7 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
               accountData.today_entries.map((e, idx) => (
                 <tr
                   key={idx}
-                  className="cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white print:cursor-default transition-colors"
+                  className="print:pointer-events-none cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white print:cursor-default transition-colors"
                   onClick={() => handleRowClick(e[4])}
                 >
                   <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black whitespace-nowrap">{e[0].split(" ")[0].replace(/-/g, ".")}</td>
@@ -89,7 +90,7 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
                 </tr>
               ))
             ) : (
-              <tr className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
+              <tr className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white print:pointer-events-none">
                 <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-center">-</td>
                 <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-center">-</td>
                 <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-center">-</td>
@@ -98,7 +99,7 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
             )}
 
             {/* Итоговое сальдо */}
-            <tr className="bg-gray-100 dark:bg-gray-750 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white dark:bg-gray-800">
+            <tr className="bg-gray-100 dark:bg-gray-750 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white dark:bg-gray-800 print:pointer-events-none">
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold" colSpan={2}>
                 {t("Total turnover")}
               </td>
@@ -107,15 +108,15 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
             </tr>
 
             {/* Конечное сальдо */}
-            <tr className="bg-gray-100 dark:bg-gray-750 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white dark:bg-gray-800">
+            <tr className="bg-gray-100 dark:bg-gray-750 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white dark:bg-gray-800 print:pointer-events-none">
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold" colSpan={2}>
                 {t("Closing balance")}
               </td>
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right whitespace-nowrap">
-                {formatNumber2(accountData.saldo[0], 2) !== 0 ? formatNumber2(accountData.saldo[0]) : "-"}
+                {accountData.saldo[0] !== 0 ? formatNumber2(accountData.saldo[0]) : "-"}
               </td>
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right whitespace-nowrap">
-                {formatNumber2(accountData.saldo[1], 2) !== 0 ? formatNumber2(accountData.saldo[1]) : "-"}
+                {accountData.saldo[1] !== 0 ? formatNumber2(accountData.saldo[1]) : "-"}
               </td>
             </tr>
           </tbody>
@@ -152,8 +153,8 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
         </div>
       </div>
 
-      {/* Контейнер для карточек */}
-      <div className="space-y-4 print:space-y-0 print:flex print:flex-wrap">
+      {/* Контейнер для карточек print:flex print:flex-wrap */}
+      <div className="space-y-4 print:space-y-0 print:block">
         {/* 4 отдельные таблицы для счетов */}
         {renderAccountTable("60_USD", "60 Клиент USD")}
         <div className="hidden">

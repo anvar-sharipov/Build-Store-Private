@@ -2,12 +2,12 @@ import myAxios from "../Components/axios";
 
 
 
-export const getSaldoForPartner = async (date, partnerId) => {
+export const getSaldoForPartner = async (partnerId, dateFrom, dateTo) => {
   try {
     const response = await myAxios.get(
       "get_saldo_for_partner_for_selected_date2",
       {
-        params: { date, partnerId },
+        params: { partnerId, dateFrom, dateTo },
       }
     );
     return response.data.saldo;

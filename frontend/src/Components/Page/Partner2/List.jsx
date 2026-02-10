@@ -38,9 +38,10 @@ const List = ({
   const { showNotification } = useNotification();
   const [saldo, setSaldo] = useState(null);
 
-  const fetchSaldo = async (date, partnerId) => {
+  const fetchSaldo = async (partnerId, date_from, date_to) => {
+    if (!partnerId || !date_from || !date_to) return;
     try {
-      const saldo = await getSaldoForPartner(date, partnerId);
+      const saldo = await getSaldoForPartner(partnerId, date_from, date_to);
       setSaldo(saldo);
     } catch (err) {
       console.log("Ошибка при получении сальдо", err);
@@ -48,9 +49,9 @@ const List = ({
   };
 
   useEffect(() => {
-    if (!openPartnerCardModal.partnerId) return;
-    fetchSaldo(dateProwodok, openPartnerCardModal.partnerId);
-  }, [openPartnerCardModal]);
+    if (!openPartnerCardModal.partnerId, !dateFrom, !dateTo) return;
+    fetchSaldo(openPartnerCardModal.partnerId, dateFrom, dateTo);
+  }, [openPartnerCardModal, dateFrom, dateTo]);
 
   const openPartnerModal = (partner) => {
     let agent_obj = null;

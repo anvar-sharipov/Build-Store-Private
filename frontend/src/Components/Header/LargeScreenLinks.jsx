@@ -18,7 +18,68 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
   const { authUser, authGroup } = useContext(AuthContext);
   const [totalSum, setTotalSum] = useState(null);
 
+  // Локальные состояния для инпутов
+  const [localDateFrom, setLocalDateFrom] = useState(dateFrom);
+  const [localDateTo, setLocalDateTo] = useState(dateTo);
+
+  // Таймеры для debounce
+  const dateFromTimerRef = useRef(null);
+  const dateToTimerRef = useRef(null);
+
+  // Синхронизация при изменении контекста извне
+  useEffect(() => {
+    setLocalDateFrom(dateFrom);
+  }, [dateFrom]);
+
+  useEffect(() => {
+    setLocalDateTo(dateTo);
+  }, [dateTo]);
+
+  // Обработчик изменения dateFrom с задержкой
+  const handleDateFromChange = (e) => {
+    const newValue = e.target.value;
+    setLocalDateFrom(newValue);
+    
+    // Очищаем предыдущий таймер
+    if (dateFromTimerRef.current) {
+      clearTimeout(dateFromTimerRef.current);
+    }
+    
+    // Устанавливаем новый таймер на 500ms
+    dateFromTimerRef.current = setTimeout(() => {
+      setDateFrom(newValue);
+    }, 1500);
+  };
+
+   // Обработчик изменения dateTo с задержкой
+  const handleDateToChange = (e) => {
+    const newValue = e.target.value;
+    setLocalDateTo(newValue);
+    
+    // Очищаем предыдущий таймер
+    if (dateToTimerRef.current) {
+      clearTimeout(dateToTimerRef.current);
+    }
+    
+    // Устанавливаем новый таймер на 500ms
+    dateToTimerRef.current = setTimeout(() => {
+      setDateTo(newValue);
+    }, 1500);
+  };
+
+   // Очистка таймеров при размонтировании
+  useEffect(() => {
+    return () => {
+      if (dateFromTimerRef.current) clearTimeout(dateFromTimerRef.current);
+      if (dateToTimerRef.current) clearTimeout(dateToTimerRef.current);
+    };
+  }, []);
+
+
+  
+
   const jingleBells = useRef(null);
+
 
   useEffect(() => {
     jingleBells.current = new Audio("/sounds/Christmas-jingle-bells-melody.mp3");
@@ -270,15 +331,19 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
               <div className="flex gap-2">
                 <input
                   type="date"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
+                  value={localDateFrom}
+                  onChange={handleDateFromChange}
+                  // value={dateFrom}
+                  // onChange={(e) => setDateFrom(e.target.value)}
                   className="px-3 py-2 bg-gray-700 border-2 border-gray-600 rounded-lg text-gray-100 text-sm font-medium
                     focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
                 />
                 <input
                   type="date"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
+                  value={localDateTo}
+                  onChange={handleDateToChange}
+                  // value={dateTo}
+                  // onChange={(e) => setDateTo(e.target.value)}
                   className="px-3 py-2 bg-gray-700 border-2 border-gray-600 rounded-lg text-gray-100 text-sm font-medium
                     focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
                 />

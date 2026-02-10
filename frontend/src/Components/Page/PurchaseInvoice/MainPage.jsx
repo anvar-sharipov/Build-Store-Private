@@ -285,10 +285,14 @@ const MainPage = () => {
     }
   };
 
-  const getSaldo2 = async (date, partnerId) => {
+  const getSaldo2 = async (partnerId, dateFrom, dateTo) => {
     try {
       const saldo = await myAxios.get("get_saldo_for_partner_for_selected_date2", {
-        params: { date: date, partnerId: partnerId },
+        params: { 
+          partnerId: partnerId,
+          dateFrom: dateFrom, 
+          dateTo: dateTo,
+         },
       });
       // console.log("saldo", saldo.data.saldo);
       setSaldo2(saldo.data.saldo);
@@ -415,11 +419,22 @@ const MainPage = () => {
                     >
                       <FetchWarehouse />
                       <FetchAwto refs={refs} />
-                      <FetchPartner refs={refs} setSaldo={setSaldo} dateProwodok={dateProwodok} saldo={saldo} getSaldo={getSaldo} getSaldo2={getSaldo2} setSaldo2={setSaldo2} />
+                      <FetchPartner 
+                      refs={refs} 
+                      setSaldo={setSaldo} 
+                      // dateProwodok={dateProwodok} 
+                      saldo={saldo} 
+                      getSaldo={getSaldo} 
+                      getSaldo2={getSaldo2} 
+                      setSaldo2={setSaldo2} 
+                      // dateFrom={dateFrom} 
+                      // dateTo={dateTo} 
+
+                      />
                       <Comment />
                     </div>
                     {/* <Saldo saldo={saldo} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} /> */}
-                    <Saldo2 saldo2={saldo2} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} setSaldo2={setSaldo2} />
+                    <Saldo2 saldo2={saldo2} letPrintSaldo={letPrintSaldo} setLetPrintSaldo={setLetPrintSaldo} setSaldo2={setSaldo2} className="print:hidden" />
 
                     <div className="flex justify-end">
                       {values.products && values.products.length > 0 && <SubmitButton dateProwodok={dateProwodok} fakturaType={fakturaType} fakturaBgDynamic={fakturaBgDynamic} />}

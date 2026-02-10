@@ -50,7 +50,7 @@ const InvoiceHead = ({
 
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { dateProwodok } = useContext(DateContext);
+  const { dateProwodok, dateFrom, dateTo } = useContext(DateContext);
   const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
   const [openModal, setOpenModal] = useState(false);
   const [entryCancelModal, setEntryCancelModal] = useState(false);
@@ -82,9 +82,9 @@ const InvoiceHead = ({
 
   const [saldoForExcel, setSaldoForExcel] = useState(null);
 
-  const fetchSaldo = async (date, partnerId) => {
+  const fetchSaldo = async (partnerId, date_from, date_to) => {
     try {
-      const saldo = await getSaldoForPartner(date, partnerId);
+      const saldo = await getSaldoForPartner(partnerId, date_from, date_to);
       // console.log("saldo", saldo);
 
       setSaldoForExcel(saldo);
@@ -94,9 +94,9 @@ const InvoiceHead = ({
   };
 
   useEffect(() => {
-    if (!values.partner?.id) return;
-    fetchSaldo(dateProwodok, values.partner.id);
-  }, [values.partner?.id, dateProwodok]);
+    if (!values.partner?.id || !dateFrom || !dateTo) return;
+    fetchSaldo(values.partner.id, dateFrom, dateTo);
+  }, [values.partner?.id, dateFrom, dateTo]);
 
   // const { dateProwodok } = useContext(DateContext);
 

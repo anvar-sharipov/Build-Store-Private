@@ -232,9 +232,20 @@ def set_date_focus(request):
 ##################################################################################################################################################################
 # osw2
 
+def is_zero_account(v):
+    return (
+        (v["initial_credit"] - v["initial_debit"] == 0) and
+        (v["final_credit"] - v["final_debit"] == 0) and
+        v["credit"] == 0 and
+        v["debit"] == 0 and
+        v["period_credit"] == 0 and
+        v["period_debit"] == 0
+    )
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_account_for_osw2(request):
+    ic("tut")
     # Получаем даты
     date_from = request.GET.get('dateFrom')
     date_to = request.GET.get('dateTo')
@@ -363,8 +374,15 @@ def get_account_for_osw2(request):
             values["is_parent"] = True
         else:
             values["is_parent"] = False
+            
+    data_dict = {
+        acc: values
+        for acc, values in data_dict.items()
+        if not is_zero_account(values)
+    }
+    
     data = list(data_dict.values())
-
+    # ic(data_dict)
 
     return Response(data, status=200)
 

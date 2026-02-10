@@ -1,26 +1,30 @@
 import { FaSearch, FaTimes } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import { useFormikContext } from "formik";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useContext } from "react";
 import myAxios from "../../../axios";
 import Fuse from "fuse.js";
+import { DateContext } from "../../../UI/DateProvider";
 
-const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo, getSaldo, saldo2, getSaldo2, setSaldo2, initialPartner }) => {
+const FetchPartner = ({ refs, setSaldo, saldo, getSaldo, saldo2, getSaldo2, setSaldo2, initialPartner }) => {
   const { t } = useTranslation();
   const { values, setFieldValue, handleBlur } = useFormikContext();
   const [isFocused, setIsFocused] = useState(false);
   const sound = new Audio("/sounds/up_down.mp3");
+  const { dateFrom, setDateFrom, dateTo, setDateTo, dateProwodok, setDateProwodok } = useContext(DateContext);
 
   // Добавим эффект для установки initialPartner
   useEffect(() => {
+    console.log("tut");
+    
     if (initialPartner && !values.partner) {
       setFieldValue("partner", initialPartner, false);
-      if (initialPartner.id && dateProwodok) {
-        getSaldo(dateProwodok, initialPartner.id);
-        getSaldo2(dateProwodok, initialPartner.id);
+      if (initialPartner.id && dateFrom && dateTo) {
+        // getSaldo(dateProwodok, initialPartner.id);
+        getSaldo2(initialPartner.id, dateFrom, dateTo);
       }
     }
-  }, [initialPartner, dateProwodok]);
+  }, [initialPartner, dateFrom, dateTo]);
 
   useEffect(() => {
     if (values.is_entry && !values.partner) {
@@ -48,22 +52,22 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo, getSaldo, saldo2, g
 
   if (values.id) {
     useEffect(() => {
-      if (values.partner?.id && values.invoice_date2) {
-        getSaldo(values.invoice_date2, values.partner?.id);
-        getSaldo2(values.invoice_date2, values.partner?.id);
+      if (values.partner?.id && dateFrom, dateTo) {
+        // getSaldo(values.invoice_date2, values.partner?.id);
+        getSaldo2(values.partner?.id, dateFrom, dateTo);
       } else {
         setSaldo(null);
       }
-    }, [values.invoice_date2]);
+    }, [values.invoice_date2, dateFrom, dateTo]);
   } else {
     useEffect(() => {
-      if (values.partner?.id && dateProwodok) {
-        getSaldo(dateProwodok, values.partner?.id);
-        getSaldo2(dateProwodok, values.partner?.id);
+      if (values.partner?.id && dateFrom && dateTo) {
+        // getSaldo(dateProwodok, values.partner?.id);
+        getSaldo2(values.partner?.id, dateFrom, dateTo);
       } else {
         setSaldo(null);
       }
-    }, [dateProwodok]);
+    }, [dateFrom, dateTo]);
   }
 
   const wrapperRef = useRef(null);
@@ -258,8 +262,8 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo, getSaldo, saldo2, g
               onClick={() => {
                 setFieldValue("partner", emp);
                 setFilteredPartners([]);
-                getSaldo(dateProwodok, emp.id);
-                getSaldo2(dateProwodok, emp.id);
+                // getSaldo(dateProwodok, emp.id);
+                getSaldo2(emp.id, dateFrom, dateTo);
                 refs.productRef.current?.focus();
               }}
               onKeyDown={(e) => {
@@ -267,8 +271,8 @@ const FetchPartner = ({ refs, setSaldo, dateProwodok, saldo, getSaldo, saldo2, g
                   e.preventDefault();
                   setFieldValue("partner", emp);
                   setFilteredPartners([]);
-                  getSaldo(dateProwodok, emp.id);
-                  getSaldo2(dateProwodok, emp.id);
+                  // getSaldo(dateProwodok, emp.id);
+                  getSaldo2(emp.id, dateFrom, dateTo);
                   refs.productRef.current?.focus();
                 } else if (e.key == "ArrowDown") {
                   e.preventDefault();

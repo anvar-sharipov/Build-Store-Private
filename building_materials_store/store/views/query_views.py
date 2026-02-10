@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from decimal import Decimal, ROUND_HALF_UP
 from django.db.models import Q, Sum, Count
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from django.utils.dateparse import parse_date
 
 from django.db.models import F
@@ -30,6 +30,8 @@ from rest_framework.response import Response
 
 from ..my_func.get_unit_map import get_unit_map 
 from ..my_func.get_unit_and_cf import get_unit_and_cf 
+from ..my_func.date_str_to_dateFormat import date_str_to_dateFormat 
+from rest_framework import status
 
 def money(value: Decimal) -> Decimal:
     return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
@@ -324,6 +326,7 @@ def get_osw(request):
 # get saldo       ishem saldo dlya partnera na wybrannuyu daty, saleInvoice
 
 def get_saldo(partner_obj, getDate):
+    # ic("afafaf")
     # USD
     rule = CustomePostingRule.objects.filter(operation__code="sale", directory_type=partner_obj.type, amount_type="revenue", currency__code="USD").first()
     
@@ -420,8 +423,18 @@ def get_saldo(partner_obj, getDate):
     }
 
 
-def get_saldo2(partner_obj, getDate):
-    ic("tut saldo2")
+def get_saldo2(partner_obj, dateFrom, dateTo):
+    
+    
+        
+    
+    date_from = date_str_to_dateFormat(dateFrom)
+    date_to = date_str_to_dateFormat(dateTo)
+    ic(date_from)
+    ic(date_to)
+    
+    
+    # ic("tut saldo2", getDate)
     # WarehouseProduct.objects.all().update(quantity=0)
     results = {}
     
@@ -432,6 +445,7 @@ def get_saldo2(partner_obj, getDate):
         ('75', 'USD'),  # Учредитель USD
         ('76', 'TMT')   # Учредитель TMT
     ]
+
     
     for account_number, currency in accounts_to_check:
         account = Account.objects.get(number=account_number)
@@ -440,7 +454,7 @@ def get_saldo2(partner_obj, getDate):
         # Начальное сальдо (до выбранной даты)
         entries_start = Entry.objects.filter(
             partner=partner_obj,  # ← ИЗМЕНИЛИ
-            transaction__date__lt=getDate
+            transaction__date__lt=date_from
         ).filter(account=account)
         
         debit_start = entries_start.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
@@ -461,7 +475,8 @@ def get_saldo2(partner_obj, getDate):
         # Обороты за выбранную дату
         entries_oborot = Entry.objects.filter(
             partner=partner_obj,  # ← ИЗМЕНИЛИ
-            transaction__date__date=getDate  
+            transaction__date__lte=date_to,  
+            transaction__date__gte=date_from  
         ).filter(account=account)
         
         debit_oborot = entries_oborot.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
@@ -519,10 +534,27 @@ def get_saldo2(partner_obj, getDate):
 
 @require_GET
 def get_saldo_for_partner_for_selected_date2(request):
-    getDate = request.GET.get('date')
+    
+
+    dateFrom = request.GET.get('dateFrom', "")
+    dateTo = request.GET.get('dateTo', "")
+    
+    if not dateFrom or not dateTo:
+        return Response(
+            {"error": "choose diapazon date"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+
     partnerId = request.GET.get('partnerId')
+    
+    # ic(dateFrom)
+    # ic(dateTo)
+    # ic(getDate)
+    # ic(partnerId)
     partner_obj = Partner.objects.get(pk=partnerId)
-    saldo = get_saldo2(partner_obj, getDate)
+    saldo = get_saldo2(partner_obj, dateFrom, dateTo)
+    
     return JsonResponse({"saldo": saldo}, safe=False)
 
 
@@ -1222,6 +1254,16 @@ def close_day(request):
     day_start = close_date_format
     day_end = close_date_format + timedelta(days=1)
 
+
+    # perewod chernowikow faktur s zakrywayushegosya dnya na sleduyushiy
+    # invoice_date = true, created_at_handle = False, updated_at_handle = True
+    # chernivik_invoices = Invoice.objects.filter(invoice_date__date=close_date, is_entry=False)
+    # for invoice in chernivik_invoices:
+    #     invoice.invoice_date = datetime.combine(day_end, time.min)
+    #     invoice.updated_at_handle = datetime.combine(day_end, time.min)
+        
+
+    
     product_units = (
         ProductUnit.objects
         .filter(is_default_for_sale=True)
@@ -1249,6 +1291,7 @@ def close_day(request):
             (s.warehouse_id, s.product_id): s.quantity
             for s in snapshots
         }
+        
 
   
     for w in Warehouse.objects.all():
@@ -3750,6 +3793,15 @@ def close_day(request):
                     # quantity=wp.quantity
                     quantity = turnover_product[wp.warehouse_id][wp.product_id]["end_qty"]
                 )
+            
+            
+            Invoice.objects.filter(
+                invoice_date__date=close_date,
+                is_entry=False
+            ).update(
+                invoice_date= day_end, # datetime.combine(day_end, time.min),
+                updated_at_handle= day_end # datetime.combine(day_end, time.min),
+            )
                 
             # oborot product excel
             report_product_oborot, _ = DayReport.objects.get_or_create(
@@ -3760,6 +3812,8 @@ def close_day(request):
                     "comment": reason
                 }
             )
+            
+            
 
             filename = f"OBOROT_TOWAR_{convert_close_date}.xlsx"
             report_product_oborot.file.save(

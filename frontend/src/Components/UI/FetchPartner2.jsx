@@ -8,7 +8,6 @@ const FetchPartner2 = ({
   refs,
   dateProwodok,
   getSaldo,
-  getSaldo2,
   currentPartner, // текущий выбранный партнер
   onPartnerSelect, // callback для выбора партнера
   fieldName, // "debitPartner" или "creditPartner"

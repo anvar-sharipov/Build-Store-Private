@@ -231,8 +231,16 @@ const Saldo2ToExcel = async (saldo2, partnerName, partnerType, accountType, t) =
     openingRow.getCell(2).style = styles.openingBalance;
 
     // Используем данные из start[0] и start[1]
-    const startDebit = accountData.start?.[0] || "0";
-    const startCredit = accountData.start?.[1] || "0";
+    let saldo_start_debit = 0
+    let saldo_start_credit = 0
+    const saldo_row = accountData.start?.[0] - accountData.start?.[1]
+    if (saldo_row > 0) {
+      saldo_start_debit = saldo_row
+    } else if (saldo_row < 0) {
+      saldo_start_credit = Math.abs(saldo_row)
+    }
+    const startDebit = saldo_start_debit;
+    const startCredit = saldo_start_credit;
 
     openingRow.getCell(3).value = formatNumber(startDebit);
     openingRow.getCell(3).style = { ...styles.openingBalance, alignment: { horizontal: "right" } };

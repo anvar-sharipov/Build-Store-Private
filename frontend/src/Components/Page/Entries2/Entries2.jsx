@@ -20,7 +20,7 @@ const PartnerField = ({
   refs,
   dateProwodok,
   getSaldo,
-  getSaldo2,
+  // getSaldo2,
 }) => {
   // Показываем поле только если выбран счет из списка
   if (!accountNumber || !["60", "62", "75", "76"].includes(accountNumber)) {
@@ -30,7 +30,7 @@ const PartnerField = ({
   return (
     <div className="pt-2 w-full">
       <div className="w-full">
-        <FetchPartner2 refs={refs} dateProwodok={dateProwodok} getSaldo={getSaldo} getSaldo2={getSaldo2} currentPartner={currentPartner} onPartnerSelect={onPartnerSelect} fieldName={fieldName} accountNumber={accountNumber} />
+        <FetchPartner2 refs={refs} dateProwodok={dateProwodok} getSaldo={getSaldo} currentPartner={currentPartner} onPartnerSelect={onPartnerSelect} fieldName={fieldName} accountNumber={accountNumber} />
       </div>
     </div>
   );
@@ -74,22 +74,22 @@ const Entries2 = () => {
     }
   };
 
-  const getDebitSaldo2 = async (date, partnerId) => {
-    if (!partnerId) {
-      setDebitSaldo2(null);
-      return;
-    }
+  // const getDebitSaldo2 = async (date, partnerId) => {
+  //   if (!partnerId) {
+  //     setDebitSaldo2(null);
+  //     return;
+  //   }
 
-    try {
-      const res = await myAxios.get("get_saldo_for_partner_for_selected_date2", {
-        params: { date, partnerId },
-      });
-      setDebitSaldo2(res.data.saldo);
-    } catch (error) {
-      console.log("Ошибка get_saldo_for_partner_for_selected_date2", error);
-      setDebitSaldo2(null);
-    }
-  };
+  //   try {
+  //     const res = await myAxios.get("get_saldo_for_partner_for_selected_date2", {
+  //       params: { date, partnerId },
+  //     });
+  //     setDebitSaldo2(res.data.saldo);
+  //   } catch (error) {
+  //     console.log("Ошибка get_saldo_for_partner_for_selected_date2", error);
+  //     setDebitSaldo2(null);
+  //   }
+  // };
 
   const getCreditSaldo = async (date, partnerId) => {
     if (!partnerId) {
@@ -108,22 +108,22 @@ const Entries2 = () => {
     }
   };
 
-  const getCreditSaldo2 = async (date, partnerId) => {
-    if (!partnerId) {
-      setCreditSaldo2(null);
-      return;
-    }
+  // const getCreditSaldo2 = async (date, partnerId) => {
+  //   if (!partnerId) {
+  //     setCreditSaldo2(null);
+  //     return;
+  //   }
 
-    try {
-      const res = await myAxios.get("get_saldo_for_partner_for_selected_date2", {
-        params: { date, partnerId },
-      });
-      setCreditSaldo2(res.data.saldo);
-    } catch (error) {
-      console.log("Ошибка get_saldo_for_partner_for_selected_date2", error);
-      setCreditSaldo2(null);
-    }
-  };
+  //   try {
+  //     const res = await myAxios.get("get_saldo_for_partner_for_selected_date2", {
+  //       params: { date, partnerId },
+  //     });
+  //     setCreditSaldo2(res.data.saldo);
+  //   } catch (error) {
+  //     console.log("Ошибка get_saldo_for_partner_for_selected_date2", error);
+  //     setCreditSaldo2(null);
+  //   }
+  // };
 
   // Функция для проверки закрыта ли дата
   const checkDateClosed = async (date) => {
@@ -274,13 +274,13 @@ const Entries2 = () => {
     if (entry.debitPartner?.id || entry.debit?.partner?.id) {
       const partnerId = entry.debitPartner?.id || entry.debit?.partner?.id;
       getDebitSaldo(entry.date, partnerId);
-      getDebitSaldo2(entry.date, partnerId);
+      // getDebitSaldo2(entry.date, partnerId);
     }
 
     if (entry.creditPartner?.id || entry.credit?.partner?.id) {
       const partnerId = entry.creditPartner?.id || entry.credit?.partner?.id;
       getCreditSaldo(entry.date, partnerId);
-      getCreditSaldo2(entry.date, partnerId);
+      // getCreditSaldo2(entry.date, partnerId);
     }
   };
 
@@ -429,7 +429,7 @@ const Entries2 = () => {
                     setFieldValue("debitPartner", partner);
                     if (partner?.id) {
                       getDebitSaldo(editingEntry.date, partner.id);
-                      getDebitSaldo2(editingEntry.date, partner.id);
+                      // getDebitSaldo2(editingEntry.date, partner.id);
                     } else {
                       setDebitSaldo(null);
                       setDebitSaldo2(null);
@@ -441,7 +441,7 @@ const Entries2 = () => {
                     setFieldValue("creditPartner", partner);
                     if (partner?.id) {
                       getCreditSaldo(editingEntry.date, partner.id);
-                      getCreditSaldo2(editingEntry.date, partner.id);
+                      // getCreditSaldo2(editingEntry.date, partner.id);
                     } else {
                       setCreditSaldo(null);
                       setCreditSaldo2(null);
@@ -494,7 +494,7 @@ const Entries2 = () => {
                                 refs={refs}
                                 dateProwodok={editingEntry.date}
                                 getSaldo={getDebitSaldo}
-                                getSaldo2={getDebitSaldo2}
+                                // getSaldo2={getDebitSaldo2}
                               />
                             </div>
                           )}
@@ -532,7 +532,7 @@ const Entries2 = () => {
                                 refs={refs}
                                 dateProwodok={editingEntry.date}
                                 getSaldo={getCreditSaldo}
-                                getSaldo2={getCreditSaldo2}
+                                // getSaldo2={getCreditSaldo2}
                               />
                             </div>
                           )}
@@ -635,7 +635,7 @@ const Entries2 = () => {
             setFieldValue("debitPartner", partner);
             if (partner?.id) {
               getDebitSaldo(dateProwodok, partner.id);
-              getDebitSaldo2(dateProwodok, partner.id);
+              // getDebitSaldo2(dateProwodok, partner.id);
             } else {
               setDebitSaldo(null);
               setDebitSaldo2(null);
@@ -647,7 +647,7 @@ const Entries2 = () => {
             setFieldValue("creditPartner", partner);
             if (partner?.id) {
               getCreditSaldo(dateProwodok, partner.id);
-              getCreditSaldo2(dateProwodok, partner.id);
+              // getCreditSaldo2(dateProwodok, partner.id);
             } else {
               setCreditSaldo(null);
               setCreditSaldo2(null);
@@ -733,7 +733,7 @@ const Entries2 = () => {
                               refs={refs}
                               dateProwodok={dateProwodok}
                               getSaldo={getDebitSaldo}
-                              getSaldo2={getDebitSaldo2}
+                              // getSaldo2={getDebitSaldo2}
                             />
                           </div>
                         )}
@@ -771,7 +771,7 @@ const Entries2 = () => {
                               refs={refs}
                               dateProwodok={dateProwodok}
                               getSaldo={getCreditSaldo}
-                              getSaldo2={getCreditSaldo2}
+                              // getSaldo2={getCreditSaldo2}
                             />
                           </div>
                         )}
@@ -823,9 +823,9 @@ const Entries2 = () => {
                   </motion.div>
 
                   {/* Сальдо - Справа (только если есть данные) */}
-                  {hasSaldo && (
+                  {/* {hasSaldo && (
                     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="lg:col-span-2 space-y-4">
-                      {/* Сальдо дебетового партнера */}
+               
                       {debitSaldo2 && values.debitPartner && (
                         <Saldo2
                           saldo2={debitSaldo2}
@@ -837,7 +837,7 @@ const Entries2 = () => {
                         />
                       )}
 
-                      {/* Сальдо кредитового партнера */}
+          
                       {creditSaldo2 && values.creditPartner && (
                         <Saldo2
                           saldo2={creditSaldo2}
@@ -849,7 +849,7 @@ const Entries2 = () => {
                         />
                       )}
                     </motion.div>
-                  )}
+                  )} */}
                 </div>
 
                 {/* Нижняя часть: Список проводок */}

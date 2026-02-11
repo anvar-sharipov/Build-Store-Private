@@ -8,10 +8,12 @@ from rest_framework.response import Response
 from datetime import datetime, date, time   
 from decimal import Decimal, ROUND_HALF_UP
 from collections import defaultdict
-from django.db.models import Sum, F, Q
+from django.db.models import Sum, F, Q, DecimalField
+from django.db.models.functions import Coalesce
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.db import transaction as db_transaction
+
 
 MONEY_Q = Decimal("0.01")
 
@@ -517,18 +519,19 @@ def get_detail_account_60_62(request):
             date_to = date_to_parsed.date()
         else:
             date_to = date_to_parsed
-
+    # ic(date_from)
+    # ic(date_from_parsed)
     # Оптимизация: предзагрузка всех необходимых данных за 2 запроса
     from django.db.models import Prefetch, Q
     
     # 1-й запрос: все партнеры с их транзакциями и записями для данного счета
-    partners_prefetch = Partner.objects.prefetch_related(
-        Prefetch(
-            'entry_set',  # ⭐ ИЗМЕНИЛИ: используем связь Partner → Entry
-            queryset=Entry.objects.filter(account__number=account_number),
-            to_attr='filtered_entries'
-        )
-    ).select_related('agent')
+    # partners_prefetch = Partner.objects.prefetch_related(
+    #     Prefetch(
+    #         'entry_set',  # ⭐ ИЗМЕНИЛИ: используем связь Partner → Entry
+    #         queryset=Entry.objects.filter(account__number=account_number),
+    #         to_attr='filtered_entries'
+    #     )
+    # ).select_related('agent')
 
     # ИСПРАВЛЕНИЕ: Упрощенные функции сравнения дат
     def get_transaction_date(transaction_date):
@@ -551,7 +554,10 @@ def get_detail_account_60_62(request):
         data = {"data": {}, "total_prices": {}}
         
         # 2-й запрос: получаем всех партнеров с предзагруженными данными
-        all_partners = list(partners_prefetch.all())
+        # all_partners = list(partners_prefetch.all())
+        all_partners = list(
+            Partner.objects.select_related('agent')
+        )
         
         # Группировка партнеров по агентам
         agents_data = {}
@@ -587,18 +593,53 @@ def get_detail_account_60_62(request):
             debit_oborot = Decimal("0.00")
             credit_oborot = Decimal("0.00")
             
-            # ⭐ ИЗМЕНЕНИЕ: Используем prefetched entries
-            for entry in partner.filtered_entries:
-                # ИСПРАВЛЕНИЕ: Получаем нормализованную дату транзакции
-                trans_date = get_transaction_date(entry.transaction.date)
+            # # ⭐ ИЗМЕНЕНИЕ: Используем prefetched entries
+            # for entry in partner.filtered_entries:
+            #     # ИСПРАВЛЕНИЕ: Получаем нормализованную дату транзакции
+            #     trans_date = get_transaction_date(entry.transaction.date)
                 
-                # ИСПРАВЛЕНИЕ: Сравниваем нормализованные даты
-                if trans_date < date_from:
-                    debit_before += money(entry.debit)
-                    credit_before += money(entry.credit)
-                elif date_from <= trans_date <= date_to:
-                    debit_oborot += money(entry.debit)
-                    credit_oborot += money(entry.credit)
+            #     # ИСПРАВЛЕНИЕ: Сравниваем нормализованные даты
+            #     if trans_date < date_from:
+            #         debit_before += money(entry.debit)
+            #         credit_before += money(entry.credit)
+            #     elif date_from <= trans_date <= date_to:
+            #         debit_oborot += money(entry.debit)
+            #         credit_oborot += money(entry.credit)
+            
+
+            entries = Entry.objects.filter(
+                partner=partner,
+                account__number=account_number
+            )
+
+            aggregates = entries.aggregate(
+                debit_before=Coalesce(
+                    Sum('debit', filter=Q(transaction__date__lt=date_from)),
+                    Decimal('0'),
+                    output_field=DecimalField()
+                ),
+                credit_before=Coalesce(
+                    Sum('credit', filter=Q(transaction__date__lt=date_from)),
+                    Decimal('0'),
+                    output_field=DecimalField()
+                ),
+                debit_oborot=Coalesce(
+                    Sum('debit', filter=Q(transaction__date__gte=date_from, transaction__date__lte=date_to)),
+                    Decimal('0'),
+                    output_field=DecimalField()
+                ),
+                credit_oborot=Coalesce(
+                    Sum('credit', filter=Q(transaction__date__gte=date_from, transaction__date__lte=date_to)),
+                    Decimal('0'),
+                    output_field=DecimalField()
+                ),
+            )
+
+            debit_before = aggregates['debit_before']
+            credit_before = aggregates['credit_before']
+            debit_oborot = aggregates['debit_oborot']
+            credit_oborot = aggregates['credit_oborot']
+
             
             # Остальной код без изменений...
             debit_end = debit_before + debit_oborot
@@ -837,7 +878,10 @@ def get_detail_account_60_62(request):
         saldo_end_credit_total = 0
         
         # 2-й запрос: получаем всех партнеров с предзагруженными данными
-        all_partners = list(partners_prefetch.all())
+        # all_partners = list(partners_prefetch.all())
+        all_partners = list(
+            Partner.objects.select_related('agent')
+        )
         
         # Временный список для хранения партнеров перед фильтрацией
         all_partners_data = []
@@ -854,19 +898,50 @@ def get_detail_account_60_62(request):
             credit_oborot = Decimal("0.00")
             
             # ⭐ ИЗМЕНЕНИЕ: Используем prefetched entries вместо prefetched_transactions
-            for entry in partner.filtered_entries:  # ← ИСПРАВИТЬ ЗДЕСЬ!
-                # ИСПРАВЛЕНИЕ: Получаем нормализованную дату транзакции
-                trans_date = get_transaction_date(entry.transaction.date)
+            # for entry in partner.filtered_entries:  # ← ИСПРАВИТЬ ЗДЕСЬ!
+            #     # ИСПРАВЛЕНИЕ: Получаем нормализованную дату транзакции
+            #     trans_date = get_transaction_date(entry.transaction.date)
                 
-                # ИСПРАВЛЕНИЕ: Сравниваем нормализованные даты
-                if trans_date < date_from:
-                    debit_before += money(entry.debit)
-                    credit_before += money(entry.credit)
-                elif date_from <= trans_date <= date_to:
-                    if partner.id == 79:
-                        ic(entry.debit)
-                    debit_oborot += money(entry.debit)
-                    credit_oborot += money(entry.credit)
+            #     # ИСПРАВЛЕНИЕ: Сравниваем нормализованные даты
+            #     if trans_date < date_from:
+            #         debit_before += money(entry.debit)
+            #         credit_before += money(entry.credit)
+            #     elif date_from <= trans_date <= date_to:
+            #         debit_oborot += money(entry.debit)
+            #         credit_oborot += money(entry.credit)
+            
+            entries = Entry.objects.filter(
+                partner=partner,
+                account__number=account_number
+            )
+
+            aggregates = entries.aggregate(
+                debit_before=Coalesce(
+                    Sum('debit', filter=Q(transaction__date__lt=date_from)),
+                    Decimal('0'),
+                    output_field=DecimalField()
+                ),
+                credit_before=Coalesce(
+                    Sum('credit', filter=Q(transaction__date__lt=date_from)),
+                    Decimal('0'),
+                    output_field=DecimalField()
+                ),
+                debit_oborot=Coalesce(
+                    Sum('debit', filter=Q(transaction__date__gte=date_from, transaction__date__lte=date_to)),
+                    Decimal('0'),
+                    output_field=DecimalField()
+                ),
+                credit_oborot=Coalesce(
+                    Sum('credit', filter=Q(transaction__date__gte=date_from, transaction__date__lte=date_to)),
+                    Decimal('0'),
+                    output_field=DecimalField()
+                ),
+            )
+
+            debit_before = aggregates['debit_before']
+            credit_before = aggregates['credit_before']
+            debit_oborot = aggregates['debit_oborot']
+            credit_oborot = aggregates['credit_oborot']
             
             debit_end = debit_before + debit_oborot
             credit_end = credit_before + credit_oborot

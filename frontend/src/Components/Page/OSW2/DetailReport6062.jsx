@@ -15,6 +15,8 @@ import OriginalReport2Excel from "./OriginalReport2Excel";
 
 const DetailReport6062 = () => {
   const { dateFrom, dateTo } = useContext(DateContext);
+  console.log("detail repotr 60");
+  
 
   const [searchParams] = useSearchParams();
   const accountNumber = searchParams.get("accountNumber");
@@ -281,6 +283,8 @@ const DetailReport6062 = () => {
         if (sortByAgent === "true") {
           // Данные с группировкой по агентам
           setData(res.data.items || {});
+          // console.log("res.data.totals", res.data.totals);
+          
           setTotals(res.data.totals || {});
         } else {
           // Обычные данные (массив)
@@ -492,6 +496,8 @@ const DetailReport6062 = () => {
 
               {/* Таблицы по агентам */}
               {Object.entries(data).map(([agentName, partners]) => {
+                console.log("totals", totals);
+                
                 const agentTotalsData = totals[agentName]?.[0];
                 if (!partners || !Array.isArray(partners) || partners.length === 0) return null;
 
@@ -633,19 +639,19 @@ const DetailReport6062 = () => {
                             <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                               {formatNumber2(agentTotalsData.debit_before_total, 2, hyphenOr0)}
                             </td>
-                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                            <td className="px-3 whitespace-nowrap py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                               {formatNumber2(agentTotalsData.credit_before_total, 2, hyphenOr0)}
                             </td>
-                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                            <td className="px-3 whitespace-nowrap py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                               {formatNumber2(agentTotalsData.debit_oborot_total, 2, hyphenOr0)}
                             </td>
-                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                            <td className="px-3 whitespace-nowrap py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                               {formatNumber2(agentTotalsData.credit_oborot_total, 2, hyphenOr0)}
                             </td>
-                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                            <td className="px-3 whitespace-nowrap py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                               {formatNumber2(agentTotalsData.saldo_end_debit_total, 2, hyphenOr0)}
                             </td>
-                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                            <td className="px-3 whitespace-nowrap py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                               {formatNumber2(agentTotalsData.saldo_end_credit_total, 2, hyphenOr0)}
                             </td>
                           </tr>
@@ -656,22 +662,22 @@ const DetailReport6062 = () => {
                             >
                               {t("total")} {agentName === "no_agent" ? t("noAgent") : agentName}:
                             </td>
-                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                            <td className="px-3 whitespace-nowrap py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                               {formatNumber2(agentTotalsData.saldo_summ_before_debit, 2, hyphenOr0)}
                             </td>
-                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                            <td className="px-3 whitespace-nowrap py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                               {formatNumber2(agentTotalsData.saldo_summ_before_credit, 2, hyphenOr0)}
                             </td>
-                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                            <td className="px-3 whitespace-nowrap py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                               {formatNumber2(agentTotalsData.saldo_summ_oborot_debit, 2, hyphenOr0)}
                             </td>
-                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                            <td className="px-3 whitespace-nowrap py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                               {formatNumber2(agentTotalsData.saldo_summ_oborot_credit, 2, hyphenOr0)}
                             </td>
-                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                            <td className="px-3 whitespace-nowrap py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                               {formatNumber2(agentTotalsData.saldo_summ_end_debit, 2, hyphenOr0)}
                             </td>
-                            <td className="px-3 py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                            <td className="px-3 whitespace-nowrap py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                               {formatNumber2(agentTotalsData.saldo_summ_end_credit, 2, hyphenOr0)}
                             </td>
                           </tr>

@@ -14,9 +14,7 @@ const FetchPartner = ({ refs, setSaldo, saldo, getSaldo, saldo2, getSaldo2, setS
   const { dateFrom, setDateFrom, dateTo, setDateTo, dateProwodok, setDateProwodok } = useContext(DateContext);
 
   // Добавим эффект для установки initialPartner
-  useEffect(() => {
-    console.log("tut");
-    
+  useEffect(() => { 
     if (initialPartner && !values.partner) {
       setFieldValue("partner", initialPartner, false);
       if (initialPartner.id && dateFrom && dateTo) {
@@ -24,7 +22,7 @@ const FetchPartner = ({ refs, setSaldo, saldo, getSaldo, saldo2, getSaldo2, setS
         getSaldo2(initialPartner.id, dateFrom, dateTo);
       }
     }
-  }, [initialPartner, dateFrom, dateTo]);
+  }, [initialPartner]);
 
   useEffect(() => {
     if (values.is_entry && !values.partner) {
@@ -52,7 +50,8 @@ const FetchPartner = ({ refs, setSaldo, saldo, getSaldo, saldo2, getSaldo2, setS
 
   if (values.id) {
     useEffect(() => {
-      if (values.partner?.id && dateFrom, dateTo) {
+      if (values.partner?.id && dateFrom && dateTo) {
+        
         // getSaldo(values.invoice_date2, values.partner?.id);
         getSaldo2(values.partner?.id, dateFrom, dateTo);
       } else {
@@ -61,13 +60,17 @@ const FetchPartner = ({ refs, setSaldo, saldo, getSaldo, saldo2, getSaldo2, setS
     }, [values.invoice_date2, dateFrom, dateTo]);
   } else {
     useEffect(() => {
-      if (values.partner?.id && dateFrom && dateTo) {
+      
+      
+      
+      
+      if (values.partner?.id && dateFrom && dateTo && values.invoice_date) {
         // getSaldo(dateProwodok, values.partner?.id);
-        getSaldo2(values.partner?.id, dateFrom, dateTo);
+        getSaldo2(values.partner?.id, dateFrom, dateTo, values.invoice_date);
       } else {
         setSaldo(null);
       }
-    }, [dateFrom, dateTo]);
+    }, [values.partner?.id, dateFrom, dateTo]);
   }
 
   const wrapperRef = useRef(null);
@@ -76,10 +79,8 @@ const FetchPartner = ({ refs, setSaldo, saldo, getSaldo, saldo2, getSaldo2, setS
   const fetchPartners = async () => {
     try {
       const res = await myAxios.get("/partners/?no_pagination=1");
-      // console.log('res', res);
       const activePartners = res.data.filter((emp) => emp.is_active);
       setAllPartners(activePartners);
-      // console.log('activePartners', activePartners);
     } catch (error) {
       console.log("Ошибка при загрузке Partners", error);
     }

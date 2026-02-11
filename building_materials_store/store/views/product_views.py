@@ -103,6 +103,7 @@ class ProductImageViewSet(viewsets.ModelViewSet):
 # dlya poiska producta for free add
 @api_view(["GET"])
 def search_products(request):
+    ic("qaswdxx")
     
     
     
@@ -246,7 +247,8 @@ def search_products(request):
             
             raw_query = query.strip()                # "ab-3"
             norm_query = raw_query.lower()
-            norm_query = re.sub(r"[^\w\s-]", "", norm_query)
+            # norm_query = re.sub(r"[^\w\s-]", "", norm_query)
+            norm_query = re.sub(r"[^\w\s/-]", " ", norm_query)
 
             words = norm_query.replace("-", " ").split()
 

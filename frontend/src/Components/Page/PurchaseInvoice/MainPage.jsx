@@ -192,7 +192,7 @@ const MainPage = () => {
   };
 
   const { dateFrom, setDateFrom, dateTo, setDateTo, dateProwodok, setDateProwodok } = useContext(DateContext);
-  // console.log("dateProwodok", dateProwodok);
+
 
   //   useEffect(() => {
   // const handleKeyDown = (e) => {
@@ -229,6 +229,8 @@ const MainPage = () => {
     };
   }, [id]); // dateProwodok
 
+
+
   // const defaultValues = getDefaultValues(id);
   const validationSchema = getInvoiceValidationSchema(t);
 
@@ -260,7 +262,7 @@ const MainPage = () => {
   // };
 
   const handleOpenInvoice = (newId) => {
-    console.log("newId", newId);
+
     
     if (!newId) {
       navigate(ROUTES.PURCHASE_INVOICE_CREATE);
@@ -268,6 +270,7 @@ const MainPage = () => {
     }
 
     if (String(id) === String(newId)) return;
+
 
     navigate(`/purchase-invoices/update/${newId}`);
   };
@@ -277,28 +280,32 @@ const MainPage = () => {
       const saldo = await myAxios.get("get_saldo_for_partner_for_selected_date", {
         params: { date: date, partnerId: partnerId },
       });
-      // console.log("saldo", saldo.data.saldo);
+
       setSaldo(saldo.data.saldo);
-      // console.log('DADADADAD');
+
     } catch (error) {
       console.log("error get_saldo_for_partner_for_selected_date from fetchPartner", error);
     }
   };
 
-  const getSaldo2 = async (partnerId, dateFrom, dateTo) => {
+  const getSaldo2 = async (partnerId, dateFrom, dateTo, invoice_date = false) => {
+    if (!invoice_date) return
+
+    
     try {
       const saldo = await myAxios.get("get_saldo_for_partner_for_selected_date2", {
         params: { 
           partnerId: partnerId,
           dateFrom: dateFrom, 
           dateTo: dateTo,
+          invoice_date
          },
       });
-      // console.log("saldo", saldo.data.saldo);
-      setSaldo2(saldo.data.saldo);
-      // console.log("saldo.data.saldo", saldo.data.saldo);
 
-      // console.log('DADADADAD');
+      setSaldo2(saldo.data.saldo);
+
+
+ 
     } catch (error) {
       console.log("error get_saldo_for_partner_for_selected_date2 from fetchPartner", error);
     }
@@ -311,17 +318,13 @@ const MainPage = () => {
         enableReinitialize={true}
         validationSchema={validationSchema}
         onSubmit={async (values, { resetForm, setFieldValue }) => {
-          // console.log("Успешно отправлено values", values);
+
           const date_margin = localStorage.getItem("date_margin"); // "2025-10-04"
           const today = new Date();
           const todayStr = today.toISOString().split("T")[0]; // "2025-10-04"
           // Способ 1: через строки (т.к. YYYY-MM-DD сравниваются корректно)
           // if (todayStr < date_margin || date_margin !== dateMargin) {
-          //   // console.log("permission denied GGGGG, todayStr today", todayStr);
-          //   // console.log("permission denied GGGGG date_margin", date_margin );
-          //   // console.log("permission denied GGGGG dateMargin db", dateMargin);
-          //   // console.log("permission denied GGGGG dateMargin todayStr > date_margin", todayStr > date_margin);
-          //   // console.log("permission denied GGGGG dateMargin date_margin !== dateMargin", date_margin !== dateMargin);
+
 
           //   showNotification(t("permission denied"), "error");
           //   return;
@@ -334,7 +337,7 @@ const MainPage = () => {
               },
             });
 
-            // console.log("Успешно отправлено", response.data);
+       
             if (response.data.already_entry) {
               setFieldValue("already_entry", true);
             }
@@ -348,7 +351,7 @@ const MainPage = () => {
               // handleOpenInvoice(response.data.id);
             }
 
-            // console.log("response.data.id", response.data);
+
             handleOpenInvoice(response.data.id);
             if (values.partner?.id) {
               getSaldo(values.invoice_date2, values.partner?.id);
@@ -359,7 +362,7 @@ const MainPage = () => {
           } catch (error) {
             if (error.response) {
               console.error("Ошибка при отправке", error.response.status, error.response.data);
-              // console.log();
+    
 
               if (error.response.data.not_fined_product_name) {
                 showNotification(`${t(error.response.data.message)} "${error.response.data.not_fined_product_name}"`, "error");
@@ -381,7 +384,6 @@ const MainPage = () => {
             setFieldValue("invoice_date", dateProwodok);
           }, [dateProwodok]);
 
-          // console.log("values", values);
 
           const fakturaBgDynamic =
             values.wozwrat_or_prihod === "wozwrat" ? "bg-red-200 dark:bg-red-900" : values.wozwrat_or_prihod === "prihod" ? "bg-green-200 dark:bg-green-900" : "bg-white dark:bg-gray-900";
@@ -408,6 +410,7 @@ const MainPage = () => {
                 letPrintSaldo={letPrintSaldo}
                 setLetPrintSaldo={setLetPrintSaldo}
                 setSaldo2={setSaldo2}
+                getSaldo2={getSaldo2}
               />
               <fieldset disabled={values.already_entry || authGroup !== "admin" || values.canceled_at}>
                 <div className="grid grid-cols-1 md:grid-cols-10 gap-4 print:block">

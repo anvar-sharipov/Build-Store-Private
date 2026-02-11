@@ -45,8 +45,9 @@ const InvoiceHead = ({
   letPrintSaldo,
   setLetPrintSaldo,
   setSaldo2,
+  getSaldo2,
 }) => {
-  // console.log("saldo2222", saldo2);
+
 
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -59,6 +60,7 @@ const InvoiceHead = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [dayIsClosed, setDayIsClosed] = useState(false);
   const sound_open_faktura = new Audio("/sounds/open_faktura.mp3");
+
 
   const handleClick = () => {
     sound_open_faktura.currentTime = 0;
@@ -82,21 +84,35 @@ const InvoiceHead = ({
 
   const [saldoForExcel, setSaldoForExcel] = useState(null);
 
-  const fetchSaldo = async (partnerId, date_from, date_to) => {
+  const fetchSaldo = async (partnerId, date_from, date_to, valuesData = null) => {
+   
+    
     try {
-      const saldo = await getSaldoForPartner(partnerId, date_from, date_to);
-      // console.log("saldo", saldo);
+      const saldo = await getSaldoForPartner(partnerId, date_from, date_to, valuesData);
+
 
       setSaldoForExcel(saldo);
+      setSaldo2(saldo);
     } catch (err) {
       console.log("Ошибка при получении сальдо", err);
     }
   };
 
   useEffect(() => {
-    if (!values.partner?.id || !dateFrom || !dateTo) return;
-    fetchSaldo(values.partner.id, dateFrom, dateTo);
-  }, [values.partner?.id, dateFrom, dateTo]);
+    let invoice_date = null
+    if (values.id) {
+      invoice_date = values.invoice_date2;
+    } else {
+      invoice_date = values.invoice_date
+    }
+    if (!invoice_date) return;
+    
+
+    if (!values.partner?.id || !dateFrom || !dateTo || !invoice_date) return;
+    
+    
+    fetchSaldo(values.partner.id, dateFrom, dateTo, values);
+  }, [values.partner?.id, values.invoice_date, values.invoice_date2]);
 
   // const { dateProwodok } = useContext(DateContext);
 
@@ -107,7 +123,7 @@ const InvoiceHead = ({
         comment: comment,
       });
 
-      // console.log("Entry canceled successfully:", res.data);
+   
       // при успехе можно закрыть модалку или обновить данные
       setEntryCancelModal(false);
       setCancelComment("");
@@ -123,7 +139,6 @@ const InvoiceHead = ({
       } else {
         showNotification(`${t(error.response.data.message)}`, "error");
       }
-      
     }
   };
 
@@ -135,9 +150,6 @@ const InvoiceHead = ({
         });
         setDayIsClosed(res.data.is_closed);
         // setLastDayIsNotClosed(res.data.last_day_not_closed);
-        // console.log("dateProwodok", dateProwodok);
-        // console.log("values.invoice_date2", values.invoice_date2);
-        // console.log("res.data", res.data);
       } catch (error) {
         console.error(error);
       }
@@ -147,9 +159,7 @@ const InvoiceHead = ({
     // }
   }, []);
 
-  // useEffect(() => {
-  //   console.log("dayIsClosed", dayIsClosed);
-  // }, [dayIsClosed]);
+
 
   const modalYesBtn = useRef(null);
   const modalNoBtn = useRef(null);
@@ -205,7 +215,7 @@ const InvoiceHead = ({
     setIsDeleting(true);
     try {
       const res = await myAxios.delete(`delete_invoice/${id}/`);
-      // console.log("Deleted invoice:", res.data);
+
       showNotification(`${t("faktura")} №${res.data.invoice_id} ${t("succesifuly deleted")}`, "success");
       navigate(ROUTES.PURCHASEINVOICE);
     } catch (error) {

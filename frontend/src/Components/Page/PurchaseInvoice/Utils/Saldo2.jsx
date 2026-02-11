@@ -10,7 +10,7 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
   const { values } = useFormikContext();
   const { t } = useTranslation();
 
-  // console.log("saldo2", saldo2);
+
   
 
   const handleOpenInvoice = (id) => {
@@ -33,13 +33,11 @@ const Saldo2 = ({ saldo2, letPrintSaldo, setLetPrintSaldo }) => {
 
   // Функция для рендеринга таблицы для каждого счета
   const renderAccountTable = (accountKey, accountName) => {
-    // console.log("accountKey", accountKey);
-    // console.log("accountName", accountName);
+
     
     const accountData = saldo2[accountKey];
     if (!accountData) return null;
-    // console.log("accountData", accountData);
-    // const oborot_total = 
+
     
 
     let start_debit = 0;

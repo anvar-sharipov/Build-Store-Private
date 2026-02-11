@@ -12,6 +12,22 @@ import { formatNumber2 } from "../../../UI/formatNumber2";
 // const BASE_URL = import.meta.env.VITE_BASE_URL;
 const BASE_URL = import.meta.env.VITE_BASE_URL || "";
 
+const safeDecimal = (value) => {
+  try {
+    if (value === null || value === undefined) return new Decimal(0);
+
+    const normalized = String(value).replace(",", ".").trim();
+
+    if (!/^[-+]?\d*\.?\d+$/.test(normalized)) {
+      return new Decimal(0);
+    }
+
+    return new Decimal(normalized);
+  } catch {
+    return new Decimal(0);
+  }
+};
+
 const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
   const { values, setFieldValue, touched, errors } = useFormikContext();
   const [focusedQuantityRow, setFocusedQuantityRow] = useState(null);
@@ -48,16 +64,12 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
   };
 
   useEffect(() => {
-    
     if (values.wozwrat_or_prihod === "prihod") {
-      
-      const products_without_gifts = values.products.filter(p => p.is_gift === false)
-      setFieldValue("products", products_without_gifts)
+      const products_without_gifts = values.products.filter((p) => p.is_gift === false);
+      setFieldValue("products", products_without_gifts);
       // console.log("products_without_gifts", products_without_gifts);
     }
-  }, [values.wozwrat_or_prihod])
-  
-  
+  }, [values.wozwrat_or_prihod]);
 
   const handleRemove = (id) => {
     const updatedProducts = values.products.filter((p) => p.id !== id);
@@ -85,9 +97,12 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
 
         const total_purchase = MyDecimalPrice(product.selected_quantity, product.purchase_price);
 
-        const income_1pc = new Decimal(product.selected_price || 0).minus(product.purchase_price || 0);
+        // const income_1pc = new Decimal(product.selected_price || 0).minus(product.purchase_price || 0);
 
-        const discount_1pc = new Decimal(product.selected_price || 0).minus(product.wholesale_price || 0).toDecimalPlaces(3, Decimal.ROUND_HALF_UP);
+        // const discount_1pc = new Decimal(product.selected_price || 0).minus(product.wholesale_price || 0).toDecimalPlaces(3, Decimal.ROUND_HALF_UP);
+        const income_1pc = safeDecimal(product.selected_price).minus(safeDecimal(product.purchase_price));
+
+        const discount_1pc = safeDecimal(product.selected_price).minus(safeDecimal(product.wholesale_price)).toDecimalPlaces(3, Decimal.ROUND_HALF_UP);
 
         const income_total = MyDecimalPrice(product.selected_quantity, income_1pc);
 

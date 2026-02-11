@@ -46,12 +46,15 @@ const getDefaultValues = async (id = null, dateProwodok = null, setDateProwodok)
       const res = await myAxios.get(`get-invoice-data/${id}/`);
       const data = res.data;
       
-      // console.log("data", data);
+      
+      
+
 
 
       const invoice_date = MyFormatDate(data.date); // 02.01.2025
       const isoDate = convertToISODate(invoice_date); // 2025-01-02
-      // console.log("invoice_dateGGGGG", invoice_date);
+
+
       
 
       const created_at = MyFormatDate(data.created_at_handle);
@@ -67,11 +70,6 @@ const getDefaultValues = async (id = null, dateProwodok = null, setDateProwodok)
         entry_canceled_at = MyFormatDate(data.canceled_at);
       }
 
-      // console.log("entry_canceled_at", entry_canceled_at);
-      // console.log("data.canceled_by", data.canceled_by);
-      
-
-      // console.log("data.products", data.products);
       // localStorage.setItem("dateProwodok", convertToISODate(invoice_date));
 
       // if (setDateProwodok) {
@@ -82,7 +80,7 @@ const getDefaultValues = async (id = null, dateProwodok = null, setDateProwodok)
       localStorage.setItem("type_price", type_price);
 
       const warehouse = data.warehouse;
-      // console.log("data", data);
+   
       
       const warehouse2 = data.warehouse2;
       localStorage.setItem("purchaseWarehouse", JSON.stringify(warehouse));
@@ -127,9 +125,9 @@ const getDefaultValues = async (id = null, dateProwodok = null, setDateProwodok)
       console.log("cant get invoice", error);
       return {};
     }
-    // console.log("tititit s id", id);
+
     // const data = await getData(id);
-    // console.log("data", data);
+
 
     // return {
     //   id: data.id,

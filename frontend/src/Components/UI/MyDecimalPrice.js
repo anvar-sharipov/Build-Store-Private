@@ -7,22 +7,40 @@
 
 import Decimal from "decimal.js";
 
-const MyDecimalPrice = (qty, price) => new Decimal(qty).mul(new Decimal(price)).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toNumber();
+const safeDecimal = (value) => {
+  try {
+    if (value === null || value === undefined) {
+      return new Decimal(0);
+    }
 
-// const sumMoney = (items, priceKey, qtyKey) =>
-//   items.reduce((acc, item) => {
-//     const price = new Decimal(item[priceKey] || 0);
-//     const qty = new Decimal(item[qtyKey] || 0);
-//     return acc.plus(price.mul(qty));
-//   }, new Decimal(0))
-//   .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
-//   .toNumber();
+    const normalized = String(value).replace(",", ".").trim();
+
+    // Разрешаем:
+    // 123
+    // 123.45
+    // .45
+    // 0.45
+    // 0
+    const isValidNumber = /^-?\d*(\.\d*)?$/.test(normalized);
+
+    // Если невалидное число или просто "." или "-"
+    if (!isValidNumber || normalized === "" || normalized === "." || normalized === "-" || normalized === "-.") {
+      return new Decimal(0);
+    }
+
+    return new Decimal(normalized);
+  } catch (e) {
+    return new Decimal(0);
+  }
+};
+// const MyDecimalPrice = (qty, price) => new Decimal(qty).mul(new Decimal(price)).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toNumber();
+const MyDecimalPrice = (qty, price) => safeDecimal(qty).mul(safeDecimal(price)).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toNumber();
 
 const sumMoney = (items, priceKey, qtyKey) =>
   items
     .reduce((acc, item) => {
-      const price = new Decimal(item[priceKey] || 0);
-      const qty = new Decimal(item[qtyKey] || 0);
+      const price = safeDecimal(item[priceKey]);
+      const qty = safeDecimal(item[qtyKey]);
 
       const rowSum = price.mul(qty).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
@@ -30,15 +48,39 @@ const sumMoney = (items, priceKey, qtyKey) =>
     }, new Decimal(0))
     .toNumber();
 
+// const sumMoney = (items, priceKey, qtyKey) =>
+//   items
+//     .reduce((acc, item) => {
+//       const price = new Decimal(item[priceKey] || 0);
+//       const qty = new Decimal(item[qtyKey] || 0);
+
+//       const rowSum = price.mul(qty).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
+//       return acc.plus(rowSum);
+//     }, new Decimal(0))
+//     .toNumber();
+
 const sumDiffMoney = (items, priceA, priceB, qtyKey) =>
   items
     .reduce((acc, item) => {
-      const a = new Decimal(item[priceA] || 0);
-      const b = new Decimal(item[priceB] || 0);
-      const qty = new Decimal(item[qtyKey] || 0);
+      const a = safeDecimal(item[priceA]);
+      const b = safeDecimal(item[priceB]);
+      const qty = safeDecimal(item[qtyKey]);
+
       return acc.plus(a.minus(b).mul(qty));
     }, new Decimal(0))
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
     .toNumber();
+
+// const sumDiffMoney = (items, priceA, priceB, qtyKey) =>
+//   items
+//     .reduce((acc, item) => {
+//       const a = new Decimal(item[priceA] || 0);
+//       const b = new Decimal(item[priceB] || 0);
+//       const qty = new Decimal(item[qtyKey] || 0);
+//       return acc.plus(a.minus(b).mul(qty));
+//     }, new Decimal(0))
+//     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+//     .toNumber();
 
 export { sumDiffMoney, sumMoney, MyDecimalPrice };

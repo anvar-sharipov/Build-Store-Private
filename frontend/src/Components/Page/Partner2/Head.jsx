@@ -181,7 +181,7 @@ const Head = ({
   }, [query]);
 
   return (
-    <div className="bg-gray-200 dark:bg-gray-800 rounded-lg shadow-md p-1 mb-2 flex items-center justify-between px-2">
+    <div className="bg-gray-200 dark:bg-gray-800 rounded-lg shadow-md p-1 mb-2 flex items-center justify-between px-2 print:hidden">
       <SmartTooltip tooltip={t("addPartner")} shortcut="INSERT">
         <button
           ref={createButtonRef}
@@ -212,7 +212,7 @@ const Head = ({
           onClick={handleDownload}
         />
       </div> */}
-      <div>
+      <div className="print:hidden">
         <ExcelButton onClick={downloadExcelPartners} disabled={downloadExcel} />
       </div>
 

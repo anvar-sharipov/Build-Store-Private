@@ -21,16 +21,12 @@ const PurchaseInvoice = () => {
   // const [query, setQuery] = useState("");
   const [query, setQuery] = useState(() => searchParams.get("query") || "");
 
-  // useEffect(() => {
-  //   console.log("query", searchParams);
 
-  // },[searchParams])
 
   const { dateProwodok } = useContext(DateContext);
 
   const { authUser, authGroup } = useContext(AuthContext);
-  // console.log("authUser", authUser);
-  // console.log("authGroup", authGroup);
+
 
   useEffect(() => {
     document.title = `${t("faktura")}`; // название вкладки
@@ -116,7 +112,7 @@ const PurchaseInvoice = () => {
 
   useEffect(() => {
     // Каждый раз при изменении фильтров из URL — перезагружаем список
-    console.log("tut1");
+
     const dateFrom = searchParams.get("dateFrom");
     const dateTo = searchParams.get("dateTo");
 
@@ -129,7 +125,7 @@ const PurchaseInvoice = () => {
 
   useEffect(() => {
     const newParams = new URLSearchParams(searchParams); // клонируем
-    console.log("tut2");
+
 
     if (query) {
       newParams.set("query", query);
@@ -160,7 +156,7 @@ const PurchaseInvoice = () => {
   const handleOpenInvoice = (id) => {
     sound_open_faktura.currentTime = 0;
     sound_open_faktura.play();
-    console.log("iddd", id);
+
 
     if (id) {
       navigate(`/purchase-invoices/update/${id}`);

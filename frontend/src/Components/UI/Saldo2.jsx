@@ -13,6 +13,7 @@ const Saldo2 = ({
   partnerName,
   partnerType,
   accountType = "debit", // "debit" или "credit"
+  w_full=false
 }) => {
   const { t } = useTranslation();
   
@@ -75,8 +76,8 @@ const Saldo2 = ({
     }
 
     return (
-      <div key={accountKey} className="mb-4 print:mb-2 print:w-1/2 print:inline-block print:align-top print:px-1">
-        <table className="w-full table-auto border-collapse print:text-[8px]">
+      <div key={accountKey} className={`mb-4 print:mb-2 print:inline-block print:align-top print:px-1 ${w_full ? "print:w-full" : "print:w-1/2"}`}>
+        <table className={`w-full table-auto border-collapse ${w_full ? "print:text-sm" : "print:text-[11px]"}`}>
           <thead>
             <tr className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 print:bg-white print:!text-black">
               <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">{t("Date")}</th>
@@ -153,7 +154,7 @@ const Saldo2 = ({
     >
       {/* Header with Print and Download Icons */}
       <div className="flex items-center justify-between mb-3 print:mb-1">
-        <h2 className={`text-base font-semibold ${titleColor} print:!text-black print:text-xs`}>
+        <h2 className={`text-base font-semibold ${titleColor} print:!text-black print:text-lg mx-auto`}>
           {/* {accountType === "debit" ? t("Debit") : t("Credit")}:  */}
           {partnerName || t("partner")}
         </h2>

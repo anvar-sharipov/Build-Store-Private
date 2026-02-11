@@ -78,7 +78,8 @@ const TDPrice = forwardRef(({ product, onFocusPriceRow, onBlurPriceRow, setFocus
         type="text"
         inputMode="decimal" // для мобильных клавиатур с цифрами
         className={`my-1 dark:bg-gray-900 w-[90%] ${product.is_custom_price ? "bg-green-300 dark:bg-green-900" : "bg-white dark:bg-gray-900"} print:hidden`}
-        value={formatNumber2(values.products[productIndex]?.selected_price, 3) ?? ""}
+        // value={formatNumber2(values.products[productIndex]?.selected_price, 3, false) ?? ""}
+        value={values.products[productIndex]?.selected_price ?? ""}
         onFocus={() => {
           onFocusPriceRow(); // родительская функция
           setFocusedPriceRow(product.id);
@@ -88,18 +89,39 @@ const TDPrice = forwardRef(({ product, onFocusPriceRow, onBlurPriceRow, setFocus
           onBlurPriceRow();
           setFocusedPriceRow(null);
         }}
+        // onChange={(e) => {
+        //   const rawValue = e.target.value;
+        //   const normalizedValue = rawValue.replace(",", ".");
+        //   const isNumber = !isNaN(normalizedValue) && normalizedValue.trim() !== "";
+        //   if (!isNumber) {
+        //     setLocalError(`${t("amount must be a digit")}`);
+        //     setFieldValue("send", false);
+        //   } else {
+        //     setLocalError("");
+        //     setFieldValue("send", true);
+        //   }
+        //   setFieldValue(`products[${productIndex}].selected_price`, e.target.value);
+        //   setFieldValue(`products[${productIndex}].is_custom_price`, true);
+        // }}
+
         onChange={(e) => {
-          const rawValue = e.target.value;
-          const normalizedValue = rawValue.replace(",", ".");
-          const isNumber = !isNaN(normalizedValue) && normalizedValue.trim() !== "";
-          if (!isNumber) {
-            setLocalError(`${t("amount must be a digit")}`);
-            setFieldValue("send", false);
-          } else {
-            setLocalError("");
-            setFieldValue("send", true);
+          let rawValue = e.target.value;
+
+          // 🔥 автоматически заменяем запятую на точку
+          rawValue = rawValue.replace(",", ".");
+
+          // разрешаем:
+          // "", "0", "0.", ".", "0.1"
+          const validPattern = /^[-+]?\d*\.?\d*$/;
+
+          if (!validPattern.test(rawValue)) {
+            return;
           }
-          setFieldValue(`products[${productIndex}].selected_price`, e.target.value);
+
+          setLocalError("");
+          setFieldValue("send", true);
+
+          setFieldValue(`products[${productIndex}].selected_price`, rawValue);
           setFieldValue(`products[${productIndex}].is_custom_price`, true);
         }}
         onKeyDown={handleKeyNavigation}

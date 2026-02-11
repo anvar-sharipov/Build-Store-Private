@@ -10,6 +10,7 @@ import { getSaldoForPartner } from "../../../services/saldoService";
 // import Saldo2 from "../PurchaseInvoice/Utils/Saldo2";
 import Saldo2 from "../../UI/Saldo2";
 import { formatNumber2 } from "../../UI/formatNumber2";
+import { useLocation } from "react-router-dom";
 
 const List = ({
   partners,
@@ -37,11 +38,15 @@ const List = ({
   const { dateFrom, dateTo, dateProwodok } = useContext(DateContext);
   const { showNotification } = useNotification();
   const [saldo, setSaldo] = useState(null);
+  const location = useLocation();
 
-  const fetchSaldo = async (partnerId, date_from, date_to) => {
+  console.log("location", location.pathname);
+  
+
+  const fetchSaldo = async (partnerId, date_from, date_to, valuesData = null, use_diapazon = false) => {
     if (!partnerId || !date_from || !date_to) return;
     try {
-      const saldo = await getSaldoForPartner(partnerId, date_from, date_to);
+      const saldo = await getSaldoForPartner(partnerId, date_from, date_to, false, true);
       setSaldo(saldo);
     } catch (err) {
       console.log("Ошибка при получении сальдо", err);
@@ -126,7 +131,7 @@ const List = ({
   return (
     <div className="max-w-6xl mx-auto p-4">
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 mb-6">
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 mb-6 print:hidden">
         <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg">
           <Users className="w-6 h-6 text-white" />
         </div>
@@ -139,7 +144,7 @@ const List = ({
       </motion.div>
 
       {/* Partners List */}
-      <motion.ul variants={containerVariants} initial="hidden" animate="visible" className="grid gap-3 mb-6">
+      <motion.ul variants={containerVariants} initial="hidden" animate="visible" className="grid gap-3 mb-6 print:hidden">
         <AnimatePresence>
           {partners.map((partner, index) => (
             <motion.li
@@ -298,7 +303,7 @@ const List = ({
       </motion.ul>
 
       {/* Pagination */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="flex flex-wrap items-center justify-center gap-2">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="flex flex-wrap items-center justify-center gap-2 print:hidden">
         {Array.from({ length: totalPages }, (_, i) => i + 1).map((p, index) => (
           <motion.button
             key={p}
@@ -346,7 +351,7 @@ const List = ({
 
       {/* Empty State */}
       {partners.length === 0 && (
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-12">
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-12 print:hidden">
           <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
             <Search className="w-10 h-10 text-gray-400" />
           </div>
@@ -354,12 +359,16 @@ const List = ({
           <p className="text-gray-600 dark:text-gray-400">Try adjusting your search criteria</p>
         </motion.div>
       )}
-
+      <div className="print:hidden">
       {openPartnerCardModal.partnerId && openPartnerCardModal.is_open && (
         <MyModal2 onClose={() => setOpenPartnerCardModal({ partnerId: null, is_open: false, partner_name: "" })}>
           <Saldo2 saldo2={saldo} partnerName={openPartnerCardModal.partner_name} />
         </MyModal2>
       )}
+      </div>
+      <div className="hidden print:block">
+      <Saldo2 saldo2={saldo} partnerName={openPartnerCardModal.partner_name} letPrintSaldo={true} w_full={true} />
+      </div>
     </div>
   );
 };

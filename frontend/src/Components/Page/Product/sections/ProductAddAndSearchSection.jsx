@@ -9,6 +9,9 @@ import ExcelButton from "../../../UI/Universal/ExcelButton";
 import { DateContext } from "../../../UI/DateProvider";
 import { useNotification } from "../../../context/NotificationContext";
 import myAxios from "../../../axios";
+import { motion, AnimatePresence } from "framer-motion";
+import { Package } from "lucide-react";
+import { formatNumber2 } from "../../../UI/formatNumber2";
 
 const ProductAddAndSearchSection = ({ t, products, listItemRefs, totalCount, searchInputRef, setProductAddModalOpen, downloadFilteredExcel }) => {
   const { searchQuery, setSearchQuery, searchParams, setSearchParams } = useContext(SearchContext);
@@ -161,6 +164,52 @@ const ProductAddAndSearchSection = ({ t, products, listItemRefs, totalCount, sea
       <div>
         <ExcelButton classname="px-3 py-1" onClick={() => downloadExcelProducts()} disabled={downloadExcel} />
       </div>
+
+      {/* <div>{t("products found")}: {totalCount}</div> */}
+
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="
+    inline-flex items-center gap-3
+    px-4 py-2
+    rounded-2xl
+    bg-gradient-to-r from-emerald-500/10 to-teal-500/10
+    dark:from-emerald-400/10 dark:to-teal-400/10
+    backdrop-blur-md
+    border border-emerald-200 dark:border-emerald-800
+    shadow-sm
+  "
+      >
+        <div
+          className="
+      p-2 rounded-xl
+      bg-emerald-500/15 dark:bg-emerald-400/20
+      text-emerald-600 dark:text-emerald-400
+    "
+        >
+          <Package size={18} />
+        </div>
+
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("products found")}:</span>
+
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={totalCount}
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 1.2, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="
+        text-lg font-bold tabular-nums
+        text-emerald-600 dark:text-emerald-400
+      "
+          >
+            {formatNumber2(totalCount, 0)}
+          </motion.span>
+        </AnimatePresence>
+      </motion.div>
 
       {/* <div className="text-gray-600 dark:text-gray-400 hidden lg:flex items-center gap-3">
         <div>

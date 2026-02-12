@@ -16,11 +16,16 @@ import { fetchUnits, fetchCategories, fetchBrands, fetchModels, fetchTags, fetch
 import ProductDeleteModal from "./modals/ProductDeleteModal";
 import { DateContext } from "../../UI/DateProvider";
 
+import { motion } from "framer-motion";
+import { PackageX } from "lucide-react";
+
 const Harytlar = () => {
   const { searchQuery, setSearchQuery, searchParams, setSearchParams } = useContext(SearchContext);
   const { t } = useTranslation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [optionsLoading, setOptionsLoading] = useState(false);
   const [nextPageUrl, setNextPageUrl] = useState(null);
   const listItemRefs = useRef([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -81,7 +86,7 @@ const Harytlar = () => {
             "Content-Type": "application/json",
           },
           timeout: 60000, // Увеличиваем таймаут до 60 секунд
-        }
+        },
       );
 
       if (response.data instanceof Blob && response.data.size > 0) {
@@ -147,7 +152,8 @@ const Harytlar = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      setLoading(true);
+      // setLoading(true);
+      setOptionsLoading(true);
       try {
         const [units, categories, brands, models, tags, warehouses] = await Promise.all([fetchUnits(), fetchCategories(), fetchBrands(), fetchModels(), fetchTags(), fetchWarehouses()]);
 
@@ -197,7 +203,8 @@ const Harytlar = () => {
       } catch (e) {
         console.error("Ошибка загрузки данных:", e);
       } finally {
-        setLoading(false);
+        // setLoading(false);
+        setOptionsLoading(true);
       }
     };
 
@@ -237,18 +244,20 @@ const Harytlar = () => {
   const fetchProducts = async (url = null) => {
     console.log("dateFrom", dateFrom);
     console.log("dateTo", dateTo);
-    
-    
-    setLoading(true);
+    // if (!dateFrom || !dateTo) return;
+
+    // setLoading(true);
+    setProductsLoading(true);
 
     // если url не передан — значит, это первая загрузка (с фильтрами)
     const query = searchParams.toString();
-    const fullUrl = url || `products/?${query}`;
+    // const fullUrl = url || `products/?date_from=${dateFrom}&date_to=${dateTo}${query}`;
+    const fullUrl = url ? url : `products/?date_from=${dateFrom}&date_to=${dateTo}${query ? `&${query}` : ""}`;
+    // const baseUrl = url ? url : `products/?date_from=${dateFrom}&date_to=${dateTo}`;
 
     try {
       const res = await myAxios.get(fullUrl);
       console.log("dadadada");
-      
 
       // если это первая страница — заменяем
       if (!url) {
@@ -258,7 +267,7 @@ const Harytlar = () => {
         setProducts(res.data.results);
         // console.log("products res.data.results == ", res.data.results);
         // console.log("products res.data.results == ", res.data.meta);
-        
+
         setTotalCount(res.data.count);
         // console.log(res.data.results);
       } else {
@@ -274,7 +283,8 @@ const Harytlar = () => {
     } catch (e) {
       console.error("Ошибка при загрузке:", e);
     } finally {
-      setLoading(false);
+      // setLoading(false);
+      setProductsLoading(false);
 
       // if (clickedNextPageBtn) {
       //   console.log('dadadadadadada2222222222', clickedNextPageBtn);
@@ -314,22 +324,22 @@ const Harytlar = () => {
     searchInputRef.current?.focus();
   }, []);
 
-//   useEffect(() => {
-//   if (!dateFrom || !dateTo) return; // ждем, пока есть даты
+  //   useEffect(() => {
+  //   if (!dateFrom || !dateTo) return; // ждем, пока есть даты
 
-//   const load = async () => {
-//     const params = new URLSearchParams(searchParams);
-//     params.set("date_from", dateFrom);
-//     params.set("date_to", dateTo);
+  //   const load = async () => {
+  //     const params = new URLSearchParams(searchParams);
+  //     params.set("date_from", dateFrom);
+  //     params.set("date_to", dateTo);
 
-//     await fetchProducts(`products/?${params.toString()}`);
-//     searchInputRef.current?.focus();
-//   };
+  //     await fetchProducts(`products/?${params.toString()}`);
+  //     searchInputRef.current?.focus();
+  //   };
 
-//   load();
-// }, [searchParams, dateFrom, dateTo]);
+  //   load();
+  // }, [searchParams, dateFrom, dateTo]);
 
-useEffect(() => {
+  useEffect(() => {
     if (!dateFrom || !dateTo) return;
     const params = new URLSearchParams(searchParams);
 
@@ -351,7 +361,7 @@ useEffect(() => {
         setProductAddModalOpen={setProductAddModalOpen}
         downloadFilteredExcel={downloadFilteredExcel}
       />
-      {loading ? (
+      {productsLoading  ? (
         <MyLoading />
       ) : products.length > 0 ? (
         <ProductList
@@ -370,7 +380,48 @@ useEffect(() => {
           setOpenDeleteModal={setOpenDeleteModal}
         />
       ) : (
-        <MyLoading />
+        <div className="flex items-center justify-center w-full py-16 px-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="
+          relative
+          flex flex-col items-center gap-4
+          rounded-2xl
+          border border-gray-200 dark:border-gray-700
+          bg-gradient-to-br from-gray-50 to-gray-100
+          dark:from-gray-800 dark:to-gray-900
+          shadow-lg dark:shadow-black/40
+          px-10 py-12
+          text-center
+          max-w-md w-full
+        "
+          >
+            {/* Glow effect */}
+            <div className="absolute inset-0 rounded-2xl bg-indigo-500/5 dark:bg-indigo-400/10 blur-2xl pointer-events-none" />
+
+            {/* Icon */}
+            <motion.div
+              initial={{ rotate: -10, scale: 0.8 }}
+              animate={{ rotate: 0, scale: 1 }}
+              transition={{ type: "spring", stiffness: 200, damping: 12 }}
+              className="
+            flex items-center justify-center
+            w-16 h-16
+            rounded-2xl
+            bg-indigo-100 dark:bg-indigo-600/20
+            text-indigo-600 dark:text-indigo-400
+            shadow-md
+          "
+            >
+              <PackageX size={32} />
+            </motion.div>
+
+            {/* Title */}
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">{t("no products")}</h2>
+          </motion.div>
+        </div>
       )}
 
       {productEditModal2.open && (

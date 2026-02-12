@@ -44,6 +44,8 @@ const Partner2 = () => {
     document.title = t("partners");
   }, []);
 
+  
+
   // dlya focus posle update i create na partenra
   const [focusedPartnerId, setFocusedPartnerId] = useState(null);
   const [focusedPartnerIndex, setFocusedPartnerIndex] = useState(null);

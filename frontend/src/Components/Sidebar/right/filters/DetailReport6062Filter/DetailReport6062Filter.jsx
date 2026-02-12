@@ -18,7 +18,7 @@ const DetailReport6062Filter = () => {
   const [dateTo, setDateTo] = useState(searchParams.get("to") || "");
 
   const [agent, setAgent] = useState(null);
-  const [sortByAgentClicked, setSortByAgentClicked] = useState(false);
+  const [sortByAgentClicked, setSortByAgentClicked] = useState(true);
 
   const [agents, setAgents] = useState([]);
   const [filteredAgents, setFilteredAgents] = useState([]);

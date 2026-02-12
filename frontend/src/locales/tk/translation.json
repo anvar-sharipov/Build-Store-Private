@@ -679,7 +679,12 @@
   "choose diapazon date": "Sene aralygyny saýlaň",
   "invalid diapazon date format": "Sene aralygynyň formady nädogry",
   "date start must be <= date end": "Başlangyç senesi gutarýan seneden kiçi ýa-da deň bolmaly",
-  "can cancel only": "ýatyp bilen diňe"
+  "can cancel only": "ýatyp bilen diňe",
+  "no products": "Haryt ýok",
+  "products found": "Haryt tapyldy",
+  "total invoices": "Jemi fakturalar",
+  "employees found": "Işgärler tapyldy",
+  "sales agents found": "Satuw agentleri tapyldy"
 
 
 

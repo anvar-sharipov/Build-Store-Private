@@ -132,7 +132,7 @@ class ProductFilter(django_filters.FilterSet):
 
         raw_value = value.strip()
         norm_value = raw_value.lower()
-        norm_value = re.sub(r"[^\w\s-]", "", norm_value)
+        norm_value = re.sub(r"[^\w\s/-]", "", norm_value)
 
         words = norm_value.replace("-", " ").split()
 

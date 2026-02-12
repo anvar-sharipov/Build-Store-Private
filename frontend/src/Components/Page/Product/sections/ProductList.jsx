@@ -382,7 +382,7 @@ const ProductList = ({
               }
             }}
           >
-            {loading ? (
+            {/* {loading ? (
               <>
                 <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} className="w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
                 <span>Загрузка...</span>
@@ -392,7 +392,7 @@ const ProductList = ({
                 <ChevronDown className="w-4 h-4" />
                 <span>{t("loadMore")}</span>
               </>
-            )}
+            )} */}
           </motion.button>
         </div>
       )}

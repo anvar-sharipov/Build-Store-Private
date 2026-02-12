@@ -533,22 +533,22 @@ def get_detail_account_60_62(request):
     #     )
     # ).select_related('agent')
 
-    # ИСПРАВЛЕНИЕ: Упрощенные функции сравнения дат
-    def get_transaction_date(transaction_date):
-        """Возвращает дату транзакции в едином формате (date)"""
-        if isinstance(transaction_date, datetime):
-            return transaction_date.date()
-        return transaction_date
+    # # ИСПРАВЛЕНИЕ: Упрощенные функции сравнения дат
+    # def get_transaction_date(transaction_date):
+    #     """Возвращает дату транзакции в едином формате (date)"""
+    #     if isinstance(transaction_date, datetime):
+    #         return transaction_date.date()
+    #     return transaction_date
 
-    def compare_dates(transaction_date, target_date):
-        """Сравнивает дату транзакции с целевой датой"""
-        trans_date = get_transaction_date(transaction_date)
-        return trans_date < target_date
+    # def compare_dates(transaction_date, target_date):
+    #     """Сравнивает дату транзакции с целевой датой"""
+    #     trans_date = get_transaction_date(transaction_date)
+    #     return trans_date < target_date
 
-    def is_date_in_range(transaction_date, start_date, end_date):
-        """Проверяет, находится ли дата транзакции в диапазоне"""
-        trans_date = get_transaction_date(transaction_date)
-        return start_date <= trans_date <= end_date
+    # def is_date_in_range(transaction_date, start_date, end_date):
+    #     """Проверяет, находится ли дата транзакции в диапазоне"""
+    #     trans_date = get_transaction_date(transaction_date)
+    #     return start_date <= trans_date <= end_date
 
     if sortByAgent == "true" or sortByAgent == True:
         data = {"data": {}, "total_prices": {}}
@@ -558,6 +558,7 @@ def get_detail_account_60_62(request):
         all_partners = list(
             Partner.objects.select_related('agent')
         )
+        
         
         # Группировка партнеров по агентам
         agents_data = {}
@@ -689,12 +690,16 @@ def get_detail_account_60_62(request):
         # Обработка агентов
         for agent_name, agent_info in agents_data.items():
             data["data"][agent_name] = []
-            
+
             for partner in agent_info['partners']:
                 partner_data = process_partner(partner, agent_info['totals'])
-                data["data"][agent_name].append(partner_data)
+                if show0 == "false":
+                    if partner_data["debit_before"] - partner_data["credit_before"] != 0:
+                        data["data"][agent_name].append(partner_data)
+                else:
+                    data["data"][agent_name].append(partner_data)
             
-            # Расчет сальдо для агента
+            # Расчет сальдо для агента  (Всего Ahrar: show0 = "true")
             totals = agent_info['totals']
             if (totals['debit_before'] - totals['credit_before']) > 0:
                 saldo_summ_before_debit = abs(totals['debit_before'] - totals['credit_before'])
@@ -736,7 +741,11 @@ def get_detail_account_60_62(request):
         data["data"]["no_agent"] = []
         for partner in no_agent_data['partners']:
             partner_data = process_partner(partner, no_agent_data['totals'])
-            data["data"]["no_agent"].append(partner_data)
+            if show0 == "false":
+                if partner_data["debit_before"] - partner_data["credit_before"] != 0:
+                    data["data"]["no_agent"].append(partner_data)
+            else:
+                data["data"]["no_agent"].append(partner_data)
         
         # Расчет сальдо для no_agent
         totals = no_agent_data['totals']
@@ -859,7 +868,35 @@ def get_detail_account_60_62(request):
 
             # ic(data)
 
+        agent_total_calc = {}
+        for key, items in data.items():
+            if key == "data":
+                for k, i in items.items():
+                    agent_total_calc[k] = {
+                            "debit_before_total": Decimal("0.00"),
+                            "credit_before_total": Decimal("0.00"),    
+                    }
+                    totals = i[-1]
+                    totals["debit_before_total"] = Decimal("0.00")
+                    totals["credit_before_total"] = Decimal("0.00")
+                    for s in i:
+                        saldo_start_debit = Decimal("0.00")
+                        saldo_start_credit = Decimal("0.00")
+                        if (s["debit_before"] - s["credit_before"]) > 0:
+                            saldo_start_debit = s["debit_before"] - s["credit_before"]
+                        elif s["debit_before"] - s["credit_before"] < 0:
+                            saldo_start_credit = abs(s["debit_before"] - s["credit_before"])
+                        agent_total_calc[k]["debit_before_total"] = agent_total_calc[k].get("debit_before_total", Decimal("0.00")) + saldo_start_debit
+                        agent_total_calc[k]["credit_before_total"] = agent_total_calc[k].get("credit_before_total", Decimal("0.00")) + saldo_start_credit
 
+                        
+    
+        for key, items in data.items():
+            if key == "total_prices":
+                for k, i in items.items():
+                    i[0]["debit_before_total"] = agent_total_calc[k]["debit_before_total"]
+                    i[0]["credit_before_total"] = agent_total_calc[k]["credit_before_total"]
+                        
         return Response({
             "items": data["data"],
             "totals": data["total_prices"]
@@ -974,8 +1011,7 @@ def get_detail_account_60_62(request):
             filtered_partners = []
             for partner in all_partners_data:
                 # Проверяем, что хотя бы одно значение не равно 0
-                if (partner["debit_before"] != 0 or 
-                    partner["credit_before"] != 0 or
+                if ((partner["debit_before"] - partner["credit_before"]) != 0 or 
                     partner["debit_oborot"] != 0 or 
                     partner["credit_oborot"] != 0 or
                     partner["saldo_end_debit"] != 0 or 
@@ -1039,7 +1075,30 @@ def get_detail_account_60_62(request):
             "saldo_summ_end_credit": saldo_summ_end_credit,
         }
 
-        # ic(data)
+        agent_total_calc = {
+            "debit_before_total": Decimal("0.00"),
+            "credit_before_total": Decimal("0.00"),  
+        }
+        for key, items in data.items():
+            # ic(type(items))
+            if key == "data":
+                # ic(type(items))
+                for item in items:
+                    # ic(item)
+                    saldo_start_debit = Decimal("0.00")
+                    saldo_start_credit = Decimal("0.00")
+                    if (item["debit_before"] - item["credit_before"]) > 0:
+                        saldo_start_debit = item["debit_before"] - item["credit_before"]
+                        agent_total_calc["debit_before_total"] += saldo_start_debit
+                    else:
+                        saldo_start_credit = abs(item["debit_before"] - item["credit_before"])    
+                        agent_total_calc["credit_before_total"] += saldo_start_credit
+                        
+        for key, items in data.items():
+            if key == "total_prices":
+                ic(items)
+                items["debit_before_total"] = agent_total_calc["debit_before_total"]
+                items["credit_before_total"] = agent_total_calc["credit_before_total"]
 
         return Response({
             "items": data["data"],

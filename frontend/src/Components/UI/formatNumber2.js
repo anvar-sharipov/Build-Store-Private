@@ -7,7 +7,7 @@ export function formatNumber2(value, fixed = 2, nullOrHyphen = true) {
   // Если значение реально равно 0 → показываем "-"
   if (num === 0) {
     if (nullOrHyphen) {
-      return "-";
+      return "";
     } else {
       return fixed === 0 ? "0" : "0.00";
     }

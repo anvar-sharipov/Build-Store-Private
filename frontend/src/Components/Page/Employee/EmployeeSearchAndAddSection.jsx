@@ -10,16 +10,10 @@ import Tooltip from "../../ToolTip";
 import MySearchInput from "../../UI/MySearchInput";
 import { myClass } from "../../tailwindClasses";
 
-const EmployeeSearchAndAddSection = ({
-  filtered,
-  search,
-  setSearch,
-  clearSearch,
-  handleSearchKeyDown,
-  setOpenModalAdd,
-  addIconButtonRef,
-  searchInputRef,
-}) => {
+import { motion, AnimatePresence } from "framer-motion";
+import { Users } from "lucide-react";
+
+const EmployeeSearchAndAddSection = ({ filtered, search, setSearch, clearSearch, handleSearchKeyDown, setOpenModalAdd, addIconButtonRef, searchInputRef }) => {
   const { t } = useTranslation();
 
   const [isAnimating, setIsAnimating] = useState(false);
@@ -82,19 +76,17 @@ const EmployeeSearchAndAddSection = ({
         <div>
           {filtered.length > 0 && (
             <div className="flex gap-3 items-center">
-              <span>
+              {/* <span>
                 {search
                   ? `${t("found")}: ${filtered.length}`
                   : `${t("total")}: ${filtered.length}`}
-              </span>
+              </span> */}
               <RiFileExcel2Fill
                 ref={downloadExcelButtonRef}
                 onMouseEnter={() => setDownloadExcelHovered(true)}
                 onMouseLeave={() => setDownloadExcelHovered(false)}
                 size={30}
-                className={`cursor-pointer rounded transition-transform duration-300 text-green-700 hover:text-green-600 ${
-                  isAnimating ? "scale-125" : "scale-100"
-                }`}
+                className={`cursor-pointer rounded transition-transform duration-300 text-green-700 hover:text-green-600 ${isAnimating ? "scale-125" : "scale-100"}`}
                 onClick={handleDownload}
                 role="button"
                 tabIndex={0}
@@ -106,16 +98,59 @@ const EmployeeSearchAndAddSection = ({
                   }
                 }}
               />
-              <Tooltip
-                targetRef={downloadExcelButtonRef}
-                visible={downloadExcelHovered}
-              >
+              <Tooltip targetRef={downloadExcelButtonRef} visible={downloadExcelHovered}>
                 {t("downloadExcel")} (CTRL+E)
               </Tooltip>
             </div>
           )}
         </div>
       </div>
+
+      {/* <div>{t("employees found")}: {filtered.length}</div> */}
+
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+        className="
+    inline-flex items-center gap-3
+    px-4 py-2
+    rounded-2xl
+    bg-gradient-to-r from-cyan-500/10 to-teal-500/10
+    dark:from-cyan-400/10 dark:to-teal-400/10
+    backdrop-blur-md
+    border border-cyan-200 dark:border-cyan-800
+    shadow-sm
+  "
+      >
+        <div
+          className="
+      p-2 rounded-xl
+      bg-cyan-500/15 dark:bg-cyan-400/20
+      text-cyan-600 dark:text-cyan-400
+    "
+        >
+          <Users size={18} />
+        </div>
+
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("employees found")}:</span>
+
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={filtered.length}
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 1.15, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="
+        text-lg font-bold tabular-nums
+        text-cyan-600 dark:text-cyan-400
+      "
+          >
+            {filtered.length}
+          </motion.span>
+        </AnimatePresence>
+      </motion.div>
 
       <div className="flex items-end gap-3">
         <MySearchInput

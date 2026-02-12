@@ -14,7 +14,7 @@ const FetchPartner = ({ refs, setSaldo, saldo, getSaldo, saldo2, getSaldo2, setS
   const { dateFrom, setDateFrom, dateTo, setDateTo, dateProwodok, setDateProwodok } = useContext(DateContext);
 
   // Добавим эффект для установки initialPartner
-  useEffect(() => { 
+  useEffect(() => {
     if (initialPartner && !values.partner) {
       setFieldValue("partner", initialPartner, false);
       if (initialPartner.id && dateFrom && dateTo) {
@@ -51,7 +51,6 @@ const FetchPartner = ({ refs, setSaldo, saldo, getSaldo, saldo2, getSaldo2, setS
   if (values.id) {
     useEffect(() => {
       if (values.partner?.id && dateFrom && dateTo) {
-        
         // getSaldo(values.invoice_date2, values.partner?.id);
         getSaldo2(values.partner?.id, dateFrom, dateTo);
       } else {
@@ -60,10 +59,6 @@ const FetchPartner = ({ refs, setSaldo, saldo, getSaldo, saldo2, getSaldo2, setS
     }, [values.invoice_date2, dateFrom, dateTo]);
   } else {
     useEffect(() => {
-      
-      
-      
-      
       if (values.partner?.id && dateFrom && dateTo && values.invoice_date) {
         // getSaldo(dateProwodok, values.partner?.id);
         getSaldo2(values.partner?.id, dateFrom, dateTo, values.invoice_date);
@@ -107,8 +102,9 @@ const FetchPartner = ({ refs, setSaldo, saldo, getSaldo, saldo2, getSaldo2, setS
       new Fuse(allPartners, {
         keys: ["name"],
         threshold: 0.3,
+        ignoreLocation: true,
       }),
-    [allPartners]
+    [allPartners],
   );
 
   // Обработчик поиска
@@ -129,7 +125,6 @@ const FetchPartner = ({ refs, setSaldo, saldo, getSaldo, saldo2, getSaldo2, setS
           .map((r) => r.item)
       : allPartners;
     setFilteredPartners(results);
-   
   };
 
   if (values.partner?.id) {

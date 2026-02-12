@@ -128,12 +128,21 @@ const DetailReport1 = () => {
           {transactions && transactions.length > 0 ? (
             transactions.map((t, i) => {
               runningBalance += (t.debit || 0) - (t.credit || 0);
+              
+              if (t.description == "Faktura (wozwrat) № 4586 11.02.26") {
+                console.log("Transaction:", t, "Running Balance:", runningBalance);
+              }
               return (
                 <tr key={i}>
                   <td className="border border-black px-2 py-2">{t.date}</td>
                   <td className="border border-black px-2 py-2">{t.description || "—"}</td>
                   <td className="border border-black px-2 py-2 text-right">
-                    {t.debit > 0 ? formatNumber(t.debit) : "—"}
+                    {account?.number == "75" && t.debit < 0 ? (
+                      <div>{formatNumber(t.debit)}</div>
+                    ) : (
+                      <div>{t.debit > 0 ? formatNumber(t.debit) : "—"}</div>
+                    )}
+                    
                   </td>
                   <td className="border border-black px-2 py-2 text-right">
                     {t.credit > 0 ? formatNumber(t.credit) : "—"}

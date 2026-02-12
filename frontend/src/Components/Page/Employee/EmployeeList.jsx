@@ -21,7 +21,7 @@ const EmployeeList = ({
   setOpenDeleteModal,
   loadMoreButtonRef,
   setEditType,
-  setEditIsActive 
+  setEditIsActive,
 }) => {
   const [selectedEmployee, setSelectedEmployee] = selectedEmployeeState;
 
@@ -29,8 +29,8 @@ const EmployeeList = ({
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.03 }
-    }
+      transition: { staggerChildren: 0.03 },
+    },
   };
 
   const itemVariants = {
@@ -38,8 +38,8 @@ const EmployeeList = ({
     visible: {
       opacity: 1,
       x: 0,
-      transition: { duration: 0.2 }
-    }
+      transition: { duration: 0.2 },
+    },
   };
 
   const focusStyles = "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-gray-900 focus:bg-blue-50 dark:focus:bg-blue-900/20";
@@ -48,17 +48,10 @@ const EmployeeList = ({
     return (
       <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6 text-center">
         <div className="text-gray-400 text-4xl mb-3">👥</div>
-        <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">
-          {search ? t("noSearchResults") : t("empty")}
-        </h3>
-        <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
-          {search ? t("tryDifferentSearch") : t("addFirstEmployee")}
-        </p>
+        <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">{search ? t("noSearchResults") : t("empty")}</h3>
+        <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">{search ? t("tryDifferentSearch") : t("addFirstEmployee")}</p>
         {search && (
-          <button 
-            onClick={clearSearch}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-          >
+          <button onClick={clearSearch} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
             {t("clearSearch")}
           </button>
         )}
@@ -67,12 +60,7 @@ const EmployeeList = ({
   }
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-      className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden"
-    >
+    <motion.div initial="hidden" animate="visible" variants={containerVariants} className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
       <div className="overflow-hidden">
         <ul className="divide-y divide-gray-200 dark:divide-gray-800">
           <AnimatePresence>
@@ -106,31 +94,20 @@ const EmployeeList = ({
                     </div>
 
                     {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`font-medium text-sm truncate ${
-                          s.is_active 
-                            ? "text-gray-900 dark:text-white" 
-                            : "text-gray-500 dark:text-gray-400"
-                        }`}>
-                          {s.name}
-                        </span>
-                        {!s.is_active && (
-                          <span className="px-2 py-0.5 text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full">
-                            {t("inactive")}
-                          </span>
-                        )}
-                      </div>
-                      
+                    <div className="flex min-w-0 gap-10">
                       <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                          s.type === "driver" 
-                            ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400" 
-                            : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                        }`}>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                            s.type === "driver" ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400" : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                          }`}
+                        >
                           {s.type === "driver" ? <Truck size={12} /> : <Package size={12} />}
                           <span>{s.type === "driver" ? t("driver") : t("warehouseWorker")}</span>
                         </span>
+                      </div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`font-medium text-sm truncate ${s.is_active ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"}`}>{s.name}</span>
+                        {!s.is_active && <span className="px-2 py-0.5 text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full">{t("inactive")}</span>}
                       </div>
                     </div>
                   </div>
@@ -138,9 +115,7 @@ const EmployeeList = ({
                   {/* Actions */}
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity">
                     <button
-                      className={`p-1.5 rounded transition-colors ${
-                        loadingDeleteId === s.id ? "opacity-0" : ""
-                      } text-gray-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20`}
+                      className={`p-1.5 rounded transition-colors ${loadingDeleteId === s.id ? "opacity-0" : ""} text-gray-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20`}
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedEmployee(s);
@@ -223,8 +198,6 @@ const EmployeeList = ({
 
 export default EmployeeList;
 
-
-
 // import { GrEdit } from "react-icons/gr";
 // import { RiDeleteBin2Fill } from "react-icons/ri";
 // import { CiNoWaitingSign } from "react-icons/ci";
@@ -250,7 +223,7 @@ export default EmployeeList;
 //   setOpenDeleteModal,
 //   loadMoreButtonRef,
 //   setEditType,
-//   setEditIsActive 
+//   setEditIsActive
 // }) => {
 //   const [selectedEmployee, setSelectedEmployee] = selectedEmployeeState;
 
@@ -367,18 +340,6 @@ export default EmployeeList;
 // };
 
 // export default EmployeeList;
-
-
-
-
-
-
-
-
-
-
-
-
 
 // import { GrEdit } from "react-icons/gr";
 // import { RiDeleteBin2Fill } from "react-icons/ri";

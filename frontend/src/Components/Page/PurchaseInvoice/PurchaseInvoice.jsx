@@ -93,7 +93,8 @@ const PurchaseInvoice = () => {
           setInvoices(res.data.invoices);
         }, 30); // задержку можно подкорректировать
       }
-
+      // console.log("total", res.data.total);
+      
       setPagination({
         page: res.data.page,
         totalPages: res.data.total_pages,
@@ -175,7 +176,7 @@ const PurchaseInvoice = () => {
 
   return (
     <div>
-      <Head mainRefs={mainRefs} handleOpenInvoice={handleOpenInvoice} setQuery={setQuery} query={query} invoices={invoices} />
+      <Head mainRefs={mainRefs} handleOpenInvoice={handleOpenInvoice} setQuery={setQuery} query={query} invoices={invoices} pagination={pagination} />
 
       <InvoiceList invoices={invoices} mainRefs={mainRefs} handleOpenInvoice={handleOpenInvoice} pagination={pagination} />
 

@@ -6,13 +6,14 @@ import { FaPlus } from "react-icons/fa";
 import invoiceClasses from "./classes";
 // import { useFormikContext } from "formik";
 import MySearchInput from "../../../UI/MySearchInput";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import ExcelButton from "../../../UI/Universal/ExcelButton";
 import myAxios from "../../../axios";
 import { DateContext } from "../../../UI/DateProvider";
 import { useNotification } from "../../../context/NotificationContext";
+import { FileText } from "lucide-react";
 
-const Head = ({ mainRefs, handleOpenInvoice, setQuery, query, invoices }) => {
+const Head = ({ mainRefs, handleOpenInvoice, setQuery, query, invoices, pagination }) => {
   const { dateFrom, dateTo } = useContext(DateContext);
   const { t } = useTranslation();
   const buttonRef = useRef(null);
@@ -164,6 +165,52 @@ const Head = ({ mainRefs, handleOpenInvoice, setQuery, query, invoices }) => {
       <div>
         <ExcelButton classname="px-3 py-2" onClick={() => downloadExcelFakturs()} disabled={downloadExcel} />
       </div>
+      {/* <div>{t("total invoices")}: {pagination.total}</div> */}
+
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="
+    inline-flex items-center gap-3
+    px-4 py-2
+    rounded-2xl
+    bg-gradient-to-r from-indigo-500/10 to-violet-500/10
+    dark:from-indigo-400/10 dark:to-violet-400/10
+    backdrop-blur-md
+    border border-indigo-200 dark:border-indigo-800
+    shadow-sm
+  "
+      >
+        <div
+          className="
+      p-2 rounded-xl
+      bg-indigo-500/15 dark:bg-indigo-400/20
+      text-indigo-600 dark:text-indigo-400
+    "
+        >
+          <FileText size={18} />
+        </div>
+
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("total invoices")}:</span>
+
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={pagination.total}
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 1.2, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="
+        text-lg font-bold tabular-nums
+        text-indigo-600 dark:text-indigo-400
+      "
+          >
+            {pagination.total}
+          </motion.span>
+        </AnimatePresence>
+      </motion.div>
+
       <div>
         <MySearchInput
           ref={mainRefs.searchInputRef}

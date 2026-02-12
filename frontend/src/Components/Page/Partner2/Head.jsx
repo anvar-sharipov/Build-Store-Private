@@ -9,6 +9,10 @@ import { partnerDownloadExcel } from "./partnerDownloadExcel";
 import myAxios from "../../axios";
 import ExcelButton from "../../UI/Universal/ExcelButton";
 import { DateContext } from "../../UI/DateProvider";
+import { motion, AnimatePresence } from "framer-motion";
+import { Users } from "lucide-react";
+import { formatNumber2 } from "../../UI/formatNumber2";
+
 
 const Head = ({
   setOpenModal,
@@ -32,9 +36,6 @@ const Head = ({
   const [downloadExcel, setDownloadExcel] = useState(false);
   const { dateFrom, dateTo } = useContext(DateContext);
 
-
-
-
   const downloadExcelPartners = async () => {
     if (!dateFrom || !dateTo) {
       showNotification(t("choose diapazon date"), "error");
@@ -55,7 +56,6 @@ const Head = ({
       const is_active = searchParams.get("is_active");
       const sort = searchParams.get("sort"); // balance_tmt_asc balance_tmt_desc balance_usd_asc balance_usd_desc
       const search = searchParams.get("search");
-
 
       if (type) params.append("type", type);
       if (is_active) params.append("is_active", is_active);
@@ -215,6 +215,51 @@ const Head = ({
       <div className="print:hidden">
         <ExcelButton onClick={downloadExcelPartners} disabled={downloadExcel} />
       </div>
+
+      {/* <div>{t("partners found")}: {count}</div> */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="
+    inline-flex items-center gap-3
+    px-4 py-2
+    rounded-2xl
+    bg-gradient-to-r from-blue-500/10 to-indigo-500/10
+    dark:from-blue-400/10 dark:to-indigo-400/10
+    backdrop-blur-md
+    border border-blue-200 dark:border-blue-800
+    shadow-sm
+  "
+      >
+        <div
+          className="
+      p-2 rounded-xl
+      bg-blue-500/15 dark:bg-blue-400/20
+      text-blue-600 dark:text-blue-400
+    "
+        >
+          <Users size={18} />
+        </div>
+
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("partners found")}:</span>
+
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={count}
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 1.2, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="
+        text-lg font-bold tabular-nums
+        text-blue-600 dark:text-blue-400
+      "
+          >
+            {formatNumber2(count, 0)}
+          </motion.span>
+        </AnimatePresence>
+      </motion.div>
 
       <div className="flex items-end gap-3">
         <MySearchInput

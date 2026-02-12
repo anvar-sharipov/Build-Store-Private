@@ -31,6 +31,8 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
   //     search: params.toString(),
   //   });
   // };
+  // console.log("len invoices", invoices.length);
+  
 
   if (!invoices || invoices.length === 0) {
     return (

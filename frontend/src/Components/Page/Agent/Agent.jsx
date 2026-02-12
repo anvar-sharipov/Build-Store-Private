@@ -25,9 +25,8 @@ import PartnerList from "../Partner/PartnerList";
 import MySearchInput from "../../UI/MySearchInput";
 import { myClass } from "../../tailwindClasses";
 import { motion, AnimatePresence } from "framer-motion";
-import { Edit2, Trash2, ClipboardList, Plus } from "lucide-react";
+import { Edit2, Trash2, ClipboardList, Plus, BadgeDollarSign } from "lucide-react";
 import { useNotification } from "../../context/NotificationContext";
-
 
 const Agent = () => {
   const { t } = useTranslation();
@@ -36,7 +35,6 @@ const Agent = () => {
   // const [filteredList, setFilteredList] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { showNotification } = useNotification();
-  
 
   const sound_up_down = new Audio("/sounds/up_down.mp3");
 
@@ -359,7 +357,7 @@ const Agent = () => {
           <div className="text-gray-600 dark:text-gray-400 flex items-center gap-3 print:hidden">
             {filteredList.length > 0 && (
               <div className="flex gap-3 items-center">
-                <span>{searchQuery ? `${t("found")}: ${filteredList.length}` : `${t("total")}: ${filteredList.length}`}</span>
+                {/* <span>{searchQuery ? `${t("found")}: ${filteredList.length}` : `${t("total")}: ${filteredList.length}`}</span> */}
 
                 <RiFileExcel2Fill
                   size={30}
@@ -372,6 +370,53 @@ const Agent = () => {
                   tabIndex={0}
                   aria-label="Download Excel"
                 />
+                {/* <div>
+                  {t("sales agents found")}: {filteredList.length}
+                </div> */}
+
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="
+    inline-flex items-center gap-3
+    px-4 py-2
+    rounded-2xl
+    bg-gradient-to-r from-amber-500/10 to-orange-500/10
+    dark:from-amber-400/10 dark:to-orange-400/10
+    backdrop-blur-md
+    border border-amber-200 dark:border-amber-800
+    shadow-sm
+  "
+                >
+                  <div
+                    className="
+      p-2 rounded-xl
+      bg-amber-500/15 dark:bg-amber-400/20
+      text-amber-600 dark:text-amber-400
+    "
+                  >
+                    <BadgeDollarSign size={18} />
+                  </div>
+
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("sales agents found")}:</span>
+
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={filteredList.length}
+                      initial={{ scale: 0.7, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 1.15, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="
+        text-lg font-bold tabular-nums
+        text-amber-600 dark:text-amber-400
+      "
+                    >
+                      {filteredList.length}
+                    </motion.span>
+                  </AnimatePresence>
+                </motion.div>
               </div>
             )}
             {/* <FaPrint className="text-blue-500 text-lg hover:text-xl hover:text-red-500 transition-all duration-100" /> */}
@@ -461,9 +506,9 @@ const Agent = () => {
           <div>
             {filteredList.length > 0 && (
               <div className="flex gap-3 items-center">
-                <span>
+                {/* <span>
                   {t("total")}: {filteredList.length}
-                </span>
+                </span> */}
                 <RiFileExcel2Fill
                   size={30}
                   className={`cursor-pointer rounded transition-transform duration-300 text-green-700 hover:text-green-600 ${excelIconIsAnimating ? "scale-125" : "scale-100"}`}
@@ -479,6 +524,51 @@ const Agent = () => {
                     setExcelIconHovered(false);
                   }}
                 />
+                {/* <div>{t("sales agents found")}: {filteredList.length}</div> */}
+
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="
+    inline-flex items-center gap-3
+    px-4 py-2
+    rounded-2xl
+    bg-gradient-to-r from-amber-500/10 to-orange-500/10
+    dark:from-amber-400/10 dark:to-orange-400/10
+    backdrop-blur-md
+    border border-amber-200 dark:border-amber-800
+    shadow-sm
+  "
+                >
+                  <div
+                    className="
+      p-2 rounded-xl
+      bg-amber-500/15 dark:bg-amber-400/20
+      text-amber-600 dark:text-amber-400
+    "
+                  >
+                    <BadgeDollarSign size={18} />
+                  </div>
+
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("sales agents found")}:</span>
+
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={filteredList.length}
+                      initial={{ scale: 0.7, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 1.15, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="
+        text-lg font-bold tabular-nums
+        text-amber-600 dark:text-amber-400
+      "
+                    >
+                      {filteredList.length}
+                    </motion.span>
+                  </AnimatePresence>
+                </motion.div>
               </div>
             )}
             <Tooltip visible={excelIconHovered} targetRef={excelIconRef}>

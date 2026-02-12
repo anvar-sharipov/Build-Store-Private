@@ -31,8 +31,8 @@ const DetailReport6062 = () => {
   const [loading, setLoading] = useState(true);
   const [sortConfig, setSortConfig] = useState({ key: "agentId", direction: "asc" });
 
-  const [show0, setShow0] = useState(true);
-  const [hyphenOr0, setHyphenOr0] = useState(false);
+  const [show0, setShow0] = useState(false);
+  const [hyphenOr0, setHyphenOr0] = useState(true);
 
   // ################################################################################################################################
   // ################################################################################################################################
@@ -451,7 +451,7 @@ const DetailReport6062 = () => {
       <div className="print:bg-white print:p-0 print:m-0 flex justify-center">
         <AnimatePresence>
           {hasData && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="w-full max-w-full">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} >
               {/* Заголовок отчета */}
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -608,10 +608,10 @@ const DetailReport6062 = () => {
                                 <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                                   {formatNumber2(start_saldo_credit, 2, hyphenOr0)}
                                 </td>
-                                <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                                <td className="text-green-700 dark:text-green-400 print:!text-black px-3 py-2 whitespace-nowrap border border-gray-300 text-right dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                                   {formatNumber2(row.debit_oborot, 2, hyphenOr0)}
                                 </td>
-                                <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                                <td className="text-red-00 dark:text-red-400 print:!text-black px-3 py-2 whitespace-nowrap border border-gray-300 text-right dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                                   {formatNumber2(row.credit_oborot, 2, hyphenOr0)}
                                 </td>
                                 <td className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
@@ -640,7 +640,7 @@ const DetailReport6062 = () => {
                               {formatNumber2(agentTotalsData.debit_before_total, 2, hyphenOr0)}
                             </td>
                             <td className="px-3 whitespace-nowrap py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                              {formatNumber2(agentTotalsData.credit_before_total, 2, hyphenOr0)}
+                              {formatNumber2(agentTotalsData.credit_before_total, 2, hyphenOr0)}gg
                             </td>
                             <td className="px-3 whitespace-nowrap py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                               {formatNumber2(agentTotalsData.debit_oborot_total, 2, hyphenOr0)}
@@ -731,22 +731,22 @@ const DetailReport6062 = () => {
                         >
                           {t("totalExpanded")}:
                         </td>
-                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                        <td className="px-3 whitespace-nowrap py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                           {formatNumber2(grandTotals.debit_before_total, 2, hyphenOr0)}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                        <td className="whitespace-nowrap px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                           {formatNumber2(grandTotals.credit_before_total, 2, hyphenOr0)}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                        <td className="whitespace-nowrap px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                           {formatNumber2(grandTotals.debit_oborot_total, 2, hyphenOr0)}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                        <td className="whitespace-nowrap px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                           {formatNumber2(grandTotals.credit_oborot_total, 2, hyphenOr0)}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                        <td className="whitespace-nowrap px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                           {formatNumber2(grandTotals.saldo_end_debit_total, 2, hyphenOr0)}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                        <td className="whitespace-nowrap px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                           {formatNumber2(grandTotals.saldo_end_credit_total, 2, hyphenOr0)}
                         </td>
                       </tr>
@@ -757,22 +757,22 @@ const DetailReport6062 = () => {
                         >
                           {t("total")}:
                         </td>
-                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                        <td className="whitespace-nowrap px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                           {formatNumber2(grandTotals.saldo_summ_before_debit, 2, hyphenOr0)}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                        <td className="whitespace-nowrap px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                           {formatNumber2(grandTotals.saldo_summ_before_credit, 2, hyphenOr0)}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                        <td className="whitespace-nowrap px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                           {formatNumber2(grandTotals.saldo_summ_oborot_debit, 2, hyphenOr0)}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                        <td className="whitespace-nowrap px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                           {formatNumber2(grandTotals.saldo_summ_oborot_credit, 2, hyphenOr0)}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                        <td className="whitespace-nowrap px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                           {formatNumber2(grandTotals.saldo_summ_end_debit, 2, hyphenOr0)}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
+                        <td className="whitespace-nowrap px-3 py-2 text-right font-mono font-bold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                           {formatNumber2(grandTotals.saldo_summ_end_credit, 2, hyphenOr0)}
                         </td>
                       </tr>
@@ -1051,16 +1051,16 @@ const DetailReport6062 = () => {
                         </td>
 
                         <td
-                          className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right
-                                   dark:text-gray-200 dark:border-gray-600
+                          className="text-green-700 dark:text-green-400 print:!text-black px-3 py-2 whitespace-nowrap border border-gray-300 text-right
+                                   dark:border-gray-600
                                    print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                    print:dark:!text-black"
                         >
                           {formatNumber2(row.debit_oborot, 2, hyphenOr0)}
                         </td>
                         <td
-                          className="px-3 py-2 whitespace-nowrap text-gray-800 border border-gray-300 text-right
-                                   dark:text-gray-200 dark:border-gray-600
+                          className="text-red-700 dark:text-red-400 print:!text-black px-3 py-2 whitespace-nowrap border border-gray-300 text-right
+                                   dark:border-gray-600
                                    print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                    print:dark:!text-black"
                         >
@@ -1111,7 +1111,7 @@ const DetailReport6062 = () => {
                     {t("totalExpanded")}:
                   </td>
                   <td
-                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
+                    className="whitespace-nowrap px-3 py-2 text-right font-mono font-semibold border border-gray-300
                                dark:text-gray-200 dark:border-gray-600
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"
@@ -1119,7 +1119,7 @@ const DetailReport6062 = () => {
                     {formatNumber2(totals.debit_before_total, 2, hyphenOr0)}
                   </td>
                   <td
-                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
+                    className="whitespace-nowrap px-3 py-2 text-right font-mono font-semibold border border-gray-300
                                dark:text-gray-200 dark:border-gray-600
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"
@@ -1128,7 +1128,7 @@ const DetailReport6062 = () => {
                   </td>
 
                   <td
-                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
+                    className="whitespace-nowrap px-3 py-2 text-right font-mono font-semibold border border-gray-300
                                dark:text-gray-200 dark:border-gray-600
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"
@@ -1136,7 +1136,7 @@ const DetailReport6062 = () => {
                     {formatNumber2(totals.debit_oborot_total, 2, hyphenOr0)}
                   </td>
                   <td
-                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
+                    className="whitespace-nowrap px-3 py-2 text-right font-mono font-semibold border border-gray-300
                                dark:text-gray-200 dark:border-gray-600
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"
@@ -1145,7 +1145,7 @@ const DetailReport6062 = () => {
                   </td>
 
                   <td
-                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
+                    className="whitespace-nowrap px-3 py-2 text-right font-mono font-semibold border border-gray-300
                                dark:text-gray-200 dark:border-gray-600
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"
@@ -1153,7 +1153,7 @@ const DetailReport6062 = () => {
                     {formatNumber2(totals.saldo_end_debit_total, 2, hyphenOr0)}
                   </td>
                   <td
-                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
+                    className="whitespace-nowrap px-3 py-2 text-right font-mono font-semibold border border-gray-300
                                dark:text-gray-200 dark:border-gray-600
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"
@@ -1179,7 +1179,7 @@ const DetailReport6062 = () => {
                     {t("total")}:
                   </td>
                   <td
-                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
+                    className="whitespace-nowrap px-3 py-2 text-right font-mono font-semibold border border-gray-300
                                dark:text-gray-200 dark:border-gray-600
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"
@@ -1187,7 +1187,7 @@ const DetailReport6062 = () => {
                     {formatNumber2(totals.saldo_summ_before_debit, 2, hyphenOr0)}
                   </td>
                   <td
-                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
+                    className="whitespace-nowrap px-3 py-2 text-right font-mono font-semibold border border-gray-300
                                dark:text-gray-200 dark:border-gray-600
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"
@@ -1196,7 +1196,7 @@ const DetailReport6062 = () => {
                   </td>
 
                   <td
-                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
+                    className="whitespace-nowrap px-3 py-2 text-right font-mono font-semibold border border-gray-300
                                dark:text-gray-200 dark:border-gray-600
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"
@@ -1204,7 +1204,7 @@ const DetailReport6062 = () => {
                     {formatNumber2(totals.saldo_summ_oborot_debit, 2, hyphenOr0)}
                   </td>
                   <td
-                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
+                    className="whitespace-nowrap px-3 py-2 text-right font-mono font-semibold border border-gray-300
                                dark:text-gray-200 dark:border-gray-600
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"
@@ -1213,7 +1213,7 @@ const DetailReport6062 = () => {
                   </td>
 
                   <td
-                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
+                    className="whitespace-nowrap px-3 py-2 text-right font-mono font-semibold border border-gray-300
                                dark:text-gray-200 dark:border-gray-600
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"
@@ -1221,7 +1221,7 @@ const DetailReport6062 = () => {
                     {formatNumber2(totals.saldo_summ_end_debit, 2, hyphenOr0)}
                   </td>
                   <td
-                    className="px-3 py-2 text-right font-mono font-semibold border border-gray-300
+                    className="whitespace-nowrap px-3 py-2 text-right font-mono font-semibold border border-gray-300
                                dark:text-gray-200 dark:border-gray-600
                                print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs
                                print:dark:!text-black"

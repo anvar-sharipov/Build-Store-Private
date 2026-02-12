@@ -708,7 +708,12 @@
   "choose diapazon date": "Выберите диапазон дат",
   "invalid diapazon date format": "Неверный формат диапазона дат",
   "date start must be <= date end": "Дата начала должна быть меньше или равна дате окончания",
-  "can cancel only": "Отменить может только"
+  "can cancel only": "Отменить может только",
+  "no products": "Нет товаров",
+  "products found": "Найдено товаров",
+  "total invoices": "Всего фактур",
+  "employees found": "Найдено сотрудников",
+  "sales agents found": "Найдено агентов по продажам"
 
 
  

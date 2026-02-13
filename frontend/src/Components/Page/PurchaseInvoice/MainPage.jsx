@@ -28,6 +28,9 @@ import InfoAboutInvoice from "./Utils/InfoAboutInvoice";
 import { useNotification } from "../../context/NotificationContext";
 import { AuthContext } from "../../../AuthContext";
 import Saldo2 from "./Utils/Saldo2";
+import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const userVisibleColumns = {
   qr_code: false,
@@ -82,10 +85,26 @@ const MainPage = () => {
   const [dateMargin, setDateMargin] = useState("");
 
   const { authUser, authGroup } = useContext(AuthContext);
+  const draftCreatedRef = useRef(false);
+  const saveTimeoutRef = useRef(null);
+  const isSavingRef = useRef(false);
+  const latestValuesRef = useRef(null);
+
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [showSavedMessage, setShowSavedMessage] = useState(false);
+  const [autoSaveError, setAutoSaveError] = useState(null);
 
   const [fakturaType, setFakturaType] = useState(() => {
     return localStorage.getItem("wozwrat_or_prihod_purchase") || "";
   });
+
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // const [notification, setNotification] = useState({ message: "", type: "" });
   // const timeoutRef = useRef(null);
@@ -193,7 +212,6 @@ const MainPage = () => {
 
   const { dateFrom, setDateFrom, dateTo, setDateTo, dateProwodok, setDateProwodok } = useContext(DateContext);
 
-
   //   useEffect(() => {
   // const handleKeyDown = (e) => {
   //   if (e.ctrlKey && e.key === "Enter") {
@@ -229,8 +247,6 @@ const MainPage = () => {
     };
   }, [id]); // dateProwodok
 
-
-
   // const defaultValues = getDefaultValues(id);
   const validationSchema = getInvoiceValidationSchema(t);
 
@@ -262,15 +278,12 @@ const MainPage = () => {
   // };
 
   const handleOpenInvoice = (newId) => {
-
-    
     if (!newId) {
       navigate(ROUTES.PURCHASE_INVOICE_CREATE);
       return;
     }
 
     if (String(id) === String(newId)) return;
-
 
     navigate(`/purchase-invoices/update/${newId}`);
   };
@@ -282,30 +295,25 @@ const MainPage = () => {
       });
 
       setSaldo(saldo.data.saldo);
-
     } catch (error) {
       console.log("error get_saldo_for_partner_for_selected_date from fetchPartner", error);
     }
   };
 
   const getSaldo2 = async (partnerId, dateFrom, dateTo, invoice_date = false) => {
-    if (!invoice_date) return
+    if (!invoice_date) return;
 
-    
     try {
       const saldo = await myAxios.get("get_saldo_for_partner_for_selected_date2", {
-        params: { 
+        params: {
           partnerId: partnerId,
-          dateFrom: dateFrom, 
+          dateFrom: dateFrom,
           dateTo: dateTo,
-          invoice_date
-         },
+          invoice_date,
+        },
       });
 
       setSaldo2(saldo.data.saldo);
-
-
- 
     } catch (error) {
       console.log("error get_saldo_for_partner_for_selected_date2 from fetchPartner", error);
     }
@@ -318,13 +326,11 @@ const MainPage = () => {
         enableReinitialize={true}
         validationSchema={validationSchema}
         onSubmit={async (values, { resetForm, setFieldValue }) => {
-
           const date_margin = localStorage.getItem("date_margin"); // "2025-10-04"
           const today = new Date();
           const todayStr = today.toISOString().split("T")[0]; // "2025-10-04"
           // Способ 1: через строки (т.к. YYYY-MM-DD сравниваются корректно)
           // if (todayStr < date_margin || date_margin !== dateMargin) {
-
 
           //   showNotification(t("permission denied"), "error");
           //   return;
@@ -337,7 +343,6 @@ const MainPage = () => {
               },
             });
 
-       
             if (response.data.already_entry) {
               setFieldValue("already_entry", true);
             }
@@ -351,7 +356,6 @@ const MainPage = () => {
               // handleOpenInvoice(response.data.id);
             }
 
-
             handleOpenInvoice(response.data.id);
             if (values.partner?.id) {
               getSaldo(values.invoice_date2, values.partner?.id);
@@ -362,7 +366,6 @@ const MainPage = () => {
           } catch (error) {
             if (error.response) {
               console.error("Ошибка при отправке", error.response.status, error.response.data);
-    
 
               if (error.response.data.not_fined_product_name) {
                 showNotification(`${t(error.response.data.message)} "${error.response.data.not_fined_product_name}"`, "error");
@@ -384,6 +387,69 @@ const MainPage = () => {
             setFieldValue("invoice_date", dateProwodok);
           }, [dateProwodok]);
 
+          useEffect(() => {
+            const createDraftIfFirstProduct = async () => {
+              if (!id && !draftCreatedRef.current && values.products?.length === 1) {
+                draftCreatedRef.current = true;
+
+                console.log("создаём черновик");
+
+                await document.querySelector("form").requestSubmit();
+              }
+            };
+
+            createDraftIfFirstProduct();
+          }, [values.products]);
+
+          useEffect(() => {
+            latestValuesRef.current = values;
+          }, [values]);
+
+          useEffect(() => {
+            if (!id) return;
+            if (values.is_entry) return;
+            if (!values.products?.length) return;
+
+            if (saveTimeoutRef.current) {
+              clearTimeout(saveTimeoutRef.current);
+            }
+
+            saveTimeoutRef.current = setTimeout(async () => {
+              if (isSavingRef.current) return;
+
+              try {
+                isSavingRef.current = true;
+                setIsAutoSaving(true);
+                setAutoSaveError(null);
+
+                await myAxios.post("save-invoice/", latestValuesRef.current);
+
+                setShowSavedMessage(true);
+
+                setTimeout(() => {
+                  setShowSavedMessage(false);
+                }, 2000);
+              } catch (err) {
+                console.error("Ошибка автосохранения", err);
+
+                if (err.response?.data) {
+                  // если backend вернул текст ошибки
+                  setAutoSaveError(err.response.data.detail || t("invoice not saved"));
+                } else {
+                  setAutoSaveError("Ошибка соединения с сервером");
+                }
+              } finally {
+                isSavingRef.current = false;
+                setIsAutoSaving(false);
+              }
+            }, 1500);
+
+            return () => {
+              if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+              }
+            };
+          }, [values]);
 
           const fakturaBgDynamic =
             values.wozwrat_or_prihod === "wozwrat" ? "bg-red-200 dark:bg-red-900" : values.wozwrat_or_prihod === "prihod" ? "bg-green-200 dark:bg-green-900" : "bg-white dark:bg-gray-900";
@@ -412,6 +478,47 @@ const MainPage = () => {
                 setSaldo2={setSaldo2}
                 getSaldo2={getSaldo2}
               />
+
+              <div className="fixed top-25 left-1/2 -translate-x-1/2 z-50">
+                <AnimatePresence mode="wait">
+            
+
+                  {showSavedMessage && !isAutoSaving && !autoSaveError && (
+                    <motion.div
+                      key="success"
+                      initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                      transition={{ duration: 0.25 }}
+                      className="flex items-center gap-3 px-6 py-3 
+                   rounded-2xl shadow-xl backdrop-blur-md
+                   bg-emerald-500/90 dark:bg-emerald-600/90
+                   text-white"
+                    >
+                      <CheckCircle2 className="w-5 h-5" />
+                      <span className="text-sm font-medium">{t("invoice saved")}</span>
+                    </motion.div>
+                  )}
+
+                  {autoSaveError && (
+                    <motion.div
+                      key="error"
+                      initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                      transition={{ duration: 0.25 }}
+                      className="flex items-center gap-3 px-6 py-3 
+                   rounded-2xl shadow-xl backdrop-blur-md
+                   bg-red-500/90 dark:bg-red-600/90
+                   text-white max-w-md"
+                    >
+                      <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                      <span className="text-sm font-medium break-words">{autoSaveError}</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
               <fieldset disabled={values.already_entry || authGroup !== "admin" || values.canceled_at}>
                 <div className="grid grid-cols-1 md:grid-cols-10 gap-4 print:block">
                   {/* Левая колонка */}
@@ -422,17 +529,16 @@ const MainPage = () => {
                     >
                       <FetchWarehouse />
                       <FetchAwto refs={refs} />
-                      <FetchPartner 
-                      refs={refs} 
-                      setSaldo={setSaldo} 
-                      // dateProwodok={dateProwodok} 
-                      saldo={saldo} 
-                      getSaldo={getSaldo} 
-                      getSaldo2={getSaldo2} 
-                      setSaldo2={setSaldo2} 
-                      // dateFrom={dateFrom} 
-                      // dateTo={dateTo} 
-
+                      <FetchPartner
+                        refs={refs}
+                        setSaldo={setSaldo}
+                        // dateProwodok={dateProwodok}
+                        saldo={saldo}
+                        getSaldo={getSaldo}
+                        getSaldo2={getSaldo2}
+                        setSaldo2={setSaldo2}
+                        // dateFrom={dateFrom}
+                        // dateTo={dateTo}
                       />
                       <Comment />
                     </div>

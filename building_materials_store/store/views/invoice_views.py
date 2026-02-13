@@ -52,6 +52,16 @@ def normalize_date(date_str: str) -> str:
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def save_invoice(request):
+    def normalize_date2(date_str):
+        #  '05.09.2025' -> '2025-09-05'
+        try:
+            # пробуем формат 11.02.2026
+            date_obj = datetime.strptime(date_str, "%d.%m.%Y")
+            return date_obj.strftime("%Y-%m-%d")
+        except ValueError:
+            # если не подошёл — возвращаем как есть
+            return date_str
+        
     if request.method == "POST":
         
         # test = Invoice.objects.get(id=3478).items.all()
@@ -142,6 +152,22 @@ def save_invoice(request):
             
             id_test_faktura = data.get('id_test_faktura')
             
+            # ic(invoice_date)
+            
+            
+            
+            # # date_str = "11.02.2026"
+
+            # # Преобразуем строку в объект даты
+            # invoice_date = datetime.strptime(invoice_date, "%d.%m.%Y")
+
+            # # Форматируем в нужный вид
+            # invoice_date = invoice_date.strftime("%Y-%m-%d")
+
+            # print(invoice_date)
+            
+            # ic(invoice_date2)
+            
           
             
             
@@ -151,6 +177,8 @@ def save_invoice(request):
             # Все валидации START
             if not send:
                 return JsonResponse({"status": "error", "message": "fill in all the fields"}, status=400)
+            
+            invoice_date = normalize_date2(invoice_date)
             
             if wozwrat_or_prihod not in ["wozwrat", "prihod", "rashod", "transfer"]:
                 return JsonResponse({"status": "error", "message": "choose rashod, prihod or wozwrat"}, status=400)

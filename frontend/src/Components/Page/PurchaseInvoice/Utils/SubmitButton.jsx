@@ -18,6 +18,8 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
   const { authUser, authGroup } = useContext(AuthContext);
   const [currency, setCurrency] = useState("");
 
+  const { isSubmitting } = useFormikContext();
+
   useEffect(() => {
     const fetchWarehouseCurrency = async () => {
       try {
@@ -411,8 +413,12 @@ const SubmitButton = ({ dateProwodok, fakturaType, fakturaBgDynamic }) => {
                   }
                 }}
                 onClick={async () => {
+                  
+                  
                   try {
-                    await document.querySelector("form").requestSubmit();
+                    await document.querySelector("form").requestSubmit(); 
+                    // console.log("tutu");
+                    // console.log("isSubmitting", isSubmitting);
                     setOpenModal(false);
                   } catch (err) {
                     console.error(err);

@@ -18,6 +18,9 @@ from . views import excel_downloads_views
 from . views import product_cards_views 
 from . views import skidka_nasenka_views 
 from . views import backend_input_queries_views
+from . views import get_product_turnover_history  
+from . views import product_turnover_excel  
+from . views import get_analiz_prodaj 
 from . views import admin_views
 from . views.sale_invoice_views import *
 from . views.report_views import *
@@ -191,10 +194,21 @@ urlpatterns = [
     path('get_warehouse_id_and_currency', get_warehouse_id_and_currency, name='get_warehouse_id_and_currency'),
     
     path('download_excel_fakturs_diapazon', download_faktura_views.download_excel_fakturs_diapazon, name='download_excel_fakturs_diapazon'),
+    path('download_excel_fakturs_diapazon2', download_faktura_views.download_excel_fakturs_diapazon2, name='download_excel_fakturs_diapazon2'),
     
     path('download_excel_products_diapazon', download_products_views.download_excel_products_diapazon, name='download_excel_products_diapazon'),
     
     path('download_excel_partners_diapazon', download_partners_views.download_excel_partners_diapazon, name='download_excel_partners_diapazon'),
+    
+    path('get_product_turnover_history', get_product_turnover_history.get_product_turnover_history, name='get_product_turnover_history'),
+    
+    path('product_turnover_excel', product_turnover_excel.product_turnover_excel, name='product_turnover_excel'),
+    
+    path('get_analiz_prodaj', get_analiz_prodaj.get_analiz_prodaj, name='get_analiz_prodaj'),
+    
+    
+    
+    
     
     
     

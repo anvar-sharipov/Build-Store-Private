@@ -289,12 +289,17 @@ const MainPage = () => {
   };
 
   const getSaldo = async (date, partnerId) => {
+    console.log("date", date);
+    console.log("partnerId", partnerId);
+    
     try {
       const saldo = await myAxios.get("get_saldo_for_partner_for_selected_date", {
         params: { date: date, partnerId: partnerId },
       });
 
       setSaldo(saldo.data.saldo);
+      console.log("saldo", saldo.data.saldo);
+      
     } catch (error) {
       console.log("error get_saldo_for_partner_for_selected_date from fetchPartner", error);
     }
@@ -324,8 +329,10 @@ const MainPage = () => {
       <Formik
         initialValues={initialValues}
         enableReinitialize={true}
-        validationSchema={validationSchema}
+        // validationSchema={validationSchema}
         onSubmit={async (values, { resetForm, setFieldValue }) => {
+          // console.log('here');
+          
           const date_margin = localStorage.getItem("date_margin"); // "2025-10-04"
           const today = new Date();
           const todayStr = today.toISOString().split("T")[0]; // "2025-10-04"
@@ -358,8 +365,14 @@ const MainPage = () => {
 
             handleOpenInvoice(response.data.id);
             if (values.partner?.id) {
-              getSaldo(values.invoice_date2, values.partner?.id);
-              // getSaldo2(values.invoice_date2, values.partner?.id);
+              console.log("dede");
+              
+              // const getSaldo2 = async (partnerId, dateFrom, dateTo, invoice_date = false) 
+              // getSaldo(values.invoice_date2, values.partner?.id);
+              // console.log("values.invoice_date2", values.invoice_date);
+              // console.log("values.partner?.id", values.partner?.id);
+              
+              getSaldo2(values.partner?.id, dateFrom, dateTo, values.invoice_date2);
             }
             // setSaldo(null)
             // resetForm();
@@ -379,6 +392,9 @@ const MainPage = () => {
             } else {
               console.error("Ошибка сети", error.message);
             }
+          } finally {
+            // window.location.reload();
+            // navigate(0);
           }
         }}
       >
@@ -387,69 +403,69 @@ const MainPage = () => {
             setFieldValue("invoice_date", dateProwodok);
           }, [dateProwodok]);
 
-          useEffect(() => {
-            const createDraftIfFirstProduct = async () => {
-              if (!id && !draftCreatedRef.current && values.products?.length === 1) {
-                draftCreatedRef.current = true;
+          // useEffect(() => {
+          //   const createDraftIfFirstProduct = async () => {
+          //     if (!id && !draftCreatedRef.current && values.products?.length > 0) {
+          //       draftCreatedRef.current = true;
 
-                console.log("создаём черновик");
+          //       console.log("создаём черновик");
 
-                await document.querySelector("form").requestSubmit();
-              }
-            };
+          //       await document.querySelector("form").requestSubmit();
+          //     }
+          //   };
 
-            createDraftIfFirstProduct();
-          }, [values.products]);
+          //   createDraftIfFirstProduct();
+          // }, [values.products]);
 
-          useEffect(() => {
-            latestValuesRef.current = values;
-          }, [values]);
+          // useEffect(() => {
+          //   latestValuesRef.current = values;
+          // }, [values]);
 
-          useEffect(() => {
-            if (!id) return;
-            if (values.is_entry) return;
-            if (!values.products?.length) return;
+          // useEffect(() => {
+          //   if (!id) return;
+          //   if (values.is_entry) return;
+          //   if (!values.products?.length) return;
 
-            if (saveTimeoutRef.current) {
-              clearTimeout(saveTimeoutRef.current);
-            }
+          //   if (saveTimeoutRef.current) {
+          //     clearTimeout(saveTimeoutRef.current);
+          //   }
 
-            saveTimeoutRef.current = setTimeout(async () => {
-              if (isSavingRef.current) return;
+          //   saveTimeoutRef.current = setTimeout(async () => {
+          //     if (isSavingRef.current) return;
 
-              try {
-                isSavingRef.current = true;
-                setIsAutoSaving(true);
-                setAutoSaveError(null);
+          //     try {
+          //       isSavingRef.current = true;
+          //       setIsAutoSaving(true);
+          //       setAutoSaveError(null);
 
-                await myAxios.post("save-invoice/", latestValuesRef.current);
+          //       await myAxios.post("save-invoice/", latestValuesRef.current);
 
-                setShowSavedMessage(true);
+          //       setShowSavedMessage(true);
 
-                setTimeout(() => {
-                  setShowSavedMessage(false);
-                }, 2000);
-              } catch (err) {
-                console.error("Ошибка автосохранения", err);
+          //       setTimeout(() => {
+          //         setShowSavedMessage(false);
+          //       }, 2000);
+          //     } catch (err) {
+          //       console.error("Ошибка автосохранения", err);
 
-                if (err.response?.data) {
-                  // если backend вернул текст ошибки
-                  setAutoSaveError(err.response.data.detail || t("invoice not saved"));
-                } else {
-                  setAutoSaveError("Ошибка соединения с сервером");
-                }
-              } finally {
-                isSavingRef.current = false;
-                setIsAutoSaving(false);
-              }
-            }, 1500);
+          //       if (err.response?.data) {
+          //         // если backend вернул текст ошибки
+          //         setAutoSaveError(err.response.data.detail || t("invoice not saved"));
+          //       } else {
+          //         setAutoSaveError("Ошибка соединения с сервером");
+          //       }
+          //     } finally {
+          //       isSavingRef.current = false;
+          //       setIsAutoSaving(false);
+          //     }
+          //   }, 1500);
 
-            return () => {
-              if (saveTimeoutRef.current) {
-                clearTimeout(saveTimeoutRef.current);
-              }
-            };
-          }, [values]);
+          //   return () => {
+          //     if (saveTimeoutRef.current) {
+          //       clearTimeout(saveTimeoutRef.current);
+          //     }
+          //   };
+          // }, [values]);
 
           const fakturaBgDynamic =
             values.wozwrat_or_prihod === "wozwrat" ? "bg-red-200 dark:bg-red-900" : values.wozwrat_or_prihod === "prihod" ? "bg-green-200 dark:bg-green-900" : "bg-white dark:bg-gray-900";
@@ -573,7 +589,7 @@ const MainPage = () => {
                     print:border-none print:shadow-none print:bg-transparent print:m-0 print:p-0"
                     >
                       <div className="mt-2 print:hidden">
-                        <FetchProduct refs={refs} />
+                        <FetchProduct refs={refs} invoice_id={id} />
                       </div>
 
                       <div>{values.products && values.products.length > 0 && <PTable printVisibleColumns={printVisibleColumns} visibleColumns={visibleColumns} id={id} refs={refs} />}</div>

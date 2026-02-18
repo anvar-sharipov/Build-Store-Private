@@ -55,6 +55,7 @@ import { useSelector } from "react-redux";
 import ProductCards from "./Components/Page/Reports2/ProductCards/ProductCards";
 import Univresal from "./Components/Page/Admin/Univresal";
 import SkidkaNasenka from "./Components/Page/Reports2/SkidkaNasenka/SkidkaNasenka";
+import AnalizProdaj from "./Components/Page/Prochee/AnalizProdaj/AnalizProdaj";
 
 function AppShell() {
   const location = useLocation();
@@ -142,6 +143,7 @@ function AppShell() {
                     <Route path={PROCHEE.ZAKAZ_LIST} element={<ZakazList />} />
                     <Route path={PROCHEE.ZAKAZ} element={<Zakaz />} />
                     <Route path="/zakaz/:id" element={<Zakaz />} />
+                    <Route path={PROCHEE.ANALIZ_PRODAJ} element={<AnalizProdaj />} />
 
                     {/* PurchaseInvoice */}
                     <Route path={ROUTES.PURCHASEINVOICE} element={<PurchaseInvoice />} />

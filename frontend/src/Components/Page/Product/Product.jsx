@@ -19,6 +19,7 @@ import { DateContext } from "../../UI/DateProvider";
 import { motion } from "framer-motion";
 import { PackageX } from "lucide-react";
 
+
 const Harytlar = () => {
   const { searchQuery, setSearchQuery, searchParams, setSearchParams } = useContext(SearchContext);
   const { t } = useTranslation();
@@ -58,6 +59,8 @@ const Harytlar = () => {
       setOpenDeleteModal({ open: false, data: null, index: null });
     }
   };
+
+  
 
   const downloadFilteredExcel = async () => {
     try {
@@ -242,8 +245,9 @@ const Harytlar = () => {
   }, []);
 
   const fetchProducts = async (url = null) => {
-    console.log("dateFrom", dateFrom);
-    console.log("dateTo", dateTo);
+    console.log("FETCH PRODUCTS CALLED");
+    // console.log("dateFrom", dateFrom);
+    // console.log("dateTo", dateTo);
     // if (!dateFrom || !dateTo) return;
 
     // setLoading(true);

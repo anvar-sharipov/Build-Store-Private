@@ -5,6 +5,7 @@ import warehouseReducer from "./warehouseSlice";
 import searchReducer from "./searchQuerySlice";
 import productSortReducer from "./ProductCardsSlice/productSortSlice";
 import skidkaFiltersReducer from "./skidkaFiltersSlice";
+import analizProdajFilterReducer from "./analizProdajSlice";
 import buhOborotReducer from "./buhOborotFiltersSlice"; 
 
 export const store = configureStore({
@@ -15,6 +16,7 @@ export const store = configureStore({
     search: searchReducer,
     productSort: productSortReducer, 
     skidkaFilters: skidkaFiltersReducer,
+    analizProdajFilters: analizProdajFilterReducer,
     buhOborot: buhOborotReducer, 
   },
 });

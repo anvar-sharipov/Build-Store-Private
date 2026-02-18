@@ -133,6 +133,60 @@ const Head = ({ mainRefs, handleOpenInvoice, setQuery, query, invoices, paginati
     }
   };
 
+  const downloadExcelFakturs2 = async () => {
+    if (!dateFrom || !dateTo) {
+      showNotification(t("choose diapazon date"), "error");
+      return;
+    }
+
+    setDownloadExcel(true);
+
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+
+      const params = new URLSearchParams();
+
+      params.append("dateFrom", dateFrom);
+      params.append("dateTo", dateTo);
+
+      const wozwrat_or_prihod = searchParams.get("wozwrat_or_prihod");
+      const partner_id = searchParams.get("partner_id");
+      const selectedEntry = searchParams.get("selectedEntry");
+      const sortInvoice = searchParams.get("sortInvoice");
+
+      if (wozwrat_or_prihod) params.append("wozwrat_or_prihod", wozwrat_or_prihod);
+      if (partner_id) params.append("partner_id", partner_id);
+      if (selectedEntry) params.append("selectedEntry", selectedEntry);
+      if (sortInvoice) params.append("sortInvoice", sortInvoice);
+
+      const res = await myAxios.get(`download_excel_fakturs_diapazon2?${params.toString()}`, {
+        responseType: "blob", // 🔥 ОБЯЗАТЕЛЬНО
+      });
+
+      // 👇 скачивание файла
+      const blob = new Blob([res.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `faktury_${dateFrom}_${dateTo}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("cant downloadExcelFakturs", err);
+      showNotification(err?.response?.data?.error || "Excel download error", "error");
+    } finally {
+      setTimeout(() => {
+        setDownloadExcel(false);
+      }, 1000);
+    }
+  };
+
   return (
     <div className="bg-gray-200 dark:bg-gray-800 rounded-lg shadow-md p-1 mb-2 flex items-center justify-between px-2 print:hidden">
       <motion.button
@@ -162,8 +216,18 @@ const Head = ({ mainRefs, handleOpenInvoice, setQuery, query, invoices, paginati
           <span>{t("add")}</span>
         </div>
       </motion.button>
-      <div>
+      <div className="flex gap-3">
         <ExcelButton classname="px-3 py-2" onClick={() => downloadExcelFakturs()} disabled={downloadExcel} />
+        <div>
+          <button
+            onClick={() => downloadExcelFakturs2()}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 print:hidden"
+            type="button"
+            title="Экспорт в Excel с сальдо"
+          >
+            <span className="font-medium">📊 Excel2</span>
+          </button>
+        </div>
       </div>
       {/* <div>{t("total invoices")}: {pagination.total}</div> */}
 

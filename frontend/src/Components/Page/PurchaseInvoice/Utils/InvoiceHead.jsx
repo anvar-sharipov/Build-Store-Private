@@ -47,12 +47,10 @@ const InvoiceHead = ({
   setSaldo2,
   getSaldo2,
 }) => {
-
-
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { dateProwodok, dateFrom, dateTo } = useContext(DateContext);
-  const { values, setFieldValue, handleBlur, touched, errors } = useFormikContext();
+  const { values, setFieldValue, handleBlur, touched, errors, setValues } = useFormikContext();
   const [openModal, setOpenModal] = useState(false);
   const [entryCancelModal, setEntryCancelModal] = useState(false);
   const [cancelComment, setCancelComment] = useState("");
@@ -60,7 +58,6 @@ const InvoiceHead = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [dayIsClosed, setDayIsClosed] = useState(false);
   const sound_open_faktura = new Audio("/sounds/open_faktura.mp3");
-
 
   const handleClick = () => {
     sound_open_faktura.currentTime = 0;
@@ -85,11 +82,8 @@ const InvoiceHead = ({
   const [saldoForExcel, setSaldoForExcel] = useState(null);
 
   const fetchSaldo = async (partnerId, date_from, date_to, valuesData = null) => {
-   
-    
     try {
       const saldo = await getSaldoForPartner(partnerId, date_from, date_to, valuesData);
-
 
       setSaldoForExcel(saldo);
       setSaldo2(saldo);
@@ -99,18 +93,16 @@ const InvoiceHead = ({
   };
 
   useEffect(() => {
-    let invoice_date = null
+    let invoice_date = null;
     if (values.id) {
       invoice_date = values.invoice_date2;
     } else {
-      invoice_date = values.invoice_date
+      invoice_date = values.invoice_date;
     }
     if (!invoice_date) return;
-    
 
     if (!values.partner?.id || !dateFrom || !dateTo || !invoice_date) return;
-    
-    
+
     fetchSaldo(values.partner.id, dateFrom, dateTo, values);
   }, [values.partner?.id, values.invoice_date, values.invoice_date2]);
 
@@ -123,11 +115,11 @@ const InvoiceHead = ({
         comment: comment,
       });
 
-   
       // при успехе можно закрыть модалку или обновить данные
       setEntryCancelModal(false);
       setCancelComment("");
       showNotification(t(res.data.message), "success");
+      getSaldo2(values.partner?.id, dateFrom, dateTo, values.invoice_date2);
 
       // например, если у тебя есть функция обновления данных:
       // await fetchEntries();
@@ -139,6 +131,14 @@ const InvoiceHead = ({
       } else {
         showNotification(`${t(error.response.data.message)}`, "error");
       }
+    } finally {
+      setValues((prev) => ({
+        ...prev,
+        is_entry: false,
+        already_entry: false,
+        entry_created_by: null,
+        entry_created_at: null,
+      }));
     }
   };
 
@@ -158,8 +158,6 @@ const InvoiceHead = ({
     checkDate();
     // }
   }, []);
-
-
 
   const modalYesBtn = useRef(null);
   const modalNoBtn = useRef(null);

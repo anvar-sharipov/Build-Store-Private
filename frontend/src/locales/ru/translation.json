@@ -714,7 +714,11 @@
   "total invoices": "Всего фактур",
   "employees found": "Найдено сотрудников",
   "sales agents found": "Найдено агентов по продажам",
-  "invoice not saved": "Фактура не сохранена"
+  "invoice not saved": "Фактура не сохранена",
+  "in drafts": "В черновиках",
+  "balance_ostatok": "Остаток",
+  "available": "Доступно",
+  "sales analysis": "Анализ продаж"
 
 
  

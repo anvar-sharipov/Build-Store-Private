@@ -17,6 +17,7 @@ from decimal import Decimal, ROUND_HALF_UP
 
 from ..my_func.get_unit_map import get_unit_map 
 from ..my_func.get_unit_and_cf import get_unit_and_cf 
+from ..my_func.get_reserved_quantity import get_reserved_quantity
 # from ..my_func.str_to_int_list import str_to_int_list
 # from ..my_func.date_convert_for_excel import format_date_ru 
 
@@ -578,7 +579,7 @@ def save_invoice(request):
                                             
                                         elif rule.amount_type == 'profit':
                                             profit_price = Decimal((sale_price - purchase_price) * quantity)
-                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, revenue_price, warehouse_parent_account, warehouse_account_obj, partner_obj)
+                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, profit_price, warehouse_parent_account, warehouse_account_obj, partner_obj)
                                             
                                 invoice.entry_created_at = invoice_date
                                 invoice.entry_created_at_handle = invoice_date
@@ -981,7 +982,7 @@ def save_invoice(request):
                                             
                                         elif rule.amount_type == 'profit':
                                             profit_price = Decimal((sale_price - purchase_price) * quantity)
-                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, revenue_price, warehouse_parent_account, warehouse_account_obj, partner_obj)
+                                            create_entries(transaction_obj, rule, product_obj, warehouse_obj, profit_price, warehouse_parent_account, warehouse_account_obj, partner_obj)
                                         
                                 invoice.entry_created_at = invoice_date2
                                 invoice.entry_created_at_handle = invoice_date2
@@ -1313,6 +1314,11 @@ def get_invoice_data(request, id):
     products = []
     
     for item in items:
+        # ic(item.product)
+        # if invoice.is_entry == False:
+        qty_in_drafts = get_reserved_quantity(item.product, invoice.warehouse.id, invoice.id)
+        ic(item.product.name)
+        ic(qty_in_drafts)
        
        
         images = [
@@ -1381,6 +1387,7 @@ def get_invoice_data(request, id):
             "volume": item.product.volume,
             "weight": item.product.weight,
             "width": item.product.width,
+            "qty_in_drafts": qty_in_drafts,
             "free_items": [
                 {
                     "gift_product": f.gift_product_obj.id, # f.id
@@ -1473,8 +1480,11 @@ def cancel_entry(request):
                 
             with transaction.atomic():
                 invoice = Invoice.objects.select_for_update().get(id=invoice_id)
-                if invoice.entry_created_by.id != request.user.id:
-                    return JsonResponse({"status": "error", "message": "can cancel only", "entry_by": request.user.username}, status=400)
+                # if invoice.entry_created_by.id != request.user.id:
+                #     return JsonResponse({"status": "error", "message": "can cancel only", "entry_by": request.user.username}, status=400)
+                
+                if not invoice.entry_created_by or invoice.entry_created_by != request.user:
+                    return JsonResponse({"status": "error", "message": "can cancel only", "entry_by": request.user.username}, status=403)
         
                 if not invoice.is_entry:
                     return JsonResponse({"status": "error", "message": "entry not found"}, status=400)
@@ -1521,7 +1531,7 @@ def cancel_entry(request):
                             partner_obj.balance_tmt += sale_price
                         else:
                             partner_obj.balance_usd += sale_price
-                        partner_obj.save()
+                        # partner_obj.save()
 
                     elif wozwrat_or_prihod == "prihod":
                         wp = WarehouseProduct.objects.select_for_update().get(warehouse=warehouse_obj, product=product)
@@ -1534,7 +1544,7 @@ def cancel_entry(request):
                             partner_obj.balance_tmt -= sale_price
                         else:
                             partner_obj.balance_usd -= sale_price
-                        partner_obj.save()
+                        # partner_obj.save()
 
                     elif wozwrat_or_prihod == "wozwrat":
                         wp = WarehouseProduct.objects.select_for_update().get(warehouse=warehouse_obj, product=product)
@@ -1544,10 +1554,10 @@ def cancel_entry(request):
                         wp.save()
                         
                         if warehouse_obj.currency.code == "TMT":
-                            partner_obj.balance_tmt -= Decimal(sale_price * quantity)
+                            partner_obj.balance_tmt -= sale_price
                         else:
-                            partner_obj.balance_usd -= Decimal(sale_price * quantity)
-                        partner_obj.save()
+                            partner_obj.balance_usd -= sale_price
+                        # partner_obj.save()
 
                     elif wozwrat_or_prihod == "transfer":
                         if not warehouse_obj2:
@@ -1564,9 +1574,10 @@ def cancel_entry(request):
                         )
                         wp1.quantity += qty
                         wp1.save()
-
+                partner_obj.save()
                 # удалить бухгалтерские проводки
                 Entry.objects.filter(transaction=transaction_obj).delete()
+                transaction_obj.delete()
 
                 # отметить отмену
                 # invoice.canceled_by = request.user

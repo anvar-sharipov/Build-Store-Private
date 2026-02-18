@@ -31,7 +31,7 @@ const ProcheeMain = () => {
     { id: 6, name: "Export Import Prowodki", icon: Shield, color: "green", to: PROCHEE.EXPORT_IMPORT_ENTRIES },
     { id: 7, name: "Рейс", icon: Car, color: "violet", to: PROCHEE.TRIP },
     { id: 8, name: t("Zakazy"), icon: Globe, color: "orange", to: PROCHEE.ZAKAZ_LIST },
-    { id: 9, name: "Инструменты", icon: Wrench, color: "sky" },
+    { id: 9, name: t("sales analysis"), icon: Wrench, color: "sky", to: PROCHEE.ANALIZ_PRODAJ },
     { id: 10, name: "Модули", icon: Package, color: "fuchsia" },
     { id: 11, name: "Автоматизация", icon: Zap, color: "lime" },
     { id: 12, name: "Избранное", icon: Star, color: "pink" },

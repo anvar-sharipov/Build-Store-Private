@@ -29,6 +29,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from django.db.models.functions import Coalesce
 
 
 
@@ -447,3 +448,480 @@ def download_excel_fakturs_diapazon(request):
     # data = []
     
     # return Response(data)
+    
+    
+    
+    
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def download_excel_fakturs_diapazon2(request):
+    
+    date_from = request.GET.get("dateFrom")
+    date_to = request.GET.get("dateTo")
+    wozwrat_or_prihod = request.GET.get("wozwrat_or_prihod") # wozwrat, prihod, rashod, transfer
+    partner_id = request.GET.get("partner_id") # po id
+    selectedEntry = request.GET.get("selectedEntry") # entried, notEntried, canceled
+    sortInvoice = request.GET.get("sortInvoice") # asc, desc po total_ptice
+    
+    
+    
+    # ic(wozwrat_or_prihod)
+    # ic(sortInvoice)
+    # ic(selectedEntry)
+    # ic(partner_id)
+    # ic(request)
+    
+
+    if not date_from or not date_to:
+        return Response(
+            {"error": "choose diapazon date"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        day_start = datetime.strptime(date_from, "%Y-%m-%d").date()
+        day_end = datetime.strptime(date_to, "%Y-%m-%d").date()
+    except ValueError:
+        return Response(
+            {"error": "invalid diapazon date format"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if day_start > day_end:
+        return Response(
+            {"error": "date start must be <= date end"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        
+    day_start_str = day_start.strftime("%d.%m.%Y")
+    day_end_str = day_end.strftime("%d.%m.%Y")
+    
+    
+    # ================= BASE QUERY =================
+
+    qs = Invoice.objects.filter(
+        invoice_date__date__gte=day_start,
+        invoice_date__date__lte=day_end,
+    )
+
+    if wozwrat_or_prihod:
+        qs = qs.filter(wozwrat_or_prihod=wozwrat_or_prihod)
+
+    if partner_id:
+        qs = qs.filter(partner_id=partner_id)
+
+    if selectedEntry == "entried":
+        qs = qs.filter(is_entry=True, canceled_at__isnull=True)
+
+    elif selectedEntry == "notEntried":
+        qs = qs.filter(is_entry=False)
+
+    elif selectedEntry == "canceled":
+        qs = qs.filter(canceled_at__isnull=False)
+
+    # ================= EXPRESSIONS =================
+    # используем историческую цену из InvoiceItem
+
+    total_expr = F("items__selected_quantity") * F("items__selected_price")
+
+    pribyl_expr = F("items__selected_quantity") * (
+        F("items__selected_price") - F("items__purchase_price")
+    )
+
+    raznisa_expr = F("items__selected_quantity") * (
+        F("items__selected_price") - F("items__wholesale_price")
+    )
+
+    # ================= ANNOTATE (для отображения по накладным) =================
+
+    qs = qs.annotate(
+        total_sum=Coalesce(
+            Sum(total_expr, output_field=DecimalField(max_digits=14, decimal_places=3)),
+            Decimal("0")
+        ),
+        pribyl=Coalesce(
+            Sum(pribyl_expr, output_field=DecimalField(max_digits=14, decimal_places=3)),
+            Decimal("0")
+        ),
+        raznisa=Coalesce(
+            Sum(raznisa_expr, output_field=DecimalField(max_digits=14, decimal_places=3)),
+            Decimal("0")
+        ),
+    )
+
+    # ================= SORT =================
+
+    if sortInvoice == "asc":
+        qs = qs.order_by("total_sum")
+    elif sortInvoice == "desc":
+        qs = qs.order_by("-total_sum")
+    else:
+        qs = qs.order_by("id")
+
+    # ================= SEPARATE QUERYSETS =================
+
+    rashod_qs = qs.filter(wozwrat_or_prihod="rashod")
+    prihod_qs = qs.filter(wozwrat_or_prihod="prihod")
+    wozwrat_qs = qs.filter(wozwrat_or_prihod="wozwrat")
+    transfer_qs = qs.filter(wozwrat_or_prihod="transfer")
+
+    # ================= TOTALS FUNCTION =================
+
+    def calculate_totals(queryset):
+        return queryset.aggregate(
+            total_sum=Coalesce(
+                Sum(total_expr, output_field=DecimalField(max_digits=14, decimal_places=3)),
+                Decimal("0")
+            ),
+            total_pribyl=Coalesce(
+                Sum(pribyl_expr, output_field=DecimalField(max_digits=14, decimal_places=3)),
+                Decimal("0")
+            ),
+            total_raznisa=Coalesce(
+                Sum(raznisa_expr, output_field=DecimalField(max_digits=14, decimal_places=3)),
+                Decimal("0")
+            ),
+        )
+
+    # ================= TOTALS PER TYPE =================
+
+    rashod_totals = calculate_totals(rashod_qs)
+    prihod_totals = calculate_totals(prihod_qs)
+    wozwrat_totals = calculate_totals(wozwrat_qs)
+    transfer_totals = calculate_totals(transfer_qs)
+
+    # ================= GRAND TOTAL =================
+    # ВАЖНО: не используем Sum("total_sum")
+
+    grand_totals = calculate_totals(qs)
+
+    # ================= DEBUG =================
+
+    # for q in rashod_qs:
+    #     print(
+    #         q.id,
+    #         q.total_sum,
+    #         q.pribyl,
+    #         q.raznisa,
+    #         q.partner.name if q.partner else None
+    #     )
+
+    # ================= RESPONSE (пример) =================
+        
+   
+    # ================= EXCEL =================
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Фактуры"
+    
+    ws.merge_cells("A1:I1")
+    ws["A1"] = f"Все Фактуры за {day_start_str} - {day_end_str}"
+    ws["A1"].alignment = CENTER_ALIGN
+    ws["A1"].font = Font(size=16, bold=True)
+    
+    ws.merge_cells("A3:I3")
+    # ws["A3"] = f"Расходные Фактуры (кол-во: {rashod_qs.count()}, общая цена: {rashod_totals['total_sum']})"
+    ws["A3"] = f"Расходные Фактуры"
+    ws["A3"].alignment = CENTER_ALIGN
+    ws["A3"].font = Font(size=14, bold=True, color="0000FF")
+    
+    ws["A5"] = "№"
+    ws["B5"] = "Дата"
+    ws["C5"] = "Фактура №"
+    ws["D5"] = "Партнёр"
+    ws["E5"] = "Сумма"
+    ws["F5"] = "Прибыль"
+    ws["G5"] = "Разница"
+    ws["H5"] = "Статус"
+    ws["I5"] = "Автомобиль"
+    
+    for i in 'ABCDEFGHI':
+        ws[f"{i}5"].alignment = CENTER_ALIGN
+        ws[f"{i}5"].font = Font(bold=True)
+        ws[f"{i}5"].fill = GRAY_FILL_1
+        ws[f"{i}5"].border = THIN_BORDER
+    
+    
+    
+    
+    
+    ws.column_dimensions["A"].width = 4
+    ws.column_dimensions["B"].width = 10
+    ws.column_dimensions["C"].width = 8
+    ws.column_dimensions["D"].width = 35
+    ws.column_dimensions["E"].width = 10
+    ws.column_dimensions["F"].width = 10
+    ws.column_dimensions["G"].width = 10
+    ws.column_dimensions["H"].width = 14
+    ws.column_dimensions["I"].width = 35
+    
+    
+    row = 6
+    count = 0
+    # grand_total = Decimal("0")
+    
+   
+    for q in rashod_qs:
+        count += 1
+        
+        invoice_date = q.invoice_date.strftime("%d.%m.%Y")
+        faktura_nomer = q.id
+        partner_name = q.partner.name if q.partner else ""
+        faktura_sum = q.total_sum
+        faktura_pribyl = q.pribyl
+        faktura_raznisa = q.raznisa
+        faktura_status = "Проведено" if q.is_entry else "Черновик"
+        awto = q.awto.name if q.awto else ""
+        
+        # ic(invoice_date, faktura_nomer, partner_name, faktura_sum, faktura_pribyl, faktura_raznisa, faktura_status)
+        for i in 'ABCDEFGHI':
+            ws[f"{i}{row}"].border = THIN_BORDER
+        ws[f"A{row}"] = count
+        ws[f"A{row}"].alignment = CENTER_ALIGN
+        ws[f"B{row}"] = invoice_date
+        ws[f"C{row}"] = faktura_nomer
+        ws[f"C{row}"].alignment = CENTER_ALIGN
+        ws[f"D{row}"] = partner_name
+        ws[f"E{row}"] = faktura_sum
+        ws[f"E{row}"].number_format = PRICE_FMT
+        ws[f"F{row}"] = faktura_pribyl
+        ws[f"F{row}"].number_format = PRICE_FMT
+        ws[f"G{row}"] = faktura_raznisa
+        ws[f"G{row}"].number_format = PRICE_FMT
+        ws[f"H{row}"] = faktura_status
+        ws[f"H{row}"].alignment = CENTER_ALIGN
+        ws[f"I{row}"] = awto
+        
+        row += 1
+    ws[f"D{row}"] = f"ИТОГО:"     
+    ws[f"D{row}"].alignment = RIGHT_ALIGN   
+    ws[f"D{row}"].font = Font(bold=True)
+    ws[f"E{row}"] = rashod_totals['total_sum']
+    ws[f"E{row}"].number_format = PRICE_FMT
+    ws[f"F{row}"] = rashod_totals['total_pribyl']
+    ws[f"F{row}"].number_format = PRICE_FMT
+    ws[f"G{row}"] = rashod_totals['total_raznisa']
+    ws[f"G{row}"].number_format = PRICE_FMT
+    for i in 'ABCDEFGHI':
+        ws[f"{i}{row}"].border = THIN_BORDER
+        ws[f"{i}{row}"].fill = GRAY_FILL_2
+        ws[f"{i}{row}"].font = Font(bold=True)
+        
+    row += 3
+        
+        
+    # wozwrat
+    
+    ws.merge_cells(f"A{row}:I{row}")
+    # ws["A3"] = f"Расходные Фактуры (кол-во: {rashod_qs.count()}, общая цена: {rashod_totals['total_sum']})"
+    ws[f"A{row}"] = f"Возвратные Фактуры"
+    ws[f"A{row}"].alignment = CENTER_ALIGN
+    ws[f"A{row}"].font = Font(size=14, bold=True, color="FF0000")
+    
+    row += 2
+    
+    ws[f"A{row}"] = "№"
+    ws[f"B{row}"] = "Дата"
+    ws[f"C{row}"] = "Фактура №"
+    ws[f"D{row}"] = "Партнёр"
+    ws[f"E{row}"] = "Сумма"
+    ws[f"F{row}"] = "Прибыль"
+    ws[f"G{row}"] = "Разница"
+    ws[f"H{row}"] = "Статус"
+    ws[f"I{row}"] = "Автомобиль"
+    
+    for i in 'ABCDEFGHI':
+        ws[f"{i}{row}"].alignment = CENTER_ALIGN
+        ws[f"{i}{row}"].font = Font(bold=True)
+        ws[f"{i}{row}"].fill = GRAY_FILL_1
+        ws[f"{i}{row}"].border = THIN_BORDER
+        
+        
+    row += 1
+    count = 0
+    
+    for q in wozwrat_qs:
+        count += 1
+        
+        invoice_date = q.invoice_date.strftime("%d.%m.%Y")
+        faktura_nomer = q.id
+        partner_name = q.partner.name if q.partner else ""
+        faktura_sum = q.total_sum
+        faktura_pribyl = q.pribyl
+        faktura_raznisa = q.raznisa
+        faktura_status = "Проведено" if q.is_entry else "Черновик"
+        awto = q.awto.name if q.awto else ""
+        
+        # ic(invoice_date, faktura_nomer, partner_name, faktura_sum, faktura_pribyl, faktura_raznisa, faktura_status)
+        for i in 'ABCDEFGHI':
+            ws[f"{i}{row}"].border = THIN_BORDER
+        ws[f"A{row}"] = count
+        ws[f"A{row}"].alignment = CENTER_ALIGN
+        ws[f"B{row}"] = invoice_date
+        ws[f"C{row}"] = faktura_nomer
+        ws[f"C{row}"].alignment = CENTER_ALIGN
+        ws[f"D{row}"] = partner_name
+        ws[f"E{row}"] = -faktura_sum if faktura_sum > 0 else abs(faktura_sum)
+        ws[f"E{row}"].number_format = PRICE_FMT
+        ws[f"F{row}"] = -faktura_pribyl if faktura_pribyl > 0 else abs(faktura_pribyl)
+        ws[f"F{row}"].number_format = PRICE_FMT
+        ws[f"G{row}"] = -faktura_raznisa if faktura_raznisa > 0 else abs(faktura_raznisa)
+        ws[f"G{row}"].number_format = PRICE_FMT
+        ws[f"H{row}"] = faktura_status
+        ws[f"H{row}"].alignment = CENTER_ALIGN
+        ws[f"I{row}"] = awto
+        
+        row += 1
+        
+    ws[f"D{row}"] = f"ИТОГО:"     
+    ws[f"D{row}"].alignment = RIGHT_ALIGN    
+    ws[f"D{row}"].font = Font(bold=True)
+    ws[f"E{row}"] = -wozwrat_totals['total_sum'] if wozwrat_totals['total_sum'] > 0 else abs(wozwrat_totals['total_sum'])
+    ws[f"E{row}"].number_format = PRICE_FMT
+    ws[f"F{row}"] = -wozwrat_totals['total_pribyl'] if wozwrat_totals['total_pribyl'] > 0 else abs(wozwrat_totals['total_pribyl'])
+    ws[f"F{row}"].number_format = PRICE_FMT
+    ws[f"G{row}"] = -wozwrat_totals['total_raznisa'] if wozwrat_totals['total_raznisa'] > 0 else abs(wozwrat_totals['total_raznisa'])
+    ws[f"G{row}"].number_format = PRICE_FMT
+    for i in 'ABCDEFGHI':
+        ws[f"{i}{row}"].border = THIN_BORDER
+        ws[f"{i}{row}"].fill = GRAY_FILL_2
+        ws[f"{i}{row}"].font = Font(bold=True)
+        
+    row += 3
+    
+    # prihod
+    
+    ws.merge_cells(f"A{row}:I{row}")
+    # ws["A3"] = f"Расходные Фактуры (кол-во: {rashod_qs.count()}, общая цена: {rashod_totals['total_sum']})"
+    ws[f"A{row}"] = f"Приходные Фактуры"
+    ws[f"A{row}"].alignment = CENTER_ALIGN
+    ws[f"A{row}"].font = Font(size=14, bold=True, color="006400")
+    
+    row += 2
+    
+    ws[f"A{row}"] = "№"
+    ws[f"B{row}"] = "Дата"
+    ws[f"C{row}"] = "Фактура №"
+    ws[f"D{row}"] = "Партнёр"
+    ws[f"E{row}"] = "Сумма"
+    ws[f"F{row}"] = "Прибыль"
+    ws[f"G{row}"] = "Разница"
+    ws[f"H{row}"] = "Статус"
+    ws[f"I{row}"] = "Автомобиль"
+    
+    for i in 'ABCDEFGHI':
+        ws[f"{i}{row}"].alignment = CENTER_ALIGN
+        ws[f"{i}{row}"].font = Font(bold=True)
+        ws[f"{i}{row}"].fill = GRAY_FILL_1
+        ws[f"{i}{row}"].border = THIN_BORDER
+        
+        
+    row += 1
+    count = 0
+    
+    for q in prihod_qs:
+        count += 1
+        
+        invoice_date = q.invoice_date.strftime("%d.%m.%Y")
+        faktura_nomer = q.id
+        partner_name = q.partner.name if q.partner else ""
+        faktura_sum = q.total_sum
+        faktura_pribyl = q.pribyl
+        faktura_raznisa = q.raznisa
+        faktura_status = "Проведено" if q.is_entry else "Черновик"
+        awto = q.awto.name if q.awto else ""
+        
+        # ic(invoice_date, faktura_nomer, partner_name, faktura_sum, faktura_pribyl, faktura_raznisa, faktura_status)
+        for i in 'ABCDEFGHI':
+            ws[f"{i}{row}"].border = THIN_BORDER
+        ws[f"A{row}"] = count
+        ws[f"A{row}"].alignment = CENTER_ALIGN
+        ws[f"B{row}"] = invoice_date
+        ws[f"C{row}"] = faktura_nomer
+        ws[f"C{row}"].alignment = CENTER_ALIGN
+        ws[f"D{row}"] = partner_name
+        ws[f"E{row}"] = -faktura_sum
+        ws[f"E{row}"].number_format = PRICE_FMT
+        ws[f"F{row}"] = "❌"
+        ws[f"F{row}"].alignment = CENTER_ALIGN
+        ws[f"G{row}"] = "❌"
+        ws[f"G{row}"].alignment = CENTER_ALIGN
+        ws[f"H{row}"] = faktura_status
+        ws[f"H{row}"].alignment = CENTER_ALIGN
+        ws[f"I{row}"] = awto
+        
+        row += 1
+        
+    ws[f"D{row}"] = f"ИТОГО:"     
+    ws[f"D{row}"].alignment = RIGHT_ALIGN  
+    ws[f"D{row}"].font = Font(bold=True)
+    ws[f"E{row}"] = -prihod_totals['total_sum']
+    ws[f"E{row}"].number_format = PRICE_FMT
+    ws[f"F{row}"] = "❌"
+    ws[f"F{row}"].alignment = CENTER_ALIGN
+    ws[f"G{row}"] = "❌"
+    ws[f"G{row}"].alignment = CENTER_ALIGN
+    for i in 'ABCDEFGHI':
+        ws[f"{i}{row}"].border = THIN_BORDER
+        ws[f"{i}{row}"].fill = GRAY_FILL_2
+        ws[f"{i}{row}"].font = Font(bold=True)
+        
+    row += 3
+    
+    
+    # grand total
+    
+    grand_total_money = (
+        rashod_totals['total_sum']
+        - wozwrat_totals['total_sum']
+        - prihod_totals['total_sum']
+    )
+    
+    grand_total_pribyl = (
+        rashod_totals['total_pribyl']
+        - wozwrat_totals['total_pribyl']
+    )
+    
+    grand_total_raznisa = (
+        rashod_totals['total_raznisa']
+        - wozwrat_totals['total_raznisa']
+    )
+    
+    ws[f"D{row}"] = "ОБЩИЙ ИТОГ:"
+    ws[f"D{row}"].font = Font(bold=True, size=14)
+    ws[f"D{row}"].alignment = RIGHT_ALIGN
+    ws[f"E{row}"] = grand_total_money
+    ws[f"E{row}"].number_format = PRICE_FMT
+    ws[f"E{row}"].font = Font(bold=True)
+
+    ws[f"F{row}"] = grand_total_pribyl
+    ws[f"F{row}"].number_format = PRICE_FMT
+    ws[f"F{row}"].font = Font(bold=True)
+
+    ws[f"G{row}"] = grand_total_raznisa
+    ws[f"G{row}"].number_format = PRICE_FMT
+    ws[f"G{row}"].font = Font(bold=True)
+    
+
+    # ================= RESPONSE =================
+
+
+    response = HttpResponse(
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    response["Content-Disposition"] = (
+        f'attachment; filename="faktury_{str(day_start_str)}_{str(day_end_str)}.xlsx"'
+    )
+
+    wb.save(response)
+    return response
+    
+        
+    # data = []
+    
+    # return Response(data)
+   
+    
+    
+    

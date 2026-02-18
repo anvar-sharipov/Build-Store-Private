@@ -28,6 +28,7 @@ import ShowHideColums from "./filters/Zakaz/ShowHideColums";
 import ZakazNavigate from "./filters/Zakaz/ZakazNavigate";
 import ProductCardsFilter from "./filters/ProductCardsFilter/ProductCardsFilter";
 import SkidkaNasenkaFilter from "./filters/SkidkaNasenkaFilter/SkidkaNasenkaFilter";
+import AnalizProdajFilter from "./filters/AnalizProdajFilter/AnalizProdajFilter";
 
 // настройки для разных страниц
 const FILTER_CONFIG = {
@@ -213,7 +214,9 @@ export default function SidebarRight() {
    && currentPath !== "/products-buh-oborot" && !currentPath.includes("zakaz") 
    && currentPath !== "/zakaz-list" 
    && currentPath !== "/product-cards"
+   && currentPath !== "/analiz_prodaj"
    && !currentPath.includes("skidki-nasenki"))
+   
    return null;
 
   const typeOptions = config.type || [];
@@ -465,6 +468,19 @@ export default function SidebarRight() {
               
             </motion.div>
           )}
+
+          {currentPath.includes("analiz_prodaj") && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+            >
+              <AnalizProdajFilter />          
+          
+              
+            </motion.div>
+          )}
+
 
 
           {/* {currentPath === "/zakaz-list" && (

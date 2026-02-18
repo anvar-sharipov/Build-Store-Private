@@ -34,10 +34,10 @@
 //         }}
 //       >
 //         <motion.div
-//           className={`relative 
-//              rounded-xl sm:rounded-2xl shadow-2xl 
+//           className={`relative
+//              rounded-xl sm:rounded-2xl shadow-2xl
 //              border border-gray-200/20 dark:border-gray-700/30 backdrop-blur-xl
-//              w-full max-w-2xl md:max-w-3xl lg:max-w-4xl 
+//              w-full max-w-2xl md:max-w-3xl lg:max-w-4xl
 //              max-h-[90vh] p-4 sm:p-6 md:p-8 ${myClass === "" ? "bg-white dark:bg-gray-900" : myClass}`}
 //           initial={{ scale: 0.9, opacity: 0 }}
 //           animate={{ scale: 1, opacity: 1 }}
@@ -49,10 +49,10 @@
 //           <button
 //             onClick={() => !loading && onClose()}
 //             disabled={loading}
-//             className="absolute top-4 right-4 p-2 rounded-full bg-gray-100 dark:bg-gray-800 
-//                        hover:bg-red-50 dark:hover:bg-red-900/20 
-//                        text-gray-500 hover:text-red-600 dark:hover:text-red-400 
-//                        transition-all duration-200 
+//             className="absolute top-4 right-4 p-2 rounded-full bg-gray-100 dark:bg-gray-800
+//                        hover:bg-red-50 dark:hover:bg-red-900/20
+//                        text-gray-500 hover:text-red-600 dark:hover:text-red-400
+//                        transition-all duration-200
 //                        disabled:opacity-50 disabled:cursor-not-allowed"
 //             aria-label="Close modal"
 //           >
@@ -76,19 +76,25 @@
 
 // export default MyModal2;
 
-
-
 import { useEffect } from "react";
 import { IoCloseSharp } from "react-icons/io5";
 import { motion, AnimatePresence } from "framer-motion";
 
-const MyModal2 = ({ 
-  onClose, 
-  children, 
-  loading, 
-  myClass = "", 
-  closeOnBackdropClick = true // Новый пропс по умолчанию true
+const MyModal2 = ({
+  onClose,
+  children,
+  loading,
+  myClass = "",
+  closeOnBackdropClick = true, // Новый пропс по умолчанию true
+  widthVariant = "default", // default | full | wide
 }) => {
+  const widthClasses = {
+    default: "w-full max-w-2xl md:max-w-3xl lg:max-w-4xl",
+    full: "w-full max-w-full",
+    wide: "w-[90%] max-w-full",
+  };
+
+
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Escape" && !loading) {
@@ -119,11 +125,13 @@ const MyModal2 = ({
           }
         }}
       >
+        {/* w-full max-w-2xl md:max-w-3xl lg:max-w-4xl  */}
         <motion.div
           className={`relative 
              rounded-xl sm:rounded-2xl shadow-2xl 
              border border-gray-200/20 dark:border-gray-700/30 backdrop-blur-xl
-             w-full max-w-2xl md:max-w-3xl lg:max-w-4xl 
+             
+             ${widthClasses[widthVariant]}
              max-h-[90vh] p-4 sm:p-6 md:p-8 ${myClass === "" ? "bg-white dark:bg-gray-900" : myClass}`}
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}

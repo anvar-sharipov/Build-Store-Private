@@ -6,7 +6,8 @@ import { AiOutlineClose } from "react-icons/ai";
 
 const PTable = ({ printVisibleColumns, visibleColumns, id, refs }) => {
   const { values, setFieldValue } = useFormikContext();
-
+  // className="overflow-auto max-h-[70vh] border border-gray-300 dark:border-gray-600 rounded-lg"
+  // 
   return (
     <div className="relative mt-1 ml-1 print:m-0 print:p-0">
       {/* Красивый крестик отмены */}
@@ -19,7 +20,7 @@ const PTable = ({ printVisibleColumns, visibleColumns, id, refs }) => {
         <AiOutlineClose className="h-4 w-4" />
       </button>
 
-      <div className="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg">
+      <div className="overflow-auto max-h-[70vh] border border-gray-300 dark:border-gray-600 rounded-lg">
         <table className="table-auto border-collapse min-w-full">
           <Thead printVisibleColumns={printVisibleColumns} visibleColumns={visibleColumns} />
           <Tbody printVisibleColumns={printVisibleColumns} visibleColumns={visibleColumns} id={id} refs={refs} />

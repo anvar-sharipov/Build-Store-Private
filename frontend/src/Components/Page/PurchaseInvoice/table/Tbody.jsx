@@ -8,6 +8,7 @@ import { HiX } from "react-icons/hi";
 import { MyDecimalPrice } from "../../../UI/MyDecimalPrice";
 import Decimal from "decimal.js";
 import { formatNumber2 } from "../../../UI/formatNumber2";
+import { useTranslation } from "react-i18next";
 
 // const BASE_URL = import.meta.env.VITE_BASE_URL;
 const BASE_URL = import.meta.env.VITE_BASE_URL || "";
@@ -32,6 +33,7 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
   const { values, setFieldValue, touched, errors } = useFormikContext();
   const [focusedQuantityRow, setFocusedQuantityRow] = useState(null);
   const [focusedPriceRow, setFocusedPriceRow] = useState(null);
+  const { t } = useTranslation();
 
   const recalcGiftQuantities = (products) => {
     const giftQuantities = {};
@@ -135,7 +137,33 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
               </div>
             </td>
 
-            <td className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 print:!text-black print:!border-black`}>{product.name}</td>
+            <td className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 print:!text-black print:!border-black`}>
+              <div className="flex justify-between">
+                <span>{product.name}</span>
+                <span className="ml-6 print:hidden mr-10 text-sm">
+                  <div className="flex justify-between">
+                    <div>{t("balance_ostatok")}:</div>
+                    <div className="font-medium pl-3">{product.quantity_on_selected_warehouses}</div>
+                  </div>
+
+                  {Number(product.qty_in_drafts) > 0 && (
+                    <div className="flex justify-between text-amber-600">
+                      <div>{t("in drafts")}:</div>
+                      <div className="font-medium pl-3">{product.qty_in_drafts}</div>
+                    </div>
+                  )}
+                  {Number(product.qty_in_drafts) > 0 && (
+                    <div className="flex justify-between font-semibold">
+                      <div>{t("available")}:</div>
+                      <div className={product.quantity_on_selected_warehouses - product.qty_in_drafts <= 0 ? "text-red-600 pl-3" : "text-green-600 pl-3"}>
+                        {product.quantity_on_selected_warehouses - product.qty_in_drafts}
+                      </div>
+                    </div>
+                  )}
+                </span>
+
+              </div>
+            </td>
 
             <td
               className={`text-center text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 ${!visibleColumns.image ? "hidden" : "table-cell"} ${

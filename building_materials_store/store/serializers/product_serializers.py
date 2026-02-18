@@ -179,6 +179,7 @@ class ProductSerializer(serializers.ModelSerializer):
     def get_turnover_data(self, obj):
         turnover_data = self.context.get("turnover_data", {})
         return turnover_data.get(obj.id, {"qty": 0, "sum": 0})
+    
         # t = turnover_data.get(obj.id, {"qty": 0, "sum": 0})
         # if id == 606:
         #     ic(t)
@@ -196,6 +197,7 @@ class ProductSerializer(serializers.ModelSerializer):
         # })
 
     def get_quantity_on_selected_warehouses(self, obj):
+        
         
         # warehouse_ids = self.context.get('warehouse_ids', [])
         if self.context:

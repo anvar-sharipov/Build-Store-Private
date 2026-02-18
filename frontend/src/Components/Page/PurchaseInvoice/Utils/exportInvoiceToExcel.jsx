@@ -291,7 +291,9 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
     const dateInfo = worksheet.getRow(currentRow);
     dateInfo.getCell(1).value = "Дата:";
     dateInfo.getCell(1).style = styles.boldInfoCell;
-    dateInfo.getCell(2).value = formatDate(values.invoice_date || values.invoice_date2 || new Date().toLocaleDateString());
+    // console.log("tttt", values.invoice_date, values.invoice_date2);
+    
+    dateInfo.getCell(2).value = values.invoice_date || formatDate(values.invoice_date2) || "invalid Dateg";
     dateInfo.getCell(2).style = styles.infoCell;
     currentRow++;
 

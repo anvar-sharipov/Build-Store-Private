@@ -153,6 +153,8 @@ def product_cards(request):
     query = request.GET.get("query")
     agent = request.GET.get("agent")
     
+    
+    
     # snapshots = (
     #     StockSnapshot.objects
     #     .filter(

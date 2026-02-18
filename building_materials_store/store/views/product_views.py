@@ -40,7 +40,7 @@ from .. filters import ProductFilter
 from django.contrib.postgres.search import TrigramSimilarity
 from django.db.models import Case, When, Value, IntegerField, Q
 from django.utils.dateparse import parse_date
-# from django.db.models import Sum, F, Count
+from django.db.models import Sum, F, Count
 from django.db.models import F, Count, DecimalField
 # from openpyxl.styles import Font
 from rest_framework.exceptions import PermissionDenied
@@ -56,6 +56,7 @@ from . base_views import IsInAdminOrWarehouseGroup, CustomPageNumberPagination
 from ..my_func.get_unit_map import get_unit_map 
 from ..my_func.get_unit_and_cf import get_unit_and_cf
 from ..my_func.date_str_to_dateFormat import date_str_to_dateFormat
+from ..my_func.get_reserved_quantity import get_reserved_quantity
 import re
 
 
@@ -100,6 +101,9 @@ class ProductImageViewSet(viewsets.ModelViewSet):
         return response
 
 
+
+
+
 # dlya poiska producta for free add
 @api_view(["GET"])
 def search_products(request):
@@ -113,8 +117,19 @@ def search_products(request):
     search_free = request.GET.get("search_free", "")
     product_id = request.query_params.get('id')
     search_in_invoice = request.GET.get("search_in_invoice", "")
+    invoice_id = request.GET.get("invoice_id", "")
+    
+    # ic(query)
+    # ic(warehouse)
+    # ic(search_free)
+    # ic(product_id)
+    # ic(search_in_invoice)
+    # ic(invoice_id)
+    
+    # warehouses_objs = Warehouse.obj
     
     if query:
+        
         
         
         
@@ -278,15 +293,15 @@ def search_products(request):
                 .order_by("rank", "name")
             )
             
-
             # --- Фильтрация по складу ---
             if warehouse:
                 tmp_results = tmp_results.filter(
-                    warehouse_products__warehouse_id=warehouse
+                    warehouse_products__warehouse_id=warehouse,
+                    warehouse_products__quantity__gt=0,
                 )
 
             # --- Slice применяем только в самом конце ---
-            results = tmp_results[:10]
+            results = tmp_results #[:30]
 
         else:
             # Если qr найден — то можно применить фильтрацию по складу сразу
@@ -298,6 +313,11 @@ def search_products(request):
         # --- Формируем ответ ---
         data = []
         for product in results:
+            # ic(product.name)
+            # ic(warehouse)
+            
+            qty_in_drafts = get_reserved_quantity(product, warehouse, invoice_id)
+            # ic(qty_in_drafts)
 
             # Подсчёт количества
             if warehouse:
@@ -325,8 +345,10 @@ def search_products(request):
                 'base_quantity_in_stock': base_quantity_in_stock,
                 'selected_quantity': 1,
                 'selected_price': 1,
-                "finded_from_QR": finded_from_qr
+                "finded_from_QR": finded_from_qr,
+                'qty_in_drafts': qty_in_drafts
             })
+            
 
             data.append(serialized)
 
@@ -334,6 +356,7 @@ def search_products(request):
     
     
     elif search_in_invoice:
+        
         
         product_id = request.GET.get("id", "")
         warehouse = request.GET.get("warehouse", "")
@@ -392,6 +415,7 @@ def search_products(request):
         #     data.append(serialized)
 
     elif product_id:
+        
         
  
         results = Product.objects.filter(id=product_id)
@@ -474,8 +498,10 @@ class ProductViewSet(viewsets.ModelViewSet):
         return [IsInAdminOrWarehouseGroup()]
 
     def get_queryset(self):
+        ic("wtwtwtw")
 
         qs = Product.objects.all()
+        
         
         
         # qs = qs.annotate(
@@ -529,7 +555,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     #         })
     
     def list(self, request, *args, **kwargs):
-        ic("ddada")
+        ic("dadadasss")
         
         
         
@@ -711,6 +737,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         )
         
         for item in period_items:
+            
             p = item.product  
             inv = item.invoice
             if inv.canceled_at != None:

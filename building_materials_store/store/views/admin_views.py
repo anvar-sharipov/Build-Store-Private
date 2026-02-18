@@ -48,6 +48,23 @@ def admin_universal(request):
     password = data.get("password")
     type_action = data.get("type")
     
+    test = Entry.objects.filter(partner__name="Koneurgench Nazar Dane Bazar +99364509001", transaction__date__date = "2026-02-16")
+    # ic(len(test))
+    test_count = 0
+    t = {}
+    for i in test:
+        if i.transaction.invoice:
+            if i.transaction.invoice.id == 4737:
+                test_count += i.debit
+                if i.product.name not in t:
+                    t[i.product.name] = 1
+                else:
+                    t[i.product.name] += 1
+                ic(i.account.number, i.partner.name, i.debit, i.transaction.date, i.product.name)
+                
+    ic(t)
+                
+    
     if password != "543569145637383":
         return JsonResponse({"status": "error", "message": "error password"}, status=400)
     

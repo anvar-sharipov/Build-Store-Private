@@ -640,7 +640,7 @@ const DetailReport6062 = () => {
                               {formatNumber2(agentTotalsData.debit_before_total, 2, hyphenOr0)}
                             </td>
                             <td className="px-3 whitespace-nowrap py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
-                              {formatNumber2(agentTotalsData.credit_before_total, 2, hyphenOr0)}gg
+                              {formatNumber2(agentTotalsData.credit_before_total, 2, hyphenOr0)}
                             </td>
                             <td className="px-3 whitespace-nowrap py-2 text-right font-mono font-semibold border border-gray-300 dark:text-gray-200 dark:border-gray-600 print:border print:border-gray-300 print:px-0.5 print:py-1 print:text-xs print:dark:!text-black">
                               {formatNumber2(agentTotalsData.debit_oborot_total, 2, hyphenOr0)}

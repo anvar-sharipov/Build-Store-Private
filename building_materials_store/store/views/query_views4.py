@@ -524,32 +524,9 @@ def get_detail_account_60_62(request):
     # Оптимизация: предзагрузка всех необходимых данных за 2 запроса
     from django.db.models import Prefetch, Q
     
-    # 1-й запрос: все партнеры с их транзакциями и записями для данного счета
-    # partners_prefetch = Partner.objects.prefetch_related(
-    #     Prefetch(
-    #         'entry_set',  # ⭐ ИЗМЕНИЛИ: используем связь Partner → Entry
-    #         queryset=Entry.objects.filter(account__number=account_number),
-    #         to_attr='filtered_entries'
-    #     )
-    # ).select_related('agent')
+  
 
-    # # ИСПРАВЛЕНИЕ: Упрощенные функции сравнения дат
-    # def get_transaction_date(transaction_date):
-    #     """Возвращает дату транзакции в едином формате (date)"""
-    #     if isinstance(transaction_date, datetime):
-    #         return transaction_date.date()
-    #     return transaction_date
-
-    # def compare_dates(transaction_date, target_date):
-    #     """Сравнивает дату транзакции с целевой датой"""
-    #     trans_date = get_transaction_date(transaction_date)
-    #     return trans_date < target_date
-
-    # def is_date_in_range(transaction_date, start_date, end_date):
-    #     """Проверяет, находится ли дата транзакции в диапазоне"""
-    #     trans_date = get_transaction_date(transaction_date)
-    #     return start_date <= trans_date <= end_date
-
+    # rabotaet no chat gpt dal uskorennyy wariant esli budet bag wernem
     if sortByAgent == "true" or sortByAgent == True:
         data = {"data": {}, "total_prices": {}}
         
@@ -558,6 +535,38 @@ def get_detail_account_60_62(request):
         all_partners = list(
             Partner.objects.select_related('agent')
         )
+        
+        # 🔥 Один SQL на все Entry
+        all_aggregates = (
+            Entry.objects
+            .filter(account__number=account_number)
+            .values('partner')
+            .annotate(
+                debit_before=Coalesce(
+                    Sum('debit', filter=Q(transaction__date__lt=date_from)),
+                    Decimal('0'),
+                    output_field=DecimalField()
+                ),
+                credit_before=Coalesce(
+                    Sum('credit', filter=Q(transaction__date__lt=date_from)),
+                    Decimal('0'),
+                    output_field=DecimalField()
+                ),
+                debit_oborot=Coalesce(
+                    Sum('debit', filter=Q(transaction__date__gte=date_from, transaction__date__lte=date_to)),
+                    Decimal('0'),
+                    output_field=DecimalField()
+                ),
+                credit_oborot=Coalesce(
+                    Sum('credit', filter=Q(transaction__date__gte=date_from, transaction__date__lte=date_to)),
+                    Decimal('0'),
+                    output_field=DecimalField()
+                ),
+            )
+        )
+
+        # превращаем в dict для быстрого доступа
+        aggregates_map = {row['partner']: row for row in all_aggregates}
         
         
         # Группировка партнеров по агентам
@@ -608,34 +617,41 @@ def get_detail_account_60_62(request):
             #         credit_oborot += money(entry.credit)
             
 
-            entries = Entry.objects.filter(
-                partner=partner,
-                account__number=account_number
-            )
+            # entries = Entry.objects.filter(
+            #     partner=partner,
+            #     account__number=account_number
+            # )
 
-            aggregates = entries.aggregate(
-                debit_before=Coalesce(
-                    Sum('debit', filter=Q(transaction__date__lt=date_from)),
-                    Decimal('0'),
-                    output_field=DecimalField()
-                ),
-                credit_before=Coalesce(
-                    Sum('credit', filter=Q(transaction__date__lt=date_from)),
-                    Decimal('0'),
-                    output_field=DecimalField()
-                ),
-                debit_oborot=Coalesce(
-                    Sum('debit', filter=Q(transaction__date__gte=date_from, transaction__date__lte=date_to)),
-                    Decimal('0'),
-                    output_field=DecimalField()
-                ),
-                credit_oborot=Coalesce(
-                    Sum('credit', filter=Q(transaction__date__gte=date_from, transaction__date__lte=date_to)),
-                    Decimal('0'),
-                    output_field=DecimalField()
-                ),
-            )
+            # aggregates = entries.aggregate(
+            #     debit_before=Coalesce(
+            #         Sum('debit', filter=Q(transaction__date__lt=date_from)),
+            #         Decimal('0'),
+            #         output_field=DecimalField()
+            #     ),
+            #     credit_before=Coalesce(
+            #         Sum('credit', filter=Q(transaction__date__lt=date_from)),
+            #         Decimal('0'),
+            #         output_field=DecimalField()
+            #     ),
+            #     debit_oborot=Coalesce(
+            #         Sum('debit', filter=Q(transaction__date__gte=date_from, transaction__date__lte=date_to)),
+            #         Decimal('0'),
+            #         output_field=DecimalField()
+            #     ),
+            #     credit_oborot=Coalesce(
+            #         Sum('credit', filter=Q(transaction__date__gte=date_from, transaction__date__lte=date_to)),
+            #         Decimal('0'),
+            #         output_field=DecimalField()
+            #     ),
+            # )
 
+            
+            aggregates = aggregates_map.get(partner.id, {
+                'debit_before': Decimal("0.00"),
+                'credit_before': Decimal("0.00"),
+                'debit_oborot': Decimal("0.00"),
+                'credit_oborot': Decimal("0.00"),
+            })
             debit_before = aggregates['debit_before']
             credit_before = aggregates['credit_before']
             debit_oborot = aggregates['debit_oborot']
@@ -693,8 +709,14 @@ def get_detail_account_60_62(request):
 
             for partner in agent_info['partners']:
                 partner_data = process_partner(partner, agent_info['totals'])
+               
                 if show0 == "false":
-                    if partner_data["debit_before"] - partner_data["credit_before"] != 0:
+                    if (partner_data["debit_before"] - partner_data["credit_before"] != 0 or 
+                        partner_data["debit_oborot"] != 0 or 
+                        partner_data["credit_oborot"] != 0 or 
+                        partner_data["saldo_end_debit"] != 0 or 
+                        partner_data["saldo_end_credit"] != 0
+                        ):
                         data["data"][agent_name].append(partner_data)
                 else:
                     data["data"][agent_name].append(partner_data)
@@ -792,12 +814,14 @@ def get_detail_account_60_62(request):
                 filtered_partners = []
                 for partner in data["data"][agent_name]:
                     # Проверяем, что хотя бы одно значение не равно 0
-                    if (partner["debit_before"] != 0 or 
-                        partner["credit_before"] != 0 or
-                        partner["debit_oborot"] != 0 or 
-                        partner["credit_oborot"] != 0 or
-                        partner["saldo_end_debit"] != 0 or 
-                        partner["saldo_end_credit"] != 0):
+                    if not (
+                        partner["debit_before"] == 0 and
+                        partner["credit_before"] == 0 and
+                        partner["debit_oborot"] == 0 and
+                        partner["credit_oborot"] == 0 and
+                        partner["saldo_end_debit"] == 0 and
+                        partner["saldo_end_credit"] == 0
+                    ):
                         filtered_partners.append(partner)
                 
                 # Если после фильтрации остались партнеры - обновляем список
@@ -920,39 +944,103 @@ def get_detail_account_60_62(request):
             Partner.objects.select_related('agent')
         )
         
+        
         # Временный список для хранения партнеров перед фильтрацией
         all_partners_data = []
         
-        for partner in all_partners:
-            # Фильтрация по агенту если указан
-            if agent_id:
-                if not partner.agent or str(partner.agent.id) != str(agent_id):
-                    continue
+        # rabotaet prawilno no chat gpt pokazal uskorennuyu wersiyu esli budet bag werni
+        # for partner in all_partners:
+        #     # Фильтрация по агенту если указан
+        #     if agent_id:
+        #         if not partner.agent or str(partner.agent.id) != str(agent_id):
+        #             continue
             
-            debit_before = Decimal("0.00")
-            credit_before = Decimal("0.00")
-            debit_oborot = Decimal("0.00")
-            credit_oborot = Decimal("0.00")
+        #     debit_before = Decimal("0.00")
+        #     credit_before = Decimal("0.00")
+        #     debit_oborot = Decimal("0.00")
+        #     credit_oborot = Decimal("0.00")
             
-            # ⭐ ИЗМЕНЕНИЕ: Используем prefetched entries вместо prefetched_transactions
-            # for entry in partner.filtered_entries:  # ← ИСПРАВИТЬ ЗДЕСЬ!
-            #     # ИСПРАВЛЕНИЕ: Получаем нормализованную дату транзакции
-            #     trans_date = get_transaction_date(entry.transaction.date)
+        #     # ⭐ ИЗМЕНЕНИЕ: Используем prefetched entries вместо prefetched_transactions
+        #     # for entry in partner.filtered_entries:  # ← ИСПРАВИТЬ ЗДЕСЬ!
+        #     #     # ИСПРАВЛЕНИЕ: Получаем нормализованную дату транзакции
+        #     #     trans_date = get_transaction_date(entry.transaction.date)
                 
-            #     # ИСПРАВЛЕНИЕ: Сравниваем нормализованные даты
-            #     if trans_date < date_from:
-            #         debit_before += money(entry.debit)
-            #         credit_before += money(entry.credit)
-            #     elif date_from <= trans_date <= date_to:
-            #         debit_oborot += money(entry.debit)
-            #         credit_oborot += money(entry.credit)
+        #     #     # ИСПРАВЛЕНИЕ: Сравниваем нормализованные даты
+        #     #     if trans_date < date_from:
+        #     #         debit_before += money(entry.debit)
+        #     #         credit_before += money(entry.credit)
+        #     #     elif date_from <= trans_date <= date_to:
+        #     #         debit_oborot += money(entry.debit)
+        #     #         credit_oborot += money(entry.credit)
             
-            entries = Entry.objects.filter(
-                partner=partner,
-                account__number=account_number
-            )
+        #     entries = Entry.objects.filter(
+        #         partner=partner,
+        #         account__number=account_number
+        #     )
 
-            aggregates = entries.aggregate(
+        #     aggregates = entries.aggregate(
+        #         debit_before=Coalesce(
+        #             Sum('debit', filter=Q(transaction__date__lt=date_from)),
+        #             Decimal('0'),
+        #             output_field=DecimalField()
+        #         ),
+        #         credit_before=Coalesce(
+        #             Sum('credit', filter=Q(transaction__date__lt=date_from)),
+        #             Decimal('0'),
+        #             output_field=DecimalField()
+        #         ),
+        #         debit_oborot=Coalesce(
+        #             Sum('debit', filter=Q(transaction__date__gte=date_from, transaction__date__lte=date_to)),
+        #             Decimal('0'),
+        #             output_field=DecimalField()
+        #         ),
+        #         credit_oborot=Coalesce(
+        #             Sum('credit', filter=Q(transaction__date__gte=date_from, transaction__date__lte=date_to)),
+        #             Decimal('0'),
+        #             output_field=DecimalField()
+        #         ),
+        #     )
+
+        #     debit_before = aggregates['debit_before']
+        #     credit_before = aggregates['credit_before']
+        #     debit_oborot = aggregates['debit_oborot']
+        #     credit_oborot = aggregates['credit_oborot']
+            
+        #     debit_end = debit_before + debit_oborot
+        #     credit_end = credit_before + credit_oborot
+            
+        #     if (debit_end - credit_end) > 0:
+        #         saldo_end_debit = debit_end - credit_end
+        #         saldo_end_credit = 0
+        #     else:
+        #         saldo_end_credit = abs(debit_end - credit_end)
+        #         saldo_end_debit = 0
+                
+        #     partner_data = {
+        #         "partner_id": partner.id,
+        #         "account_id": account.id,
+        #         "partner_name": partner.name,
+        #         "debit_before": debit_before,
+        #         "credit_before": credit_before,
+        #         "debit_oborot": debit_oborot,
+        #         "credit_oborot": credit_oborot,
+        #         "saldo_end_debit": saldo_end_debit,
+        #         "saldo_end_credit": saldo_end_credit,
+        #         "agent": {"id": partner.agent.id, "name": partner.agent.name} if partner.agent else {},
+        #     }
+            
+        #     all_partners_data.append(partner_data)
+        
+        entries = (
+            Entry.objects
+            .filter(account__number=account_number)
+            .values(
+                'partner',
+                'partner__name',
+                'partner__agent__id',
+                'partner__agent__name'
+            )
+            .annotate(
                 debit_before=Coalesce(
                     Sum('debit', filter=Q(transaction__date__lt=date_from)),
                     Decimal('0'),
@@ -974,35 +1062,47 @@ def get_detail_account_60_62(request):
                     output_field=DecimalField()
                 ),
             )
+        )
 
-            debit_before = aggregates['debit_before']
-            credit_before = aggregates['credit_before']
-            debit_oborot = aggregates['debit_oborot']
-            credit_oborot = aggregates['credit_oborot']
-            
+        all_partners_data = []
+
+        for row in entries:
+
+            # 🔹 фильтр по агенту
+            if agent_id and str(row['partner__agent__id']) != str(agent_id):
+                continue
+
+            debit_before = row['debit_before']
+            credit_before = row['credit_before']
+            debit_oborot = row['debit_oborot']
+            credit_oborot = row['credit_oborot']
+
             debit_end = debit_before + debit_oborot
             credit_end = credit_before + credit_oborot
-            
+
             if (debit_end - credit_end) > 0:
                 saldo_end_debit = debit_end - credit_end
-                saldo_end_credit = 0
+                saldo_end_credit = Decimal("0")
             else:
                 saldo_end_credit = abs(debit_end - credit_end)
-                saldo_end_debit = 0
-                
+                saldo_end_debit = Decimal("0")
+
             partner_data = {
-                "partner_id": partner.id,
+                "partner_id": row['partner'],
                 "account_id": account.id,
-                "partner_name": partner.name,
+                "partner_name": row['partner__name'],
                 "debit_before": debit_before,
                 "credit_before": credit_before,
                 "debit_oborot": debit_oborot,
                 "credit_oborot": credit_oborot,
                 "saldo_end_debit": saldo_end_debit,
                 "saldo_end_credit": saldo_end_credit,
-                "agent": {"id": partner.agent.id, "name": partner.agent.name} if partner.agent else {},
+                "agent": {
+                    "id": row['partner__agent__id'],
+                    "name": row['partner__agent__name']
+                } if row['partner__agent__id'] else {},
             }
-            
+
             all_partners_data.append(partner_data)
         
         # Фильтрация нулевых партнеров если show0 = false
@@ -1011,11 +1111,14 @@ def get_detail_account_60_62(request):
             filtered_partners = []
             for partner in all_partners_data:
                 # Проверяем, что хотя бы одно значение не равно 0
-                if ((partner["debit_before"] - partner["credit_before"]) != 0 or 
-                    partner["debit_oborot"] != 0 or 
-                    partner["credit_oborot"] != 0 or
-                    partner["saldo_end_debit"] != 0 or 
-                    partner["saldo_end_credit"] != 0):
+                if not (
+                    partner["debit_before"] == 0 and
+                    partner["credit_before"] == 0 and
+                    partner["debit_oborot"] == 0 and
+                    partner["credit_oborot"] == 0 and
+                    partner["saldo_end_debit"] == 0 and
+                    partner["saldo_end_credit"] == 0
+                ):
                     filtered_partners.append(partner)
             
             data["data"] = filtered_partners

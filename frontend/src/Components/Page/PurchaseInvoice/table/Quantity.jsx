@@ -17,11 +17,15 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
   const [localErrorQuantity, setLocalErrorQuantity] = useState("");
 
   useEffect(() => {
-    if (Number(product.selected_quantity) > (product.quantity_on_selected_warehouses || 0) && (values.wozwrat_or_prihod === "rashod" || values.wozwrat_or_prihod === "transfer")) {
-      setLocalErrorQuantity(`${t("OnStock")} ${product.quantity_on_selected_warehouses}`);
+    if (Number(product.selected_quantity) > (((product.quantity_on_selected_warehouses || 0) - (product.qty_in_drafts || 0)) || 0) && (values.wozwrat_or_prihod === "rashod" || values.wozwrat_or_prihod === "transfer")) {
+      setLocalErrorQuantity(`${t("OnStock")} ${(product.quantity_on_selected_warehouses || 0) - (product.qty_in_drafts || 0)}`);
       setFieldValue("send", false);
-    }
-  }, [product.selected_quantity, setFieldValue, t, values.wozwrat_or_prihod]);
+    } 
+    // else {
+    //   setLocalErrorQuantity("");
+    //   setFieldValue("send", true);
+    // }
+  }, [product.selected_quantity, setFieldValue, t, values.wozwrat_or_prihod, product.qty_in_drafts,]);
 
   //   useEffect(() => {
   //   console.log("values", values);
@@ -164,8 +168,8 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
           if (!isNumber) {
             setLocalErrorQuantity(`${t("quantity must be a digit")}`);
             setFieldValue("send", false);
-          } else if (qty > product.quantity_on_selected_warehouses && (values.wozwrat_or_prihod === "rashod" || values.wozwrat_or_prihod === "transfer")) {
-            setLocalErrorQuantity(`${t("OnStock")} ${product.quantity_on_selected_warehouses}`);
+          } else if (qty > ((product.quantity_on_selected_warehouses || 0) - (product.qty_in_drafts || 0)) && (values.wozwrat_or_prihod === "rashod" || values.wozwrat_or_prihod === "transfer")) {
+            setLocalErrorQuantity(`${t("OnStock")} ${(product.quantity_on_selected_warehouses || 0) - (product.qty_in_drafts || 0)}`);
             setFieldValue("send", false);
           } else if (qty < 0.001) {
             setLocalErrorQuantity(`${t("only positive numbers")}`);

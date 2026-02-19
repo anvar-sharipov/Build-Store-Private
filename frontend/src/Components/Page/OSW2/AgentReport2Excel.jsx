@@ -3,9 +3,21 @@ import { saveAs } from "file-saver";
 import MyFormatDate from "../../UI/MyFormatDate";
 import { formatNumber2 } from "../../UI/formatNumber2";
 
+// // esli 0 to pokazywaet 0.00
+// const toNumber = (v) => {
+//   if (v === "-" || v === null || v === undefined) return null;
+//   return Number(String(v).replace(",", "."));
+// };
+
+// esli 0 ti pokazywaet pustye yacheyki
 const toNumber = (v) => {
   if (v === "-" || v === null || v === undefined) return null;
-  return Number(String(v).replace(",", "."));
+
+  const num = Number(String(v).replace(",", "."));
+
+  if (!num || num === 0) return null; // <-- вот это главное
+
+  return num;
 };
 
 const AgentReport2Excel = async (data, totals, grandTotals, dateFrom, dateTo, accountNumber, sortByAgent, t, hyphenOr0) => {
@@ -38,13 +50,42 @@ const AgentReport2Excel = async (data, totals, grandTotals, dateFrom, dateTo, ac
   worksheet.columns = [
     { width: 6 }, // A: №
     { width: 40 }, // B: Контрагент
-    { width: 16 }, // C: Нач. Дт
-    { width: 16 }, // D: Нач. Кт
-    { width: 16 }, // E: Оборот Дт
-    { width: 16 }, // F: Оборот Кт
-    { width: 16 }, // G: Кон. Дт
-    { width: 16 }, // H: Кон. Кт
+    { width: 12.6 }, // C: Нач. Дт
+    { width: 10.6 }, // D: Нач. Кт
+    { width: 12.6 }, // E: Оборот Дт
+    { width: 12.6 }, // F: Оборот Кт
+    { width: 12.6 }, // G: Кон. Дт
+    { width: 18.6 }, // H: Кон. Кт
   ];
+
+  // worksheet.pageSetup.margins = {
+  //   left: 0.40,
+  //   right: 0.20,
+  //   top: 0.20,
+  //   bottom: 0.20,
+  //   header: 0.3,
+  //   footer: 0.3,
+  // };
+
+  worksheet.pageSetup = {
+  orientation: "portrait",
+  scale: 80, // 🔥 ВОТ ЭТО 80%
+  horizontalCentered: true,
+  margins: {
+    left: 0.40,
+    right: 0.20,
+    top: 0.20,
+    bottom: 0.20,
+    header: 0.3,
+    footer: 0.3,
+  }
+};
+
+  // Центрирование колонки №
+  worksheet.getColumn(1).alignment = {
+    horizontal: "center",
+    vertical: "middle",
+  };
 
   // Стили для переиспользования
   const styles = {
@@ -215,6 +256,14 @@ const AgentReport2Excel = async (data, totals, grandTotals, dateFrom, dateTo, ac
     // Данные контрагентов
     partners.forEach((row, index) => {
       const dataRow = worksheet.getRow(currentRow);
+
+      const text = row.partner_name || "";
+      const approxCharsPerLine = 40; // зависит от ширины колонки
+      const lines = Math.ceil(text.length / approxCharsPerLine);
+
+      dataRow.height = 20 * Math.max(1, lines);
+      // dataRow.height = 20;
+
       // for (let i = 1; i <= 8; i++) {
       //   dataRow.getCell(i).border = {
       //     top: { style: "thin", color: { argb: "FF000000" } },
@@ -255,21 +304,46 @@ const AgentReport2Excel = async (data, totals, grandTotals, dateFrom, dateTo, ac
       dataRow.getCell(8).value = toNumber(row.saldo_end_credit); // parseFloat(row.saldo_end_credit || 0);
 
       // Применение стилей
+      // for (let i = 1; i <= 8; i++) {
+      //   const cell = dataRow.getCell(i);
+      //   cell.style = styles.dataRow(currentRow);
+
+      //   // Числовой формат для денежных колонок
+      //   if (i >= 3) {
+      //     cell.numFmt = "# ##0.00;[Red]-# ##0.00";
+      //   }
+      //   if (i == 5) {
+      //     // Зелёный
+      //     dataRow.getCell(5).font = { color: { argb: "FF00B050" } };
+      //   }
+      //   if (i == 6) {
+      //     // Красный
+      //     dataRow.getCell(6).font = { color: { argb: "FFFF0000" } };
+      //   }
+      // }
+
       for (let i = 1; i <= 8; i++) {
         const cell = dataRow.getCell(i);
-        cell.style = styles.dataRow(currentRow);
 
-        // Числовой формат для денежных колонок
+        cell.font = { size: 10 };
+        cell.border = {
+          top: { style: "thin", color: { argb: "FF000000" } },
+          bottom: { style: "thin", color: { argb: "FF000000" } },
+          left: { style: "thin", color: { argb: "FF000000" } },
+          right: { style: "thin", color: { argb: "FF000000" } },
+        };
+
+        // ✅ ВОТ ТУТ правильное выравнивание
+        if (i === 1) {
+          cell.alignment = { horizontal: "center", vertical: "middle" };
+        } else if (i === 2) {
+          cell.alignment = { horizontal: "left", vertical: "middle", wrapText: true };
+        } else {
+          cell.alignment = { horizontal: "right", vertical: "middle" };
+        }
+
         if (i >= 3) {
           cell.numFmt = "# ##0.00;[Red]-# ##0.00";
-        }
-        if (i == 5) {
-          // Зелёный
-          dataRow.getCell(5).font = { color: { argb: "FF00B050" } };
-        }
-        if (i == 6) {
-          // Красный
-          dataRow.getCell(6).font = { color: { argb: "FFFF0000" } };
         }
       }
 
@@ -279,7 +353,7 @@ const AgentReport2Excel = async (data, totals, grandTotals, dateFrom, dateTo, ac
     // Итоги по агенту (развернутые)
     if (agentTotalsData) {
       // console.log("agentTotalsData", agentTotalsData);
-      
+
       const subtotalExpandedRow = worksheet.getRow(currentRow);
       subtotalExpandedRow.getCell(2).value = `Итого ${displayAgentName}:`;
       // subtotalExpandedRow.getCell(2).value = `Итого развернуто ${displayAgentName}:`;
@@ -325,7 +399,6 @@ const AgentReport2Excel = async (data, totals, grandTotals, dateFrom, dateTo, ac
     currentRow++;
   });
 
-  
   // 6. Общие итоги
   if (grandTotals) {
     // Пустая строка перед общими итогами
@@ -361,7 +434,8 @@ const AgentReport2Excel = async (data, totals, grandTotals, dateFrom, dateTo, ac
     // Развернутые итоги
     const grandExpandedRow = worksheet.getRow(currentRow);
     grandExpandedRow.getCell(2).value = "Итого развернуто:";
-    grandExpandedRow.getCell(3).value = parseFloat(grandTotals.debit_before_total || 0);
+    // grandExpandedRow.getCell(3).value = parseFloat(grandTotals.debit_before_total || 0);
+    grandExpandedRow.getCell(3).value = toNumber(grandTotals.debit_before_total);
     grandExpandedRow.getCell(4).value = parseFloat(grandTotals.credit_before_total || 0);
     grandExpandedRow.getCell(5).value = parseFloat(grandTotals.debit_oborot_total || 0);
     grandExpandedRow.getCell(6).value = parseFloat(grandTotals.credit_oborot_total || 0);
@@ -397,7 +471,6 @@ const AgentReport2Excel = async (data, totals, grandTotals, dateFrom, dateTo, ac
     }
     worksheet.mergeCells(`A${currentRow}:B${currentRow}`);
   }
-
 
   // 7. Заморозка строк
   worksheet.views = [

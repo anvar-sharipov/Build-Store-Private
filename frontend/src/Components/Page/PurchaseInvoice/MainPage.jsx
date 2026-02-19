@@ -97,6 +97,7 @@ const MainPage = () => {
   const [fakturaType, setFakturaType] = useState(() => {
     return localStorage.getItem("wozwrat_or_prihod_purchase") || "";
   });
+  
 
   useEffect(() => {
     return () => {
@@ -291,7 +292,7 @@ const MainPage = () => {
   const getSaldo = async (date, partnerId) => {
     console.log("date", date);
     console.log("partnerId", partnerId);
-    
+
     try {
       const saldo = await myAxios.get("get_saldo_for_partner_for_selected_date", {
         params: { date: date, partnerId: partnerId },
@@ -299,7 +300,6 @@ const MainPage = () => {
 
       setSaldo(saldo.data.saldo);
       console.log("saldo", saldo.data.saldo);
-      
     } catch (error) {
       console.log("error get_saldo_for_partner_for_selected_date from fetchPartner", error);
     }
@@ -332,7 +332,7 @@ const MainPage = () => {
         // validationSchema={validationSchema}
         onSubmit={async (values, { resetForm, setFieldValue }) => {
           // console.log('here');
-          
+
           const date_margin = localStorage.getItem("date_margin"); // "2025-10-04"
           const today = new Date();
           const todayStr = today.toISOString().split("T")[0]; // "2025-10-04"
@@ -366,12 +366,12 @@ const MainPage = () => {
             handleOpenInvoice(response.data.id);
             if (values.partner?.id) {
               console.log("dede");
-              
-              // const getSaldo2 = async (partnerId, dateFrom, dateTo, invoice_date = false) 
+
+              // const getSaldo2 = async (partnerId, dateFrom, dateTo, invoice_date = false)
               // getSaldo(values.invoice_date2, values.partner?.id);
               // console.log("values.invoice_date2", values.invoice_date);
               // console.log("values.partner?.id", values.partner?.id);
-              
+
               getSaldo2(values.partner?.id, dateFrom, dateTo, values.invoice_date2);
             }
             // setSaldo(null)
@@ -470,6 +470,8 @@ const MainPage = () => {
           const fakturaBgDynamic =
             values.wozwrat_or_prihod === "wozwrat" ? "bg-red-200 dark:bg-red-900" : values.wozwrat_or_prihod === "prihod" ? "bg-green-200 dark:bg-green-900" : "bg-white dark:bg-gray-900";
 
+
+          
           return (
             <Form>
               {/* Твой form fields здесь */}
@@ -497,8 +499,6 @@ const MainPage = () => {
 
               <div className="fixed top-25 left-1/2 -translate-x-1/2 z-50">
                 <AnimatePresence mode="wait">
-            
-
                   {showSavedMessage && !isAutoSaving && !autoSaveError && (
                     <motion.div
                       key="success"
@@ -625,6 +625,13 @@ const MainPage = () => {
                       <InfoAboutInvoice values={values} letPrintInfo={letPrintInfo} setLetPrintInfo={setLetPrintInfo} />
                     </div>
                   )}
+                </div>
+                <div className="hidden print:flex w-full items-center justify-center print:py-6">
+                  <div className="text-center">
+                    <p className="print:text-2xl font-serif font-semibold tracking-wide leading-relaxed">Işiňiz haýyrly we bereketli bolsun!</p>
+                  
+                    {/* <div className="mt-4 h-1 w-24 mx-auto bg-black"></div> */}
+                  </div>
                 </div>
 
                 {/* <div className="flex justify-end">{values.products.length > 0 && <SubmitButton dateProwodok={dateProwodok} />}</div> */}

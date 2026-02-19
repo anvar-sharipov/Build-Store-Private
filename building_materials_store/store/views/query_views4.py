@@ -532,8 +532,13 @@ def get_detail_account_60_62(request):
         
         # 2-й запрос: получаем всех партнеров с предзагруженными данными
         # all_partners = list(partners_prefetch.all())
+        # all_partners = list(
+        #     Partner.objects.select_related('agent')
+        # )
         all_partners = list(
-            Partner.objects.select_related('agent')
+            Partner.objects
+                .select_related('agent')
+                .order_by('name')  # 🔥 сортировка по имени партнёра
         )
         
         # 🔥 Один SQL на все Entry
@@ -940,8 +945,13 @@ def get_detail_account_60_62(request):
         
         # 2-й запрос: получаем всех партнеров с предзагруженными данными
         # all_partners = list(partners_prefetch.all())
+        # all_partners = list(
+        #     Partner.objects.select_related('agent')
+        # )
         all_partners = list(
-            Partner.objects.select_related('agent')
+            Partner.objects
+                .select_related('agent')
+                .order_by('name')  # 🔥 сортировка по имени партнёра
         )
         
         
@@ -1065,6 +1075,8 @@ def get_detail_account_60_62(request):
         )
 
         all_partners_data = []
+        
+        entries = sorted(entries, key=lambda x: (x['partner__name'] or '').lower())
 
         for row in entries:
 
@@ -1105,6 +1117,9 @@ def get_detail_account_60_62(request):
 
             all_partners_data.append(partner_data)
         
+        # all_partners_data.sort(
+        #     key=lambda x: (x['partner_name'] or '').lower()
+        # )
         # Фильтрация нулевых партнеров если show0 = false
         if show0 == "false" or show0 == False or show0 == "False":
             # Фильтруем партнеров, у которых не все значения равны 0

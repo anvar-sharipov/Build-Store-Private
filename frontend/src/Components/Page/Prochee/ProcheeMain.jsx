@@ -32,7 +32,7 @@ const ProcheeMain = () => {
     { id: 7, name: "Рейс", icon: Car, color: "violet", to: PROCHEE.TRIP },
     { id: 8, name: t("Zakazy"), icon: Globe, color: "orange", to: PROCHEE.ZAKAZ_LIST },
     { id: 9, name: t("sales analysis"), icon: Wrench, color: "sky", to: PROCHEE.ANALIZ_PRODAJ },
-    { id: 10, name: "Модули", icon: Package, color: "fuchsia" },
+    { id: 10, name: t("universal filter"), icon: Package, color: "fuchsia", to: PROCHEE.UNIVERSAL_FILTER },
     { id: 11, name: "Автоматизация", icon: Zap, color: "lime" },
     { id: 12, name: "Избранное", icon: Star, color: "pink" },
   ];

@@ -480,10 +480,14 @@ def download_excel_products_diapazon(request):
         .select_related("warehouse", "account")
         .filter(warehouse_id__in=warehouse_list)
     )
+    
+    
 
     wb = Workbook()
     ws = wb.active
     ws.title = "Бух. Оборот товаров"
+    
+    
 
     account_warehouse = ", ".join(
         sorted({f"{w.account.number} — {w.warehouse.name}" for w in w_acc})
@@ -703,6 +707,140 @@ def download_excel_products_diapazon(request):
     ws[f"A{row}"].font = CATEGORY_FONT
     ws[f"A{row}"].alignment = RIGHT_ALIGN
     ws[f"A{row}"] = "ВСЕГО:"
+    
+    
+    
+    
+    # создаем второй лист
+    ws = wb.create_sheet(title="Бух. Оборот товаров (сокр.)", index=1)
+
+    account_warehouse = ", ".join(
+        sorted({f"{w.account.number} — {w.warehouse.name}" for w in w_acc})
+    )
+
+    dateFrom_ru = format_date_ru(date_from)
+    dateTo_ru = format_date_ru(date_to)
+
+    # === Заголовок ===
+    ws.merge_cells("A2:F2")
+    ws.merge_cells("A3:F3")
+    ws.merge_cells("A4:F4")
+
+    ws["A2"] = "Бухгалтерский оборот товаров"
+    ws["A3"] = f"Склад(ы): {account_warehouse}"
+    ws["A4"] = f"Период: {dateFrom_ru} — {dateTo_ru}"
+
+    for cell in ["A2", "A3", "A4"]:
+        ws[cell].font = CATEGORY_FONT
+        ws[cell].alignment = CENTER_ALIGN
+
+    ws.freeze_panes = "A7"
+
+    # === Шапка ===
+    ws["A5"] = "№"
+    ws.column_dimensions["A"].width = 8
+
+    ws["B5"] = "Наименование товара"
+    ws.column_dimensions["B"].width = 55
+
+    ws["C5"] = "Ед."
+    ws.column_dimensions["C"].width = 8
+
+    ws["D5"] = "Цена"
+    ws.column_dimensions["D"].width = 12
+    ws["D5"].number_format = PRICE_FMT
+
+    ws.merge_cells("E5:F5")
+    ws["E5"] = "Остаток на конец"
+
+    ws["E6"] = "Кол-во"
+    ws["F6"] = "Всего"
+
+    ws.column_dimensions["E"].width = 14
+    ws.column_dimensions["F"].width = 14
+
+    # стиль шапки
+    for cell in ["A5","B5","C5","D5","E5","F5",
+                "A6","B6","C6","D6","E6","F6"]:
+        ws[cell].font = CATEGORY_FONT
+        ws[cell].alignment = CENTER_ALIGN
+        ws[cell].fill = GRAY_FILL_1
+        ws[cell].border = THIN_BORDER
+
+    # === Данные ===
+    row = 7
+    count = 1
+
+    for cat_id, values in sorted(
+        account_40_42.items(),
+        key=lambda item: item[1]["category"]["name"].lower()
+    ):
+        cat_name = values["category"]["name"]
+        totals = values["totals"]
+
+        ws.merge_cells(f"A{row}:F{row}")
+        ws[f"A{row}"].fill = GREEN_FILL_0
+        ws[f"A{row}"].font = CATEGORY_FONT
+        ws[f"A{row}"].alignment = LEFT_ALIGN
+        ws[f"A{row}"] = cat_name
+
+        row += 1
+
+        for products, value in values["products"].items():
+            product = value["product"]
+
+            ws[f"A{row}"] = count
+            ws[f"B{row}"] = product["name"]
+            ws[f"C{row}"] = product["unit"]
+            ws[f"D{row}"] = product["wholsale_price"]
+
+            ws[f"E{row}"] = value["end_qty"]
+            ws[f"F{row}"] = value["end_price"]
+
+            # форматы
+            ws[f"D{row}"].number_format = PRICE_FMT
+            ws[f"E{row}"].number_format = QTY_FMT
+            ws[f"F{row}"].number_format = PRICE_FMT
+
+            for col in ["A","B","C","D","E","F"]:
+                ws[f"{col}{row}"].border = THIN_BORDER
+
+            count += 1
+            row += 1
+
+        # === Итого по категории ===
+        ws.merge_cells(f"A{row}:D{row}")
+        ws[f"A{row}"] = f"Итого по категории: {cat_name}"
+        ws[f"A{row}"].font = CATEGORY_FONT
+        ws[f"A{row}"].alignment = RIGHT_ALIGN
+
+        ws[f"E{row}"] = totals["end_qty"]
+        ws[f"F{row}"] = totals["end_price"]
+
+        ws[f"E{row}"].number_format = QTY_FMT
+        ws[f"F{row}"].number_format = PRICE_FMT
+
+        for col in ["A","B","C","D","E","F"]:
+            ws[f"{col}{row}"].fill = GRAY_FILL_0
+            ws[f"{col}{row}"].border = THIN_BORDER
+
+        row += 1
+
+    # === ГРАНД ИТОГО ===
+    ws.merge_cells(f"A{row}:D{row}")
+    ws[f"A{row}"] = "ВСЕГО:"
+    ws[f"A{row}"].font = CATEGORY_FONT
+    ws[f"A{row}"].alignment = RIGHT_ALIGN
+
+    ws[f"E{row}"] = grand_total["end_qty"]
+    ws[f"F{row}"] = grand_total["end_price"]
+
+    ws[f"E{row}"].number_format = QTY_FMT
+    ws[f"F{row}"].number_format = PRICE_FMT
+
+    for col in ["A","B","C","D","E","F"]:
+        ws[f"{col}{row}"].fill = GREEN_FILL_1
+        ws[f"{col}{row}"].border = THIN_BORDER
             
     
     output = BytesIO()
@@ -717,7 +855,7 @@ def download_excel_products_diapazon(request):
     )
     
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
-    print("EXCEL RESPONSE SENT")
+    print("EXCEL RESPONSE SENT gg")
     return response
 
     

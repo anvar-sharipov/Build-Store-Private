@@ -16,7 +16,6 @@ import OriginalReport2Excel from "./OriginalReport2Excel";
 const DetailReport6062 = () => {
   const { dateFrom, dateTo } = useContext(DateContext);
   console.log("detail repotr 60");
-  
 
   const [searchParams] = useSearchParams();
   const accountNumber = searchParams.get("accountNumber");
@@ -29,7 +28,8 @@ const DetailReport6062 = () => {
   const [data, setData] = useState([]);
   const [totals, setTotals] = useState({});
   const [loading, setLoading] = useState(true);
-  const [sortConfig, setSortConfig] = useState({ key: "agentId", direction: "asc" });
+  // const [sortConfig, setSortConfig] = useState({ key: "agentId", direction: "asc" });
+  const [sortConfig, setSortConfig] = useState({ key: "partnerName", direction: "asc" });
 
   const [show0, setShow0] = useState(false);
   const [hyphenOr0, setHyphenOr0] = useState(true);
@@ -270,8 +270,25 @@ const DetailReport6062 = () => {
   // ################################################################################################################################
   // ################################################################################################################################
 
+  // useEffect(() => {
+  //   console.log("data", data);
+  // }, [data]);
+
   useEffect(() => {
-    if (!accountNumber) return;
+    // console.log("tut");
+    if (!accountNumber || !dateFrom || !dateTo || sortByAgent === null) {
+      return;
+    }
+
+    // console.log("REQUEST:", {
+    //   accountNumber,
+    //   dateFrom,
+    //   dateTo,
+    //   sortByAgent,
+    // });
+
+    // if (!accountNumber) return;
+    // console.log("tut2");
 
     const getDetail = async () => {
       try {
@@ -284,7 +301,7 @@ const DetailReport6062 = () => {
           // Данные с группировкой по агентам
           setData(res.data.items || {});
           // console.log("res.data.totals", res.data.totals);
-          
+
           setTotals(res.data.totals || {});
         } else {
           // Обычные данные (массив)
@@ -298,11 +315,12 @@ const DetailReport6062 = () => {
       }
     };
 
-    if (accountNumber && dateFrom && dateTo) {
-      getDetail();
-    } else {
-      setData([]);
-    }
+    getDetail();
+    // if (accountNumber && dateFrom && dateTo) {
+    //   getDetail();
+    // } else {
+    //   setData([]);
+    // }
   }, [accountNumber, dateFrom, dateTo, agent, sortByAgent, show0]);
 
   const handleRowClick = (partner_id, account_id) => {
@@ -451,7 +469,7 @@ const DetailReport6062 = () => {
       <div className="print:bg-white print:p-0 print:m-0 flex justify-center">
         <AnimatePresence>
           {hasData && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
               {/* Заголовок отчета */}
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -496,8 +514,8 @@ const DetailReport6062 = () => {
 
               {/* Таблицы по агентам */}
               {Object.entries(data).map(([agentName, partners]) => {
-                console.log("totals", totals);
-                
+                // console.log("totals", totals);
+
                 const agentTotalsData = totals[agentName]?.[0];
                 if (!partners || !Array.isArray(partners) || partners.length === 0) return null;
 

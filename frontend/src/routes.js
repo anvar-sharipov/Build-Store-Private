@@ -49,6 +49,7 @@ export const PROCHEE = {
   ZAKAZ: "/zakaz",
   ZAKAZ_LIST: "/zakaz-list",
   ANALIZ_PRODAJ: "/analiz_prodaj",
+  UNIVERSAL_FILTER: "/uniwersal_filter",
 };
 
 

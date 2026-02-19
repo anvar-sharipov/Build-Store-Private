@@ -292,7 +292,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
     dateInfo.getCell(1).value = "Дата:";
     dateInfo.getCell(1).style = styles.boldInfoCell;
     // console.log("tttt", values.invoice_date, values.invoice_date2);
-    
+
     dateInfo.getCell(2).value = values.invoice_date || formatDate(values.invoice_date2) || "invalid Dateg";
     dateInfo.getCell(2).style = styles.infoCell;
     currentRow++;
@@ -845,6 +845,28 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
       //   addCompactAccountTable("75_USD", "75 Учредитель USD");
       // }
     }
+
+    // 15. Финальная надпись (только текст, без таблицы)
+    currentRow += 1;
+
+    const blessingRow = worksheet.getRow(currentRow);
+    blessingRow.getCell(1).value = "Işiňiz haýyrly we bereketli bolsun!";
+
+    // объединяем всю ширину таблицы
+    worksheet.mergeCells(currentRow, 1, currentRow, columnMapping.length);
+
+    blessingRow.getCell(1).font = {
+      size: 14,
+      bold: true,
+      name: "Times New Roman", // красивый печатный шрифт
+    };
+
+    blessingRow.getCell(1).alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
+
+    currentRow += 1;
 
     // 15. Автонастройка ширины колонок для сальдо
     // worksheet.columns = [{ width: 10 }, { width: 60 }, { width: 12 }, { width: 12 }, ...columnMapping.slice(4).map((col) => ({ width: col.width }))];

@@ -11,6 +11,7 @@ import CloseDayModal from "./modals/CloseDayModal";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleSnowfall } from "../../app/store/snowfallSlice";
 import { formatNumber2 } from "../UI/formatNumber2";
+import AccountDropdown from "./AccountDropdown";
 
 const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDarkMode, darkMode, i18n, user, setShowAvatarModal }) => {
   const { dateFrom, setDateFrom, dateTo, setDateTo, dateProwodok, setDateProwodok } = useContext(DateContext);
@@ -39,35 +40,35 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
   const handleDateFromChange = (e) => {
     const newValue = e.target.value;
     setLocalDateFrom(newValue);
-    
+
     // Очищаем предыдущий таймер
     if (dateFromTimerRef.current) {
       clearTimeout(dateFromTimerRef.current);
     }
-    
+
     // Устанавливаем новый таймер на 500ms
     dateFromTimerRef.current = setTimeout(() => {
       setDateFrom(newValue);
     }, 1500);
   };
 
-   // Обработчик изменения dateTo с задержкой
+  // Обработчик изменения dateTo с задержкой
   const handleDateToChange = (e) => {
     const newValue = e.target.value;
     setLocalDateTo(newValue);
-    
+
     // Очищаем предыдущий таймер
     if (dateToTimerRef.current) {
       clearTimeout(dateToTimerRef.current);
     }
-    
+
     // Устанавливаем новый таймер на 500ms
     dateToTimerRef.current = setTimeout(() => {
       setDateTo(newValue);
     }, 1500);
   };
 
-   // Очистка таймеров при размонтировании
+  // Очистка таймеров при размонтировании
   useEffect(() => {
     return () => {
       if (dateFromTimerRef.current) clearTimeout(dateFromTimerRef.current);
@@ -75,17 +76,11 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
     };
   }, []);
 
-
-  
-
   const jingleBells = useRef(null);
-
 
   useEffect(() => {
     jingleBells.current = new Audio("/sounds/Christmas-jingle-bells-melody.mp3");
   }, []);
-
-
 
   const handleClick = () => {
     if (!isSnowfallOn) {
@@ -256,11 +251,15 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
               <div className="text-gray-300 flex flex-col text-sm">
                 <div className="flex gap-3">
                   <span>{t("faktura")}:</span>
-                  <span>{totalSum?.credit_40 ? `${formatNumber2(totalSum.credit_40)} USD` : ""} {totalSum.credit_42 ? `${formatNumber2(totalSum.credit_42)}TMT` : ""}</span>
+                  <span>
+                    {totalSum?.credit_40 ? `${formatNumber2(totalSum.credit_40)} USD` : ""} {totalSum.credit_42 ? `${formatNumber2(totalSum.credit_42)}TMT` : ""}
+                  </span>
                 </div>
                 <div className="flex gap-4">
                   <span>{t("prihod")}:</span>
-                  <span>{totalSum.debit_50 ? `${formatNumber2(totalSum.debit_50)} USD` : ""} {totalSum.debit_52 ? `${formatNumber2(totalSum.debit_52)}TMT` : ""}</span>
+                  <span>
+                    {totalSum.debit_50 ? `${formatNumber2(totalSum.debit_50)} USD` : ""} {totalSum.debit_52 ? `${formatNumber2(totalSum.debit_52)}TMT` : ""}
+                  </span>
                 </div>
               </div>
             )}
@@ -354,72 +353,7 @@ const LargeScreenLinks = ({ setIsMenuOpen, isMenuOpen, ROUTES, t, logout, setDar
           {/* Divider */}
           <div className="h-20 w-px bg-gradient-to-b from-transparent via-gray-700 to-transparent" />
 
-          {/* Auth Links */}
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="flex gap-1.5">
-            {authGroup === "admin" && (
-              <Link to={ROUTES.REGISTER} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-400 hover:text-blue-300 hover:bg-gray-800 rounded-lg transition-all group">
-                <UserPlus className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                <span>{t("register")}</span>
-              </Link>
-            )}
-
-            <Link to={ROUTES.LOGIN} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-400 hover:text-blue-300 hover:bg-gray-800 rounded-lg transition-all group">
-              <LogIn className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span>{t("login")}</span>
-            </Link>
-            <button onClick={logout} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-gray-800 rounded-lg transition-all group">
-              <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span>{t("logout")}</span>
-            </button>
-          </motion.div>
-
-          {/* Divider */}
-          <div className="h-20 w-px bg-gradient-to-b from-transparent via-gray-700 to-transparent" />
-
-          {/* Language & Theme */}
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="flex  items-center gap-3">
-            <LanguageSwitcher i18n={i18n} />
-
-            <motion.button
-              whileHover={{ scale: 1.1, rotate: 180 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => {
-                setDarkMode(!darkMode);
-                setTimeout(() => {
-                  window.dispatchEvent(new Event("theme-toggled"));
-                }, 0);
-              }}
-              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl
-                ${darkMode ? "bg-gradient-to-br from-amber-400 to-orange-500 text-white" : "bg-gradient-to-br from-indigo-600 to-purple-700 text-amber-300"}`}
-            >
-              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </motion.button>
-          </motion.div>
-
-          {/* User Avatar */}
-          {user && (
-            <>
-              <div className="h-20 w-px bg-gradient-to-b from-transparent via-gray-700 to-transparent" />
-
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 }}
-                className="flex items-center gap-3 p-2 pr-4 bg-gray-800 border-2 border-gray-700 rounded-xl shadow-lg hover:shadow-xl hover:border-gray-600 transition-all cursor-pointer group"
-                onClick={() => setShowAvatarModal(true)}
-              >
-                <div className="relative">
-                  <img src={user.photo} alt="user" className="w-10 h-10 rounded-lg object-cover border-2 border-blue-500 group-hover:border-blue-400 transition-colors" />
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-gray-900 rounded-full" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-bold text-gray-100">{user.username}</span>
-                  <span className="text-xs text-gray-400">Онлайн</span>
-                </div>
-                <ChevronDown className="w-4 h-4 text-gray-500 group-hover:text-gray-400 transition-colors" />
-              </motion.div>
-            </>
-          )}
+          <AccountDropdown user={user} logout={logout} darkMode={darkMode} setDarkMode={setDarkMode} i18n={i18n} authGroup={authGroup} ROUTES={ROUTES} />
         </div>
       </div>
     </nav>

@@ -114,6 +114,7 @@ const FetchProduct = ({ refs, invoice_id = null }) => {
             search: query,
             warehouse: values.warehouse.id,
             invoice_id: invoice_id || null,
+            wozwrat_or_prihod: values.wozwrat_or_prihod,
           },
           signal: controller.signal,
         });

@@ -7,6 +7,9 @@ const OriginalReport2Excel = async (data, totals, dateFrom, dateTo, accountNumbe
   // 1. Создание книги и листа
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("ОСВ по контрагентам");
+
+  
+  
   
 
   // 2. Добавление логотипа

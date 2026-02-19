@@ -58,6 +58,7 @@ class ProductExportExcelView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        ic("gg")
         try:
             # Получаем фильтры или product_ids
             filters = request.data.get("filters", {})

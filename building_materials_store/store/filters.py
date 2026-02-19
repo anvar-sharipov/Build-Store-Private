@@ -127,6 +127,7 @@ class ProductFilter(django_filters.FilterSet):
     #     )
     
     def filter_search(self, queryset, name, value):
+       
         if not value:
             return queryset
 
@@ -136,9 +137,13 @@ class ProductFilter(django_filters.FilterSet):
 
         words = norm_value.replace("-", " ").split()
 
+        # q = Q()
+        # for word in words:
+        #     q &= Q(name__icontains=word)
+        
         q = Q()
         for word in words:
-            q &= Q(name__icontains=word)
+            q |= Q(name__icontains=word)
 
         return (
             queryset

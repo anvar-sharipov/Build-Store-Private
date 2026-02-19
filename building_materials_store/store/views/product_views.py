@@ -117,7 +117,9 @@ def search_products(request):
     search_free = request.GET.get("search_free", "")
     product_id = request.query_params.get('id')
     search_in_invoice = request.GET.get("search_in_invoice", "")
-    invoice_id = request.GET.get("invoice_id", "")
+    invoice_id = request.GET.get("invoice_id", "") 
+    wozwrat_or_prihod = request.GET.get("wozwrat_or_prihod", "")
+    
     
     # ic(query)
     # ic(warehouse)
@@ -294,9 +296,14 @@ def search_products(request):
             )
             
             # --- Фильтрация по складу ---
+            
             if warehouse:
                 tmp_results = tmp_results.filter(
                     warehouse_products__warehouse_id=warehouse,
+                )
+          
+            if wozwrat_or_prihod == "rashod":
+                tmp_results = tmp_results.filter(
                     warehouse_products__quantity__gt=0,
                 )
 

@@ -15,6 +15,21 @@ function QRDisplay({ code }) {
 const ImagesTab = ({ options, product, setProduct, t }) => {
   const { values } = useFormikContext();
 
+  const handleDeleteImage = async (imageId) => {
+    try {
+      await myAxios.delete(`/product-images/${imageId}/`);
+
+      setProduct((prev) => ({
+        ...prev,
+        images: prev.images.filter((img) => img.id !== imageId),
+      }));
+    } catch (error) {
+      console.error("Ошибка удаления:", error.response?.data || error);
+    }
+  };
+
+  
+
   return (
     <div className="space-y-4">
       {/* QR код: инпут + изображение в 1 строку */}
@@ -34,20 +49,29 @@ const ImagesTab = ({ options, product, setProduct, t }) => {
           product.images.map((img) => {
             console.log("Отображаем изображение:", img); // Добавить отладку
             return (
-              <div key={img.id} className="relative w-16 h-16 group">
-                {img?.image && (
-                  <img
-                    src={img.image}
-                    alt={img.alt_text || ""}
-                    className="w-full h-full object-cover rounded border border-gray-300"
-                    onError={(e) => {
-                      console.error("Ошибка загрузки изображения:", img.image);
-                      e.target.style.display = "none";
-                    }}
-                    onLoad={() => console.log("Изображение загружено:", img.image)}
-                  />
-                )}
-                {/* кнопка удаления */}
+              // <div key={img.id} className="relative w-16 h-16 group">
+              //   {img?.image && (
+              //     <img
+              //       src={img.image}
+              //       alt={img.alt_text || ""}
+              //       className="w-full h-full object-cover rounded border border-gray-300"
+              //       onError={(e) => {
+              //         console.error("Ошибка загрузки изображения:", img.image);
+              //         e.target.style.display = "none";
+              //       }}
+              //       onLoad={() => console.log("Изображение загружено:", img.image)}
+              //     />
+              //   )}
+
+              // </div>
+              <div key={img.id} className="relative w-20 h-20 group">
+                {img?.image && <img src={img.image} alt={img.alt_text || ""} className="w-full h-full object-cover rounded border border-gray-300" />}
+
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center rounded">
+                  <button type="button" onClick={() => handleDeleteImage(img.id)} className="bg-red-600 hover:bg-red-700 text-white text-sm px-2 py-1 rounded">
+                    ✕
+                  </button>
+                </div>
               </div>
             );
           })}

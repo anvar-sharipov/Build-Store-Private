@@ -21,7 +21,8 @@ from . views import backend_input_queries_views
 from . views import get_product_turnover_history  
 from . views import product_turnover_excel  
 from . views import get_analiz_prodaj 
-from . views import admin_views
+from . views import admin_views 
+from . views import download_excel_entries_diapazon
 from . views.sale_invoice_views import *
 from . views.report_views import *
 from . views.utils import *
@@ -201,10 +202,15 @@ urlpatterns = [
     path('download_excel_partners_diapazon', download_partners_views.download_excel_partners_diapazon, name='download_excel_partners_diapazon'),
     
     path('get_product_turnover_history', get_product_turnover_history.get_product_turnover_history, name='get_product_turnover_history'),
+    path('download_product_turnover_excel/',get_product_turnover_history.download_product_turnover_excel,name='download_product_turnover_excel'
+),
     
     path('product_turnover_excel', product_turnover_excel.product_turnover_excel, name='product_turnover_excel'),
     
     path('get_analiz_prodaj', get_analiz_prodaj.get_analiz_prodaj, name='get_analiz_prodaj'),
+    
+    path('download_excel_entries_diapazon', download_excel_entries_diapazon.download_excel_entries_diapazon, name='download_excel_entries_diapazon'),
+    
     
     
     

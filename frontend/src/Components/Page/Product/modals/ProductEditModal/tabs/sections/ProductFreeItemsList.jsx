@@ -47,12 +47,10 @@ const ProductFreeItemsList = ({ productOptions = [], t }) => {
         const params = new URLSearchParams({
           search_free: inputValue,
         });
-        warehouses.forEach(id => params.append('warehouses', id));
+        warehouses.forEach((id) => params.append("warehouses", id));
         // console.log('params.toString()', params.toString());
-        
-        const res = await myAxios.get(
-          `search-products/?${params.toString()}`
-        );
+
+        const res = await myAxios.get(`search-products/?${params.toString()}`);
         // console.log("res.dataaaaa", res.data);
 
         return res.data.map((p) => ({
@@ -64,7 +62,7 @@ const ProductFreeItemsList = ({ productOptions = [], t }) => {
         return [];
       }
     },
-    [t, values.warehouses, setFieldValue.warehouses]
+    [t, values.warehouses, setFieldValue.warehouses],
   );
 
   const getSelectValue = (item, index) => {
@@ -72,9 +70,7 @@ const ProductFreeItemsList = ({ productOptions = [], t }) => {
     if (selectedProducts[index]) {
       return selectedProducts[index];
     }
-    const option = productOptions.find(
-      (opt) => String(opt.value) === String(item.gift_product)
-    );
+    const option = productOptions.find((opt) => String(opt.value) === String(item.gift_product));
     if (option) return option;
     return {
       value: String(item.gift_product),
@@ -101,24 +97,15 @@ const ProductFreeItemsList = ({ productOptions = [], t }) => {
     <div className="space-y-4 ">
       <div className="flex justify-between gap-4">
         <label className="text-sm font-medium">{t("freeItemsInPackage")}</label>
-        <button
-          type="button"
-          onClick={handleAddFreeItem}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors"
-        >
+        <button type="button" onClick={handleAddFreeItem} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors">
           + {t("add")}
         </button>
       </div>
 
-      {freeItems.length === 0 && (
-        <div className="text-sm text-gray-500 italic">{t("noFreeItems")}</div>
-      )}
+      {freeItems.length === 0 && <div className="text-sm text-gray-500 italic">{t("noFreeItems")}</div>}
 
       {freeItems.map((item, index) => (
-        <div
-          key={index}
-          className="flex gap-3 items-start border p-3 rounded bg-gray-50 dark:bg-gray-900 dark:border-gray-700"
-        >
+        <div key={index} className="flex gap-3 items-start border p-3 rounded bg-gray-50 dark:bg-gray-900 dark:border-gray-700">
           <div className="flex-1">
             <AsyncSelect
               menuPlacement="top"
@@ -126,14 +113,10 @@ const ProductFreeItemsList = ({ productOptions = [], t }) => {
               defaultOptions={false}
               loadOptions={loadProductOptions}
               placeholder={t("enterProductName")}
-              noOptionsMessage={({ inputValue }) =>
-                inputValue.length < 2 ? t("minTwoChars") : t("productsNotFound")
-              }
+              noOptionsMessage={({ inputValue }) => (inputValue.length < 2 ? t("minTwoChars") : t("productsNotFound"))}
               loadingMessage={() => t("searching")}
               value={getSelectValue(item, index)}
-              onChange={(selectedOption) =>
-                handleProductChange(selectedOption, index)
-              }
+              onChange={(selectedOption) => handleProductChange(selectedOption, index)}
               isClearable
               styles={{
                 control: (base) => ({
@@ -158,34 +141,40 @@ const ProductFreeItemsList = ({ productOptions = [], t }) => {
                 }),
                 option: (base, state) => ({
                   ...base,
-                  backgroundColor: state.isFocused
-                    ? isDarkMode
-                      ? "#374151"
-                      : "#E5E7EB"
-                    : "transparent",
+                  backgroundColor: state.isFocused ? (isDarkMode ? "#374151" : "#E5E7EB") : "transparent",
                   color: isDarkMode ? "#F9FAFB" : "#111827",
                 }),
                 input: (base) => ({
                   ...base,
                   color: isDarkMode ? "white" : "#111827",
                 }),
+                // singleValue: (base) => ({
+                //   ...base,
+                //   color: isDarkMode ? "#F9FAFB" : "#111827",
+                // }),
+
                 singleValue: (base) => ({
                   ...base,
                   color: isDarkMode ? "#F9FAFB" : "#111827",
+                  whiteSpace: "normal",
+                  overflow: "visible",
+                  textOverflow: "unset",
                 }),
+                
+                // valueContainer: (base) => ({
+                //   ...base,
+                //   color: isDarkMode ? "#F9FAFB" : "#111827",
+                // }),
+
                 valueContainer: (base) => ({
                   ...base,
                   color: isDarkMode ? "#F9FAFB" : "#111827",
+                  whiteSpace: "normal",
+                  overflow: "visible",
                 }),
               }}
             />
-            {errors.free_items &&
-              errors.free_items[index] &&
-              errors.free_items[index].gift_product && (
-                <span className="text-red-500 text-xs mt-1">
-                  {errors.free_items[index].gift_product}
-                </span>
-              )}
+            {errors.free_items && errors.free_items[index] && errors.free_items[index].gift_product && <span className="text-red-500 text-xs mt-1">{errors.free_items[index].gift_product}</span>}
           </div>
 
           <div className="w-32">
@@ -201,13 +190,9 @@ const ProductFreeItemsList = ({ productOptions = [], t }) => {
              transition-all duration-150"
               placeholder={t("quantity")}
             />
-            {errors.free_items &&
-              errors.free_items[index] &&
-              errors.free_items[index].quantity_per_unit && (
-                <span className="text-red-500 text-xs mt-1">
-                  {errors.free_items[index].quantity_per_unit}
-                </span>
-              )}
+            {errors.free_items && errors.free_items[index] && errors.free_items[index].quantity_per_unit && (
+              <span className="text-red-500 text-xs mt-1">{errors.free_items[index].quantity_per_unit}</span>
+            )}
           </div>
 
           <button

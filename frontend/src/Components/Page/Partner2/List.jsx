@@ -34,7 +34,7 @@ const List = ({
   const sound_up_down = new Audio("/sounds/up_down.mp3");
   const [hoveredPartner, setHoveredPartner] = useState(null);
   const [selectedPartner, setSelectedPartner] = useState(null);
-  const [openPartnerCardModal, setOpenPartnerCardModal] = useState({ partnerId: null, is_open: false, partner_name: "" });
+  const [openPartnerCardModal, setOpenPartnerCardModal] = useState({ partnerId: null, is_open: false, partner_name: "", partner_type: "" });
   const { dateFrom, dateTo, dateProwodok } = useContext(DateContext);
   const { showNotification } = useNotification();
   const [saldo, setSaldo] = useState(null);
@@ -174,6 +174,8 @@ const List = ({
                   }
                 } else if (e.key === "Enter") {
                   e.preventDefault();
+                  console.log("partner", partner);
+                  
                   setFocusedPartnerIndex(index);
                   setSelectedPartner(partner.id);
                   setTimeout(() => setSelectedPartner(null), 300);
@@ -181,7 +183,7 @@ const List = ({
                   if (!dateProwodok) {
                     showNotification(t("choose date prowodka"), "error");
                   } else {
-                    setOpenPartnerCardModal({ partnerId: partner.id, is_open: true, partner_name: partner.name });
+                    setOpenPartnerCardModal({ partnerId: partner.id, is_open: true, partner_name: partner.name, partner_type:partner.type });
                   }
                 }
               }}
@@ -193,7 +195,7 @@ const List = ({
                 if (!dateProwodok) {
                   showNotification(t("choose date prowodka"), "error");
                 } else {
-                  setOpenPartnerCardModal({ partnerId: partner.id, is_open: true, partner_name: partner.name });
+                  setOpenPartnerCardModal({ partnerId: partner.id, is_open: true, partner_name: partner.name, partner_type:partner.type });
                 }
               }}
               ref={(el) => (partnersListRefs.current[index] = el)}
@@ -361,13 +363,13 @@ const List = ({
       )}
       <div className="print:hidden">
       {openPartnerCardModal.partnerId && openPartnerCardModal.is_open && (
-        <MyModal2 onClose={() => setOpenPartnerCardModal({ partnerId: null, is_open: false, partner_name: "" })}>
-          <Saldo2 saldo2={saldo} partnerName={openPartnerCardModal.partner_name} />
+        <MyModal2 onClose={() => setOpenPartnerCardModal({ partnerId: null, is_open: false, partner_name: "", partner_type: "" })}>
+          <Saldo2 saldo2={saldo} partnerName={openPartnerCardModal.partner_name} partnerType={openPartnerCardModal.partner_type} />
         </MyModal2>
       )}
       </div>
       <div className="hidden print:block">
-      <Saldo2 saldo2={saldo} partnerName={openPartnerCardModal.partner_name} letPrintSaldo={true} w_full={true} />
+      <Saldo2 saldo2={saldo} partnerName={openPartnerCardModal.partner_name} letPrintSaldo={true} w_full={true} partnerType={openPartnerCardModal.partner_type} />
       </div>
     </div>
   );

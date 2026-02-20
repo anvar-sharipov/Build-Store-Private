@@ -30,6 +30,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from io import BytesIO
+import re
 
 
 
@@ -136,7 +137,7 @@ def download_excel_products_diapazon(request):
     
     # ic(warehouse_list)
     # ic(categories_list)
-    # ic(search)
+    ic(search)
     # ic(is_active)
     # ic(request)
     
@@ -181,9 +182,23 @@ def download_excel_products_diapazon(request):
         Q(invoiceitem__invoice__warehouse_id__in=warehouse_list) |
         Q(invoiceitem__invoice__warehouse2_id__in=warehouse_list)
     ).distinct()
+    ic(products)
     
+    # if search:
+    #     products = products.filter(name__icontains=search)
     if search:
-        products = products.filter(name__icontains=search)
+        raw = search.strip().lower()
+        raw = re.sub(r"[^\w\s/-]", "", raw)
+
+        words = raw.replace("-", " ").split()
+
+        q = Q()
+        for word in words:
+            q &= Q(name__icontains=word)
+
+        products = products.filter(q)
+        
+    
         
     if categories_list:
         products = products.filter(category__id__in=categories_list)

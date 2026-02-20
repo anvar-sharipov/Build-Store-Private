@@ -38,6 +38,7 @@ class ProductFilter(django_filters.FilterSet):
 
     ordering = django_filters.OrderingFilter(
         fields=(
+            ('id', 'id'),
             ('wholesale_price', 'wholesale_price'),
             ('retail_price', 'retail_price'),
             ('total_quantity2', 'total_quantity2'),
@@ -127,6 +128,7 @@ class ProductFilter(django_filters.FilterSet):
     #     )
     
     def filter_search(self, queryset, name, value):
+        ic("product query")
        
         if not value:
             return queryset
@@ -143,7 +145,7 @@ class ProductFilter(django_filters.FilterSet):
         
         q = Q()
         for word in words:
-            q |= Q(name__icontains=word)
+            q &= Q(name__icontains=word)
 
         return (
             queryset

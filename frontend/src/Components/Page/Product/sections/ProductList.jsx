@@ -76,6 +76,33 @@ const ProductList = ({
 
   const sound_up_down = new Audio("/sounds/up_down.mp3");
 
+  const handleExportExcel = async (productId) => {
+    try {
+      const response = await myAxios.get("/download_product_turnover_excel/", {
+        params: {
+          product_id: productId,
+          dateFrom,
+          dateTo,
+          warheousesId,
+        },
+        responseType: "blob", // ⚠ ОБЯЗАТЕЛЬНО
+      });
+
+      // создаём ссылку для скачивания
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.setAttribute("download", `product_turnover_${productId}.xlsx`);
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Excel download error:", error);
+    }
+  };
+
   useEffect(() => {
     console.log("tut");
 
@@ -110,29 +137,27 @@ const ProductList = ({
     window.open(url, "invoiceWindow", "width=1000,height=700,scrollbars=yes,resizable=yes");
   };
 
-  const handleExportExcel = () => {
-    const downloadProductTurnoverExcel = async () => {
-      console.log("warheousesId", warheousesId);
-      
-      try {
-      const res = await myAxios.get(`product_turnover_excel`, {
-        params: {
-          product_id: detailOborot.product_id,
-          dateFrom,
-          dateTo,
-          warheousesId,
-        }
-        
-      })    
-      } catch (err) {
-        console.log("Error downloading Excel:", err);
-        
-      } finally {}
-    
-    }
-    downloadProductTurnoverExcel()
-    // window.open(`${BASE_URL}/products/turnover-excel/?product_id=${detailOborot.product_id}&date_from=${dateFrom}&date_to=${dateTo}`, "_blank");
-  };
+  // const handleExportExcel = () => {
+  //   const downloadProductTurnoverExcel = async () => {
+  //     console.log("warheousesId", warheousesId);
+
+  //     try {
+  //       const res = await myAxios.get(`product_turnover_excel`, {
+  //         params: {
+  //           product_id: detailOborot.product_id,
+  //           dateFrom,
+  //           dateTo,
+  //           warheousesId,
+  //         },
+  //       });
+  //     } catch (err) {
+  //       console.log("Error downloading Excel:", err);
+  //     } finally {
+  //     }
+  //   };
+  //   downloadProductTurnoverExcel();
+  //   // window.open(`${BASE_URL}/products/turnover-excel/?product_id=${detailOborot.product_id}&date_from=${dateFrom}&date_to=${dateTo}`, "_blank");
+  // };
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
@@ -687,7 +712,7 @@ const ProductList = ({
 
                   {/* EXCEL */}
                   <button
-                    onClick={handleExportExcel}
+                    onClick={() => handleExportExcel(detailOborot.product_id)}
                     className="
         p-2
         rounded-lg

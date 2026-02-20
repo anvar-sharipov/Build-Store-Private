@@ -5,7 +5,7 @@ import time
 # from openpyxl.utils import get_column_letter
 # from icecream import ic
 # from rest_framework.decorators import action
-# from rest_framework.filters import OrderingFilter
+from rest_framework.filters import OrderingFilter
 # from collections import OrderedDict
 # from collections import defaultdict
 from icecream import ic
@@ -58,6 +58,7 @@ from ..my_func.get_unit_and_cf import get_unit_and_cf
 from ..my_func.date_str_to_dateFormat import date_str_to_dateFormat
 from ..my_func.get_reserved_quantity import get_reserved_quantity
 import re
+
 
 
 
@@ -121,12 +122,7 @@ def search_products(request):
     wozwrat_or_prihod = request.GET.get("wozwrat_or_prihod", "")
     
     
-    # ic(query)
-    # ic(warehouse)
-    # ic(search_free)
-    # ic(product_id)
-    # ic(search_in_invoice)
-    # ic(invoice_id)
+   
     
     # warehouses_objs = Warehouse.obj
     
@@ -138,7 +134,7 @@ def search_products(request):
         # # 🔹 1. Сначала ищем по qr_code
         # results = Product.objects.filter(qr_code=query)
         # not_qr_code = False
-        # ic("wqwqwq")
+  
         
         # # 🔹 2. Если по qr_code пусто → ищем по имени
         # if not results.exists():
@@ -320,11 +316,10 @@ def search_products(request):
         # --- Формируем ответ ---
         data = []
         for product in results:
-            # ic(product.name)
-            # ic(warehouse)
+       
             
             qty_in_drafts = get_reserved_quantity(product, warehouse, invoice_id)
-            # ic(qty_in_drafts)
+        
 
             # Подсчёт количества
             if warehouse:
@@ -450,22 +445,67 @@ def search_products(request):
                 'base_quantity_in_stock': base_quantity_in_stock,
             })
             data.append(serialized)
-    elif search_free:
+    
+    
+    # elif search_free:
+    #     ic("search gift")
         
+    #     warehouse_ids = request.GET.getlist("warehouses")
+    #     if warehouse_ids:
+    #         warehouse_ids = [int(w) for w in warehouse_ids if w.isdigit()]
+        
+    #     # Добавляем аннотацию с похожестью по триграммам
+    #     results = Product.objects.annotate(
+    #         similarity=TrigramSimilarity('name', search_free)
+    #     ).filter(similarity__gt=0.1)  # порог схожести (можно подстроить)
+        
+    #     # eto ili
+    #     # if warehouse_ids:
+    #     #     results = results.filter(warehouse_products__warehouse_id__in=warehouse_ids)
+
+    #     # a eto i (doljno byt wo wseh wybrannyh skladah)
+    #     if warehouse_ids:
+    #         results = results.annotate(
+    #             warehouses_count=Count(
+    #                 'warehouse_products__warehouse_id',
+    #                 filter=Q(warehouse_products__warehouse_id__in=warehouse_ids),
+    #                 distinct=True
+    #             )
+    #         ).filter(
+    #             warehouses_count=len(warehouse_ids)
+    #         )
+        
+    #     results = results.order_by('-similarity')[:10]  # сортируем по убыванию схожести
+
+    #     data = []
+    #     for product in results:
+    #         serialized = ProductSerializer(product).data
+    #         data.append(serialized)
+    
+    elif search_free:
+        ic("search gift")
+
         warehouse_ids = request.GET.getlist("warehouses")
         if warehouse_ids:
             warehouse_ids = [int(w) for w in warehouse_ids if w.isdigit()]
-        
-        # Добавляем аннотацию с похожестью по триграммам
-        results = Product.objects.annotate(
-            similarity=TrigramSimilarity('name', search_free)
-        ).filter(similarity__gt=0.1)  # порог схожести (можно подстроить)
-        
-        # eto ili
-        # if warehouse_ids:
-        #     results = results.filter(warehouse_products__warehouse_id__in=warehouse_ids)
 
-        # a eto i (doljno byt wo wseh wybrannyh skladah)
+        raw_query = search_free.strip()
+
+        results = (
+            Product.objects
+            .annotate(
+                rank=Case(
+                    When(name__iexact=raw_query, then=Value(1)),
+                    When(name__istartswith=raw_query, then=Value(2)),
+                    When(name__icontains=raw_query, then=Value(3)),
+                    default=Value(4),
+                    output_field=IntegerField(),
+                )
+            )
+            .filter(name__icontains=raw_query)
+        )
+
+        # ✅ склад фильтруем ДО slice
         if warehouse_ids:
             results = results.annotate(
                 warehouses_count=Count(
@@ -476,8 +516,12 @@ def search_products(request):
             ).filter(
                 warehouses_count=len(warehouse_ids)
             )
-        
-        results = results.order_by('-similarity')[:10]  # сортируем по убыванию схожести
+
+        # ✅ сортировка
+        results = results.order_by("rank", "name")
+
+        # ✅ slice В САМОМ КОНЦЕ
+        results = results[:100]
 
         data = []
         for product in results:
@@ -498,6 +542,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     pagination_class = CustomPageNumberPagination
 
+    # filter_backends = [DjangoFilterBackend]
     filter_backends = [DjangoFilterBackend]
     filterset_class = ProductFilter
 

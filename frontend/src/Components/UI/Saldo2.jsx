@@ -16,6 +16,9 @@ const Saldo2 = ({
   w_full=false
 }) => {
   const { t } = useTranslation();
+
+  console.log("partnerType", partnerType);
+  
   
 
   const handleExportToExcel = async () => {

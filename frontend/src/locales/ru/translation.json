@@ -719,7 +719,14 @@
   "balance_ostatok": "Остаток",
   "available": "Доступно",
   "sales analysis": "Анализ продаж",
-  "universal filter": "Универсальный фильтр"
+  "universal filter": "Универсальный фильтр",
+  "operations journal": "Журнал Проводок",
+  "credit subaccount": "Кредит субконто",
+  "operation number": "№ операции",
+  "debit subaccount": "Дебет субконто",
+  "newest first": "Сначала новые",
+  "oldest first": "Сначала старые",
+  "article": "Артикул"
 
 
  

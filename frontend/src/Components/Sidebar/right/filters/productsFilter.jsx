@@ -1,18 +1,7 @@
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 
-function ProductsFilter({
-  searchParams,
-  setSearchParams,
-  categories,
-  brands,
-  models,
-  tags,
-  warehouses,
-  selectedTags,
-  t,
-  setSearchQuery,
-}) {
+function ProductsFilter({ searchParams, setSearchParams, categories, brands, models, tags, warehouses, selectedTags, t, setSearchQuery }) {
   // начальные значения берем из searchParams
   const initialValues = {
     categories: searchParams.get("categories")?.split(",") || [],
@@ -143,82 +132,55 @@ function ProductsFilter({
   // Formik передаёт в Yup пустую строку "", если поле пустое. А Yup.number() по умолчанию считает "" невалидным значением. Чтобы "" превратилось в null (и пропустилось как "ничего не введено") — мы добавляем transform.
   const validationSchema = Yup.object({
     wholesale_price_min: Yup.number()
-      .transform((value, originalValue) =>
-        String(originalValue).trim() === "" ? null : value
-      )
+      .transform((value, originalValue) => (String(originalValue).trim() === "" ? null : value))
       .typeError("Должно быть числом")
       .min(0, "Минимум 0")
       .nullable(true),
 
     wholesale_price_max: Yup.number()
-      .transform((value, originalValue) =>
-        String(originalValue).trim() === "" ? null : value
-      )
+      .transform((value, originalValue) => (String(originalValue).trim() === "" ? null : value))
       .typeError("Должно быть числом")
       .min(0, "Минимум 0")
       .nullable(true)
-      .when("wholesale_price_min", (min, schema) =>
-        min ? schema.min(min, "Не может быть меньше минимальной") : schema
-      ),
+      .when("wholesale_price_min", (min, schema) => (min ? schema.min(min, "Не может быть меньше минимальной") : schema)),
 
     quantity_min: Yup.number()
-      .transform((value, originalValue) =>
-        String(originalValue).trim() === "" ? null : value
-      )
+      .transform((value, originalValue) => (String(originalValue).trim() === "" ? null : value))
       .typeError("Должно быть числом")
       .min(0, "Минимум 0")
       .nullable(true),
 
     quantity_max: Yup.number()
-      .transform((value, originalValue) =>
-        String(originalValue).trim() === "" ? null : value
-      )
+      .transform((value, originalValue) => (String(originalValue).trim() === "" ? null : value))
       .typeError("Должно быть числом")
       .min(0, "Минимум 0")
       .nullable(true)
-      .when("quantity_min", (min, schema) =>
-        min ? schema.min(min, "Не может быть меньше минимальной") : schema
-      ),
+      .when("quantity_min", (min, schema) => (min ? schema.min(min, "Не может быть меньше минимальной") : schema)),
 
     retail_price_min: Yup.number()
-      .transform((value, originalValue) =>
-        String(originalValue).trim() === "" ? null : value
-      )
+      .transform((value, originalValue) => (String(originalValue).trim() === "" ? null : value))
       .typeError("Должно быть числом")
       .min(0, "Минимум 0")
       .nullable(true),
 
     retail_price_max: Yup.number()
-      .transform((value, originalValue) =>
-        String(originalValue).trim() === "" ? null : value
-      )
+      .transform((value, originalValue) => (String(originalValue).trim() === "" ? null : value))
       .typeError("Должно быть числом")
       .min(0, "Минимум 0")
       .nullable(true)
-      .when("retail_price_min", (min, schema) =>
-        min ? schema.min(min, "Не может быть меньше минимальной") : schema
-      ),
+      .when("retail_price_min", (min, schema) => (min ? schema.min(min, "Не может быть меньше минимальной") : schema)),
   });
 
   return (
-    <Formik
-      initialValues={initialValues}
-      onSubmit={onSubmit}
-      validationSchema={validationSchema}
-    >
+    <Formik initialValues={initialValues} onSubmit={onSubmit} validationSchema={validationSchema}>
       {({ values, setFieldValue, resetForm }) => (
         <Form className="text-gray-400 text-sm">
           {categories.length > 0 && (
             <div className="border p-2 border-gray-600 rounded">
-              <h3 className="font-semibold text-base text-center text-gray-600">
-                {t("categories")}
-              </h3>
+              <h3 className="font-semibold text-base text-center text-gray-600">{t("categories")}</h3>
               <div className="flex flex-wrap gap-2 max-h-40 overflow-auto">
                 {categories.map((cat) => (
-                  <label
-                    key={cat.id}
-                    className="flex items-center cursor-pointer select-none whitespace-nowrap px-2 py-1 rounded border border-gray-700  hover:bg-gray-700"
-                  >
+                  <label key={cat.id} className="flex items-center cursor-pointer select-none whitespace-nowrap px-2 py-1 rounded border border-gray-700  hover:bg-gray-700">
                     <input
                       type="checkbox"
                       checked={values.categories.includes(String(cat.id))}
@@ -226,15 +188,10 @@ function ProductsFilter({
                         if (values.categories.includes(String(cat.id))) {
                           setFieldValue(
                             "categories",
-                            values.categories.filter(
-                              (c) => c !== String(cat.id)
-                            )
+                            values.categories.filter((c) => c !== String(cat.id)),
                           );
                         } else {
-                          setFieldValue("categories", [
-                            ...values.categories,
-                            String(cat.id),
-                          ]);
+                          setFieldValue("categories", [...values.categories, String(cat.id)]);
                         }
                       }}
                       className="mr-1 accent-blue-600 w-4 h-4 "
@@ -248,15 +205,10 @@ function ProductsFilter({
 
           {brands.length > 0 && (
             <div className="border p-2 border-gray-600 rounded mt-4">
-              <h3 className="font-semibold text-base text-center text-gray-600">
-                {t("brands")}
-              </h3>
+              <h3 className="font-semibold text-base text-center text-gray-600">{t("brands")}</h3>
               <div className="flex flex-wrap gap-2 max-h-40 overflow-auto">
                 {brands.map((cat) => (
-                  <label
-                    key={cat.id}
-                    className="flex items-center cursor-pointer select-none whitespace-nowrap px-2 py-1 rounded border border-gray-700  hover:bg-gray-700"
-                  >
+                  <label key={cat.id} className="flex items-center cursor-pointer select-none whitespace-nowrap px-2 py-1 rounded border border-gray-700  hover:bg-gray-700">
                     <input
                       type="checkbox"
                       checked={values.brands.includes(String(cat.id))}
@@ -264,13 +216,10 @@ function ProductsFilter({
                         if (values.brands.includes(String(cat.id))) {
                           setFieldValue(
                             "brands",
-                            values.brands.filter((c) => c !== String(cat.id))
+                            values.brands.filter((c) => c !== String(cat.id)),
                           );
                         } else {
-                          setFieldValue("brands", [
-                            ...values.brands,
-                            String(cat.id),
-                          ]);
+                          setFieldValue("brands", [...values.brands, String(cat.id)]);
                         }
                       }}
                       className="mr-1 accent-blue-600 w-4 h-4 "
@@ -284,15 +233,10 @@ function ProductsFilter({
 
           {models.length > 0 && (
             <div className="border p-2 border-gray-600 rounded mt-4">
-              <h3 className="font-semibold text-base text-center text-gray-600">
-                {t("models")}
-              </h3>
+              <h3 className="font-semibold text-base text-center text-gray-600">{t("models")}</h3>
               <div className="flex flex-wrap gap-2 max-h-40 overflow-auto">
                 {models.map((cat) => (
-                  <label
-                    key={cat.id}
-                    className="flex items-center cursor-pointer select-none whitespace-nowrap px-2 py-1 rounded border border-gray-700  hover:bg-gray-700"
-                  >
+                  <label key={cat.id} className="flex items-center cursor-pointer select-none whitespace-nowrap px-2 py-1 rounded border border-gray-700  hover:bg-gray-700">
                     <input
                       type="checkbox"
                       checked={values.models.includes(String(cat.id))}
@@ -300,13 +244,10 @@ function ProductsFilter({
                         if (values.models.includes(String(cat.id))) {
                           setFieldValue(
                             "models",
-                            values.models.filter((c) => c !== String(cat.id))
+                            values.models.filter((c) => c !== String(cat.id)),
                           );
                         } else {
-                          setFieldValue("models", [
-                            ...values.models,
-                            String(cat.id),
-                          ]);
+                          setFieldValue("models", [...values.models, String(cat.id)]);
                         }
                       }}
                       className="mr-1 accent-blue-600 w-4 h-4 "
@@ -320,15 +261,10 @@ function ProductsFilter({
 
           {tags.length > 0 && (
             <div className="border p-2 border-gray-600 rounded mt-4">
-              <h3 className="font-semibold text-base text-center text-gray-600">
-                {t("tags")}
-              </h3>
+              <h3 className="font-semibold text-base text-center text-gray-600">{t("tags")}</h3>
               <div className="flex flex-wrap gap-2 max-h-40 overflow-auto">
                 {tags.map((tag) => (
-                  <label
-                    key={tag.id}
-                    className="flex items-center cursor-pointer select-none whitespace-nowrap px-2 py-1 rounded border border-gray-700 hover:bg-gray-700"
-                  >
+                  <label key={tag.id} className="flex items-center cursor-pointer select-none whitespace-nowrap px-2 py-1 rounded border border-gray-700 hover:bg-gray-700">
                     <input
                       type="checkbox"
                       checked={values.tags.includes(String(tag.id))}
@@ -336,13 +272,10 @@ function ProductsFilter({
                         if (values.tags.includes(String(tag.id))) {
                           setFieldValue(
                             "tags",
-                            values.tags.filter((t) => t !== String(tag.id))
+                            values.tags.filter((t) => t !== String(tag.id)),
                           );
                         } else {
-                          setFieldValue("tags", [
-                            ...values.tags,
-                            String(tag.id),
-                          ]);
+                          setFieldValue("tags", [...values.tags, String(tag.id)]);
                         }
                       }}
                       className="mr-1 accent-blue-600 w-4 h-4"
@@ -356,15 +289,10 @@ function ProductsFilter({
 
           {warehouses.length > 0 && (
             <div className="border p-2 border-gray-600 rounded mt-4">
-              <h3 className="font-semibold text-base text-center text-gray-600">
-                {t("warehouse")}
-              </h3>
+              <h3 className="font-semibold text-base text-center text-gray-600">{t("warehouse")}</h3>
               <div className="flex flex-wrap gap-2 max-h-40 overflow-auto">
                 {warehouses.map((w) => (
-                  <label
-                    key={w.id}
-                    className="flex items-center cursor-pointer select-none whitespace-nowrap px-2 py-1 rounded border border-gray-700 hover:bg-gray-700"
-                  >
+                  <label key={w.id} className="flex items-center cursor-pointer select-none whitespace-nowrap px-2 py-1 rounded border border-gray-700 hover:bg-gray-700">
                     <input
                       type="checkbox"
                       checked={values.warehouse.includes(String(w.id))}
@@ -372,13 +300,10 @@ function ProductsFilter({
                         if (values.warehouse.includes(String(w.id))) {
                           setFieldValue(
                             "warehouse",
-                            values.warehouse.filter((t) => t !== String(w.id))
+                            values.warehouse.filter((t) => t !== String(w.id)),
                           );
                         } else {
-                          setFieldValue("warehouse", [
-                            ...values.warehouse,
-                            String(w.id),
-                          ]);
+                          setFieldValue("warehouse", [...values.warehouse, String(w.id)]);
                         }
                       }}
                       className="mr-1 accent-blue-600 w-4 h-4"
@@ -391,9 +316,43 @@ function ProductsFilter({
           )}
 
           <div className="border p-2 border-gray-600 rounded mt-4">
-            <h3 className="font-semibold text-base text-center text-gray-600">
-              {t("wholesale_price")}
-            </h3>
+            <h3 className="font-semibold text-base text-center text-gray-600">{t("article")}</h3>
+
+            <div className="flex gap-2 mt-2">
+              <button
+                type="button"
+                // onClick={() => setFieldValue("ordering", "id")}
+                onClick={() => {
+                  setFieldValue("ordering", "id");
+
+                  const params = new URLSearchParams(searchParams);
+                  params.set("ordering", "id");
+                  setSearchParams(params);
+                }}
+                className={`flex-1 px-2 py-1 rounded ${values.ordering === "id" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-300"}`}
+              >
+                {t("oldest first")}
+              </button>
+
+              <button
+                type="button"
+                // onClick={() => setFieldValue("ordering", "-id")}
+                onClick={() => {
+                  setFieldValue("ordering", "-id");
+
+                  const params = new URLSearchParams(searchParams);
+                  params.set("ordering", "-id");
+                  setSearchParams(params);
+                }}
+                className={`flex-1 px-2 py-1 rounded ${values.ordering === "-id" ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-300"}`}
+              >
+                {t("newest first")}
+              </button>
+            </div>
+          </div>
+
+          <div className="border p-2 border-gray-600 rounded mt-4">
+            <h3 className="font-semibold text-base text-center text-gray-600">{t("wholesale_price")}</h3>
             <div className="flex">
               <label className="flex flex-col flex-1">
                 <span className="mb-1">{t("min")}</span>
@@ -403,11 +362,7 @@ function ProductsFilter({
                   placeholder={t("priceFrom")}
                   className="border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-800 border-gray-600 w-20"
                 />
-                <ErrorMessage
-                  name="wholesale_price_min"
-                  component="div"
-                  className="text-red-500 text-xs mt-0.5"
-                />
+                <ErrorMessage name="wholesale_price_min" component="div" className="text-red-500 text-xs mt-0.5" />
               </label>
               <label className="flex flex-col flex-1">
                 <span className="mb-1">{t("max")}</span>
@@ -417,19 +372,13 @@ function ProductsFilter({
                   placeholder={t("priceTo")}
                   className="border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-800 border-gray-600 w-20"
                 />
-                <ErrorMessage
-                  name="wholesale_price_max"
-                  component="div"
-                  className="text-red-500 text-xs mt-0.5"
-                />
+                <ErrorMessage name="wholesale_price_max" component="div" className="text-red-500 text-xs mt-0.5" />
               </label>
             </div>
           </div>
 
           <div className="border p-2 border-gray-600 rounded mt-4">
-            <h3 className="font-semibold text-base text-center text-gray-600">
-              {t("retail_price")}
-            </h3>
+            <h3 className="font-semibold text-base text-center text-gray-600">{t("retail_price")}</h3>
             <div className="flex">
               <label className="flex flex-col flex-1">
                 <span className="mb-1">{t("min")}</span>
@@ -439,11 +388,7 @@ function ProductsFilter({
                   placeholder={t("priceFrom")}
                   className="border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-800 border-gray-600 w-20"
                 />
-                <ErrorMessage
-                  name="retail_price_min"
-                  component="div"
-                  className="text-red-500 text-xs mt-0.5"
-                />
+                <ErrorMessage name="retail_price_min" component="div" className="text-red-500 text-xs mt-0.5" />
               </label>
               <label className="flex flex-col flex-1">
                 <span className="mb-1">{t("max")}</span>
@@ -453,19 +398,13 @@ function ProductsFilter({
                   placeholder={t("priceTo")}
                   className="border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-800 border-gray-600 w-20"
                 />
-                <ErrorMessage
-                  name="retail_price_max"
-                  component="div"
-                  className="text-red-500 text-xs mt-0.5"
-                />
+                <ErrorMessage name="retail_price_max" component="div" className="text-red-500 text-xs mt-0.5" />
               </label>
             </div>
           </div>
 
           <div className="border p-2 border-gray-600 rounded mt-4">
-            <h3 className="font-semibold text-base text-center text-gray-600">
-              {t("quantityInStock")}
-            </h3>
+            <h3 className="font-semibold text-base text-center text-gray-600">{t("quantityInStock")}</h3>
             <div className="flex">
               <label className="flex flex-col flex-1">
                 <span className="mb-1">{t("min")}</span>
@@ -475,11 +414,7 @@ function ProductsFilter({
                   placeholder={t("priceFrom")}
                   className="border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-800 border-gray-600 w-20"
                 />
-                <ErrorMessage
-                  name="quantity_min"
-                  component="div"
-                  className="text-red-500 text-xs mt-0.5"
-                />
+                <ErrorMessage name="quantity_min" component="div" className="text-red-500 text-xs mt-0.5" />
               </label>
               <label className="flex flex-col flex-1">
                 <span className="mb-1">{t("max")}</span>
@@ -489,11 +424,7 @@ function ProductsFilter({
                   placeholder={t("priceTo")}
                   className="border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-800 border-gray-600 w-20"
                 />
-                <ErrorMessage
-                  name="quantity_max"
-                  component="div"
-                  className="text-red-500 text-xs mt-0.5"
-                />
+                <ErrorMessage name="quantity_max" component="div" className="text-red-500 text-xs mt-0.5" />
               </label>
             </div>
           </div>
@@ -501,11 +432,7 @@ function ProductsFilter({
           <div className="border p-2 border-gray-600 rounded mt-4">
             <label className="flex items-center gap-2">
               <span className="text-sm text-gray-300">{t("status")}</span>
-              <Field
-                as="select"
-                name="is_active"
-                className="border rounded px-2 py-1 bg-gray-800 border-gray-600"
-              >
+              <Field as="select" name="is_active" className="border rounded px-2 py-1 bg-gray-800 border-gray-600">
                 <option value="">{t("all")}</option>
                 <option value="true">{t("onlyActive")}</option>
                 <option value="false">{t("onlyInactive")}</option>
@@ -514,16 +441,13 @@ function ProductsFilter({
           </div>
 
           <div className="border p-2 border-gray-600 rounded mt-4">
-            <h3 className="font-semibold text-base text-center text-gray-600">
-              {t("sort")}
-            </h3>
-            <Field
-              as="select"
-              name="ordering"
-              className="w-full border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-800 border-gray-600"
-            >
+            <h3 className="font-semibold text-base text-center text-gray-600">{t("sort")}</h3>
+            <Field as="select" name="ordering" className="w-full border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-800 border-gray-600">
               <option value="">{t("noneSort")}</option>
-              <option value="wholesale_price">{t("wholesale_price")} ↑</option>
+              {/* <option value="wholesale_price">{t("wholesale_price")} ↑</option> */}
+              {/* 👇 ДОБАВЬ ЭТО */}
+              {/* <option value="id">ID ↑</option>
+              <option value="-id">ID ↓</option> */}
               <option value="-wholesale_price">{t("wholesale_price")} ↓</option>
               <option value="total_quantity2">{t("quantity")} ↑</option>
               <option value="-total_quantity2">{t("quantity")} ↓</option>
@@ -535,10 +459,7 @@ function ProductsFilter({
           </div>
 
           <div className="flex flex-col gap-2 mt-4">
-            <button
-              type="submit"
-              className="flex-1 px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 transition"
-            >
+            <button type="submit" className="flex-1 px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 transition">
               {t("acceptFilter")}
             </button>
             <button

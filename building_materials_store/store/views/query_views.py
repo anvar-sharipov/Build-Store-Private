@@ -423,6 +423,7 @@ def get_saldo(partner_obj, getDate):
 
 
 def get_saldo2(partner_obj, dateFrom, dateTo, invoiceDate=None, use_diapazon=False):
+    ic("pppp")
     
     
         

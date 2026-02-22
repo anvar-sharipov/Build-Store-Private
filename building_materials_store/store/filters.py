@@ -128,47 +128,37 @@ class ProductFilter(django_filters.FilterSet):
     #     )
     
     def filter_search(self, queryset, name, value):
-        ic("product query")
-       
         if not value:
             return queryset
 
         raw_value = value.strip()
         norm_value = raw_value.lower()
         norm_value = re.sub(r"[^\w\s/-]", "", norm_value)
-
         words = norm_value.replace("-", " ").split()
 
-        # q = Q()
-        # for word in words:
-        #     q &= Q(name__icontains=word)
-        
         q = Q()
         for word in words:
             q &= Q(name__icontains=word)
 
-        return (
-            queryset
-            .annotate(
-                rank=Case(
-                    # 1️⃣ точное совпадение
-                    When(name__iexact=raw_value, then=Value(1)),
-
-                    # 2️⃣ начинается с ab-3
-                    When(name__istartswith=raw_value, then=Value(2)),
-
-                    # 3️⃣ содержит ab-3
-                    When(name__icontains=raw_value, then=Value(3)),
-
-                    # 4️⃣ просто подходит по словам
-                    default=Value(4),
-                    output_field=IntegerField(),
-                )
+        queryset = queryset.annotate(
+            rank=Case(
+                When(name__iexact=raw_value, then=Value(1)),
+                When(name__istartswith=raw_value, then=Value(2)),
+                When(name__icontains=raw_value, then=Value(3)),
+                default=Value(4),
+                output_field=IntegerField(),
             )
-            .filter(q)
-            .order_by("rank", "name")
-        )
-       
+        ).filter(q)
+
+        # 🔥 если есть ordering в query — уважаем его
+        ordering = self.request.GET.get("ordering")
+
+        if ordering:
+            return queryset.order_by(ordering)
+
+        # если сортировка не задана — тогда по rank
+        return queryset.order_by("rank", "name")
+        
 
 
 

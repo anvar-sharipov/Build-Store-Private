@@ -20,6 +20,7 @@ from ..my_func.get_unit_and_cf import get_unit_and_cf
 from ..my_func.get_reserved_quantity import get_reserved_quantity
 # from ..my_func.str_to_int_list import str_to_int_list
 # from ..my_func.date_convert_for_excel import format_date_ru 
+from ..my_func.get_reserved_quantity import get_reserved_quantity
 
 
 
@@ -321,6 +322,29 @@ def save_invoice(request):
                             except UnitOfMeasurement.DoesNotExist:
                                 return JsonResponse({"status": "error", "message": "unit is not fined", "not_fined_unit_name": base_unit_obj['name']}, status=400)
                             
+                            if wozwrat_or_prihod == "rashod" or wozwrat_or_prihod == "transfer":
+                                quantity = Decimal(product['selected_quantity'])
+                                conversion_factor = Decimal(1)
+                                units = product.get('units', [])
+                                if units:
+                                    for u in units:
+                                        if u['is_default_for_sale']:
+                                            conversion_factor = Decimal(u['conversion_factor'])
+                                minus_to_stock = conversion_factor * Decimal(quantity)
+                                
+                                # wp = WarehouseProduct.objects.get(warehouse=warehouse_obj, product=product_obj)
+                                try:
+                                    wp = WarehouseProduct.objects.get(
+                                        warehouse=warehouse_obj,
+                                        product=product_obj
+                                    )
+                                except WarehouseProduct.DoesNotExist:
+                                    return JsonResponse({"status": "error", "message": f"{product_obj.name} not found in warehouse"}, status=400)
+                                qty_in_drafts = get_reserved_quantity(product_obj, warehouse_obj.id)
+                                
+                                if ((wp.quantity - qty_in_drafts) < minus_to_stock):
+                                    return JsonResponse({"status": "error", "message": "Not enough product in stock"}, status=400) 
+                            
             
                             invoiceItem = InvoiceItem.objects.create(
                                 # item_id=product["id"],
@@ -422,7 +446,7 @@ def save_invoice(request):
                                     # retail_price = Decimal(product['retail_price'])
                                     # wholesale_price = Decimal(product['wholesale_price'])
                                     
-                                    conversion_factor = 1
+                                    conversion_factor = Decimal(1)
                                     units = product['units']
                                     if units:
                                         for u in units:
@@ -478,7 +502,7 @@ def save_invoice(request):
                                     # retail_price = Decimal(product['retail_price'])
                                     # wholesale_price = Decimal(product['wholesale_price'])
                                     
-                                    conversion_factor = 1
+                                    conversion_factor = Decimal(1)
                                     units = product['units']
                                     if units:
                                         for u in units:
@@ -536,7 +560,7 @@ def save_invoice(request):
                                     # retail_price = Decimal(product['retail_price'])
                                     # wholesale_price = Decimal(product['wholesale_price'])
                                     
-                                    conversion_factor = 1
+                                    conversion_factor = Decimal(1)
                                     units = product['units']
                                     if units:
                                         for u in units:
@@ -544,7 +568,10 @@ def save_invoice(request):
                                                 conversion_factor = Decimal(u['conversion_factor'])
                                     minus_to_stock = conversion_factor * Decimal(quantity)
                                     wp = WarehouseProduct.objects.select_for_update().get(warehouse=warehouse_obj, product=product_obj)
-                                    if wp.quantity < minus_to_stock:
+                                    qty_in_drafts = get_reserved_quantity(product_obj, warehouse_obj.id)
+            
+                                    
+                                    if (wp.quantity - qty_in_drafts) < minus_to_stock:
                                         transaction.set_rollback(True)
                                         return JsonResponse({"status": "error", "message": "Not enough product in stock"}, status=400)    
                                     wp.quantity -= Decimal(minus_to_stock)
@@ -595,7 +622,7 @@ def save_invoice(request):
                                     purchase_price = Decimal(product['purchase_price'])  
                                     
                                     # minus s perwogo sklada
-                                    conversion_factor = 1
+                                    conversion_factor = Decimal(1)
                                     units = product['units']
                                     if units:
                                         for u in units:
@@ -603,7 +630,8 @@ def save_invoice(request):
                                                 conversion_factor = Decimal(u['conversion_factor'])
                                     minus_to_stock = conversion_factor * Decimal(quantity)
                                     wp = WarehouseProduct.objects.select_for_update().get(warehouse=warehouse_obj, product=product_obj)
-                                    if wp.quantity < minus_to_stock:
+                                    qty_in_drafts = get_reserved_quantity(product_obj, warehouse_obj.id)
+                                    if ((wp.quantity - qty_in_drafts) < minus_to_stock):
                                         transaction.set_rollback(True)
                                         return JsonResponse({"status": "error", "message": "Not enough product in stock"}, status=400)    
                                     wp.quantity -= Decimal(minus_to_stock)
@@ -693,6 +721,7 @@ def save_invoice(request):
                     return JsonResponse({"status": "error", "message": "choose date prowodok"}, status=400)
                 try:
                     with transaction.atomic():
+                        ic("tut")
                         invoice = Invoice.objects.get(id=invoice_id)
                         invoice_date = normalize_date(invoice_date2)
                         invoice.awto = awto_obj
@@ -718,6 +747,38 @@ def save_invoice(request):
                             product_obj = Product.objects.get(id=product['id'])
                             product_map[product['id']] = product_obj
                             base_unit_obj = UnitOfMeasurement.objects.get(id=product["base_unit_obj"]["id"])
+                            
+                            if wozwrat_or_prihod == "rashod" or wozwrat_or_prihod == "transfer":
+                                quantity = Decimal(product['selected_quantity'])
+                                sale_price = Decimal(product['selected_price'])
+                                conversion_factor = Decimal(1)
+                                units = product.get('units', [])
+                                if units:
+                                    for u in units:
+                                        if u['is_default_for_sale']:
+                                            conversion_factor = Decimal(u['conversion_factor'])
+                                minus_to_stock = conversion_factor * Decimal(quantity)
+                                
+                                # wp = WarehouseProduct.objects.get(warehouse=warehouse_obj, product=product_obj)
+                                try:
+                                    wp = WarehouseProduct.objects.get(
+                                        warehouse=warehouse_obj,
+                                        product=product_obj
+                                    )
+                                except WarehouseProduct.DoesNotExist:
+                                    return JsonResponse({"status": "error", "message": f"{product_obj.name} not found in warehouse"}, status=400)
+                                qty_in_drafts = get_reserved_quantity(product_obj, warehouse_obj.id, invoice_id)
+                                
+                                if ((wp.quantity - qty_in_drafts) < minus_to_stock):
+                                    return JsonResponse({"status": "error", "message": "Not enough product in stock"}, status=400)  
+                                
+         
+                                    
+                                
+                                    
+                                    
+                                
+                                
 
                             invoiceItem = InvoiceItem.objects.create(
                                 base_quantity_in_stock=product["base_quantity_in_stock"],
@@ -825,7 +886,7 @@ def save_invoice(request):
                                     sale_price = Decimal(product['selected_price'])
                                     purchase_price = Decimal(product['purchase_price'])
  
-                                    conversion_factor = 1
+                                    conversion_factor = Decimal(1)
                                     units = product['units']
                                     if units:
                                         for u in units:
@@ -880,7 +941,7 @@ def save_invoice(request):
                                     sale_price = Decimal(product['selected_price'])
                                     purchase_price = Decimal(product['purchase_price'])
  
-                                    conversion_factor = 1
+                                    conversion_factor = Decimal(1)
                                     units = product['units']
                                     if units:
                                         for u in units:
@@ -938,7 +999,7 @@ def save_invoice(request):
                                     # retail_price = Decimal(product['retail_price'])
                                     # wholesale_price = Decimal(product['wholesale_price'])
                                     
-                                    conversion_factor = 1
+                                    conversion_factor = Decimal(1)
                                     units = product['units']
                                     if units:
                                         for u in units:
@@ -946,11 +1007,15 @@ def save_invoice(request):
                                                 conversion_factor = Decimal(u['conversion_factor'])
                                     minus_to_stock = conversion_factor * Decimal(quantity)
                                     wp = WarehouseProduct.objects.select_for_update().get(warehouse=warehouse_obj, product=product_obj)
-                                    if wp.quantity < minus_to_stock:
-                                        transaction.set_rollback(True)
+                                    
+                                    qty_in_drafts = get_reserved_quantity(product_obj, warehouse_obj.id, invoice_id)
+
+                                    if ((wp.quantity - qty_in_drafts) < minus_to_stock):
+                                        # transaction.set_rollback(True)
                                         return JsonResponse({"status": "error", "message": "Not enough product in stock"}, status=400)  
                                     wp.quantity -= Decimal(minus_to_stock)
                                     wp.save()
+                                   
                                      
                                     warehouse_account = WarehouseAccount.objects.filter(warehouse=warehouse_obj)
                                     if not warehouse_account.exists():
@@ -997,15 +1062,20 @@ def save_invoice(request):
                                     purchase_price = Decimal(product['purchase_price'])  
                                     
                                     # minus s perwogo sklada
-                                    conversion_factor = 1
-                                    units = product['units']
+                                    conversion_factor = Decimal(1)
+                                    # units = product['units']
+                                    units = product.get('units', [])
                                     if units:
                                         for u in units:
                                             if u['is_default_for_sale']:
                                                 conversion_factor = Decimal(u['conversion_factor'])
                                     minus_to_stock = conversion_factor * Decimal(quantity)
                                     wp = WarehouseProduct.objects.select_for_update().get(warehouse=warehouse_obj, product=product_obj)
-                                    if wp.quantity < minus_to_stock:
+                                    
+                                    ###
+                                    qty_in_drafts = get_reserved_quantity(product_obj, warehouse_obj.id, invoice_id)
+                                    ###
+                                    if ((wp.quantity - qty_in_drafts) < minus_to_stock):
                                         transaction.set_rollback(True)
                                         return JsonResponse({"status": "error", "message": "Not enough product in stock"}, status=400)    
                                     wp.quantity -= Decimal(minus_to_stock)

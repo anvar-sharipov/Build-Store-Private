@@ -40,7 +40,7 @@ const List = ({
   const [saldo, setSaldo] = useState(null);
   const location = useLocation();
 
-  console.log("location", location.pathname);
+  // console.log("location", location.pathname);
   
 
   const fetchSaldo = async (partnerId, date_from, date_to, valuesData = null, use_diapazon = false) => {

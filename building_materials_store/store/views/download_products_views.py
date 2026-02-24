@@ -182,7 +182,8 @@ def download_excel_products_diapazon(request):
         Q(invoiceitem__invoice__warehouse_id__in=warehouse_list) |
         Q(invoiceitem__invoice__warehouse2_id__in=warehouse_list)
     ).distinct()
-    ic(products)
+    # ic(products)
+    # DayClosing.objects.filter(date__in=["2026-02-16"]).delete()
     
     # if search:
     #     products = products.filter(name__icontains=search)
@@ -244,7 +245,7 @@ def download_excel_products_diapazon(request):
                 "name": p.name,
                 "unit": unit,
                 "cf": Decimal(cf),
-                "wholsale_price": p.wholesale_price,
+                "wholsale_price": Decimal(p.wholesale_price),
             },
 
             "start_qty": Decimal("0.00"),
@@ -445,6 +446,8 @@ def download_excel_products_diapazon(request):
                 
                 grand_total["prihod_qty"] += qty
                 grand_total["prihod_price"] += calculated_price
+    
+    
                 
     for cat in account_40_42.values():
         for prod in cat["products"].values():
@@ -454,12 +457,16 @@ def download_excel_products_diapazon(request):
                 - prod["rashod_qty"]
                 + prod["wozwrat_qty"]
             )
+            wholesale_price = prod["product"]["wholsale_price"]
 
+            # prod["end_price"] = (
+            #     prod["start_price"]
+            #     + prod["prihod_price"]
+            #     - prod["rashod_price"]
+            #     + prod["wozwrat_price"]
+            # )
             prod["end_price"] = (
-                prod["start_price"]
-                + prod["prihod_price"]
-                - prod["rashod_price"]
-                + prod["wozwrat_price"]
+                prod["end_qty"] * Decimal(wholesale_price)
             )
             
     for cat in account_40_42.values():
@@ -470,11 +477,14 @@ def download_excel_products_diapazon(request):
             - totals["rashod_qty"]
             + totals["wozwrat_qty"]
         )
-        totals["end_price"] = (
-            totals["start_price"]
-            + totals["prihod_price"]
-            - totals["rashod_price"]
-            + totals["wozwrat_price"]
+        # totals["end_price"] = (
+        #     totals["start_price"]
+        #     + totals["prihod_price"]
+        #     - totals["rashod_price"]
+        #     + totals["wozwrat_price"]
+        # )
+        totals["end_price"] = sum(
+            p["end_price"] for p in cat["products"].values()
         )
         
     grand_total["end_qty"] = (
@@ -483,11 +493,14 @@ def download_excel_products_diapazon(request):
         - grand_total["rashod_qty"]
         + grand_total["wozwrat_qty"]
     )
-    grand_total["end_price"] = (
-        grand_total["start_price"]
-        + grand_total["prihod_price"]
-        - grand_total["rashod_price"]
-        + grand_total["wozwrat_price"]
+    # grand_total["end_price"] = (
+    #     grand_total["start_price"]
+    #     + grand_total["prihod_price"]
+    #     - grand_total["rashod_price"]
+    #     + grand_total["wozwrat_price"]
+    # )
+    grand_total["end_price"] = sum(
+        cat["totals"]["end_price"] for cat in account_40_42.values()
     )
     
     w_acc = (

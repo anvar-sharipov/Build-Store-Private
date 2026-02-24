@@ -6,6 +6,12 @@ import { ROUTES } from "../../routes";
 import { useTranslation } from "react-i18next";
 import { formatNumber2 } from "./formatNumber2";
 
+import { DateContext } from "./DateProvider";
+import { useContext } from "react";
+import MyFormatDate from "./MyFormatDate";
+
+import { useNotification } from "../context/NotificationContext";
+
 const Saldo2 = ({
   saldo2,
   letPrintSaldo,
@@ -13,24 +19,28 @@ const Saldo2 = ({
   partnerName,
   partnerType,
   accountType = "debit", // "debit" или "credit"
-  w_full=false
+  w_full = false,
 }) => {
   const { t } = useTranslation();
+  const { dateFrom, dateTo } = useContext(DateContext);
+  const { showNotification } = useNotification();
 
-  console.log("partnerType", partnerType);
-  
-  
+  // console.log("partnerType", partnerType);
 
   const handleExportToExcel = async () => {
+    if (!dateFrom || !dateTo) {
+      showNotification(t("errorDate"), "error");
+      return;
+    }
     try {
-      console.log("Данные для экспорта:", {
-        saldo2,
-        partnerName,
-        partnerType,
-        accountType,
-      });
+      // console.log("Данные для экспорта:", {
+      //   saldo2,
+      //   partnerName,
+      //   partnerType,
+      //   accountType,
+      // });
 
-      await Saldo2ToExcel(saldo2, partnerName, partnerType, accountType, t);
+      await Saldo2ToExcel(saldo2, partnerName, partnerType, accountType, t, MyFormatDate(dateFrom), MyFormatDate(dateTo), MyFormatDate);
     } catch (error) {
       console.error("Ошибка при экспорте в Excel:", error);
     }
@@ -45,8 +55,6 @@ const Saldo2 = ({
     try {
       const res = await myAxios.get(`transaction_detail/${transactionId}/`);
       if (res.data.invoice_id) {
-        
-        
         handleOpenInvoice(res.data.invoice_id);
       }
     } catch (error) {
@@ -77,6 +85,7 @@ const Saldo2 = ({
     } else if (start_saldo < 0) {
       start_credit = Math.abs(start_saldo);
     }
+    let ostatok = start_debit - start_credit;
 
     return (
       <div key={accountKey} className={`mb-4 print:mb-2 print:inline-block print:align-top print:px-1 ${w_full ? "print:w-full" : "print:w-1/2"}`}>
@@ -87,32 +96,40 @@ const Saldo2 = ({
               <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">{accountName}</th>
               <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">{t("Debit")}</th>
               <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">{t("Credit")}</th>
+              <th className="px-2 py-1 border border-gray-400 dark:border-gray-600 print:border-black font-semibold">{t("balance_ostatok")}</th>
             </tr>
           </thead>
           <tbody>
             {/* Начальное сальдо */}
-            <tr className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
+            <tr className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium" colSpan={2}>
-                {t("Opening balance")}
+                {t("Opening balance")} {MyFormatDate(dateFrom)}
               </td>
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right whitespace-nowrap">{formatNumber2(start_debit, 2, false)}</td>
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right whitespace-nowrap">{formatNumber2(start_credit, 2, false)}</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-medium text-right whitespace-nowrap">
+                {formatNumber2(start_debit - start_credit, 2, false)}
+              </td>
             </tr>
 
             {/* Обороты за день */}
             {accountData.today_entries && accountData.today_entries.length > 0 ? (
-              accountData.today_entries.map((e, idx) => (
-                <tr
-                  key={idx}
-                  className="cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white print:cursor-default transition-colors"
-                  onClick={() => handleRowClick(e[4])}
-                >
-                  <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black whitespace-nowrap">{e[0].split(" ")[0].replace(/-/g, ".")}</td>
-                  <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black break-words min-w-[200px]">{e[1]}</td>
-                  <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-right whitespace-nowrap">{parseFloat(e[2]) !== 0 ? formatNumber2(e[2]) : "-"}</td>
-                  <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-right whitespace-nowrap">{parseFloat(e[3]) !== 0 ? formatNumber2(e[3]) : "-"}</td>
-                </tr>
-              ))
+              accountData.today_entries.map((e, idx) => {
+                ostatok += e[2] - e[3];
+                return (
+                  <tr
+                    key={idx}
+                    className="cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white print:cursor-default transition-colors bg-white"
+                    onClick={() => handleRowClick(e[4])}
+                  >
+                    <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black whitespace-nowrap text-center">{e[0].split(" ")[0].replace(/-/g, ".")}</td>
+                    <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black break-words min-w-[200px]">{e[1]}</td>
+                    <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-right whitespace-nowrap">{parseFloat(e[2]) !== 0 ? formatNumber2(e[2]) : "-"}</td>
+                    <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-right whitespace-nowrap">{parseFloat(e[3]) !== 0 ? formatNumber2(e[3]) : "-"}</td>
+                    <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-right whitespace-nowrap">{formatNumber2(ostatok, 2)}</td>
+                  </tr>
+                );
+              })
             ) : (
               <tr className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white">
                 <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black text-center">-</td>
@@ -129,18 +146,22 @@ const Saldo2 = ({
               </td>
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">{formatNumber2(accountData.oborot[0])}</td>
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">{formatNumber2(accountData.oborot[1])}</td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">-</td>
             </tr>
 
             {/* Конечное сальдо */}
             <tr className="bg-gray-100 dark:bg-gray-750 text-gray-700 dark:text-gray-200 print:!text-black print:bg-white dark:bg-gray-800">
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold" colSpan={2}>
-                {t("Closing balance")}
+                {t("Closing balance")} {MyFormatDate(dateTo)}
               </td>
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">
                 {parseFloat(accountData.saldo[0]) !== 0 ? formatNumber2(accountData.saldo[0]) : "-"}
               </td>
               <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">
                 {parseFloat(accountData.saldo[1]) !== 0 ? formatNumber2(accountData.saldo[1]) : "-"}
+              </td>
+              <td className="px-2 py-0.5 border border-gray-300 dark:border-gray-600 print:border-black font-semibold text-right">
+                {parseFloat(accountData.saldo[0]) - parseFloat(accountData.saldo[1]) !== 0 ? formatNumber2(parseFloat(accountData.saldo[0]) - parseFloat(accountData.saldo[1])) : "-"}
               </td>
             </tr>
           </tbody>
@@ -156,11 +177,14 @@ const Saldo2 = ({
       } print:bg-transparent print:border-0 print:p-0 print:mt-2`}
     >
       {/* Header with Print and Download Icons */}
-      <div className="flex items-center justify-between mb-3 print:mb-1">
-        <h2 className={`text-base font-semibold ${titleColor} print:!text-black print:text-lg mx-auto`}>
-          {/* {accountType === "debit" ? t("Debit") : t("Credit")}:  */}
-          {partnerName || t("partner")}
-        </h2>
+      {/* <div className="flex items-center justify-between mb-3 print:mb-1">
+        <div className="flex flex-col items-center text-center">
+          <h2 className={`text-base font-semibold ${titleColor} print:!text-black print:text-lg`}>{partnerName || t("partner")}</h2>
+          <h2 className={`text-base font-semibold ${titleColor} print:!text-black print:text-lg`}>
+            Период с {MyFormatDate(dateFrom)} по {MyFormatDate(dateTo)}
+          </h2>
+        </div>
+
         <div className="flex items-center gap-2 print:hidden">
           <MdDownload
             onClick={handleExportToExcel}
@@ -181,12 +205,35 @@ const Saldo2 = ({
             />
           )}
         </div>
+      </div> */}
+      <div className="grid grid-cols-3 items-center mb-3 print:mb-1">
+        {/* Пустой блок слева */}
+        <div></div>
+
+        {/* Центр */}
+        <div className="flex flex-col items-center text-center">
+          <h2 className={`text-base font-semibold ${titleColor} print:!text-black print:text-lg`}>{partnerName || t("partner")}</h2>
+          <h2 className={`text-base font-semibold ${titleColor} print:!text-black print:text-lg`}>
+            Период с {MyFormatDate(dateFrom)} по {MyFormatDate(dateTo)}
+          </h2>
+        </div>
+
+        {/* Иконки справа */}
+        <div className="flex items-center justify-end gap-2 print:hidden">
+          <MdDownload onClick={handleExportToExcel} className="w-4 h-4 text-green-600 dark:text-green-400 cursor-pointer hover:scale-110 active:scale-95 transition-transform" />
+          {letPrintSaldo ? (
+            <MdPrint onClick={() => setLetPrintSaldo((v) => !v)} className="w-4 h-4 text-blue-600 dark:text-blue-400 cursor-pointer hover:scale-110 active:scale-95 transition-transform" />
+          ) : (
+            <MdPrintDisabled onClick={() => setLetPrintSaldo((v) => !v)} className="w-4 h-4 text-gray-400 dark:text-gray-500 cursor-pointer hover:scale-110 active:scale-95 transition-transform" />
+          )}
+        </div>
       </div>
 
       {/* Контейнер для карточек */}
       <div className="space-y-4 print:space-y-0 print:flex print:flex-wrap">
         {/* 4 отдельные таблицы для счетов */}
-        {renderAccountTable("60_USD", "60 Клиент USD")}
+
+        {partnerType == "klient" && renderAccountTable("60_USD", "60 Клиент USD")}
         {/* {renderAccountTable("62_TMT", "62 Клиент TMT")} */}
         {partnerType == "founder" && (
           <>

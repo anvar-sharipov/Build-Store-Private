@@ -23,6 +23,7 @@ from . views import product_turnover_excel
 from . views import get_analiz_prodaj 
 from . views import admin_views 
 from . views import download_excel_entries_diapazon
+from . views import download_detail_entry
 from . views.sale_invoice_views import *
 from . views.report_views import *
 from . views.utils import *
@@ -164,6 +165,7 @@ urlpatterns = [
     # query_views5
     path('BuhOborotTowarow/', query_views5.BuhOborotTowarow, name='BuhOborotTowarow'),
     path('BuhOborotTowarowExcel/', query_views5.BuhOborotTowarowExcel, name='BuhOborotTowarowExcel'),
+    path('BuhOborotTowarowExcelBrand/', query_views5.BuhOborotTowarowExcelBrand, name='BuhOborotTowarowExcelBrand'),
     path('get_active_warehouses/', query_views5.get_active_warehouses, name='get_active_warehouses'),
     path('upload_initial_stock', query_views5.upload_initial_stock, name='upload_initial_stock'),
     path('get_all_products_id_and_name', query_views5.get_all_products_id_and_name, name='get_all_products_id_and_name'),
@@ -210,6 +212,11 @@ urlpatterns = [
     path('get_analiz_prodaj', get_analiz_prodaj.get_analiz_prodaj, name='get_analiz_prodaj'),
     
     path('download_excel_entries_diapazon', download_excel_entries_diapazon.download_excel_entries_diapazon, name='download_excel_entries_diapazon'),
+    
+    
+    path('download_detail_entry', download_detail_entry.download_detail_entry, name='download_detail_entry'),
+    
+    
     
     
     

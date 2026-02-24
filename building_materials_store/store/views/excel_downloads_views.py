@@ -808,7 +808,7 @@ def download_osw_excel(request):
                         "name": p.name,
                         "unit": unit,
                         "cf": Decimal(cf),
-                        "wholsale_price": p.wholesale_price,
+                        "wholsale_price": Decimal(p.wholesale_price),
                     },
 
                     "start_qty": Decimal("0.00"),
@@ -1018,12 +1018,14 @@ def download_osw_excel(request):
                         + prod["wozwrat_qty"]
                     )
 
-                    prod["end_price"] = (
-                        prod["start_price"]
-                        + prod["prihod_price"]
-                        - prod["rashod_price"]
-                        + prod["wozwrat_price"]
-                    )
+                    # prod["end_price"] = (
+                    #     prod["start_price"]
+                    #     + prod["prihod_price"]
+                    #     - prod["rashod_price"]
+                    #     + prod["wozwrat_price"]
+                    # )
+                    wholesale_price = Decimal(prod["product"]["wholsale_price"])
+                    prod["end_price"] = prod["end_qty"] * wholesale_price
                     
             for cat in account_40_42.values():
                 totals = cat["totals"]
@@ -1033,11 +1035,14 @@ def download_osw_excel(request):
                     - totals["rashod_qty"]
                     + totals["wozwrat_qty"]
                 )
-                totals["end_price"] = (
-                    totals["start_price"]
-                    + totals["prihod_price"]
-                    - totals["rashod_price"]
-                    + totals["wozwrat_price"]
+                # totals["end_price"] = (
+                #     totals["start_price"]
+                #     + totals["prihod_price"]
+                #     - totals["rashod_price"]
+                #     + totals["wozwrat_price"]
+                # )
+                totals["end_price"] = sum(
+                    p["end_price"] for p in cat["products"].values()
                 )
                 
             grand_total["end_qty"] = (
@@ -1046,11 +1051,14 @@ def download_osw_excel(request):
                 - grand_total["rashod_qty"]
                 + grand_total["wozwrat_qty"]
             )
-            grand_total["end_price"] = (
-                grand_total["start_price"]
-                + grand_total["prihod_price"]
-                - grand_total["rashod_price"]
-                + grand_total["wozwrat_price"]
+            # grand_total["end_price"] = (
+            #     grand_total["start_price"]
+            #     + grand_total["prihod_price"]
+            #     - grand_total["rashod_price"]
+            #     + grand_total["wozwrat_price"]
+            # )
+            grand_total["end_price"] = sum(
+                cat["totals"]["end_price"] for cat in account_40_42.values()
             )
             
             ws_detail = detail_sheets[account_id]

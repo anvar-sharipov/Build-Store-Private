@@ -131,22 +131,28 @@ def download_excel_entries_diapazon(request):
     ws["A1"].alignment = CENTER
     ws["A1"].font = Font(size=14, bold=True)
     ws.row_dimensions[1].height = 30
+    
+    ws.merge_cells("A2:I2")
+    ws["A2"] = f"Период с {day_start_str} по {day_end_str}"
+    ws["A2"].alignment = CENTER
+    ws["A2"].font = Font(size=12, bold=True)
+    # ws.row_dimensions[1].height = 30
 
     # ===== Шапка =====
     headers = [
-        "№",
-        "Дата",
-        "№ операции",
-        "Комментарий",
-        "Сумма",
-        "Дебет",
-        "Дебет субконто",
-        "Кредит",
-        "Кредит субконто",
+        "№",              # A
+        "Дата",           # B
+        "№ операции",     # C
+        "Кредит",         # D   ← было H
+        "Кредит субконто",# E   ← было I
+        "Дебет",          # F
+        "Дебет субконто", # G
+        "Комментарий",    # H   ← было D
+        "Сумма",          # I   ← было E
     ]
     ws.row_dimensions[3].height = 22
 
-    row = 3
+    row = 4
     for col, header in enumerate(headers, start=1):
         cell = ws.cell(row=row, column=col)
         cell.value = header
@@ -155,7 +161,7 @@ def download_excel_entries_diapazon(request):
         cell.border = THIN
 
     # ширина колонок
-    widths = [5, 10, 10, 25, 11, 7, 25, 7, 45]
+    widths = [5, 10, 12, 8, 30, 8, 30, 35, 12]
     
     for i, w in enumerate(widths, start=1):
         ws.column_dimensions[chr(64 + i)].width = w
@@ -215,16 +221,28 @@ def download_excel_entries_diapazon(request):
         if credit_entry.account.number.startswith(("60", "75")) and credit_entry.partner:
             credit_partner = credit_entry.partner.name
 
+        # values = [
+        #     counter,
+        #     transaction.date.strftime("%d.%m.%Y"),
+        #     transaction.id,
+        #     transaction.description,
+        #     float(amount),
+        #     debit_entry.account.number,
+        #     debit_partner,
+        #     credit_entry.account.number,
+        #     credit_partner,
+        # ]
+        
         values = [
-            counter,
-            transaction.date.strftime("%d.%m.%Y"),
-            transaction.id,
-            transaction.description,
-            float(amount),
-            debit_entry.account.number,
-            debit_partner,
-            credit_entry.account.number,
-            credit_partner,
+            counter,                              # A
+            transaction.date.strftime("%d.%m.%Y"),# B
+            transaction.id,                       # C
+            credit_entry.account.number,          # D
+            credit_partner,                       # E
+            debit_entry.account.number,           # F
+            debit_partner,                        # G
+            transaction.description,              # H
+            float(amount),                        # I
         ]
 
         for col, val in enumerate(values, start=1):
@@ -233,7 +251,7 @@ def download_excel_entries_diapazon(request):
             cell.border = THIN
 
             # Сумма
-            if col == 5:
+            if col == 9:
                 cell.number_format = '#,##0.00'
                 cell.alignment = RIGHT
 
@@ -247,12 +265,12 @@ def download_excel_entries_diapazon(request):
                 cell.alignment = CENTER
 
             # Кредит — красный
-            if col == 8:
+            if col == 4:
                 cell.font = Font(size=12, color="FF0000", bold=True)  # красный
                 cell.alignment = CENTER
 
             # Перенос текста для субконто
-            if col in [7, 9]:
+            if col in [5, 7]:
                 cell.alignment = Alignment(wrap_text=True, vertical="center")
                 
         # ws.row_dimensions[row].height = 20
@@ -261,14 +279,14 @@ def download_excel_entries_diapazon(request):
 
 
     # ===== ИТОГО =====
-    ws[f"D{row}"] = "ИТОГО:"
-    ws[f"D{row}"].font = Font(bold=True)
-    ws[f"D{row}"].alignment = RIGHT
+    ws[f"H{row}"] = "ИТОГО:"
+    ws[f"H{row}"].font = Font(bold=True)
+    ws[f"H{row}"].alignment = RIGHT
 
-    ws[f"E{row}"] = float(total_sum)
-    ws[f"E{row}"].font = Font(bold=True)
-    ws[f"E{row}"].number_format = '#,##0.00'
-    ws[f"E{row}"].alignment = RIGHT
+    ws[f"I{row}"] = float(total_sum)
+    ws[f"I{row}"].font = Font(bold=True)
+    ws[f"I{row}"].number_format = '#,##0.00'
+    ws[f"I{row}"].alignment = RIGHT
 
     for col in range(1, 10):
         ws.cell(row=row, column=col).border = THIN

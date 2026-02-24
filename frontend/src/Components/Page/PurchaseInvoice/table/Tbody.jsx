@@ -148,7 +148,7 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
 
                   {Number(product.qty_in_drafts) > 0 && (
                     <div className="flex justify-between text-amber-600">
-                      <div>{t("in drafts")}:</div>
+                      <div>{t("reserved")}:</div>
                       <div className="font-medium pl-3">{product.qty_in_drafts}</div>
                     </div>
                   )}

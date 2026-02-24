@@ -7,7 +7,7 @@ import { useSearchParams } from "react-router-dom";
 import { fetchCategories } from "../../../../fetchs/optionsFetchers";
 import MyButton from "../../../../UI/MyButton";
 import { useDispatch } from "react-redux";
-import { setPrintExcel } from "../../../../../app/store/buhOborotFiltersSlice";
+import { setPrintExcel, setPrintExcelBrand } from "../../../../../app/store/buhOborotFiltersSlice";
 
 const BuhOborotTowarowFilter = () => {
   const { t } = useTranslation();
@@ -22,6 +22,10 @@ const BuhOborotTowarowFilter = () => {
 
   const handleClick = () => {
     dispatch(setPrintExcel(true));
+  };
+
+  const handleClickBrand = () => {
+    dispatch(setPrintExcelBrand(true));
   };
 
   const warehouseId = searchParams.get("warehouse");
@@ -492,6 +496,11 @@ const BuhOborotTowarowFilter = () => {
       <div className="mt-3 text-gray-300 text-sm text-center flex gap-3">
         <MyButton variant="green" className="px-2" onClick={handleClick}>
           📊 Excel
+        </MyButton>
+      </div>
+      <div className="mt-3 text-gray-300 text-sm text-center flex gap-3">
+        <MyButton variant="green" className="px-2" onClick={handleClickBrand}>
+          📊 Excel (Brand)
         </MyButton>
       </div>
       {/* Статус загрузки складов */}

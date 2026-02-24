@@ -4,6 +4,7 @@ const initialState = {
 
 
   printExcel: false,
+  printExcelBrand: false,
 };
 
 const buhOborotSlice = createSlice({
@@ -15,12 +16,18 @@ const buhOborotSlice = createSlice({
       state.printExcel = action.payload;
     },
 
+    // ===== EXCEL BRAND =====
+    setPrintExcelBrand(state, action) {
+      state.printExcelBrand = action.payload;
+    },
+
  
   },
 });
 
 export const {
   setPrintExcel,
+  setPrintExcelBrand,
 } = buhOborotSlice.actions;
 
 export default buhOborotSlice.reducer;

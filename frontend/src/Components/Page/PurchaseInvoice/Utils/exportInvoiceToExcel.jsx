@@ -3,7 +3,7 @@ import { saveAs } from "file-saver";
 import { formatNumber2 } from "../../../UI/formatNumber2";
 
 const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibleColumns, t, awtoData, saldoForExcel, saldo2) => {
-  // console.log("ryryryr");
+  console.log("ryryryr");
 
   const safeNumber = (v, decimals = null) => {
     if (v === null || v === undefined || v === "") return null;
@@ -49,11 +49,27 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
 
     worksheet.pageSetup = {
       paperSize: 9, // A4
-      orientation: "portrait", // или "landscape"
+      orientation: "portrait", // или "landscape" если нужно
       fitToPage: true,
-      fitToWidth: 1, // 👈 не более 1 страницы в ширину
-      fitToHeight: 1, // 👈 не более 1 страницы в высоту
+      fitToWidth: 1, // ВАЖНО → 1 страница по ширине
+      fitToHeight: 0, // 0 = по высоте без ограничения
+      margins: {
+        left: 0.6,
+        right: 0.2,
+        top: 0.2,
+        bottom: 0.2,
+        header: 0.3,
+        footer: 0.3,
+      },
     };
+
+    // worksheet.pageSetup = {
+    //   paperSize: 9, // A4
+    //   orientation: "portrait", // или "landscape"
+    //   fitToPage: true,
+    //   fitToWidth: 1, // 👈 не более 1 страницы в ширину
+    //   fitToHeight: 1, // 👈 не более 1 страницы в высоту
+    // };
 
     // 2. Добавление логотипа
     try {
@@ -715,8 +731,9 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
         saldoHeaderRow.getCell(2).value = "Описание";
         saldoHeaderRow.getCell(3).value = "Дебет";
         saldoHeaderRow.getCell(4).value = "Кредит";
+        saldoHeaderRow.getCell(5).value = "Остаток";
 
-        for (let i = 1; i <= 4; i++) {
+        for (let i = 1; i <= 5; i++) {
           saldoHeaderRow.getCell(i).style = styles.saldoTableHeader;
         }
         currentRow++;
@@ -732,6 +749,8 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
         } else if (start_calc < 0) {
           start_credit = Math.abs(start_calc);
         }
+
+        let ostatok = start_debit - start_credit;
         openingRow.getCell(3).value = safeNumber(start_debit, 2);
 
         openingRow.getCell(3).style = { ...styles.saldoData, alignment: { horizontal: "right" } };
@@ -740,6 +759,11 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
 
         openingRow.getCell(4).style = { ...styles.saldoData, alignment: { horizontal: "right" } };
         openingRow.getCell(4).numFmt = "#,##0.00";
+
+        openingRow.getCell(5).value = safeNumber(ostatok, 2);
+        openingRow.getCell(5).style = { ...styles.saldoData, alignment: { horizontal: "right" } };
+        openingRow.getCell(5).numFmt = "#,##0.00";
+
         applySaldoRowBorder(openingRow);
         currentRow++;
 
@@ -783,6 +807,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
 
         if (accountData.today_entries && accountData.today_entries.length > 0) {
           accountData.today_entries.forEach((entry) => {
+            ostatok += entry[2] - entry[3];
             const dataRow = worksheet.getRow(currentRow);
             dataRow.getCell(1).value = entry[0]?.split(" ")[0]?.replace(/-/g, ".") || "";
             dataRow.getCell(2).value = entry[1] || "";
@@ -798,6 +823,14 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
 
             creditCell.style = { ...styles.saldoData, alignment: { horizontal: "right" } };
             creditCell.numFmt = "#,##0.00";
+
+            dataRow.getCell(5).value = safeNumber(ostatok, 2);
+            dataRow.getCell(5).border = {
+              top: { style: "thin", color: { argb: "FF000000" } },
+              bottom: { style: "thin", color: { argb: "FF000000" } },
+              left: { style: "thin", color: { argb: "FF000000" } },
+              right: { style: "thin", color: { argb: "FF000000" } },
+            };
 
             applySaldoRowBorder(dataRow);
             currentRow++;
@@ -819,6 +852,10 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
 
         totalRow.getCell(4).style = { ...styles.saldoData, alignment: { horizontal: "right" }, font: { bold: true } };
         totalRow.getCell(4).numFmt = "#,##0.00";
+
+        totalRow.getCell(5).value = "";
+        totalRow.getCell(5).style = { ...styles.saldoData, alignment: { horizontal: "right" }, font: { bold: true } };
+
         applySaldoRowBorder(totalRow, true);
         currentRow++;
 
@@ -833,6 +870,11 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
 
         closingRow.getCell(4).style = { ...styles.saldoData, alignment: { horizontal: "right" }, font: { bold: true } };
         closingRow.getCell(4).numFmt = "#,##0.00";
+
+        closingRow.getCell(5).style = { ...styles.saldoData, alignment: { horizontal: "right" }, font: { bold: true } };
+        closingRow.getCell(5).value = ostatok;
+        closingRow.getCell(5).numFmt = "#,##0.00";
+
         applySaldoRowBorder(closingRow, true);
         currentRow += 2;
       };

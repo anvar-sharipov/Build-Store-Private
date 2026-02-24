@@ -465,7 +465,7 @@ def get_saldo2(partner_obj, dateFrom, dateTo, invoiceDate=None, use_diapazon=Fal
             entries_start = Entry.objects.filter(
                 partner=partner_obj,  # ← ИЗМЕНИЛИ
                 transaction__date__lt=invoice_date
-            ).filter(account=account)
+            ).filter(account=account).order_by("id")
         
         debit_start = entries_start.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
         credit_start = entries_start.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
@@ -484,7 +484,7 @@ def get_saldo2(partner_obj, dateFrom, dateTo, invoiceDate=None, use_diapazon=Fal
                 partner=partner_obj,  # ← ИЗМЕНИЛИ
                 transaction__date__lte=date_to,  
                 transaction__date__gte=date_from  
-            ).filter(account=account)
+            ).filter(account=account).order_by("id")
         else:
             
             entries_oborot = Entry.objects.filter(
@@ -492,7 +492,7 @@ def get_saldo2(partner_obj, dateFrom, dateTo, invoiceDate=None, use_diapazon=Fal
                 transaction__date__date=invoice_date, 
                 # transaction__date__lte=date_to,  
                 # transaction__date__gte=date_from  
-            ).filter(account=account)
+            ).filter(account=account).order_by("id")
         
         debit_oborot = entries_oborot.aggregate(total=Sum('debit'))['total'] or Decimal('0.00')
         credit_oborot = entries_oborot.aggregate(total=Sum('credit'))['total'] or Decimal('0.00')
@@ -543,7 +543,7 @@ def get_saldo2(partner_obj, dateFrom, dateTo, invoiceDate=None, use_diapazon=Fal
 
 @require_GET
 def get_saldo_for_partner_for_selected_date2(request):
-    
+   
 
     dateFrom = request.GET.get('dateFrom', "")
     dateTo = request.GET.get('dateTo', "")

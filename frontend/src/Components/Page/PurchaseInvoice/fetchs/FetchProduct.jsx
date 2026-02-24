@@ -390,7 +390,7 @@ const FetchProduct = ({ refs, invoice_id = null }) => {
                         {/* reserved */}
                         {product.qty_in_drafts > 0 && (
                           <div className="grid grid-cols-[120px_80px_auto] text-sm font-bold leading-5">
-                            <div className="text-amber-600 dark:text-amber-400">{t("in drafts")}:</div>
+                            <div className="text-amber-600 dark:text-amber-400">{t("reserved")}:</div>
                             <div className="text-right font-mono text-amber-600 dark:text-amber-400">{formatNumber(product.qty_in_drafts)}</div>
                             <div className="pl-2 text-amber-600 dark:text-amber-400">{unit}</div>
                           </div>

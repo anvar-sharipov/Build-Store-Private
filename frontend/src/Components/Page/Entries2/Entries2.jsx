@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useContext, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, CreditCard, ArrowRightLeft, Coins, MessageSquare, CheckCircle2, Edit, Trash2, Save, User } from "lucide-react";
+import { Calendar, CreditCard, ArrowRightLeft, Coins, MessageSquare, CheckCircle2, Edit, Trash2, Save, User, Table } from "lucide-react";
 import { DateContext } from "../../UI/DateProvider";
 import myAxios from "../../axios";
 import { Formik, Form, Field } from "formik";
@@ -66,6 +66,41 @@ const Entries2 = () => {
   const [downloadExcel, setDownloadExcel] = useState(false);
 
   const [letPrintSaldo, setLetPrintSaldo] = useState(false);
+
+  const downloadDetailEntry = async (entry_id = null) => {
+    if (!entry_id) return;
+    try {
+      console.log("DOWNLOAD DETAIL ENTRY");
+
+      // await generateAndDownloadExcel();
+      // или
+      // await myAxios.get("/buh-oborot/excel", { responseType: "blob" });
+      const res = await myAxios.get("download_detail_entry", {
+        params: {
+          entry_id,
+        },
+        responseType: "blob",
+      });
+      // ===== СКАЧИВАНИЕ =====
+      const blob = new Blob([res.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Prowodka_${entry_id}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("Excel Brand error", e);
+    } finally {
+      // dispatch(setPrintExcelBrand(false)); // ✅ СБРОС ПОСЛЕ
+    }
+  };
 
   const downloadExcelEntries = async () => {
     if (!dateFrom || !dateTo) {
@@ -1028,86 +1063,89 @@ const Entries2 = () => {
                         </div>
                       ) : (
                         <div className="space-y-4">
-                          {entriesList.map((entry) => (
-                            <motion.div
-                              key={entry.id}
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              className="border border-gray-200 dark:border-gray-600 rounded-xl p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200 shadow-sm hover:shadow-md dark:shadow-gray-900/20"
-                            >
-                              <div className="flex justify-between items-start">
-                                <div className="flex-1">
-                                  {/* Заголовок с номером проводки и комментарием */}
-                                  <div className="flex items-center gap-3 mb-3">
-                                    <div className="bg-gradient-to-r from-gray-600 to-gray-800 dark:from-gray-500 dark:to-gray-700 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                                      {t("confirm_entry")} № {entry.id}
+                          {entriesList.map((entry) => {
+                            // console.log("entry", entry);
+                            
+                            return (
+                              <motion.div
+                                key={entry.id}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="border border-gray-200 dark:border-gray-600 rounded-xl p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-all duration-200 shadow-sm hover:shadow-md dark:shadow-gray-900/20"
+                              >
+                                <div className="flex justify-between items-start">
+                                  <div className="flex-1">
+                                    {/* Заголовок с номером проводки и комментарием */}
+                                    <div className="flex items-center gap-3 mb-3">
+                                      <div className="bg-gradient-to-r from-gray-600 to-gray-800 dark:from-gray-500 dark:to-gray-700 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                        {t("confirm_entry")} № {entry.id}
+                                      </div>
+                                      <p className="font-medium text-gray-900 dark:text-gray-100 flex-1">{entry.comment}</p>
                                     </div>
-                                    <p className="font-medium text-gray-900 dark:text-gray-100 flex-1">{entry.comment}</p>
-                                  </div>
 
-                                  <div className="flex items-center gap-6">
-                                    {/* Сумма - выделенная */}
-                                    <div className="text-xl font-bold dark:text-white bg-gradient-to-r from-blue-500 to-purple-600 dark:from-blue-400 dark:to-purple-500 text-white px-3 py-2 rounded-lg min-w-24 text-center">
-                                      <div className="flex items-center gap-3">
-                                        <Coins className="w-4 h-4 text-yellow-500" />
-                                        {new Intl.NumberFormat("ru-RU", {
-                                          minimumFractionDigits: 2,
-                                          maximumFractionDigits: 2,
-                                        }).format(entry.debit?.amount || entry.credit?.amount)}
+                                    <div className="flex items-center gap-6">
+                                      {/* Сумма - выделенная */}
+                                      <div className="text-xl font-bold dark:text-white bg-gradient-to-r from-blue-500 to-purple-600 dark:from-blue-400 dark:to-purple-500 text-white px-3 py-2 rounded-lg min-w-24 text-center">
+                                        <div className="flex items-center gap-3">
+                                          <Coins className="w-4 h-4 text-yellow-500" />
+                                          {new Intl.NumberFormat("ru-RU", {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                          }).format(entry.debit?.amount || entry.credit?.amount)}
+                                        </div>
+                                      </div>
+                                      {/* Разделитель */}
+                                      <div className="h-10 w-px bg-gray-300 dark:bg-gray-500"></div>
+                                      {/* Счета */}
+                                      <div className="flex gap-6 text-sm">
+                                        <div className="text-green-600 dark:text-green-400">
+                                          <strong className="text-gray-700 dark:text-gray-300">Дт:</strong>
+                                          <span className="ml-1 font-mono bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded text-green-700 dark:text-green-300">{entry.debit?.account}</span>
+                                        </div>
+                                        <div className="text-red-600 dark:text-red-400">
+                                          <strong className="text-gray-700 dark:text-gray-300">Кт:</strong>
+                                          <span className="ml-1 font-mono bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded text-red-700 dark:text-red-300">{entry.credit?.account}</span>
+                                        </div>
                                       </div>
                                     </div>
-                                    {/* Разделитель */}
-                                    <div className="h-10 w-px bg-gray-300 dark:bg-gray-500"></div>
-                                    {/* Счета */}
-                                    <div className="flex gap-6 text-sm">
-                                      <div className="text-green-600 dark:text-green-400">
-                                        <strong className="text-gray-700 dark:text-gray-300">Дт:</strong>
-                                        <span className="ml-1 font-mono bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded text-green-700 dark:text-green-300">{entry.debit?.account}</span>
-                                      </div>
-                                      <div className="text-red-600 dark:text-red-400">
-                                        <strong className="text-gray-700 dark:text-gray-300">Кт:</strong>
-                                        <span className="ml-1 font-mono bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded text-red-700 dark:text-red-300">{entry.credit?.account}</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
-                                    <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                                      <span className="flex items-center gap-1">
-                                        <Calendar className="w-4 h-4" />
-                                        {MyFormatDate(entry.date)}
-                                      </span>
-
-                                      {/* Партнер дебета */}
-                                      {(entry.debitPartner || entry.debit?.partner) && (
-                                        <span className="flex items-center gap-1 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded">
-                                          <User className="w-4 h-4 text-green-600" />
-                                          <span className="text-green-700 dark:text-green-300">Дт: {entry.debitPartner?.name || entry.debit?.partner?.name}</span>
-                                        </span>
-                                      )}
-
-                                      {/* Партнер кредита */}
-                                      {(entry.creditPartner || entry.credit?.partner) && (
-                                        <span className="flex items-center gap-1 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded">
-                                          <User className="w-4 h-4 text-red-600" />
-                                          <span className="text-red-700 dark:text-red-300">Кт: {entry.creditPartner?.name || entry.credit?.partner?.name}</span>
-                                        </span>
-                                      )}
-
-                                      {/* Старый партнер из Transaction (для обратной совместимости) */}
-                                      {entry.partner?.name && !entry.debitPartner && !entry.creditPartner && (
+                                    <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
+                                      <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                                         <span className="flex items-center gap-1">
-                                          <User className="w-4 h-4" />
-                                          {entry.partner.name}
+                                          <Calendar className="w-4 h-4" />
+                                          {MyFormatDate(entry.date)}
                                         </span>
-                                      )}
+
+                                        {/* Партнер дебета */}
+                                        {(entry.debitPartner || entry.debit?.partner) && (
+                                          <span className="flex items-center gap-1 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded">
+                                            <User className="w-4 h-4 text-green-600" />
+                                            <span className="text-green-700 dark:text-green-300">Дт: {entry.debitPartner?.name || entry.debit?.partner?.name}</span>
+                                          </span>
+                                        )}
+
+                                        {/* Партнер кредита */}
+                                        {(entry.creditPartner || entry.credit?.partner) && (
+                                          <span className="flex items-center gap-1 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded">
+                                            <User className="w-4 h-4 text-red-600" />
+                                            <span className="text-red-700 dark:text-red-300">Кт: {entry.creditPartner?.name || entry.credit?.partner?.name}</span>
+                                          </span>
+                                        )}
+
+                                        {/* Старый партнер из Transaction (для обратной совместимости) */}
+                                        {entry.partner?.name && !entry.debitPartner && !entry.creditPartner && (
+                                          <span className="flex items-center gap-1">
+                                            <User className="w-4 h-4" />
+                                            {entry.partner.name}
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                                <div className="flex gap-2 ml-4">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleEdit(entry)}
-                                    className={`
+                                  <div className="flex gap-2 ml-4">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleEdit(entry)}
+                                      className={`
       p-2 rounded-lg transition-all duration-200 border
       ${
         !canUpdateAndDeleteEntry(entry)
@@ -1115,15 +1153,15 @@ const Entries2 = () => {
           : "text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:scale-110 border-blue-200 dark:border-blue-800 cursor-pointer"
       }
     `}
-                                    title={!canUpdateAndDeleteEntry(entry) ? t("no_permission") : t("edit")}
-                                    disabled={!canUpdateAndDeleteEntry(entry)}
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => setDeleteModal(entry.id)}
-                                    className={`
+                                      title={!canUpdateAndDeleteEntry(entry) ? t("no_permission") : t("edit")}
+                                      disabled={!canUpdateAndDeleteEntry(entry)}
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setDeleteModal(entry.id)}
+                                      className={`
       p-2 rounded-lg transition-all duration-200 border
       ${
         !canUpdateAndDeleteEntry(entry)
@@ -1131,15 +1169,26 @@ const Entries2 = () => {
           : "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:scale-110 border-red-200 dark:border-red-800 cursor-pointer"
       }
     `}
-                                    title={!canUpdateAndDeleteEntry(entry) ? t("no_permission") : t("delete")}
-                                    disabled={!canUpdateAndDeleteEntry(entry)}
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
+                                      title={!canUpdateAndDeleteEntry(entry) ? t("no_permission") : t("delete")}
+                                      disabled={!canUpdateAndDeleteEntry(entry)}
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => downloadDetailEntry(entry.id)}
+                                      className={`
+      p-2 rounded-lg transition-all duration-200 border
+      text-green-600 dark:text-green-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:scale-110 border-red-200 dark:border-red-800 cursor-pointer`}
+                                      title={t("download")}
+                                    >
+                                      <Table className="w-4 h-4" />
+                                    </button>
+                                  </div>
                                 </div>
-                              </div>
-                            </motion.div>
-                          ))}
+                              </motion.div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>

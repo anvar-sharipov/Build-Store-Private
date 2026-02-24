@@ -1193,8 +1193,363 @@ def BuhOborotTowarowExcel(request):
     # ic(warehouse_ids)
 
     # return Response(data)
+  
+  
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def BuhOborotTowarowExcelBrand(request):
+
+    dateFrom = request.GET.get("dateFrom")
+    dateTo = request.GET.get("dateTo")
+
+    day_start = datetime.strptime(dateFrom, "%Y-%m-%d").date()
+    day_end = datetime.strptime(dateTo, "%Y-%m-%d").date()
+
+    warehouses_param = request.GET.get("warehouses", "")
+    warehouse_param = request.GET.get("warehouse", "")
+
+    warehouse_ids = []
+
+    if warehouses_param:
+        warehouse_ids = [
+            int(id.strip()) for id in warehouses_param.split(",")
+            if id.strip().isdigit()
+        ]
+    elif warehouse_param and warehouse_param.isdigit():
+        warehouse_ids = [int(warehouse_param)]
+
+    if not warehouse_ids:
+        return JsonResponse(
+            {"status": "error", "message": "Warehouse(s) not selected"},
+            status=400
+        )
+
+    # === Товары ===
+    products = Product.objects.filter(
+        Q(warehouse_products__warehouse_id__in=warehouse_ids) |
+        Q(invoiceitem__invoice__warehouse_id__in=warehouse_ids) |
+        Q(invoiceitem__invoice__warehouse2_id__in=warehouse_ids)
+    ).select_related("brand").distinct()
+
+    unit_map = get_unit_map()
+
+    brands = {}
+
+    for p in products:
+        if not p.brand:
+            continue
+
+        unit, cf = get_unit_and_cf(unit_map, p)
+
+        brand_id = p.brand.id
+        brand_name = p.brand.name
+
+        if brand_id not in brands:
+            brands[brand_id] = {
+                "brand": brand_name,
+                "products": {},
+                "totals": {
+                    "start_qty": Decimal("0.00"),
+                    "start_price": Decimal("0.00"),
+                    "prihod_qty": Decimal("0.00"),
+                    "prihod_price": Decimal("0.00"),
+                    "wozwrat_qty": Decimal("0.00"),
+                    "wozwrat_price": Decimal("0.00"),
+                    "rashod_qty": Decimal("0.00"),
+                    "rashod_price": Decimal("0.00"),
+                    "end_qty": Decimal("0.00"),
+                    "end_price": Decimal("0.00"),
+                }
+            }
+
+        brands[brand_id]["products"][p.id] = {
+            "product": p,
+            "unit": unit,
+            "cf": Decimal(cf),
+            "start_qty": Decimal("0.00"),
+            "start_price": Decimal("0.00"),
+            "prihod_qty": Decimal("0.00"),
+            "prihod_price": Decimal("0.00"),
+            "wozwrat_qty": Decimal("0.00"),
+            "wozwrat_price": Decimal("0.00"),
+            "rashod_qty": Decimal("0.00"),
+            "rashod_price": Decimal("0.00"),
+            "end_qty": Decimal("0.00"),
+            "end_price": Decimal("0.00"),
+        }
+
+    # === Все движения ===
+    items = InvoiceItem.objects.filter(
+        invoice__entry_created_at_handle__lte=day_end,
+        invoice__canceled_at__isnull=True
+    ).filter(
+        Q(invoice__warehouse_id__in=warehouse_ids) |
+        Q(invoice__warehouse2_id__in=warehouse_ids)
+    ).select_related(
+        "product", "product__brand", "invoice"
+    )
+
+    for item in items:
+        p = item.product
+        inv = item.invoice
+
+        if not p.brand:
+            continue
+        if p.brand.id not in brands:
+            continue
+        if p.id not in brands[p.brand.id]["products"]:
+            continue
+
+        prod = brands[p.brand.id]["products"][p.id]
+        totals = brands[p.brand.id]["totals"]
+
+        cf = prod["cf"]
+        qty = Decimal(item.selected_quantity) / cf
+        total = qty * Decimal(item.selected_price)
+
+        is_start = inv.entry_created_at_handle.date() < day_start
+
+        def add(field_qty, field_price, sign=1):
+            prod[field_qty] += sign * qty
+            prod[field_price] += sign * total
+            totals[field_qty] += sign * qty
+            totals[field_price] += sign * total
+
+        # === START ===
+        if is_start:
+
+            if inv.wozwrat_or_prihod in ["prihod", "wozwrat"]:
+                if inv.warehouse_id in warehouse_ids:
+                    add("start_qty", "start_price")
+
+            elif inv.wozwrat_or_prihod == "rashod":
+                if inv.warehouse_id in warehouse_ids:
+                    add("start_qty", "start_price", -1)
+
+            elif inv.wozwrat_or_prihod == "transfer":
+                if inv.warehouse_id in warehouse_ids:
+                    add("start_qty", "start_price", -1)
+                elif inv.warehouse2_id in warehouse_ids:
+                    add("start_qty", "start_price")
+
+        # === TURNOVER ===
+        else:
+
+            if inv.wozwrat_or_prihod == "prihod":
+                if inv.warehouse_id in warehouse_ids:
+                    add("prihod_qty", "prihod_price")
+
+            elif inv.wozwrat_or_prihod == "wozwrat":
+                if inv.warehouse_id in warehouse_ids:
+                    add("wozwrat_qty", "wozwrat_price")
+
+            elif inv.wozwrat_or_prihod == "rashod":
+                if inv.warehouse_id in warehouse_ids:
+                    add("rashod_qty", "rashod_price")
+
+            elif inv.wozwrat_or_prihod == "transfer":
+                if inv.warehouse_id in warehouse_ids:
+                    add("rashod_qty", "rashod_price")
+                elif inv.warehouse2_id in warehouse_ids:
+                    add("prihod_qty", "prihod_price")
+
+    # === Конец ===
+    for brand in brands.values():
+        totals = brand["totals"]
+
+        for prod in brand["products"].values():
+
+            # количество как и было
+            prod["end_qty"] = (
+                prod["start_qty"]
+                + prod["prihod_qty"]
+                - prod["rashod_qty"]
+                + prod["wozwrat_qty"]
+            )
+
+            # ❗ ВАЖНО: берём текущую цену из продукта
+            current_price = Decimal(prod["product"].wholesale_price)
+
+            prod["end_price"] = (
+                prod["end_qty"] * current_price
+            ).quantize(Decimal("0.01"))
+
+        # ===== totals =====
+        totals["end_qty"] = sum(
+            p["end_qty"] for p in brand["products"].values()
+        )
+
+        totals["end_price"] = sum(
+            p["end_price"] for p in brand["products"].values()
+        )
+    # ================= EXCEL =================
+
+    wb = Workbook()
+    wb.remove(wb.active)
+
+    for brand_id, data in sorted(brands.items(), key=lambda x: x[1]["brand"].lower()):
+
+        ws = wb.create_sheet(title=data["brand"][:31])
+
+        # ================= HEADER =================
+        ws.merge_cells("A2:N2")
+        ws.merge_cells("A3:N3")
+
+        ws["A2"] = f"Бухгалтерский оборот товаров (Бренд: {data['brand']})"
+        ws["A3"] = f"Период: {dateFrom} — {dateTo}"
+
+        ws["A2"].font = CATEGORY_FONT
+        ws["A3"].font = CATEGORY_FONT
+        ws["A2"].alignment = CENTER_ALIGN
+        ws["A3"].alignment = CENTER_ALIGN
+
+        # ================= COLUMN WIDTH =================
+        ws.column_dimensions["A"].width = 6
+        ws.column_dimensions["B"].width = 45
+        ws.column_dimensions["C"].width = 8
+        ws.column_dimensions["D"].width = 10
+
+        for col in "EFGHIJKLMN":
+            ws.column_dimensions[col].width = 12
+
+        # ================= HEADER ROW 1 =================
+        ws["A5"] = "№"
+        ws["B5"] = "Наименование"
+        ws["C5"] = "Ед."
+        ws["D5"] = "Цена"
+
+        ws.merge_cells("E5:F5")
+        ws["E5"] = "Остаток на начало"
+
+        ws.merge_cells("G5:H5")
+        ws["G5"] = "Приход"
+
+        ws.merge_cells("I5:J5")
+        ws["I5"] = "Возврат"
+
+        ws.merge_cells("K5:L5")
+        ws["K5"] = "Расход"
+
+        ws.merge_cells("M5:N5")
+        ws["M5"] = "Остаток на конец"
+
+        # ================= HEADER ROW 2 =================
+        headers2 = {
+            "E6": "Кол-во", "F6": "Сумма",
+            "G6": "Кол-во", "H6": "Сумма",
+            "I6": "Кол-во", "J6": "Сумма",
+            "K6": "Кол-во", "L6": "Сумма",
+            "M6": "Кол-во", "N6": "Сумма",
+        }
+
+        for cell, value in headers2.items():
+            ws[cell] = value
+
+        # ================= STYLE HEADER =================
+        for cell in [
+            "A5","B5","C5","D5","E5","F5","G5","H5",
+            "I5","J5","K5","L5","M5","N5",
+            "E6","F6","G6","H6","I6","J6",
+            "K6","L6","M6","N6"
+        ]:
+            ws[cell].font = CATEGORY_FONT
+            ws[cell].alignment = CENTER_ALIGN
+            ws[cell].fill = GRAY_FILL_1
+            ws[cell].border = THIN_BORDER
+
+        ws.freeze_panes = "A7"
+
+        # ================= BRAND ROW =================
+        row = 7
+
+        ws.merge_cells(f"A{row}:N{row}")
+        ws[f"A{row}"] = f"Бренд: {data['brand']}"
+        ws[f"A{row}"].fill = GREEN_FILL_0
+        ws[f"A{row}"].font = CATEGORY_FONT
+        ws[f"A{row}"].alignment = LEFT_ALIGN
+
+        row += 1
+        count = 1
+
+        # ================= PRODUCTS =================
+        for prod_id, value in sorted(
+            data["products"].items(),
+            key=lambda x: x[1]["product"].name.lower()
+        ):
+
+            p = value["product"]
+
+            ws.append([
+                count,
+                p.name,
+                value["unit"],
+                p.wholesale_price,
+
+                value["start_qty"], value["start_price"],
+                value["prihod_qty"], value["prihod_price"],
+                value["wozwrat_qty"], value["wozwrat_price"],
+                value["rashod_qty"], value["rashod_price"],
+                value["end_qty"], value["end_price"],
+            ])
+
+            # форматы
+            for col in "FHJLN":
+                ws[f"{col}{row}"].number_format = PRICE_FMT
+
+            for col in "EGIKM":
+                ws[f"{col}{row}"].number_format = QTY_FMT
+
+            # границы
+            for col_letter in "ABCDEFGHIJKLMN":
+                ws[f"{col_letter}{row}"].border = THIN_BORDER
+
+            row += 1
+            count += 1
+
+        # ================= TOTAL =================
+        totals = data["totals"]
+
+        ws.merge_cells(f"A{row}:D{row}")
+        ws[f"A{row}"] = f"Итого по бренду: {data['brand']}"
+        ws[f"A{row}"].font = CATEGORY_FONT
+        ws[f"A{row}"].alignment = RIGHT_ALIGN
+
+        ws[f"E{row}"] = totals["start_qty"]
+        ws[f"F{row}"] = totals["start_price"]
+        ws[f"G{row}"] = totals["prihod_qty"]
+        ws[f"H{row}"] = totals["prihod_price"]
+        ws[f"I{row}"] = totals["wozwrat_qty"]
+        ws[f"J{row}"] = totals["wozwrat_price"]
+        ws[f"K{row}"] = totals["rashod_qty"]
+        ws[f"L{row}"] = totals["rashod_price"]
+        ws[f"M{row}"] = totals["end_qty"]
+        ws[f"N{row}"] = totals["end_price"]
+
+        for col in "FHJLN":
+            ws[f"{col}{row}"].number_format = PRICE_FMT
+
+        for col in "EGIKM":
+            ws[f"{col}{row}"].number_format = QTY_FMT
+
+        for col_letter in "ABCDEFGHIJKLMN":
+            ws[f"{col_letter}{row}"].fill = GRAY_FILL_0
+            ws[f"{col_letter}{row}"].border = THIN_BORDER
     
-    
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    filename = f"buh_oborot_tovarov_brand_{dateFrom}_{dateTo}.xlsx"
+
+    response = HttpResponse(
+        output.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+
+    return response
+        
 # BuhOborotTowarow (3 warianta moy, chatGpt i DeepSeek) END
 ################################################################################################################################################################
 ################################################################################################################################################################

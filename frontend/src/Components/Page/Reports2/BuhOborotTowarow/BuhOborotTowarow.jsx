@@ -12,7 +12,7 @@ import { ROUTES_RAPORT } from "../../../../routes";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 
-import { setPrintExcel } from "../../../../app/store/buhOborotFiltersSlice";
+import { setPrintExcel, setPrintExcelBrand } from "../../../../app/store/buhOborotFiltersSlice";
 import { useSelector, useDispatch } from "react-redux";
 
 export const BuhOborotTowarow = () => {
@@ -27,9 +27,12 @@ export const BuhOborotTowarow = () => {
 
   const dispatch = useDispatch();
   const printExcel = useSelector((state) => state.buhOborot.printExcel);
+  const printExcelBrand = useSelector((state) => state.buhOborot.printExcelBrand);
 
   useEffect(() => {
     if (!printExcel) return;
+    
+    
 
     const downloadExcel = async () => {
       try {
@@ -74,6 +77,57 @@ export const BuhOborotTowarow = () => {
 
     downloadExcel();
   }, [printExcel, dispatch]);
+
+
+    useEffect(() => {
+    if (!printExcelBrand) return;
+    
+    
+
+    const downloadExcelBrand = async () => {
+      try {
+        console.log("START EXCEL BARND");
+
+        // await generateAndDownloadExcel();
+        // или
+        // await myAxios.get("/buh-oborot/excel", { responseType: "blob" });
+        const warehouseParam = selectedWarehouses.length > 0 ? selectedWarehouses.join(",") : warehouseId || "";
+        const res = await myAxios.get("BuhOborotTowarowExcelBrand", {
+          params: {
+            dateFrom,
+            dateTo,
+            warehouses: warehouseParam, // Изменено на множественный параметр
+            // withWozwrat: withWozwrat,
+            categories: categories,
+            products: products_ids,
+            emptyTurnovers: emptyTurnovers,
+          },
+          responseType: "blob",
+        });
+        // ===== СКАЧИВАНИЕ =====
+        const blob = new Blob([res.data], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `Haryt_Brand${dateFrom}_${dateTo}.xlsx`;
+        document.body.appendChild(link);
+        link.click();
+
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (e) {
+        console.error("Excel Brand error", e);
+      } finally {
+        dispatch(setPrintExcelBrand(false)); // ✅ СБРОС ПОСЛЕ
+      }
+    };
+
+    downloadExcelBrand();
+  }, [printExcelBrand, dispatch]);
+
 
   const printStylesThTd = "print:border-black print:px-1 print:py-0.5 print:text-[10px] print:leading-none border-black px-1 py-0.5 text-[12px] leading-none";
 

@@ -721,7 +721,7 @@ def save_invoice(request):
                     return JsonResponse({"status": "error", "message": "choose date prowodok"}, status=400)
                 try:
                     with transaction.atomic():
-                        ic("tut")
+                        # ic("tut")
                         invoice = Invoice.objects.get(id=invoice_id)
                         invoice_date = normalize_date(invoice_date2)
                         invoice.awto = awto_obj
@@ -1387,8 +1387,8 @@ def get_invoice_data(request, id):
         # ic(item.product)
         # if invoice.is_entry == False:
         qty_in_drafts = get_reserved_quantity(item.product, invoice.warehouse.id, invoice.id)
-        ic(item.product.name)
-        ic(qty_in_drafts)
+        # ic(item.product.name)
+        # ic(qty_in_drafts)
        
        
         images = [

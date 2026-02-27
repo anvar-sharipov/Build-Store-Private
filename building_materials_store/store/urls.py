@@ -22,7 +22,8 @@ from . views import get_product_turnover_history
 from . views import product_turnover_excel  
 from . views import get_analiz_prodaj 
 from . views import admin_views 
-from . views import download_excel_entries_diapazon
+from . views import download_excel_entries_diapazon 
+from . views import universal_faktura_filter 
 from . views import download_detail_entry
 from . views.sale_invoice_views import *
 from . views.report_views import *
@@ -214,7 +215,9 @@ urlpatterns = [
     path('download_excel_entries_diapazon', download_excel_entries_diapazon.download_excel_entries_diapazon, name='download_excel_entries_diapazon'),
     
     
-    path('download_detail_entry', download_detail_entry.download_detail_entry, name='download_detail_entry'),
+    path('download_detail_entry', download_detail_entry.download_detail_entry, name='download_detail_entry'), 
+    
+    path('universal_faktura_filter', universal_faktura_filter.universal_faktura_filter, name='universal_faktura_filter'), 
     
     
     

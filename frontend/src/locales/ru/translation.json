@@ -727,7 +727,18 @@
   "newest first": "Сначала новые",
   "oldest first": "Сначала старые",
   "article": "Артикул",
-  "reserved": "Зарезервировано"
+  "reserved": "Зарезервировано",
+  "no": "Нет",
+  "active filters": "Активные фильтры",
+  "operations filter": "Фильтр операций",
+  "start date cannot be later than end date": "Дата начала не может быть позже даты окончания",
+  "consolidated": "Консолидированный",
+  "not consolidated": "Не консолидированный",
+  "Period s": "Период с",
+  "po": "по",
+  "Only one product allowed in this report mode": "В этом режиме отчёта допускается только один товар",
+  "Only one partner allowed in this report mode": "В этом режиме отчёта допускается только один партнёр",
+  "report type": "Тип отчёта"
 
 
  

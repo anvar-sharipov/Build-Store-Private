@@ -158,7 +158,7 @@ const SkidkaNasenkaFilter = () => {
                 <div className="flex items-center gap-2 w-full">
                   {/* name */}
                   <div className="flex flex-col min-w-0 flex-1">
-                    <div className={`text-sm font-medium truncate ${active ? "text-white" : ""}`}>
+                    <div className={`text-sm font-medium ${active ? "text-white" : ""}`}>
                       <span>{item.name}</span>
                     </div>
                   </div>
@@ -195,7 +195,7 @@ const SkidkaNasenkaFilter = () => {
                 <div className="flex items-center gap-2 w-full">
                   {/* name */}
                   <div className="flex flex-col min-w-0 flex-1">
-                    <span className={`text-sm font-medium truncate ${active ? "text-white" : ""}`}>{item.name}</span>
+                    <span className={`text-sm font-medium ${active ? "text-white" : ""}`}>{item.name}</span>
                   </div>
                 </div>
               )}
@@ -231,7 +231,7 @@ const SkidkaNasenkaFilter = () => {
                 <div className="flex items-center gap-2 w-full">
                   {/* name */}
                   <div className="flex flex-col min-w-0 flex-1">
-                    <span className={`text-sm font-medium truncate ${active ? "text-white" : ""}`}>{item.name}</span>
+                    <span className={`text-sm font-medium ${active ? "text-white" : ""}`}>{item.name}</span>
                   </div>
                 </div>
               )}

@@ -7,6 +7,7 @@ import productSortReducer from "./ProductCardsSlice/productSortSlice";
 import skidkaFiltersReducer from "./skidkaFiltersSlice";
 import analizProdajFilterReducer from "./analizProdajSlice";
 import buhOborotReducer from "./buhOborotFiltersSlice"; 
+import fakturaFilterReducer from "./universalFilterSlice";
 
 export const store = configureStore({
   reducer: {
@@ -17,6 +18,7 @@ export const store = configureStore({
     productSort: productSortReducer, 
     skidkaFilters: skidkaFiltersReducer,
     analizProdajFilters: analizProdajFilterReducer,
-    buhOborot: buhOborotReducer, 
+    buhOborot: buhOborotReducer,
+    fakturaFilter: fakturaFilterReducer,
   },
 });

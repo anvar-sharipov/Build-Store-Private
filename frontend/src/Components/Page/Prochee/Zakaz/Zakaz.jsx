@@ -543,7 +543,7 @@ const Zakaz = () => {
 
                           {/* name */}
                           <div className="flex flex-col min-w-0 flex-1">
-                            <span className={`text-sm font-medium truncate ${active ? "text-white" : ""}`}>{item.name}</span>
+                            <span className={`text-sm font-medium ${active ? "text-white" : ""}`}>{item.name}</span>
                           </div>
 
                           {/* quantity */}

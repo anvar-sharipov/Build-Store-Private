@@ -29,6 +29,8 @@ import ZakazNavigate from "./filters/Zakaz/ZakazNavigate";
 import ProductCardsFilter from "./filters/ProductCardsFilter/ProductCardsFilter";
 import SkidkaNasenkaFilter from "./filters/SkidkaNasenkaFilter/SkidkaNasenkaFilter";
 import AnalizProdajFilter from "./filters/AnalizProdajFilter/AnalizProdajFilter";
+import UniversalFilter from "../../Page/Prochee/UniversalFilter/UniversalFilter";
+import UniversalFilterFilter from "./filters/UniversalFilterFilter/UniversalFilterFilter";
 
 // настройки для разных страниц
 const FILTER_CONFIG = {
@@ -214,7 +216,8 @@ export default function SidebarRight() {
    && currentPath !== "/products-buh-oborot" && !currentPath.includes("zakaz") 
    && currentPath !== "/zakaz-list" 
    && currentPath !== "/product-cards"
-   && currentPath !== "/analiz_prodaj"
+   && currentPath !== "/analiz_prodaj" 
+   && currentPath !== "/uniwersal_filter"
    && !currentPath.includes("skidki-nasenki"))
    
    return null;
@@ -476,6 +479,18 @@ export default function SidebarRight() {
               exit={{ opacity: 0, height: 0 }}
             >
               <AnalizProdajFilter />          
+          
+              
+            </motion.div>
+          )}
+
+          {currentPath.includes("uniwersal_filter") && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+            >
+              <UniversalFilterFilter />          
           
               
             </motion.div>

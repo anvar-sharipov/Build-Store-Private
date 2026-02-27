@@ -405,9 +405,9 @@
   "day is closed": "Gün ýapylan",
   "entries": "Prowodkalar",
   "select_warehouse": "Ammary sayla",
-  "prihod": "Geliş",
-  "wozwrat": "Gaýtaryş",
-  "rashod": "Çykdajy",
+  "prihod": "Prihod",
+  "wozwrat": "Wozwrat",
+  "rashod": "Rashod",
   "type faktura": "Faktura görnüşi",
   "CannotBeZero": "0 bolup bilmez",
   "name2": "Harydyň ady",
@@ -698,7 +698,18 @@
   "newest first": "Ilki täze",
   "oldest first": "Ilki köne",
   "article": "Artikul",
-  "reserved": "Bron edildi"
+  "reserved": "Bron edildi",
+  "no": "Ýok",
+  "active filters": "Işjeň filtrler",
+  "operations filter": "Operasiýalar filtri",
+  "start date cannot be later than end date": "Başlangyç senesi gutarýan seneden soň bolup bilmez",
+  "consolidated": "Konsolidirlenen",
+  "not consolidated": "Konsolidirlenmedik",
+  "Period s": "Период с",
+  "po": "по",
+  "Only one product allowed in this report mode": "Bu hasabat režiminde diňe bir haryt rugsat berilýär",
+  "Only one partner allowed in this report mode": "Bu hasabat režiminde diňe bir hyzmatdaş rugsat berilýär",
+  "report type": "Hasabat görnüşi"
 
 
 

@@ -115,6 +115,14 @@ const InvoiceHead = ({
         comment: comment,
       });
 
+      setValues((prev) => ({
+        ...prev,
+        is_entry: false,
+        already_entry: false,
+        entry_created_by: null,
+        entry_created_at: null,
+      }));
+
       // при успехе можно закрыть модалку или обновить данные
       setEntryCancelModal(false);
       setCancelComment("");
@@ -132,13 +140,13 @@ const InvoiceHead = ({
         showNotification(`${t(error.response.data.message)}`, "error");
       }
     } finally {
-      setValues((prev) => ({
-        ...prev,
-        is_entry: false,
-        already_entry: false,
-        entry_created_by: null,
-        entry_created_at: null,
-      }));
+      // setValues((prev) => ({
+      //   ...prev,
+      //   is_entry: false,
+      //   already_entry: false,
+      //   entry_created_by: null,
+      //   entry_created_at: null,
+      // }));
     }
   };
 

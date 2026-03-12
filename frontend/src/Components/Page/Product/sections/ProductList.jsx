@@ -38,6 +38,7 @@ const ProductList = ({
   setOpenDeleteModal,
 }) => {
   const loadMoreButtonRef = useRef(null);
+
   const { authUser, authGroup } = useContext(AuthContext);
   const [productTurnOverModal, setProductTurnOverModal] = useState({ open: false, id: null });
   const { dateFrom, dateTo, dateProwodok } = useContext(DateContext);
@@ -121,7 +122,7 @@ const ProductList = ({
           },
         });
 
-        console.log("res", res.data.data);
+        // console.log("res", res.data.data);
         setDetailOborot(res.data.data);
       } catch (error) {
         console.log("Error fetching product history:", error);
@@ -168,6 +169,8 @@ const ProductList = ({
               let unit_name = p.base_unit_obj.name;
               let quantity = parseFloat(p.quantity_on_selected_warehouses || p.total_quantity || 0);
               const currency = p.warehouses_data[0].warehouse_currency;
+
+              // console.log("ppppawqwd", p);
 
               if (p.units.length > 0) {
                 p.units.forEach((u) => {
@@ -378,9 +381,23 @@ const ProductList = ({
                           </span>
                         </div>
 
+                        {Number(p.qty_in_drafts) > 0 && (
+                          <div className="flex items-center gap-1.5 px-2 py-1 bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 rounded-lg">
+                            <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">{t("reserved")}</span>
+                            <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">{myFormatNumber(p.qty_in_drafts)}</span>
+                          </div>
+                        )}
+
+                        {Number(p.qty_in_drafts) > 0 && (
+                          <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-lg">
+                            <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">{t("available")}</span>
+                            <span className={`text-sm font-semibold ${quantity - p.qty_in_drafts <= 0 ? "text-red-600" : "text-green-600"}`}>{myFormatNumber(quantity - p.qty_in_drafts)}</span>
+                          </div>
+                        )}
+
                         <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-lg">
                           <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                            {formatNumber2(p.wholesale_price)} {currency}
+                            {formatNumber2(p.wholesale_price, 3)} {currency}
                           </span>
                         </div>
 

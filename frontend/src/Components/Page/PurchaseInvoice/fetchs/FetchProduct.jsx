@@ -18,8 +18,11 @@ const FetchProduct = ({ refs, invoice_id = null }) => {
   const [products, setProducts] = useState([]);
   // const [warehouseCurrency, setWarehouseCurrency] = useState([]);
   const [currency, setCurrency] = useState("");
-  const sound = new Audio("/sounds/up_down.mp3");
+  // const sound = new Audio("/sounds/up_down.mp3");
+  const sound = useRef(new Audio("/sounds/up_down.mp3"));
   const [loading, setLoading] = useState(false);
+
+  const cacheRef = useRef({});
 
   // console.log("invoice_idddd", invoice_id);
 
@@ -48,7 +51,8 @@ const FetchProduct = ({ refs, invoice_id = null }) => {
   };
 
   const wrapperRef = useRef(null);
-  const sound_beep = new Audio("/sounds/beep.mp3");
+  // const sound_beep = new Audio("/sounds/beep.mp3");
+  const sound_beep = useRef(new Audio("/sounds/beep.mp3"));
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -99,16 +103,67 @@ const FetchProduct = ({ refs, invoice_id = null }) => {
   //   fetchProduct();
   // }, [query]);
 
+  // useEffect(() => {
+  //   const controller = new AbortController();
+
+  //   const timeout = setTimeout(async () => {
+  //     if (!query || query.length < 2) return setProducts([]);
+  //     setLoading(true);
+
+  //     try {
+  //       console.log("invoice_idddd", invoice_id);
+  //       // const res = await myAxios.get(`search-products/?search=${query}&warehouse=${values.warehouse.id}`, { signal: controller.signal });
+  //       const res = await myAxios.get("search-products/", {
+  //         params: {
+  //           search: query,
+  //           warehouse: values.warehouse.id,
+  //           invoice_id: invoice_id || null,
+  //           wozwrat_or_prihod: values.wozwrat_or_prihod,
+  //         },
+  //         signal: controller.signal,
+  //       });
+
+  //       const activeProducts = res.data.filter((prod) => prod.is_active);
+  //       setProducts(activeProducts);
+  //     } catch (error) {
+  //       if (error.name !== "CanceledError") {
+  //         console.log("oshibka", error);
+  //       }
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }, 400);
+
+  //   return () => {
+  //     clearTimeout(timeout);
+  //     controller.abort(); // ← отменяем прошлый запрос
+  //   };
+  // }, [query]);
   useEffect(() => {
     const controller = new AbortController();
 
     const timeout = setTimeout(async () => {
-      if (!query || query.length < 2) return setProducts([]);
+      if (!query || query.length < 2 || !values.warehouse?.id) {
+        setProducts([]);
+        return;
+      }
+
+      // 🔥 проверяем cache
+      // const cacheKey = `${values.warehouse.id}_${query}`;
+      const CACHE_TTL = 60000;
+
+      const cacheKey = `${values.warehouse.id}_${values.wozwrat_or_prihod}_${invoice_id}_${query}`;
+
+      const cached = cacheRef.current[cacheKey];
+
+      if (cached && Date.now() - cached.time < CACHE_TTL) {
+        setProducts(cached.data);
+        return;
+      }
+
       setLoading(true);
 
       try {
-        console.log("invoice_idddd", invoice_id);
-        // const res = await myAxios.get(`search-products/?search=${query}&warehouse=${values.warehouse.id}`, { signal: controller.signal });
         const res = await myAxios.get("search-products/", {
           params: {
             search: query,
@@ -120,6 +175,12 @@ const FetchProduct = ({ refs, invoice_id = null }) => {
         });
 
         const activeProducts = res.data.filter((prod) => prod.is_active);
+
+        cacheRef.current[cacheKey] = {
+          data: activeProducts,
+          time: Date.now(),
+        };
+
         setProducts(activeProducts);
       } catch (error) {
         if (error.name !== "CanceledError") {
@@ -132,9 +193,10 @@ const FetchProduct = ({ refs, invoice_id = null }) => {
 
     return () => {
       clearTimeout(timeout);
-      controller.abort(); // ← отменяем прошлый запрос
+      controller.abort();
     };
-  }, [query]);
+    // }, [query, values.warehouse?.id]);
+  }, [query, values.warehouse?.id, values.wozwrat_or_prihod, invoice_id]);
 
   // ################################################################################################################################################################
   // ################################################################################################################################################################
@@ -236,8 +298,8 @@ const FetchProduct = ({ refs, invoice_id = null }) => {
               }
               if (e.key == "ArrowDown") {
                 e.preventDefault();
-                sound.currentTime = 0;
-                sound.play();
+                sound.current.currentTime = 0;
+                sound.current.play();
 
                 if (refs.productListRef.current.length > 0) {
                   setTimeout(() => {
@@ -249,8 +311,8 @@ const FetchProduct = ({ refs, invoice_id = null }) => {
                 }
               } else if (e.key == "ArrowUp") {
                 e.preventDefault();
-                sound.currentTime = 0;
-                sound.play();
+                sound.current.currentTime = 0;
+                sound.current.play();
                 if (refs.partnerX_Ref.current) {
                   refs.partnerX_Ref.current?.focus();
                 } else {
@@ -312,6 +374,10 @@ const FetchProduct = ({ refs, invoice_id = null }) => {
                   unit = unit_obj.unit_name;
                 }
               }
+
+              const imgSrc = product.images?.[0]?.image?.startsWith("http") ? product.images[0].image : `${BASE_URL}${product.images?.[0]?.image}`;
+              console.log("imgSrc", imgSrc);
+
               return (
                 <li
                   key={product.id}
@@ -338,15 +404,15 @@ const FetchProduct = ({ refs, invoice_id = null }) => {
                       setQuery("");
                     } else if (e.key === "ArrowDown") {
                       e.preventDefault();
-                      sound.currentTime = 0;
-                      sound.play();
+                      sound.current.currentTime = 0;
+                      sound.current.play();
                       if (refs.productListRef.current.length > idx + 1) {
                         refs.productListRef.current[idx + 1]?.focus();
                       }
                     } else if (e.key === "ArrowUp") {
                       e.preventDefault();
-                      sound.currentTime = 0;
-                      sound.play();
+                      sound.current.currentTime = 0;
+                      sound.current.play();
                       if (idx === 0) {
                         refs.productRef.current?.focus();
                       } else {
@@ -356,8 +422,8 @@ const FetchProduct = ({ refs, invoice_id = null }) => {
                   }}
                 >
                   <div className="flex items-center gap-3 w-full">
-                    {product.images?.[0] && <img src={`${BASE_URL}${product.images[0].image}`} className="w-16 h-16 object-cover rounded border flex-shrink-0" />}
-
+                    {/* {product.images?.[0] && <img src={`${BASE_URL}${product.images[0].image}`} loading="lazy" decoding="async" className="w-16 h-16 object-cover rounded border flex-shrink-0" />} */}
+                    {product.images?.[0] && <img src={imgSrc} loading="lazy" decoding="async" className="w-16 h-16 object-cover rounded border flex-shrink-0" />}
                     <div className="flex-1 min-w-0">
                       <div className="font-medium truncate mb-1">{product.name}</div>
 

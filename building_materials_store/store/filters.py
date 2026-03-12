@@ -130,6 +130,8 @@ class ProductFilter(django_filters.FilterSet):
     def filter_search(self, queryset, name, value):
         if not value:
             return queryset
+        
+        
 
         raw_value = value.strip()
         norm_value = raw_value.lower()
@@ -149,6 +151,9 @@ class ProductFilter(django_filters.FilterSet):
                 output_field=IntegerField(),
             )
         ).filter(q)
+        
+        # ic("this is a filter", queryset)
+        ic("this is a filter")
 
         # 🔥 если есть ordering в query — уважаем его
         ordering = self.request.GET.get("ordering")

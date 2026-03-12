@@ -98,7 +98,7 @@ function AppShell() {
               >
                 {!isFullScreenPage && <SidebarLeft />}
 
-                <section className={`flex-grow flex flex-col bg-zinc-50 dark:bg-gray-800 rounded-lg shadow-sm ${isFullScreenPage ? "p-0" : "p-4 print:p-0"}`}>
+                <section className={`flex-grow flex flex-col min-w-0 overflow-hidden bg-zinc-50 dark:bg-gray-800 rounded-lg shadow-sm ${isFullScreenPage ? "p-0" : "p-4 print:p-0"}`}>
                   <Routes>
                     <Route path={ROUTES.MAIN} element={<ProductList />} />
                     {/* <Route path="/sale-invoices/new" element={<AddSaleInvoicePage />} />

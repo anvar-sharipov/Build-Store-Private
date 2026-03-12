@@ -205,36 +205,6 @@ const DetailReport6062 = () => {
     XLSX.writeFile(workbook, fileName);
   };
 
-  // Компонент кнопки для экспорта
-  // const ExportButton = () => (
-  //   <motion.button
-  //     whileHover={{ scale: 1.05 }}
-  //     whileTap={{ scale: 0.95 }}
-  //     onClick={exportToExcel}
-  //     disabled={loading || !data || (Array.isArray(data) && data.length === 0) || (typeof data === "object" && Object.keys(data).length === 0)}
-  //     className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-lg"
-  //   >
-  //     <FileSpreadsheet className="w-4 h-4" />
-  //     <span>Excel</span>
-  //   </motion.button>
-  // );
-
-  // const ExportButton = () => {
-  //   const handleExport = async () => {
-  //     try {
-  //       await AgentReport2Excel(data, totals, calculateGrandTotals(), dateFrom, dateTo, accountNumber, sortByAgent, t, hyphenOr0);
-  //     } catch (error) {
-  //       console.error("Ошибка при экспорте в Excel:", error);
-  //     }
-  //   };
-
-  //   return (
-  //     <button onClick={handleExport} className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm flex items-center gap-1">
-  //       <span>📊 Excel</span>
-  //     </button>
-  //   );
-  // };
-
   // В компоненте Reports.jsx
   const ExportButton = () => {
     const handleExport = async () => {
@@ -270,25 +240,11 @@ const DetailReport6062 = () => {
   // ################################################################################################################################
   // ################################################################################################################################
 
-  // useEffect(() => {
-  //   console.log("data", data);
-  // }, [data]);
-
   useEffect(() => {
     // console.log("tut");
     if (!accountNumber || !dateFrom || !dateTo || sortByAgent === null) {
       return;
     }
-
-    // console.log("REQUEST:", {
-    //   accountNumber,
-    //   dateFrom,
-    //   dateTo,
-    //   sortByAgent,
-    // });
-
-    // if (!accountNumber) return;
-    // console.log("tut2");
 
     const getDetail = async () => {
       try {
@@ -316,11 +272,6 @@ const DetailReport6062 = () => {
     };
 
     getDetail();
-    // if (accountNumber && dateFrom && dateTo) {
-    //   getDetail();
-    // } else {
-    //   setData([]);
-    // }
   }, [accountNumber, dateFrom, dateTo, agent, sortByAgent, show0]);
 
   const handleRowClick = (partner_id, account_id) => {
@@ -1020,6 +971,10 @@ const DetailReport6062 = () => {
                     } else if (row.debit_before - row.credit_before < 0) {
                       start_saldo_credit = Math.abs(row.debit_before - row.credit_before);
                     }
+                    if (row.partner_id === 221) {
+                      console.log("row", row);
+                    }
+
                     return (
                       <motion.tr
                         key={index}

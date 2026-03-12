@@ -709,7 +709,23 @@
   "po": "по",
   "Only one product allowed in this report mode": "Bu hasabat režiminde diňe bir haryt rugsat berilýär",
   "Only one partner allowed in this report mode": "Bu hasabat režiminde diňe bir hyzmatdaş rugsat berilýär",
-  "report type": "Hasabat görnüşi"
+  "report type": "Hasabat görnüşi",
+  "Only one from warehouse allowed in this report mode": "Bu hasabat režiminde diňe bir ugradýan ammar rugsat berilýär",
+  "Only one to warehouse allowed in this report mode": "Bu hasabat režiminde diňe bir kabul edýän ammar rugsat berilýär",
+  "warehouses cannot be the same": "Ammarlar birmeňzeş bolup bilmez",
+  "select analyze type": "Seljeriş görnüşini saýlaň",
+  "analyze type": "Seljeriş görnüşi",
+  "last days analysis": "Soňky günleriň seljermesi",
+  "enter day count": "Gün sanyny giriziň",
+  "search analysis": "Seljeriş gözlegi",
+  "sort by brand": "Brend boýunça tertiple",
+  "days of inventory left": "Galan ätiýaçlyk günleri",
+  "show zero": "Nollary görkez",
+  "founded": "Tapyldy",
+  "product age days": "Harydyň ýaşy (gün)",
+  "full list": "Doly sanaw",
+  "share": "Paý agramy %",
+  "cumulative percent": "Toplanan %"
 
 
 

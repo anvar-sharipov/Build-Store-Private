@@ -1,16 +1,30 @@
 import { useSelector, useDispatch } from "react-redux";
-import { resetAnalizProdajFilters, addWarehouse, removeWarehouse, setAnalyzeBy, setComparePrevious } from "../../../../../app/store/analizProdajSlice";
+import { resetAnalizProdajFilters, addWarehouse, removeWarehouse, setSelectedAnalyzType } from "../../../../../app/store/analizProdajSlice";
 import { fetchWarehouses, fetchAgents } from "../../../../fetchs/optionsFetchers";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import XrowList from "../../../../UI/Universal/XrowList";
 import MultipleSelectInputs from "../../../../UI/Universal/MultipleSelectInputs";
+import SelectInput from "../../../../UI/Universal/SelectInput";
+import { Search } from "lucide-react";
+import { motion } from "framer-motion";
+import LastDaysAnalysis from "./LastDaysAnalysis";
+
+
+
 
 const AnalizProdajFilter = () => {
   const [listWarehouses, setListWarehouses] = useState([]);
-  const { warehouses, analyzeBy, comparePrevious } = useSelector((state) => state.analizProdajFilters);
+  const { warehouses, selectedAnalyzType  } = useSelector((state) => state.analizProdajFilters);
   const { t } = useTranslation();
   const dispatch = useDispatch();
+
+  const analyzTypes = [{id: 1, name:t("last days analysis")}]
+  const analyzTypeInputRef = useRef(null)
+  // const [selectedAnalyzType, setSelectedAnalyzType] = useState(null);
+
+  // console.log("selectedAnalyzType", selectedAnalyzType);
+  
 
   // 📊 4 типа анализа:
   // 📦 volume → по количеству
@@ -22,22 +36,15 @@ const AnalizProdajFilter = () => {
     const loads = async () => {
       const allWarehouses = await fetchWarehouses();
       setListWarehouses(allWarehouses);
-
-      //   const allAgents = await fetchAgents();
-      //   setListAgents(allAgents);
-
-      // const allUsers = await fetchUsers();
-      // const adminUsers = allUsers.filter((u) => u.groups.includes("admin"));
-      // setListUsers(adminUsers);
     };
     loads();
   }, []);
 
-  useEffect(() => {
-    if (warehouses.length === 0) {
-      dispatch(resetAnalizProdajFilters());
-    }
-  }, [warehouses]);
+  // useEffect(() => {
+  //   if (warehouses.length === 0) {
+  //     dispatch(resetAnalizProdajFilters());
+  //   }
+  // }, [warehouses]);
 
   const selectAllWarehouses = () => {
     listWarehouses.forEach((w) => dispatch(addWarehouse(w)));
@@ -48,7 +55,26 @@ const AnalizProdajFilter = () => {
 
   return (
     <div className="mt-10">
-      <div className="border border-gray-300 p-1 rounded-sm mt-3">
+      <SelectInput
+        list={analyzTypes}
+        labelText={t("analyze type")} // text dlya label inputa
+        containerClass="flex flex-col" //"grid grid-cols-1 items-center md:grid-cols-[70px_1fr]" // mojno menyat style containera dlya label i input, w odin ryad ili w odnu kolonku
+        labelAnimation={{ initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.3, delay: 0.1 } }}
+        inputAnimation={{ initial: { opacity: 0, x: 20 }, animate: { opacity: 1, x: 0 }, transition: { duration: 0.3, delay: 0.1 } }}
+        ref={analyzTypeInputRef}
+        diasbledInput={false}
+        onlyDarkModeInputStyle={true}
+        selectedObject={selectedAnalyzType}
+        setSelectedObject={(obj) => dispatch(setSelectedAnalyzType(obj))}
+        labelIcon="📈"
+        emptyOptionText="select analyze type"
+      />
+
+      {selectedAnalyzType?.id && selectedAnalyzType.id === 1 && (
+        <LastDaysAnalysis />
+      )}
+
+      {/* <div className="border border-gray-300 p-1 rounded-sm mt-3">
         <MultipleSelectInputs
           title={t("warehouses")}
           list={listWarehouses}
@@ -58,55 +84,9 @@ const AnalizProdajFilter = () => {
           toggleClearAll={clearAllWarehouses}
           onlyDark={true}
         />
-        {/* selected warehouses list */}
         {warehouses.length > 0 && <XrowList list={warehouses} icon="🏬" deleteItem={(id) => dispatch(removeWarehouse(id))} onlyDark={true} />}
-      </div>
+      </div> */}
 
-      <select
-        value={analyzeBy}
-        onChange={(e) => dispatch(setAnalyzeBy(e.target.value))}
-        className="
-    mt-3
-    w-full h-9 px-3
-    rounded-lg
-    bg-gray-800
-    border border-gray-700
-    text-white text-sm
-    focus:outline-none
-    focus:ring-2 focus:ring-cyan-500
-    hover:border-cyan-500
-    transition
-  "
-      >
-        <option value="volume" className="bg-gray-800 text-white">
-          📦 По количеству
-        </option>
-        <option value="revenue" className="bg-gray-800 text-white">
-          💰 По выручке
-        </option>
-        <option value="stock" className="bg-gray-800 text-white">
-          🏬 Залежавшийся товар
-        </option>
-        <option value="dynamics" className="bg-gray-800 text-white">
-          📉 Падение продаж
-        </option>
-      </select>
-
-      <label className="flex items-center gap-2 mt-3 text-sm text-gray-200 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={comparePrevious}
-          onChange={(e) => dispatch(setComparePrevious(e.target.checked))}
-          className="
-      w-4 h-4
-      bg-gray-800
-      border-gray-600
-      rounded
-      accent-cyan-500
-    "
-        />
-        Сравнить с прошлым периодом
-      </label>
     </div>
   );
 };

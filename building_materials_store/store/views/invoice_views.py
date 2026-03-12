@@ -110,6 +110,12 @@ def save_invoice(request):
             debit_acc = warehouse_account_obj if rule.debit_account == warehouse_parent_account else rule.debit_account
             credit_acc = warehouse_account_obj if rule.credit_account == warehouse_parent_account else rule.credit_account
             
+            ic(amount)
+            ic(debit_acc)
+            ic(credit_acc)
+            print("===========")
+            
+            
             # Умная логика: определяем нужен ли partner для каждого счета
             def needs_partner(account):
                 return account.number in ["60", "62", "75", "76"]
@@ -289,6 +295,7 @@ def save_invoice(request):
             if not invoice_id:
                 try:
                     with transaction.atomic():
+                        ic("tut first save draft")
                         invoice = Invoice.objects.create(
                             awto=awto_obj,
                             awto_send=awto_send,
@@ -396,6 +403,7 @@ def save_invoice(request):
                                         )
                         
                         if is_entry:
+                            ic("tut first save with entry")
                             partner_obj = Partner.objects.select_for_update().get(id=partner["id"])
                             if wozwrat_or_prihod == "transfer":
                                 transaction_obj = Transaction.objects.create(
@@ -721,7 +729,7 @@ def save_invoice(request):
                     return JsonResponse({"status": "error", "message": "choose date prowodok"}, status=400)
                 try:
                     with transaction.atomic():
-                        # ic("tut")
+                        ic("tut draft update")
                         invoice = Invoice.objects.get(id=invoice_id)
                         invoice_date = normalize_date(invoice_date2)
                         invoice.awto = awto_obj
@@ -828,6 +836,7 @@ def save_invoice(request):
                         # return JsonResponse({"status": "ok", "message": f"{wozwrat_or_prihod} invoice updated without entry", "id": invoice.id})
                     
                         if is_entry:
+                            ic("tut update with entry")
                             partner_obj = Partner.objects.select_for_update().get(id=partner["id"])
                             if invoice.entry_created_at:
                                 return JsonResponse({"status": "error", "message": "Invoice already posted"}, status=400)
@@ -1529,6 +1538,7 @@ def delete_invoice(request, id):
 @permission_classes([IsAuthenticated])
 def cancel_entry(request):
     if request.method == "POST":
+        ic("entry canceled")
         if not request.user.groups.filter(name="admin").exists():
             return JsonResponse({"status": "error", "message": "permission denied"}, status=403)
 

@@ -16,7 +16,7 @@ const UniversalFilter = () => {
   const { t } = useTranslation();
   const { dateFrom, dateTo } = useContext(DateContext);
   const { showNotification } = useNotification();
-  const { warehouses, partners, products, consolidated } = useSelector((state) => state.fakturaFilter);
+  const { warehouses, partners, products, consolidated, warehouses2 } = useSelector((state) => state.fakturaFilter);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState(false);
   const [tableType, setTableType] = useState(false);
@@ -60,6 +60,7 @@ const UniversalFilter = () => {
     const controller = new AbortController();
 
     const warehouseIds = warehouses.map((w) => w.id);
+    const warehouse2Ids = warehouses2.map((w) => w.id);
     const partnerIds = partners.map((p) => p.id);
     const productIds = products.map((p) => p.id);
     // console.log("warehouses", warehouses);
@@ -75,6 +76,7 @@ const UniversalFilter = () => {
             dateTo,
             fakturaTypes,
             warehouseIds,
+            warehouse2Ids,
             partnerIds,
             productIds,
             consolidated,
@@ -102,7 +104,7 @@ const UniversalFilter = () => {
       clearTimeout(timeout); // отменяем debounce
       controller.abort(); // отменяем прошлый запрос
     };
-  }, [fakturaTypes, dateFrom, dateTo, warehouses, partners, products, consolidated]);
+  }, [fakturaTypes, dateFrom, dateTo, warehouses, warehouses2, partners, products, consolidated]);
 
   const typeLabels = {
     prihod: { label: t("prihod"), color: "text-green-600" },
@@ -110,6 +112,8 @@ const UniversalFilter = () => {
     wozwrat: { label: t("wozwrat"), color: "text-red-600" },
     transfer: { label: t("transfer"), color: "text-purple-600" },
   };
+
+  console.log("tableType", tableType);
 
   return (
     <div>
@@ -236,7 +240,7 @@ const UniversalFilter = () => {
           </>
 
           {/* СКЛАДЫ */}
-          {warehouses.length > 0 && (
+          {warehouses.length > 0 && warehouses2.length === 0 && (
             <>
               <div className="font-semibold">{t("warehouses")}:</div>
               <div>
@@ -245,6 +249,25 @@ const UniversalFilter = () => {
                     {w.name}
                     {index !== warehouses.length - 1 && ", "}
                   </span>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* СО СКЛАДА НА СКЛАД */}
+          {warehouses.length > 0 && warehouses2.length > 0 && (
+            <>
+              <div className="font-semibold">{t("from warehouse")}:</div>
+              <div className="flex flex-col">
+                {warehouses.map((w) => (
+                  <span key={w.id}>{w.name}</span>
+                ))}
+              </div>
+
+              <div className="font-semibold">{t("to warehouse")}:</div>
+              <div className="flex flex-col">
+                {warehouses2.map((w) => (
+                  <span key={w.id}>{w.name}</span>
                 ))}
               </div>
             </>
@@ -1021,7 +1044,6 @@ const UniversalFilter = () => {
                 </div>
               )}
 
-              
               {tableType === "and_partner_and_product_rashod_consolidated" && (
                 <div className="overflow-x-auto">
                   <table className="min-w-full border border-gray-300 text-sm">
@@ -1108,7 +1130,6 @@ const UniversalFilter = () => {
                           <td className="border border-gray-300 px-2 py-1">{MyFormatDate(row.date)}</td>
 
                           <td className="border border-gray-300 px-2 py-1">{row.invoice_id}</td>
-
 
                           <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.price)}</td>
 
@@ -1386,6 +1407,444 @@ const UniversalFilter = () => {
                 </div>
               )}
 
+              {tableType === "not_partner_and_not_product_consolidated" && (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border border-gray-300 text-sm">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="border border-gray-300 px-2 py-1 text-center w-12">№</th>
+                        {/* <th className="border border-gray-300 px-2 py-1 text-left">Дата</th> */}
+                        {/* <th className="border border-gray-300 px-2 py-1 text-left">Фактура №</th> */}
+                        <th className="border border-gray-300 px-2 py-1 text-left">Наименование товара</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Средняя цена</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Количество</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Сумма возврата</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Прибыль</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Разница</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">КГ</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {data.map((row, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="border border-gray-300 px-2 py-1 text-center">{index + 1}</td>
+
+                          {/* <td className="border border-gray-300 px-2 py-1">{MyFormatDate(row.date)}</td> */}
+
+                          {/* <td className="border border-gray-300 px-2 py-1">{row.invoice_id}</td> */}
+
+                          <td className="border border-gray-300 px-2 py-1">{row.product}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.price)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.selected_quantity, 0)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.sale_sum)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.profit)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.difference)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.kg)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td className="border border-gray-300 px-2 py-1"></td>
+                        {/* <td className="border border-gray-300 px-2 py-1"></td> */}
+                        {/* <td className="border border-gray-300 px-2 py-1"></td> */}
+                        <td className="border border-gray-300 px-2 py-1"></td>
+                        <td className="border border-gray-300 px-2 py-1 font-bold">Итого:</td>
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.qty, 0)}</td>
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right whitespace-nowrap">{formatNumber2(grandTotal.summ)}</td>
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right whitespace-nowrap">{formatNumber2(grandTotal.profit)}</td>
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right whitespace-nowrap">{formatNumber2(grandTotal.difference)}</td>
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right whitespace-nowrap">{formatNumber2(grandTotal.weight)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
+
+              {tableType === "not_partner_and_not_product" && (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border border-gray-300 text-sm">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="border border-gray-300 px-2 py-1 text-center w-12">№</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Дата</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Фактура №</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Наименование Партнера</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Наименование товара</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Средняя цена</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Количество</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Сумма</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Прибыль</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Разница</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">КГ</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {data.map((row, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="border border-gray-300 px-2 py-1 text-center">{index + 1}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{MyFormatDate(row.date)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{row.invoice_id}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{row.partner}</td>
+                          <td className="border border-gray-300 px-2 py-1">{row.product}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.price)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.selected_quantity, 0)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.sale_sum)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.profit)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.difference)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.kg)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td className="border border-gray-300 px-2 py-1"></td>
+                        <td className="border border-gray-300 px-2 py-1"></td>
+                        <td className="border border-gray-300 px-2 py-1"></td>
+                        <td className="border border-gray-300 px-2 py-1"></td>
+                        <td className="border border-gray-300 px-2 py-1"></td>
+                        <td className="border border-gray-300 px-2 py-1 font-bold">Итого:</td>
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.qty, 0)}</td>
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right whitespace-nowrap">{formatNumber2(grandTotal.summ)}</td>
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right whitespace-nowrap">{formatNumber2(grandTotal.profit)}</td>
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right whitespace-nowrap">{formatNumber2(grandTotal.difference)}</td>
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right whitespace-nowrap">{formatNumber2(grandTotal.weight)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
+
+              {tableType === "not_partner_and_not_product_multi_type_consolidated" && (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border border-gray-300 text-sm">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="border border-gray-300 px-2 py-1 text-center w-12">№</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Тип</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Товар</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Количество</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Сумма</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Прибыль</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Разница</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">КГ</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {data.map((row, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="border border-gray-300 px-2 py-1 text-center">{index + 1}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{row.invoice_type}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{row.product}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.selected_quantity, 0)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.sale_sum)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.profit)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.difference)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.kg)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+
+                    <tfoot>
+                      <tr>
+                        <td className="border border-gray-300 px-2 py-1"></td>
+                        <td className="border border-gray-300 px-2 py-1"></td>
+                        <td className="border border-gray-300 px-2 py-1 font-bold">Итого:</td>
+
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.qty, 0)}</td>
+
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.summ)}</td>
+
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.profit)}</td>
+
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.difference)}</td>
+
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.weight)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
+
+              {tableType === "not_partner_and_not_product_multi_type" && (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border border-gray-300 text-sm">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="border border-gray-300 px-2 py-1 text-center w-12">№</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Тип</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Дата</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Фактура №</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Партнер</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Товар</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Количество</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Сумма</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Прибыль</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Разница</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">КГ</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {data.map((row, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="border border-gray-300 px-2 py-1 text-center">{index + 1}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{t(row.invoice_type)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{MyFormatDate(row.date)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{row.invoice_id}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{row.partner}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{row.product}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.selected_quantity, 0)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.sale_sum)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.profit)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.difference)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.kg)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+
+                    <tfoot>
+                      <tr>
+                        <td colSpan={6} className="border border-gray-300 px-2 py-1 font-bold text-right">
+                          Итого:
+                        </td>
+
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.qty, 0)}</td>
+
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.summ)}</td>
+
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.profit)}</td>
+
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.difference)}</td>
+
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.weight)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
+
+              {tableType === "transfer_consolidated" && (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border border-gray-300 text-sm">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="border border-gray-300 px-2 py-1 text-center w-12">№</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Товар</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Количество</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">КГ</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {data.map((row, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="border border-gray-300 px-2 py-1 text-center">{index + 1}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{row.product}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.selected_quantity, 0)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.kg)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+
+                    <tfoot>
+                      <tr>
+                        <td></td>
+                        <td className="border border-gray-300 px-2 py-1 font-bold">Итого:</td>
+
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.qty, 0)}</td>
+
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.weight)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
+
+              {tableType === "transfer_detailed" && (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border border-gray-300 text-sm">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="border border-gray-300 px-2 py-1 text-center w-12">№</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Дата</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Фактура №</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Откуда</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Куда</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Товар</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Количество</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">КГ</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {data.map((row, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="border border-gray-300 px-2 py-1 text-center">{index + 1}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{MyFormatDate(row.date)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{row.invoice_id}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{row.from_warehouse}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{row.to_warehouse}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{row.product}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.selected_quantity, 0)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.kg)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+
+                    <tfoot>
+                      <tr>
+                        <td colSpan={6} className="border border-gray-300 px-2 py-1 font-bold text-right">
+                          Итого:
+                        </td>
+
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.qty, 0)}</td>
+
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.weight)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
+
+              {tableType === "only_product_transfer_consolidated" && (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border border-gray-300 text-sm">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="border border-gray-300 px-2 py-1 text-center w-12">№</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Откуда</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Куда</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Количество</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">КГ</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {data.map((row, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="border border-gray-300 px-2 py-1 text-center">{index + 1}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{row.from_warehouse}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{row.to_warehouse}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.selected_quantity, 0)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.kg)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+
+                    <tfoot>
+                      <tr>
+                        <td colSpan={3} className="border border-gray-300 px-2 py-1 font-bold text-right">
+                          Итого:
+                        </td>
+
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.qty, 0)}</td>
+
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.weight)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
+
+              {tableType === "only_product_transfer" && (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border border-gray-300 text-sm">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="border border-gray-300 px-2 py-1 text-center w-12">№</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Дата</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Фактура №</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Откуда</th>
+                        <th className="border border-gray-300 px-2 py-1 text-left">Куда</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">Количество</th>
+                        <th className="border border-gray-300 px-2 py-1 text-right">КГ</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {data.map((row, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="border border-gray-300 px-2 py-1 text-center">{index + 1}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{MyFormatDate(row.date)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{row.invoice_id}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{row.from_warehouse}</td>
+
+                          <td className="border border-gray-300 px-2 py-1">{row.to_warehouse}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.selected_quantity, 0)}</td>
+
+                          <td className="border border-gray-300 px-2 py-1 text-right">{formatNumber2(row.kg)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+
+                    <tfoot>
+                      <tr>
+                        <td colSpan={5} className="border border-gray-300 px-2 py-1 font-bold text-right">
+                          Итого:
+                        </td>
+
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.qty, 0)}</td>
+
+                        <td className="border border-gray-300 px-2 py-1 font-bold text-right">{formatNumber2(grandTotal.weight)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
             </div>
           ) : (
             <div className="print:hidden flex items-center justify-center py-20">

@@ -18,7 +18,7 @@ const Input = ({
     <div className="flex flex-col w-full">
       {label && (
         <label htmlFor={inputId} className={`mb-1 text-sm font-medium ${onlyDarkModeInputStyle ? "text-gray-300" : "text-gray-700 dark:text-gray-300"}`}>
-          {t(label)}
+          {t(label)}:
         </label>
       )}
       <input

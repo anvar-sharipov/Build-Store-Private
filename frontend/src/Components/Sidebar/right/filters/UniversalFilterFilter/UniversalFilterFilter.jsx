@@ -1,6 +1,17 @@
 import { ArrowDownCircle, ArrowUpCircle, RotateCcw, Repeat } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
-import { toggleFakturaType, addWarehouse, removeWarehouse, addPartner, removePartner, addProduct, toggleConsolidated, removeProduct } from "../../../../../app/store/universalFilterSlice";
+import {
+  toggleFakturaType,
+  addWarehouse,
+  removeWarehouse,
+  addPartner,
+  removePartner,
+  addProduct,
+  toggleConsolidated,
+  removeProduct,
+  addWarehouse2,
+  removeWarehouse2,
+} from "../../../../../app/store/universalFilterSlice";
 import { useTranslation } from "react-i18next";
 import SelectInput from "../../../../UI/Universal/SelectInput";
 import { useEffect, useState, useRef } from "react";
@@ -12,7 +23,6 @@ import SearchInputWithLiBackend from "../../../../UI/Universal/SearchInputWithLi
 import { Package } from "lucide-react";
 import LoadingSpin from "../../../../UI/LoadingSpin";
 
-
 const UniversalFilterFilter = () => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
@@ -22,8 +32,9 @@ const UniversalFilterFilter = () => {
   const isChecked = (type) => fakturaTypes.includes(type);
 
   const [listWarehouses, setListWarehouses] = useState([]);
+  const [listWarehouses2, setListWarehouses2] = useState([]);
 
-  const { warehouses, partners, products, consolidated } = useSelector((state) => state.fakturaFilter);
+  const { warehouses, partners, products, consolidated, warehouses2 } = useSelector((state) => state.fakturaFilter);
 
   const partnerInputRef = useRef(null);
   const [selectedPartner, setSelectedPartner] = useState(null);
@@ -53,6 +64,14 @@ const UniversalFilterFilter = () => {
     loads();
   }, []);
 
+  useEffect(() => {
+    const loads = async () => {
+      const allWarehouses2 = await fetchWarehouses();
+      setListWarehouses2(allWarehouses2);
+    };
+    loads();
+  }, []);
+
   const selectAllWarehouses = () => {
     listWarehouses.forEach((w) => dispatch(addWarehouse(w)));
   };
@@ -60,13 +79,19 @@ const UniversalFilterFilter = () => {
     warehouses.forEach((w) => dispatch(removeWarehouse(w.id)));
   };
 
+  const selectAllWarehouses2 = () => {
+    listWarehouses2.forEach((w) => dispatch(addWarehouse2(w)));
+  };
+  const clearAllWarehouses2 = () => {
+    warehouses2.forEach((w) => dispatch(removeWarehouse2(w.id)));
+  };
+
   const checkboxStyle = "flex items-center gap-2 px-4 py-2 rounded-xl border cursor-pointer transition-all duration-200 hover:shadow-md";
 
-  // console.log("fakturaTypes", fakturaTypes);
+  console.log("fakturaTypes", fakturaTypes);
 
   return (
     <div className="mt-3">
-     
       <div className="text-xl font-semibold mb-4 text-gray-400 text-center">{t("operations filter")}</div>
 
       <div className="flex flex-wrap gap-2">
@@ -102,19 +127,50 @@ const UniversalFilterFilter = () => {
       {fakturaTypes.length > 0 && (
         <div>
           <hr className="mt-5 mb-5" />
+          {fakturaTypes.length > 0 && fakturaTypes.includes("transfer") && (
+            <div className="mt-2 flex flex-col gap-3">
+              <div>
+                <MultipleSelectInputs
+                  title={t("from warehouse")}
+                  list={listWarehouses}
+                  choosedList={warehouses}
+                  toggle={(w) => (warehouses.some((x) => x.id === w.id) ? dispatch(removeWarehouse(w.id)) : dispatch(addWarehouse(w)))}
+                  toggleSelectAll={selectAllWarehouses}
+                  toggleClearAll={clearAllWarehouses}
+                  onlyDark={true}
+                />
+                {warehouses.length > 0 && <XrowList list={warehouses} icon="🏬" deleteItem={(id) => dispatch(removeWarehouse(id))} onlyDark={true} />}
+              </div>
 
-          <div className="mt-2">
-            <MultipleSelectInputs
-              title={t("warehouses")}
-              list={listWarehouses}
-              choosedList={warehouses}
-              toggle={(w) => (warehouses.some((x) => x.id === w.id) ? dispatch(removeWarehouse(w.id)) : dispatch(addWarehouse(w)))}
-              toggleSelectAll={selectAllWarehouses}
-              toggleClearAll={clearAllWarehouses}
-              onlyDark={true}
-            />
-            {warehouses.length > 0 && <XrowList list={warehouses} icon="🏬" deleteItem={(id) => dispatch(removeWarehouse(id))} onlyDark={true} />}
-          </div>
+              <div>
+                <MultipleSelectInputs
+                  title={t("to warehouse")}
+                  list={listWarehouses2}
+                  choosedList={warehouses2}
+                  toggle={(w) => (warehouses2.some((x) => x.id === w.id) ? dispatch(removeWarehouse2(w.id)) : dispatch(addWarehouse2(w)))}
+                  toggleSelectAll={selectAllWarehouses2}
+                  toggleClearAll={clearAllWarehouses2}
+                  onlyDark={true}
+                />
+                {warehouses2.length > 0 && <XrowList list={warehouses2} icon="🏬" deleteItem={(id) => dispatch(removeWarehouse2(id))} onlyDark={true} />}
+              </div>
+            </div>
+          )}
+
+          {fakturaTypes.length > 0 && !fakturaTypes.includes("transfer") && (
+            <div className="mt-2">
+              <MultipleSelectInputs
+                title={t("warehouses")}
+                list={listWarehouses}
+                choosedList={warehouses}
+                toggle={(w) => (warehouses.some((x) => x.id === w.id) ? dispatch(removeWarehouse(w.id)) : dispatch(addWarehouse(w)))}
+                toggleSelectAll={selectAllWarehouses}
+                toggleClearAll={clearAllWarehouses}
+                onlyDark={true}
+              />
+              {warehouses.length > 0 && <XrowList list={warehouses} icon="🏬" deleteItem={(id) => dispatch(removeWarehouse(id))} onlyDark={true} />}
+            </div>
+          )}
 
           <hr className="mt-5 mb-5" />
 
@@ -202,7 +258,6 @@ const UniversalFilterFilter = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };

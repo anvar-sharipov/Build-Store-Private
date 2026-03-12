@@ -62,7 +62,23 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
 
     const updatedProducts = (products || []).filter((product) => Number(product.selected_quantity) > 0);
 
+    console.log("updatedProducts", updatedProducts);
+
     setFieldValue("products", updatedProducts);
+
+    let send = true;
+    for (let i = 0; i < updatedProducts.length; i++) {
+      const product = updatedProducts[i];
+      const maxQty = (product.quantity_on_selected_warehouses || 0) - (product.qty_in_drafts || 0);
+      if ((values.wozwrat_or_prihod === "rashod" || values.wozwrat_or_prihod === "transfer") && Number(product.selected_quantity) > maxQty) {
+        send = false;
+        break;
+      }
+    }
+    console.log("send", send);
+    
+    // setFieldValue("send", true);
+    setFieldValue("send", send);
   };
 
   useEffect(() => {
@@ -161,7 +177,6 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
                     </div>
                   )}
                 </span>
-
               </div>
             </td>
 

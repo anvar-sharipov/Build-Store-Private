@@ -738,7 +738,23 @@
   "po": "по",
   "Only one product allowed in this report mode": "В этом режиме отчёта допускается только один товар",
   "Only one partner allowed in this report mode": "В этом режиме отчёта допускается только один партнёр",
-  "report type": "Тип отчёта"
+  "report type": "Тип отчёта",
+  "Only one from warehouse allowed in this report mode": "В этом режиме отчёта допускается только один склад-отправитель",
+  "Only one to warehouse allowed in this report mode": "В этом режиме отчёта допускается только один склад-получатель",
+  "warehouses cannot be the same": "Склады не могут быть одинаковыми",
+  "select analyze type": "Выберите тип анализа",
+  "analyze type": "Тип анализа",
+  "last days analysis": "Анализ последних дней",
+  "enter day count": "Введите количество дней",
+  "search analysis": "Поиск анализа",
+  "sort by brand": "Сортировать по бренду",
+  "days of inventory left": "Остаток дней запаса",
+  "show zero": "Показывать нули",
+  "founded": "Найдено",
+  "product age days": "Возраст товара (дни)",
+  "full list": "Полный список",
+  "share": "Удельный вес %",
+  "cumulative percent": "Накопительный %"
 
 
  

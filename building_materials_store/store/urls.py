@@ -24,7 +24,8 @@ from . views import get_analiz_prodaj
 from . views import admin_views 
 from . views import download_excel_entries_diapazon 
 from . views import universal_faktura_filter 
-from . views import download_detail_entry
+from . views import download_detail_entry 
+from . views.analysis import get_last_days_analysis
 from . views.sale_invoice_views import *
 from . views.report_views import *
 from . views.utils import *
@@ -217,7 +218,13 @@ urlpatterns = [
     
     path('download_detail_entry', download_detail_entry.download_detail_entry, name='download_detail_entry'), 
     
-    path('universal_faktura_filter', universal_faktura_filter.universal_faktura_filter, name='universal_faktura_filter'), 
+    path('universal_faktura_filter', universal_faktura_filter.universal_faktura_filter, name='universal_faktura_filter'),
+    
+    # analysis 
+    path('get_last_days_analysis', get_last_days_analysis.get_last_days_analysis, name='get_last_days_analysis'), 
+    path('get_last_days_analysis_excel', get_last_days_analysis.get_last_days_analysis_excel, name='get_last_days_analysis_excel'), 
+    
+    
     
     
     

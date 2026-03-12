@@ -17,15 +17,18 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
   const [localErrorQuantity, setLocalErrorQuantity] = useState("");
 
   useEffect(() => {
-    if (Number(product.selected_quantity) > (((product.quantity_on_selected_warehouses || 0) - (product.qty_in_drafts || 0)) || 0) && (values.wozwrat_or_prihod === "rashod" || values.wozwrat_or_prihod === "transfer")) {
+    if (
+      Number(product.selected_quantity) > ((product.quantity_on_selected_warehouses || 0) - (product.qty_in_drafts || 0) || 0) &&
+      (values.wozwrat_or_prihod === "rashod" || values.wozwrat_or_prihod === "transfer")
+    ) {
       setLocalErrorQuantity(`${t("OnStock")} ${(product.quantity_on_selected_warehouses || 0) - (product.qty_in_drafts || 0)}`);
       setFieldValue("send", false);
-    } 
+    }
     // else {
     //   setLocalErrorQuantity("");
     //   setFieldValue("send", true);
     // }
-  }, [product.selected_quantity, setFieldValue, t, values.wozwrat_or_prihod, product.qty_in_drafts,]);
+  }, [product.selected_quantity, setFieldValue, t, values.wozwrat_or_prihod, product.qty_in_drafts]);
 
   //   useEffect(() => {
   //   console.log("values", values);
@@ -102,7 +105,7 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
     products.forEach((product) => {
       if (!product.is_gift && product.free_items?.length > 0) {
         // console.log("GGGGGGGGGGGGGGGGGG", product.selected_quantity);
-        
+
         const mainQty = Number(product.selected_quantity) || 0; // <-- используем quantity из values.products
         product.free_items.forEach((free) => {
           const giftId = free.gift_product;
@@ -114,14 +117,12 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
       }
     });
     // console.log("GGGGGGGGGGGGGGGGGG", giftQuantities);
-    
-
 
     // Обновляем все gift товары
     products.forEach((product, idx) => {
       if (product.is_gift) {
         const newQty = giftQuantities[product.id] || 0;
-        
+
         if (Number(product.selected_quantity) !== newQty) {
           // console.log('tut');
           // console.log('eeeee', values.products[idx]);
@@ -162,26 +163,37 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
           const isNumber = !isNaN(normalizedValue) && normalizedValue.trim() !== "";
 
           // console.log("values.wozwrat_or_prihodEEEEEEEEEEEE", values.wozwrat_or_prihod);
-          
-
 
           if (!isNumber) {
             setLocalErrorQuantity(`${t("quantity must be a digit")}`);
             setFieldValue("send", false);
-          } else if (qty > ((product.quantity_on_selected_warehouses || 0) - (product.qty_in_drafts || 0)) && (values.wozwrat_or_prihod === "rashod" || values.wozwrat_or_prihod === "transfer")) {
+          } else if (qty > (product.quantity_on_selected_warehouses || 0) - (product.qty_in_drafts || 0) && (values.wozwrat_or_prihod === "rashod" || values.wozwrat_or_prihod === "transfer")) {
             setLocalErrorQuantity(`${t("OnStock")} ${(product.quantity_on_selected_warehouses || 0) - (product.qty_in_drafts || 0)}`);
             setFieldValue("send", false);
+            setFieldValue(`products[${productIndex}].selected_quantity`, qty);
           } else if (qty < 0.001) {
             setLocalErrorQuantity(`${t("only positive numbers")}`);
             setFieldValue("send", false);
+            setFieldValue(`products[${productIndex}].selected_quantity`, qty);
           } else {
             setLocalErrorQuantity("");
-            setFieldValue("send", true);
+            // setFieldValue("send", true);
             setFieldValue(`products[${productIndex}].selected_quantity`, qty);
 
             const updatedProducts = values.products.map((p, idx) => (idx === productIndex ? { ...p, selected_quantity: qty } : p));
 
             recalcGiftQuantities(updatedProducts);
+
+            let send = true;
+            for (let i = 0; i < updatedProducts.length; i++) {
+              const prod = updatedProducts[i];
+              const maxQty = (prod.quantity_on_selected_warehouses || 0) - (prod.qty_in_drafts || 0);
+              if ((values.wozwrat_or_prihod === "rashod" || values.wozwrat_or_prihod === "transfer") && Number(prod.selected_quantity) > maxQty) {
+                send = false;
+                break;
+              }
+            }
+            setFieldValue("send", send);
           }
         }}
         onKeyDown={handleKeyNavigation}

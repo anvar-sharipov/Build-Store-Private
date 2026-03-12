@@ -107,6 +107,10 @@ class Product(models.Model):
     class Meta:
         verbose_name = 'Товар'
         verbose_name_plural = 'Товары'
+        indexes = [
+            models.Index(fields=["brand"]),
+            models.Index(fields=["category"]),
+        ]
 
 
 class Warehouse(models.Model):
@@ -139,6 +143,7 @@ class WarehouseProduct(models.Model):
         unique_together = ("product", "warehouse")
         verbose_name = "Остаток на складе"
         verbose_name_plural = "Остатки на складах"
+        
 
     def __str__(self):
         return f"{self.product.name} на {self.warehouse.name}: {self.quantity}"
@@ -502,6 +507,23 @@ class Invoice(models.Model):
         indexes = [
             models.Index(fields=["created_at"]),
             models.Index(fields=["partner", "created_at"]),
+
+            # для аналитики продаж
+            models.Index(fields=["invoice_date"]),
+            models.Index(fields=["warehouse"]),
+            models.Index(fields=["wozwrat_or_prihod"]),
+            models.Index(fields=["is_entry"]),
+            models.Index(fields=["canceled_at"]),
+
+            # самый важный индекс для анализа
+            models.Index(
+                fields=[
+                    "wozwrat_or_prihod",
+                    "is_entry",
+                    "invoice_date",
+                    "warehouse",
+                ]
+            ),
         ]
 
     def __str__(self):
@@ -532,6 +554,14 @@ class InvoiceItem(models.Model):
 
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="items")
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=["product"]),
+            models.Index(fields=["invoice"]),
+            models.Index(fields=["product", "invoice"]),
+            models.Index(fields=["invoice", "product"]),
+        ]
     
     
 
@@ -625,6 +655,10 @@ class Transaction(models.Model):
         verbose_name = 'Хозяйственная операция'
         verbose_name_plural = 'Хозяйственные операции'
         ordering = ['-date']
+        indexes = [
+            models.Index(fields=["invoice"]),
+            models.Index(fields=["date"]),
+        ]
     
 
 # # Проводка (двойная запись: дебет и кредит)
@@ -647,6 +681,9 @@ class Entry(models.Model):
         indexes = [
             models.Index(fields=["account"]),
             models.Index(fields=["transaction"]),
+            models.Index(fields=["partner"]),
+            models.Index(fields=["product"]),
+            models.Index(fields=["warehouse"]),
         ]
         verbose_name = 'Проводка'
         verbose_name_plural = 'Проводки'

@@ -403,6 +403,7 @@ const MainPage = () => {
             setFieldValue("invoice_date", dateProwodok);
           }, [dateProwodok]);
 
+          // #################################################################################
           // useEffect(() => {
           //   const createDraftIfFirstProduct = async () => {
           //     if (!id && !draftCreatedRef.current && values.products?.length > 0) {
@@ -466,6 +467,9 @@ const MainPage = () => {
           //     }
           //   };
           // }, [values]);
+
+          // #################################################################################
+
 
           const fakturaBgDynamic =
             values.wozwrat_or_prihod === "wozwrat" ? "bg-red-200 dark:bg-red-900" : values.wozwrat_or_prihod === "prihod" ? "bg-green-200 dark:bg-green-900" : "bg-white dark:bg-gray-900";

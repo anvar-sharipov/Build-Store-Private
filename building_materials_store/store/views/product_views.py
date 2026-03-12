@@ -54,9 +54,11 @@ from django.db.models.functions import Coalesce
 from . base_views import IsInAdminOrWarehouseGroup, CustomPageNumberPagination
 
 from ..my_func.get_unit_map import get_unit_map 
+from ..my_func.get_unit_map import get_unit_map2 
 from ..my_func.get_unit_and_cf import get_unit_and_cf
 from ..my_func.date_str_to_dateFormat import date_str_to_dateFormat
 from ..my_func.get_reserved_quantity import get_reserved_quantity
+from ..my_func.get_reserved_quantity_map import get_reserved_quantity_map
 import re
 
 
@@ -315,33 +317,102 @@ def search_products(request):
 
         # --- Формируем ответ ---
         data = []
-        for product in results:
+        product_ids = [p.id for p in results]
+        reserved_map = get_reserved_quantity_map(product_ids, [warehouse], invoice_id)
+        ic("tut22")
+        warehouse_quantity_map = dict(
+            WarehouseProduct.objects
+            .filter(product_id__in=product_ids, warehouse_id=warehouse)
+            .values_list('product_id')
+            .annotate(total=Sum('quantity'))
+        )
+        # unit_map = get_unit_map()
+        unit_map = get_unit_map2(product_ids)
+        
+        serializer = ProductSerializer(
+            results,
+            many=True,
+            context={
+                "request": request,
+                "reserved_map": reserved_map,
+                "warehouse_quantity_map": warehouse_quantity_map,
+            }
+        )
+
+        data = serializer.data
+        
+        # for product in results:
        
             
-            qty_in_drafts = get_reserved_quantity(product, warehouse, invoice_id)
+        #     # qty_in_drafts = get_reserved_quantity(product, warehouse, invoice_id)
+            
+        #     qty_in_drafts = reserved_map.get(product.id, 0)
+            
         
 
-            # Подсчёт количества
+        #     # Подсчёт количества
+        #     if warehouse:
+        #         # quantity = product.warehouse_products.filter(
+        #         #     warehouse_id=warehouse
+        #         # ).aggregate(total=models.Sum('quantity'))['total'] or 0
+        #         # base_quantity_in_stock = quantity
+        #         quantity = warehouse_quantity_map.get(product.id, 0)
+        #         base_quantity_in_stock = quantity
+        #     else:
+        #         quantity = product.get_total_quantity()
+        #         base_quantity_in_stock = quantity
+
+        #     # Конвертация по юнитам
+        #     # unit_name = product.base_unit.name if product.base_unit else ""
+        #     # for unit in product.units.all():
+        #     #     if unit.is_default_for_sale and unit.conversion_factor:
+        #     #         quantity = float(quantity) / float(unit.conversion_factor)
+        #     #         unit_name = unit.unit.name
+        #     #         break
+        #     unit_name, cf = get_unit_and_cf(unit_map, product)
+        #     qty_in_drafts = Decimal(qty_in_drafts) / cf
+        #     quantity = Decimal(quantity) / cf
+
+        #     # Сериализация
+        #     # serialized = ProductSerializer(product).data
+        #     serialized = ProductSerializer(
+        #         product,
+        #         context={
+        #             "request": request,
+        #             "reserved_map": reserved_map,
+        #             "warehouse_quantity_map": warehouse_quantity_map,
+        #         }
+        #     ).data
+
+        #     serialized.update({
+        #         'quantity_on_selected_warehouses': quantity,
+        #         'unit_name_on_selected_warehouses': unit_name,
+        #         'base_quantity_in_stock': base_quantity_in_stock,
+        #         'selected_quantity': 1,
+        #         'selected_price': 1,
+        #         "finded_from_QR": finded_from_qr,
+        #         'qty_in_drafts': qty_in_drafts
+        #     })
+
+        #     data.append(serialized)
+        
+        for i, product in enumerate(results):
+
+            qty_in_drafts = reserved_map.get(product.id, 0)
+
             if warehouse:
-                quantity = product.warehouse_products.filter(
-                    warehouse_id=warehouse
-                ).aggregate(total=models.Sum('quantity'))['total'] or 0
+                quantity = warehouse_quantity_map.get(product.id, 0)
                 base_quantity_in_stock = quantity
             else:
                 quantity = product.get_total_quantity()
                 base_quantity_in_stock = quantity
 
-            # Конвертация по юнитам
-            unit_name = product.base_unit.name if product.base_unit else ""
-            for unit in product.units.all():
-                if unit.is_default_for_sale and unit.conversion_factor:
-                    quantity = float(quantity) / float(unit.conversion_factor)
-                    unit_name = unit.unit.name
-                    break
+            unit_name, cf = get_unit_and_cf(unit_map, product)
 
-            # Сериализация
-            serialized = ProductSerializer(product).data
-            serialized.update({
+            quantity = Decimal(quantity) / cf
+            qty_in_drafts = Decimal(qty_in_drafts) / cf
+
+            data[i].update({
                 'quantity_on_selected_warehouses': quantity,
                 'unit_name_on_selected_warehouses': unit_name,
                 'base_quantity_in_stock': base_quantity_in_stock,
@@ -351,8 +422,9 @@ def search_products(request):
                 'qty_in_drafts': qty_in_drafts
             })
             
-
-            data.append(serialized)
+            
+            
+        ic("tut33")
 
     # esli poisk produkta s sales invoice (esli najal na enter wybor producta)
     
@@ -362,6 +434,8 @@ def search_products(request):
         
         product_id = request.GET.get("id", "")
         warehouse = request.GET.get("warehouse", "")
+        
+   
         
         try:
             product = Product.objects.get(id=product_id)
@@ -417,6 +491,8 @@ def search_products(request):
         #     data.append(serialized)
 
     elif product_id:
+        
+       
         
         
  
@@ -616,6 +692,12 @@ class ProductViewSet(viewsets.ModelViewSet):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         
+        current_products = page if page is not None else queryset
+        product_ids = [p.id for p in current_products]
+        
+        
+        
+        
         dateFrom = request.query_params.get('date_from')
         dateTo = request.query_params.get('date_to')
         
@@ -648,6 +730,9 @@ class ProductViewSet(viewsets.ModelViewSet):
         warehouse_ids = request.query_params.get('warehouse')
         warehouse_ids = warehouse_ids.split(',') if warehouse_ids else []
         warehouse_ids = list(map(int, warehouse_ids))
+        
+        reserved_map = get_reserved_quantity_map(product_ids, warehouse_ids)
+        ic(reserved_map)
         
         if not warehouse_ids:
             warehouse_ids = [w.id for w in Warehouse.objects.all()]
@@ -849,28 +934,34 @@ class ProductViewSet(viewsets.ModelViewSet):
             qty_end += data["turnover_quantity_wozwrat"] 
             
             data["qty_end"] = qty_end
-            # if qty_end > 0:
-            #     ic(qty_end)
-        # ic(turnover_data)
-        # for id, data in turnover_data.items():
-        #     if id == 606:
-        #         ic(data)
-        # ic(turnover_data)
-                
-    
 
-        # пример: подготовим фейковые данные
-        # turnover_map = {
-        #     1: {"qty": 10, "sum": 100},
-        #     2: {"qty": 5, "sum": 70},
-        # }
 
+        # serializer = self.get_serializer(
+        #     page if page is not None else queryset,
+        #     many=True,
+        #     context={
+        #         "request": request,
+        #         "turnover_data": turnover_data,
+        #     }
+        # )
+        
+        # serializer = self.get_serializer(
+        #     page if page is not None else queryset,
+        #     many=True,
+        #     context={
+        #         "request": request,
+        #         "turnover_data": turnover_data,
+        #         "warehouse_ids": warehouse_ids,
+        #     }
+        # )
+        
         serializer = self.get_serializer(
-            page if page is not None else queryset,
+            current_products,
             many=True,
             context={
                 "request": request,
                 "turnover_data": turnover_data,
+                "reserved_map": reserved_map,
             }
         )
 

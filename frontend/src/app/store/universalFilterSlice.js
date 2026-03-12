@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   faktura_type: [], // ["prihod", "rashod"]
   warehouses: [],
+  warehouses2: [],
   partners: [],
   products: [],
   consolidated: false,
@@ -41,6 +42,27 @@ const fakturaFilterSlice = createSlice({
       }
     },
 
+    removeWarehouse(state, action) {
+      const warehouseId = action.payload;
+      state.warehouses = state.warehouses.filter((w) => w.id !== warehouseId);
+    },
+
+    // ===== WAREHOUSES2 =====
+    addWarehouse2(state, action) {
+      const warehouse2 = action.payload;
+      if (!warehouse2) return;
+
+      const exists = state.warehouses2.some((w) => w.id === warehouse2.id);
+      if (!exists) {
+        state.warehouses2.push(warehouse2);
+      }
+    },
+
+    removeWarehouse2(state, action) {
+      const warehouse2Id = action.payload;
+      state.warehouses2 = state.warehouses2.filter((w) => w.id !== warehouse2Id);
+    },
+
     addPartner(state, action) {
       const partner = action.payload;
       if (!partner) return;
@@ -53,11 +75,6 @@ const fakturaFilterSlice = createSlice({
     removePartner(state, action) {
       const partnerId = action.payload;
       state.partners = state.partners.filter((p) => p.id !== partnerId);
-    },
-
-    removeWarehouse(state, action) {
-      const warehouseId = action.payload;
-      state.warehouses = state.warehouses.filter((w) => w.id !== warehouseId);
     },
 
     // ===== PRODUCTS =====
@@ -88,6 +105,7 @@ const fakturaFilterSlice = createSlice({
     resetUniversalFilter: () => ({
       faktura_type: [],
       warehouses: [],
+      warehouses2: [],
       partners: [],
       products: [],
       consolidated: false,
@@ -101,6 +119,8 @@ export const {
   setFakturaTypes,
   addWarehouse,
   removeWarehouse,
+  addWarehouse2,
+  removeWarehouse2,
   addPartner,
   removePartner,
   resetUniversalFilter,

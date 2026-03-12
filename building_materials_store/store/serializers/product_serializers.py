@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from ..models import *
 import os
+from ..my_func.get_reserved_quantity import get_reserved_quantity
 
 from .base_serializers import *
 # from django.contrib.auth.models import Group
@@ -154,6 +155,19 @@ class ProductSerializer(serializers.ModelSerializer):
 
     quantity_on_selected_warehouses = serializers.SerializerMethodField()
     turnover_data = serializers.SerializerMethodField()
+    qty_in_drafts = serializers.SerializerMethodField()
+    
+    # def get_qty_in_drafts(self, obj):
+    #     warehouse_ids = self.context.get("warehouse_ids", [])
+    #     if not warehouse_ids:
+    #         return 0
+    #     total = 0
+    #     for w in warehouse_ids:
+    #         total += get_reserved_quantity(obj, w, None)
+    #     return total
+    def get_qty_in_drafts(self, obj):
+        reserved_map = self.context.get("reserved_map", {})
+        return reserved_map.get(obj.id, 0)
     
     class Meta:
         model = Product
@@ -174,54 +188,58 @@ class ProductSerializer(serializers.ModelSerializer):
             'is_active', 'created_at', 'updated_at',
             'quantity_on_selected_warehouses',  
             "turnover_data",
+            "qty_in_drafts",
+            
         ]
     
     def get_turnover_data(self, obj):
         turnover_data = self.context.get("turnover_data", {})
         return turnover_data.get(obj.id, {"qty": 0, "sum": 0})
     
-        # t = turnover_data.get(obj.id, {"qty": 0, "sum": 0})
-        # if id == 606:
-        #     ic(t)
 
-        # # print(obj.id)
-        # return {
-        #     "qty": obj.name,
-        #     "sum": 0,
-        # }
-        # turnover_map = self.context.get("turnover_map", {})
-        # print("ID:", obj.id, "IN MAP:", obj.id in turnover_map)
-        # return turnover_map.get(obj.id, {
-        #     "qty": obj.name,
-        #     "sum": 0,
-        # })
 
+    # def get_quantity_on_selected_warehouses(self, obj):
+    #     # warehouse_ids = self.context.get('warehouse_ids', [])
+    #     if self.context:
+
+    #         request = self.context.get('request')
+    #         warehouse_ids_str = request.query_params.get('warehouse', '')  # например '3,2'
+
+    #         warehouse_ids = []
+    #         if warehouse_ids_str:
+    #             warehouse_ids = warehouse_ids_str.split(',')
+    #         if warehouse_ids:
+    #             return obj.warehouse_products.filter(
+    #                 warehouse_id__in=warehouse_ids
+    #             ).aggregate(total=Sum('quantity'))['total'] or 0
+    #         else:
+    #             return obj.get_total_quantity()
+    
     def get_quantity_on_selected_warehouses(self, obj):
-        
-        
-        # warehouse_ids = self.context.get('warehouse_ids', [])
-        if self.context:
 
-            request = self.context.get('request')
-            warehouse_ids_str = request.query_params.get('warehouse', '')  # например '3,2'
+        warehouse_quantity_map = self.context.get("warehouse_quantity_map")
 
-            warehouse_ids = []
-            if warehouse_ids_str:
-                warehouse_ids = warehouse_ids_str.split(',')
-            if warehouse_ids:
-                return obj.warehouse_products.filter(
-                    warehouse_id__in=warehouse_ids
-                ).aggregate(total=Sum('quantity'))['total'] or 0
-            else:
-                return obj.get_total_quantity()
+        # 🚀 быстрый путь (если передали map)
+        if warehouse_quantity_map is not None:
+            return warehouse_quantity_map.get(obj.id, 0)
 
-    # ❌ Как сейчас (медленно) no rabotaet poprobuem sowet chata gpt on goworit budet bystree
-    # def get_total_quantity(self, obj):
-    #     # Если queryset аннотирован, возвращаем аннотированное значение
-    #     if hasattr(obj, 'total_quantity') and obj.total_quantity is not None:
-    #         return obj.total_quantity
-    #     # Если аннотация отсутствует (например, отдельный объект), считаем на лету
-    #     return obj.warehouse_products.aggregate(total=Sum('quantity'))['total'] or 0
+        # ⚠️ fallback для старых мест
+        request = self.context.get('request')
+        if not request:
+            return 0
+
+        warehouse_ids_str = request.query_params.get('warehouse', '')
+        warehouse_ids = warehouse_ids_str.split(',') if warehouse_ids_str else []
+
+        if warehouse_ids:
+            return obj.warehouse_products.filter(
+                warehouse_id__in=warehouse_ids
+            ).aggregate(total=Sum('quantity'))['total'] or 0
+
+        return obj.get_total_quantity()
+            
+
+
     
     # ✅ Как изменить (НИЧЕГО НЕ ЛОМАЯ)
     def get_total_quantity(self, obj):

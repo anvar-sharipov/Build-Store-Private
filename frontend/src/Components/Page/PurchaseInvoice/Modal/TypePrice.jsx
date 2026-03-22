@@ -22,18 +22,28 @@ const TypePrice = ({ authGroup }) => {
                 change_type.play();
                 const newType = e.target.value;
                 if (values.products.length > 0) {
-                  const updatedProducts = values.products.map((p) => {
-                    if (p.is_custom_price) {
-                      // пользователь ввёл вручную → оставляем
-                      return p;
-                    }
-                    // иначе обновляем под тип
-                    return {
-                      ...p,
-                      selected_price: newType === "retail_price" ? Number(p.retail_price) : Number(p.wholesale_price),
-                    };
-                  });
-                  setFieldValue("products", updatedProducts);
+                  setFieldValue("products", []);
+                  // const updatedProducts = values.products.map((p) => {
+                  //   if (p.is_custom_price) {
+                  //     // пользователь ввёл вручную → оставляем
+                  //     return p;
+                  //   }
+                  //   // иначе обновляем под тип
+                  //   // console.log("newType TTEE", newType);
+                  //   const basePrice = newType === "retail_price" ? Number(p.retail_price) : Number(p.wholesale_price);
+                  //   const discount = p.discount_percent || 0;
+                  //   const price_after_discount = discount > 0 ? basePrice * (1 - discount / 100) : basePrice;
+
+                  //   // console.log("basePrice TT", basePrice);
+                  //   // console.log("p.wholesale_price TT", p.wholesale_price);
+
+                  //   return {
+                  //     ...p,
+                  //     selected_price: price_after_discount,
+                  //     price_after_discount,
+                  //   };
+                  // });
+                  // setFieldValue("products", updatedProducts);
                 }
                 setFieldValue("type_price", newType);
                 localStorage.setItem("type_price", newType);
@@ -58,19 +68,25 @@ const TypePrice = ({ authGroup }) => {
                 change_type.currentTime = 0;
                 change_type.play();
                 const newType = e.target.value;
+
                 if (values.products.length > 0) {
-                  const updatedProducts = values.products.map((p) => {
-                    if (p.is_custom_price) {
-                      // пользователь ввёл вручную → оставляем
-                      return p;
-                    }
-                    // иначе обновляем под тип
-                    return {
-                      ...p,
-                      selected_price: newType === "retail_price" ? Number(p.retail_price) : Number(p.wholesale_price),
-                    };
-                  });
-                  setFieldValue("products", updatedProducts);
+                  setFieldValue("products", []);
+                  // const updatedProducts = values.products.map((p) => {
+                  //   if (p.is_custom_price) {
+                  //     // пользователь ввёл вручную → оставляем
+                  //     return p;
+                  //   }
+                  //   // иначе обновляем под тип
+                  //   const basePrice = newType === "retail_price" ? Number(p.retail_price) : Number(p.wholesale_price);
+                  //   const discount = p.discount_percent || 0;
+                  //   const price_after_discount = discount > 0 ? basePrice * (1 - discount / 100) : basePrice;
+                  //   return {
+                  //     ...p,
+                  //     selected_price: price_after_discount,
+                  //     price_after_discount,
+                  //   };
+                  // });
+                  // setFieldValue("products", updatedProducts);
                 }
                 setFieldValue("type_price", newType);
                 localStorage.setItem("type_price", newType);

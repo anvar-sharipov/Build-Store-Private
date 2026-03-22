@@ -21,6 +21,7 @@ from collections import defaultdict
 
 from decimal import Decimal
 from django.db import transaction as db_transaction
+from ..my_func.get_reserved_quantity_map import get_reserved_quantity_map
 
 
 
@@ -30,10 +31,14 @@ from django.db import transaction as db_transaction
 
 # поиск продукта по id и складу
 def get_product_by_id_and_warehouse(request):
+    ic("ya tut")
     product_id = request.GET.get('product_id')
     main_product_id = request.GET.get('main_product_id')
     warehouse_id = request.GET.get('warehouse_id')
     warehouse = Warehouse.objects.get(id=warehouse_id)
+    
+    invoice_id = request.GET.get('invoice_id')
+    
     
     main_product_obj = Product.objects.get(id=main_product_id)
 
@@ -47,6 +52,15 @@ def get_product_by_id_and_warehouse(request):
             warehouse_id=warehouse_id
         )
         product = wp.product
+        
+        product_ids = [product.id]
+        reserved_map, reserved_details = get_reserved_quantity_map(
+            product_ids,
+            [warehouse_id],
+            invoice_id
+        )
+        qty_in_drafts = reserved_map.get(product.id, 0)
+        details = reserved_details.get(product.id, [])
         
    
         base_unit_obj = {"id":product.base_unit.id, "name":product.base_unit.name}
@@ -99,7 +113,11 @@ def get_product_by_id_and_warehouse(request):
             "warehouse_name": warehouse.name
         }]
             
- 
+        # qty_in_drafts
+        # reserved_details
+        
+        
+        
         data = {
             'base_quantity_in_stock': float(wp.quantity),
             "base_unit_obj": base_unit_obj,
@@ -129,6 +147,9 @@ def get_product_by_id_and_warehouse(request):
             "weight": product.weight,
             "wholesale_price": product.wholesale_price,
             "width": product.width,
+            "qty_in_drafts": qty_in_drafts,
+            "reserved_details": details,
+            "quantity_discounts": [],
             # "firma_price": product.firma_price,
             # "firma_price": product.firma_price,
             # "firma_price": product.firma_price,
@@ -146,6 +167,7 @@ def get_product_by_id_and_warehouse(request):
             #     } for f in product.free_items.all()
             # ]
         }
+        # ic("dataaaa", data)
         return JsonResponse(data)
     except WarehouseProduct.DoesNotExist:
         return JsonResponse({'error': 'Product not found in this warehouse'}, status=404)

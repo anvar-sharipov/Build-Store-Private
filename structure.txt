@@ -1,0 +1,559 @@
+﻿├── building_env
+├── building_materials_store
+│   ├── building_materials_store
+│   │   ├── __pycache__
+│   │   │   ├── settings.cpython-311.pyc
+│   │   │   ├── settings.cpython-312.pyc
+│   │   │   ├── urls.cpython-311.pyc
+│   │   │   ├── urls.cpython-312.pyc
+│   │   │   ├── wsgi.cpython-311.pyc
+│   │   │   ├── wsgi.cpython-312.pyc
+│   │   │   ├── __init__.cpython-311.pyc
+│   │   │   └── __init__.cpython-312.pyc
+│   │   ├── asgi.py
+│   │   ├── settings.py
+│   │   ├── urls.py
+│   │   ├── wsgi.py
+│   │   └── __init__.py
+│   ├── media
+│   ├── static
+│   │   └── images
+│   │       └── avatar.png
+│   ├── store
+│   │   ├── management
+│   │   │   └── commands
+│   │   │       ├── __pycache__
+│   │   │       │   └── init_accounts.cpython-311.pyc
+│   │   │       └── init_accounts.py
+│   │   ├── migrations
+│   │   ├── my_func
+│   │   │   ├── __pycache__
+│   │   │   │   ├── date_convert_for_excel.cpython-311.pyc
+│   │   │   │   ├── date_str_to_dateFormat.cpython-311.pyc
+│   │   │   │   ├── get_reserved_quantity.cpython-311.pyc
+│   │   │   │   ├── get_reserved_quantity_map.cpython-311.pyc
+│   │   │   │   ├── get_unit_and_cf.cpython-311.pyc
+│   │   │   │   ├── get_unit_and_conversion_factor.cpython-311.pyc
+│   │   │   │   ├── get_unit_map.cpython-311.pyc
+│   │   │   │   └── str_to_int_list.cpython-311.pyc
+│   │   │   ├── date_convert_for_excel.py
+│   │   │   ├── date_str_to_dateFormat.py
+│   │   │   ├── get_reserved_quantity.py
+│   │   │   ├── get_reserved_quantity_map.py
+│   │   │   ├── get_unit_and_cf.py
+│   │   │   ├── get_unit_map.py
+│   │   │   └── str_to_int_list.py
+│   │   ├── serializers
+│   │   │   ├── __pycache__
+│   │   │   │   ├── base_serializers.cpython-311.pyc
+│   │   │   │   ├── entry_serializers.cpython-311.pyc
+│   │   │   │   ├── partner_serializers.cpython-311.pyc
+│   │   │   │   ├── product_serializers.cpython-311.pyc
+│   │   │   │   ├── purchase_invoice_serializers.cpython-311.pyc
+│   │   │   │   ├── register_serializers.cpython-311.pyc
+│   │   │   │   ├── sale_invoice_serializers.cpython-311.pyc
+│   │   │   │   └── __init__.cpython-311.pyc
+│   │   │   ├── base_serializers.py
+│   │   │   ├── entry_serializers.py
+│   │   │   ├── partner_serializers.py
+│   │   │   ├── product_serializers.py
+│   │   │   ├── register_serializers.py
+│   │   │   ├── sale_invoice_serializers.py
+│   │   │   └── __init__.py
+│   │   ├── views
+│   │   │   ├── adminPanel_views
+│   │   │   │   ├── __pycache__
+│   │   │   │   │   ├── import_partners.cpython-311.pyc
+│   │   │   │   │   └── import_products.cpython-311.pyc
+│   │   │   │   ├── import_partners.py
+│   │   │   │   └── import_products.py
+│   │   │   ├── analysis
+│   │   │   │   ├── __pycache__
+│   │   │   │   │   └── get_last_days_analysis.cpython-311.pyc
+│   │   │   │   └── get_last_days_analysis.py
+│   │   │   ├── __pycache__
+│   │   │   │   ├── admin_views.cpython-311.pyc
+│   │   │   │   ├── backend_input_queries_views.cpython-311.pyc
+│   │   │   │   ├── base_views.cpython-311.pyc
+│   │   │   │   ├── download_detail_entry.cpython-311.pyc
+│   │   │   │   ├── download_excel_entries_diapazon.cpython-311.pyc
+│   │   │   │   ├── download_faktura_views.cpython-311.pyc
+│   │   │   │   ├── download_partners_views.cpython-311.pyc
+│   │   │   │   ├── download_products_views.cpython-311.pyc
+│   │   │   │   ├── entry_views.cpython-311.pyc
+│   │   │   │   ├── excel_downloads_views.cpython-311.pyc
+│   │   │   │   ├── get_analiz_prodaj.cpython-311.pyc
+│   │   │   │   ├── get_product_turnover_history.cpython-311.pyc
+│   │   │   │   ├── invoice_views.cpython-311.pyc
+│   │   │   │   ├── partner_views.cpython-311.pyc
+│   │   │   │   ├── product_cards_views.cpython-311.pyc
+│   │   │   │   ├── product_turnover_excel.cpython-311.pyc
+│   │   │   │   ├── product_views.cpython-311.pyc
+│   │   │   │   ├── purchase_invoice_views.cpython-311.pyc
+│   │   │   │   ├── query_views.cpython-311.pyc
+│   │   │   │   ├── query_views2.cpython-311.pyc
+│   │   │   │   ├── query_views3.cpython-311.pyc
+│   │   │   │   ├── query_views4.cpython-311.pyc
+│   │   │   │   ├── query_views5.cpython-311.pyc
+│   │   │   │   ├── query_views6.cpython-311.pyc
+│   │   │   │   ├── register_views.cpython-311.pyc
+│   │   │   │   ├── report_views.cpython-311.pyc
+│   │   │   │   ├── sale_invoice_views.cpython-311.pyc
+│   │   │   │   ├── skidka_nasenka_views.cpython-311.pyc
+│   │   │   │   ├── universal_faktura_filter.cpython-311.pyc
+│   │   │   │   ├── utils.cpython-311.pyc
+│   │   │   │   └── __init__.cpython-311.pyc
+│   │   │   ├── admin_views.py
+│   │   │   ├── backend_input_queries_views.py
+│   │   │   ├── base_views.py
+│   │   │   ├── download_detail_entry.py
+│   │   │   ├── download_excel_entries_diapazon.py
+│   │   │   ├── download_faktura_views.py
+│   │   │   ├── download_partners_views.py
+│   │   │   ├── download_products_views.py
+│   │   │   ├── entry_views.py
+│   │   │   ├── excel_downloads_views.py
+│   │   │   ├── get_analiz_prodaj.py
+│   │   │   ├── get_product_turnover_history.py
+│   │   │   ├── invoice_views.py
+│   │   │   ├── partner_views.py
+│   │   │   ├── product_cards_views.py
+│   │   │   ├── product_turnover_excel.py
+│   │   │   ├── product_views.py
+│   │   │   ├── query_views.py
+│   │   │   ├── query_views2.py
+│   │   │   ├── query_views3.py
+│   │   │   ├── query_views4.py
+│   │   │   ├── query_views5.py
+│   │   │   ├── query_views6.py
+│   │   │   ├── register_views.py
+│   │   │   ├── report_views.py
+│   │   │   ├── sale_invoice_views.py
+│   │   │   ├── skidka_nasenka_views.py
+│   │   │   ├── universal_faktura_filter.py
+│   │   │   ├── utils.py
+│   │   │   └── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── admin.cpython-311.pyc
+│   │   │   ├── admin.cpython-312.pyc
+│   │   │   ├── apps.cpython-311.pyc
+│   │   │   ├── apps.cpython-312.pyc
+│   │   │   ├── filters.cpython-311.pyc
+│   │   │   ├── models.cpython-311.pyc
+│   │   │   ├── models.cpython-312.pyc
+│   │   │   ├── serializers.cpython-311.pyc
+│   │   │   ├── serializers.cpython-312.pyc
+│   │   │   ├── signals.cpython-311.pyc
+│   │   │   ├── urls.cpython-311.pyc
+│   │   │   ├── urls.cpython-312.pyc
+│   │   │   ├── views.cpython-311.pyc
+│   │   │   ├── views.cpython-312.pyc
+│   │   │   ├── __init__.cpython-311.pyc
+│   │   │   └── __init__.cpython-312.pyc
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── filters.py
+│   │   ├── models.py
+│   │   ├── serializers.txt
+│   │   ├── serializers_old.py
+│   │   ├── signals.py
+│   │   ├── tests.py
+│   │   ├── urls.py
+│   │   ├── views_old.py
+│   │   └── __init__.py
+│   ├── .env
+│   ├── .env_new
+│   ├── db.sqlite3
+│   ├── Dockerfile
+│   ├── entrypoint.sh
+│   ├── manage.py
+│   ├── requirements.txt
+│   └── wait-for-it.sh
+├── frontend
+│   ├── .github
+│   │   └── appmod
+│   │       └── appcat
+│   ├── dist
+│   │   ├── assets
+│   │   │   ├── index-BpWL7Q-r.js
+│   │   │   └── index-oR9CXFqZ.css
+│   │   ├── index.html
+│   │   ├── POLISEM.png
+│   │   └── vite.svg
+│   ├── node_modules
+│   ├── public
+│   │   ├── sounds
+│   │   │   ├── beep.mp3
+│   │   │   ├── change_type.mp3
+│   │   │   ├── change_wkladka.mp3
+│   │   │   ├── Christmas-jingle-bells-melody.mp3
+│   │   │   ├── error.mp3
+│   │   │   ├── faktura_success.mp3
+│   │   │   ├── open_faktura.mp3
+│   │   │   ├── open_modal2.mp3
+│   │   │   ├── success.mp3
+│   │   │   └── up_down.mp3
+│   │   ├── excel-icon.png
+│   │   ├── polisem.png
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── app
+│   │   │   └── store
+│   │   │       ├── ProductCardsSlice
+│   │   │       │   └── productSortSlice.js
+│   │   │       ├── analizProdajSlice.js
+│   │   │       ├── buhOborotFiltersSlice.js
+│   │   │       ├── index.js
+│   │   │       ├── searchQuerySlice.js
+│   │   │       ├── skidkaFiltersSlice.js
+│   │   │       ├── snowfallSlice.js
+│   │   │       ├── universalFilterSlice.js
+│   │   │       ├── warehouseSlice.js
+│   │   │       └── zakazSlice.js
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── Components
+│   │   │   ├── common
+│   │   │   │   └── GenericList.jsx
+│   │   │   ├── context
+│   │   │   │   ├── InvoiceSearchContext.jsx
+│   │   │   │   ├── NotificationContext.jsx
+│   │   │   │   └── SearchContext.jsx
+│   │   │   ├── fetchs
+│   │   │   │   └── optionsFetchers.js
+│   │   │   ├── Header
+│   │   │   │   ├── modals
+│   │   │   │   │   ├── CloseDayModal.jsx
+│   │   │   │   │   └── HeaderAvatarModal.jsx
+│   │   │   │   ├── AccountDropdown.jsx
+│   │   │   │   ├── Header.jsx
+│   │   │   │   ├── LargeScreenLinks.jsx
+│   │   │   │   └── MobileScreenLinks.jsx
+│   │   │   ├── Page
+│   │   │   │   ├── Admin
+│   │   │   │   │   ├── DeleteData.jsx
+│   │   │   │   │   ├── FirstPrihod.jsx
+│   │   │   │   │   ├── ImportPartners.jsx
+│   │   │   │   │   ├── ImportProducts.jsx
+│   │   │   │   │   ├── SetPartnerInEntry.jsx
+│   │   │   │   │   └── Univresal.jsx
+│   │   │   │   ├── Agent
+│   │   │   │   │   ├── modals
+│   │   │   │   │   │   ├── AgentAddModal.jsx
+│   │   │   │   │   │   ├── AgentDeleteModal.jsx
+│   │   │   │   │   │   ├── AgentEditModal.jsx
+│   │   │   │   │   │   └── AgentsPartnersListModal.jsx
+│   │   │   │   │   ├── Agent.jsx
+│   │   │   │   │   └── AgentDownloadExcel.js
+│   │   │   │   ├── Employee
+│   │   │   │   │   ├── modals
+│   │   │   │   │   │   ├── EmployeeAddModal.jsx
+│   │   │   │   │   │   ├── EmployeeDeleteModal.jsx
+│   │   │   │   │   │   └── EmployeeEditModal.jsx
+│   │   │   │   │   ├── EmpDownloadExcel.js
+│   │   │   │   │   ├── Employee.jsx
+│   │   │   │   │   ├── EmployeeList.jsx
+│   │   │   │   │   └── EmployeeSearchAndAddSection.jsx
+│   │   │   │   ├── Entries
+│   │   │   │   │   └── Entries.jsx
+│   │   │   │   ├── Entries2
+│   │   │   │   │   └── Entries2.jsx
+│   │   │   │   ├── ExportsImports
+│   │   │   │   │   ├── ExportImportFaktura
+│   │   │   │   │   │   └── ExportFaktura.jsx
+│   │   │   │   │   └── ExportImportEntries.jsx
+│   │   │   │   ├── Faktura
+│   │   │   │   │   ├── SaleInvoice
+│   │   │   │   │   │   ├── AddSaleInvoicePage.jsx
+│   │   │   │   │   │   ├── GetSaldo2.jsx
+│   │   │   │   │   │   ├── korzina.txt
+│   │   │   │   │   │   ├── SaleInvoiceForm2.jsx
+│   │   │   │   │   │   ├── SearchedPartnerList.jsx
+│   │   │   │   │   │   └── SearchedProductList.jsx
+│   │   │   │   │   ├── SaleInvoice2
+│   │   │   │   │   │   ├── Utils
+│   │   │   │   │   │   │   ├── invoiceTable
+│   │   │   │   │   │   │   │   ├── InvoiceTable.jsx
+│   │   │   │   │   │   │   │   ├── PriceType.jsx
+│   │   │   │   │   │   │   │   ├── refreshTable.js
+│   │   │   │   │   │   │   │   ├── TDGifts.jsx
+│   │   │   │   │   │   │   │   ├── TDPrice.jsx
+│   │   │   │   │   │   │   │   ├── TDProducts.jsx
+│   │   │   │   │   │   │   │   ├── TDQuantity.jsx
+│   │   │   │   │   │   │   │   ├── TFoot.jsx
+│   │   │   │   │   │   │   │   └── THead.jsx
+│   │   │   │   │   │   │   ├── DefaultInitialValues.js
+│   │   │   │   │   │   │   ├── PrintVisibleHideInputs.jsx
+│   │   │   │   │   │   │   ├── SearchAwto.jsx
+│   │   │   │   │   │   │   ├── SearchPartner.jsx
+│   │   │   │   │   │   │   ├── SearchProduct.jsx
+│   │   │   │   │   │   │   ├── SearchWarehouse.jsx
+│   │   │   │   │   │   │   ├── useLoadOptions.jsx
+│   │   │   │   │   │   │   ├── Utils.jsx
+│   │   │   │   │   │   │   └── VisibleHideInputs.jsx
+│   │   │   │   │   │   └── MainPage.jsx
+│   │   │   │   │   ├── sections
+│   │   │   │   │   │   └── FakturaAddAndSearchSection.jsx
+│   │   │   │   │   ├── UpdateSaleInvoice
+│   │   │   │   │   │   ├── UpdateInvoiceForm2.jsx
+│   │   │   │   │   │   └── UpdateSaleInvoice.jsx
+│   │   │   │   │   └── Faktura.jsx
+│   │   │   │   ├── OSW2
+│   │   │   │   │   ├── AgentReport2Excel.jsx
+│   │   │   │   │   ├── DetailReport1.jsx
+│   │   │   │   │   ├── DetailReport6062.jsx
+│   │   │   │   │   ├── DetailReport6062Partner.jsx
+│   │   │   │   │   ├── OriginalReport2Excel.jsx
+│   │   │   │   │   ├── OSW2.jsx
+│   │   │   │   │   └── OSW2Excel.jsx
+│   │   │   │   ├── Partner
+│   │   │   │   │   ├── modals
+│   │   │   │   │   │   ├── PartnerAddModal.jsx
+│   │   │   │   │   │   ├── PartnerDeleteModal.jsx
+│   │   │   │   │   │   └── PartnerUpdateModal.jsx
+│   │   │   │   │   ├── Partner.jsx
+│   │   │   │   │   ├── PartnerDownloadExcel.js
+│   │   │   │   │   ├── PartnerList.jsx
+│   │   │   │   │   ├── PartnerSearchAndAddSection.jsx
+│   │   │   │   │   └── TypeBadge.jsx
+│   │   │   │   ├── Partner2
+│   │   │   │   │   ├── Utils
+│   │   │   │   │   ├── Head.jsx
+│   │   │   │   │   ├── List.jsx
+│   │   │   │   │   ├── Partner2.jsx
+│   │   │   │   │   ├── partnerDownloadExcel.js
+│   │   │   │   │   └── PartnerModal.jsx
+│   │   │   │   ├── PartnerTransactionEntry
+│   │   │   │   │   ├── Amount.jsx
+│   │   │   │   │   ├── Comment.jsx
+│   │   │   │   │   ├── DebitAccountSearch.jsx
+│   │   │   │   │   ├── KreditAccountSearch.jsx
+│   │   │   │   │   ├── PartnerSearch.jsx
+│   │   │   │   │   └── PartnerTransactionEntry.jsx
+│   │   │   │   ├── Prochee
+│   │   │   │   │   ├── AnalizProdaj
+│   │   │   │   │   │   ├── AnalizProdaj.jsx
+│   │   │   │   │   │   └── TablePartners.jsx
+│   │   │   │   │   ├── QrListPrint
+│   │   │   │   │   │   └── QrListPrint.jsx
+│   │   │   │   │   ├── UniversalFilter
+│   │   │   │   │   │   └── UniversalFilter.jsx
+│   │   │   │   │   ├── Zakaz
+│   │   │   │   │   │   ├── SyncFormik.jsx
+│   │   │   │   │   │   ├── Zakaz.jsx
+│   │   │   │   │   │   ├── ZakazForPrint.jsx
+│   │   │   │   │   │   └── ZakazList.jsx
+│   │   │   │   │   ├── ProcheeMain.jsx
+│   │   │   │   │   └── TransactionJournal.jsx
+│   │   │   │   ├── Product
+│   │   │   │   │   ├── modals
+│   │   │   │   │   │   ├── ProductAddModal
+│   │   │   │   │   │   │   └── ProductAddModal.jsx
+│   │   │   │   │   │   ├── ProductEditModal
+│   │   │   │   │   │   │   ├── tabs
+│   │   │   │   │   │   │   │   ├── sections
+│   │   │   │   │   │   │   │   │   ├── ProductFreeItemsList.jsx
+│   │   │   │   │   │   │   │   │   ├── ProductUnitsList.jsx
+│   │   │   │   │   │   │   │   │   └── WarehousesSection.jsx
+│   │   │   │   │   │   │   │   ├── BasicTab.jsx
+│   │   │   │   │   │   │   │   ├── CategoriesTab.jsx
+│   │   │   │   │   │   │   │   ├── DimensionsTab.jsx
+│   │   │   │   │   │   │   │   ├── HeaderForTabs.jsx
+│   │   │   │   │   │   │   │   ├── ImagesTab.jsx
+│   │   │   │   │   │   │   │   └── PricesTab.jsx
+│   │   │   │   │   │   │   └── ProductEditModal2.jsx
+│   │   │   │   │   │   └── ProductDeleteModal.jsx
+│   │   │   │   │   ├── sections
+│   │   │   │   │   │   ├── ProductAddAndSearchSection.jsx
+│   │   │   │   │   │   └── ProductList.jsx
+│   │   │   │   │   └── Product.jsx
+│   │   │   │   ├── PurchaseInvoice
+│   │   │   │   │   ├── fetchs
+│   │   │   │   │   │   ├── FetchAwto.jsx
+│   │   │   │   │   │   ├── FetchPartner.jsx
+│   │   │   │   │   │   ├── FetchProduct.jsx
+│   │   │   │   │   │   └── FetchWarehouse.jsx
+│   │   │   │   │   ├── Modal
+│   │   │   │   │   │   ├── SettingsModal.jsx
+│   │   │   │   │   │   ├── SettingsPrintVisible.jsx
+│   │   │   │   │   │   ├── SettingVisible.jsx
+│   │   │   │   │   │   ├── TypeFaktura.jsx
+│   │   │   │   │   │   └── TypePrice.jsx
+│   │   │   │   │   ├── table
+│   │   │   │   │   │   ├── PTable.jsx
+│   │   │   │   │   │   ├── Quantity.jsx
+│   │   │   │   │   │   ├── Tbody.jsx
+│   │   │   │   │   │   ├── TDPrice.jsx
+│   │   │   │   │   │   ├── TFoot.jsx
+│   │   │   │   │   │   └── Thead.jsx
+│   │   │   │   │   ├── Utils
+│   │   │   │   │   │   ├── classes.js
+│   │   │   │   │   │   ├── Comment.jsx
+│   │   │   │   │   │   ├── defaultValues.jsx
+│   │   │   │   │   │   ├── exportInvoiceToExcel.jsx
+│   │   │   │   │   │   ├── Head.jsx
+│   │   │   │   │   │   ├── InfoAboutInvoice.jsx
+│   │   │   │   │   │   ├── InvoiceHead.jsx
+│   │   │   │   │   │   ├── PrintInvoiceButton.jsx
+│   │   │   │   │   │   ├── Saldo.jsx
+│   │   │   │   │   │   ├── Saldo2.jsx
+│   │   │   │   │   │   ├── SubmitButton.jsx
+│   │   │   │   │   │   └── validationSchema.js
+│   │   │   │   │   ├── InvoiceList.jsx
+│   │   │   │   │   ├── MainPage.jsx
+│   │   │   │   │   └── PurchaseInvoice.jsx
+│   │   │   │   ├── Reports
+│   │   │   │   │   ├── Accounts
+│   │   │   │   │   └── PriceChangeReport
+│   │   │   │   │       └── PriceChangeReport.jsx
+│   │   │   │   ├── Reports2
+│   │   │   │   │   ├── AccountCards
+│   │   │   │   │   │   ├── AccountCardDetail.jsx
+│   │   │   │   │   │   └── AccountCards.jsx
+│   │   │   │   │   ├── BuhOborotTowarow
+│   │   │   │   │   │   ├── BuhOborotTowarow.jsx
+│   │   │   │   │   │   └── DetailProductOborot.jsx
+│   │   │   │   │   ├── ProductCards
+│   │   │   │   │   │   ├── ExportToExcel.js
+│   │   │   │   │   │   └── ProductCards.jsx
+│   │   │   │   │   ├── SalesAnalys
+│   │   │   │   │   │   ├── AnalysSalesWithoutReturn.jsx
+│   │   │   │   │   │   └── SalesAnalys.jsx
+│   │   │   │   │   ├── SkidkaNasenka
+│   │   │   │   │   │   └── SkidkaNasenka.jsx
+│   │   │   │   │   └── ReportsMain.jsx
+│   │   │   │   └── Trip
+│   │   │   │       ├── Trip.jsx
+│   │   │   │       ├── Trip.txt
+│   │   │   │       └── ViewTrip.jsx
+│   │   │   ├── Sidebar
+│   │   │   │   ├── left
+│   │   │   │   │   └── SidebarLeft.jsx
+│   │   │   │   └── right
+│   │   │   │       ├── filters
+│   │   │   │       │   ├── AnalizProdajFilter
+│   │   │   │       │   │   ├── AnalizProdajFilter.jsx
+│   │   │   │       │   │   └── LastDaysAnalysis.jsx
+│   │   │   │       │   ├── BuhOborotTowarowFilter
+│   │   │   │       │   │   └── BuhOborotTowarowFilter.jsx
+│   │   │   │       │   ├── DetailReport6062Filter
+│   │   │   │       │   │   └── DetailReport6062Filter.jsx
+│   │   │   │       │   ├── InvoiceFilter
+│   │   │   │       │   │   ├── InvoiceFilter.jsx
+│   │   │   │       │   │   ├── InvoiceSort.jsx
+│   │   │   │       │   │   ├── SelectEnryBoolen.jsx
+│   │   │   │       │   │   └── SelectPartner.jsx
+│   │   │   │       │   ├── ProductCardsFilter
+│   │   │   │       │   │   └── ProductCardsFilter.jsx
+│   │   │   │       │   ├── SkidkaNasenkaFilter
+│   │   │   │       │   │   └── SkidkaNasenkaFilter.jsx
+│   │   │   │       │   ├── UniversalFilterFilter
+│   │   │   │       │   │   └── UniversalFilterFilter.jsx
+│   │   │   │       │   ├── Zakaz
+│   │   │   │       │   │   ├── ShowHideColums.jsx
+│   │   │   │       │   │   ├── ZakazFilter.jsx
+│   │   │   │       │   │   ├── ZakazListFilter.jsx
+│   │   │   │       │   │   └── ZakazNavigate.jsx
+│   │   │   │       │   ├── CompactAgentFilter.jsx
+│   │   │   │       │   ├── productsFilter.jsx
+│   │   │   │       │   └── SalesInvoiceFilter.jsx
+│   │   │   │       └── SideRight.jsx
+│   │   │   ├── UI
+│   │   │   │   ├── FormikFileds
+│   │   │   │   │   ├── DateFormikField.jsx
+│   │   │   │   │   └── SelectFormikFiled.jsx
+│   │   │   │   ├── miniModals
+│   │   │   │   │   ├── BrandModal.jsx
+│   │   │   │   │   ├── CategoryModal.jsx
+│   │   │   │   │   ├── ModelModal.jsx
+│   │   │   │   │   ├── TagModal.jsx
+│   │   │   │   │   └── UnitModal.jsx
+│   │   │   │   ├── Universal
+│   │   │   │   │   ├── ExcelButton.jsx
+│   │   │   │   │   ├── Input.jsx
+│   │   │   │   │   ├── MultipleSelectInputs.jsx
+│   │   │   │   │   ├── SearchInputWithLiBackend.jsx
+│   │   │   │   │   ├── SearchInputWithLiFrontend.jsx
+│   │   │   │   │   ├── SelectInput.jsx
+│   │   │   │   │   ├── Xrow.jsx
+│   │   │   │   │   └── XrowList.jsx
+│   │   │   │   ├── DateProvider.jsx
+│   │   │   │   ├── FetchPartner2.jsx
+│   │   │   │   ├── formatNumber.js
+│   │   │   │   ├── formatNumber2.js
+│   │   │   │   ├── FuseSearchAndXButton.jsx
+│   │   │   │   ├── getCookie.jsx
+│   │   │   │   ├── LoadingSpin.jsx
+│   │   │   │   ├── MyButton.jsx
+│   │   │   │   ├── MyDecimalPrice.js
+│   │   │   │   ├── MyFormatDate.js
+│   │   │   │   ├── myFormatNumber.js
+│   │   │   │   ├── MyInput.jsx
+│   │   │   │   ├── MyList.jsx
+│   │   │   │   ├── MyLoading.jsx
+│   │   │   │   ├── MyLoading2.jsx
+│   │   │   │   ├── MyModal.jsx
+│   │   │   │   ├── MyModal2.jsx
+│   │   │   │   ├── MySearchInput.jsx
+│   │   │   │   ├── MySmallModal.jsx
+│   │   │   │   ├── QRDisplay.jsx
+│   │   │   │   ├── Saldo2.jsx
+│   │   │   │   ├── Saldo2ToExcel.jsx
+│   │   │   │   ├── SearchInputLikeRezka.jsx
+│   │   │   │   └── UploadImageForm.jsx
+│   │   │   ├── axios.js
+│   │   │   ├── axiosInstance.js
+│   │   │   ├── Login.jsx
+│   │   │   ├── Notification.jsx
+│   │   │   ├── Notification2.jsx
+│   │   │   ├── Register.jsx
+│   │   │   ├── SmartTooltip.jsx
+│   │   │   ├── tailwindClasses.js
+│   │   │   ├── ThemeToggle.jsx
+│   │   │   └── ToolTip.jsx
+│   │   ├── hooks
+│   │   │   └── useDebounce.js
+│   │   ├── locales
+│   │   │   ├── ru
+│   │   │   │   └── translation.json
+│   │   │   └── tk
+│   │   │       └── translation.json
+│   │   ├── services
+│   │   │   └── saldoService.js
+│   │   ├── App.jsx
+│   │   ├── AppShell.jsx
+│   │   ├── AuthContext.jsx
+│   │   ├── i18n.js
+│   │   ├── index.css
+│   │   ├── LanguageSwitcher.jsx
+│   │   ├── main.jsx
+│   │   └── routes.js
+│   ├── .env
+│   ├── .gitignore
+│   ├── Dockerfile
+│   ├── eslint.config.js
+│   ├── generate-cert.sh
+│   ├── index.html
+│   ├── nginx.conf
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.cjs
+│   ├── README.md
+│   ├── tailwind.config.js
+│   └── vite.config.js
+├── postgres_new
+│   └── dockerfile
+├── .env
+├── .gitignore
+├── backup-prod.sql
+├── docker-compose.yml
+├── dump_15092025_1800.sql
+├── init_db.sql
+├── kod_for_create_structure_power_shell
+├── README.md
+├── requerements1.txt
+├── requirements.txt
+├── restore_db.bat
+├── structure.txt
+├── table faktura.docx
+└── trush.txt

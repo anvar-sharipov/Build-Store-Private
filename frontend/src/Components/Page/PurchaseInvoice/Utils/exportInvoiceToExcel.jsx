@@ -120,6 +120,14 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
     columnMapping.push({ key: "quantity", excelCol: colIndex++, title: t("q-ty"), width: 11 });
     columnMapping.push({ key: "unit", excelCol: colIndex++, title: t("un"), width: 8 });
     columnMapping.push({ key: "price", excelCol: colIndex++, title: "Цена за шт.", width: 11 });
+
+    columnMapping.push({
+      key: "discount_percent",
+      excelCol: colIndex++,
+      title: "Скидка %",
+      width: 10,
+    });
+
     columnMapping.push({ key: "totalPrice", excelCol: colIndex++, title: "Общая цена", width: 15 });
 
     if (printVisibleColumns.purchase) {
@@ -373,11 +381,24 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
 
     values.products.forEach((product, index) => {
       const dataRow = worksheet.getRow(currentRow);
-      
+
       // dataRow.height = 30
 
       const qty = toNumber(product.selected_quantity);
-      const price = toNumber(product.selected_price);
+
+      let price = toNumber(product.selected_price);
+
+      let show_price = toNumber(product.selected_price);
+      // console.log("discount_percent", product.discount_percent);
+
+      if (Number(product.discount_percent) > 0) {
+        const basePrice = values.type_price === "retail_price" ? Number(product.retail_price) : Number(product.wholesale_price);
+        show_price = toNumber(basePrice);
+      }
+
+      // console.log("price GHGHGH", price);
+      // console.log("price product.selected_price", product.selected_price);
+
       const purchasePrice = toNumber(product.purchase_price);
       const wholesalePrice = toNumber(product.wholesale_price);
       const volume = toNumber(product.volume);
@@ -424,7 +445,12 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
           //   break;
 
           case "name":
-            cell.value = product.name || "";
+            if (product.is_gift) {
+              cell.value = `🎁 ${product.name}` || "";
+            } else {
+              cell.value = product.name || "";
+            }
+
             cell.style = styles.dataRow;
             cell.alignment = {
               horizontal: "left",
@@ -495,25 +521,27 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
             break;
 
           case "price":
-            cell.value = safeNumber(price);
-            cell.style = styles.numberCell;
+            console.log("show_price", show_price);
 
-            cell.font = { size: 12 }; // ✅ 11
-            cell.alignment = {
-              horizontal: "right",
-              vertical: "middle",
-            };
-
+            cell.value = safeNumber(show_price);
+            cell.numFmt = "#,##0.000";
+            cell.font = { size: 14 };
+            cell.alignment = { horizontal: "right", vertical: "middle" };
             cell.border = {
               top: { style: "thin", color: { argb: "FF000000" } },
               bottom: { style: "thin", color: { argb: "FF000000" } },
               left: { style: "thin", color: { argb: "FF000000" } },
               right: { style: "thin", color: { argb: "FF000000" } },
             };
+            break;
 
-            cell.numFmt = "#,##0.000";
-            cell.font = { size: 14 }; // ✅ 11
-            cell.alignment = { vertical: "middle" };
+          case "discount_percent":
+            cell.value = safeNumber(product.discount_percent);
+            cell.style = styles.numberCell;
+            // cell.numFmt = "0.00";
+            cell.numFmt = '0"%"';
+            cell.font = { size: 14 };
+            cell.alignment = { horizontal: "center", vertical: "middle" };
             break;
 
           case "totalPrice":
@@ -618,7 +646,6 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
         }
       });
 
-      
       dataRow.height = 37;
 
       currentRow++;
@@ -638,7 +665,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
       const labelCol = totalPriceCol.excelCol - 1;
       totalRow.getCell(labelCol).value = "ИТОГО:";
       totalRow.getCell(labelCol).style = { ...styles.totalRow, alignment: { horizontal: "right" } };
-      totalRow.getCell(labelCol).font = {size:14, bold: true}
+      totalRow.getCell(labelCol).font = { size: 14, bold: true };
 
       columnMapping.forEach((col) => {
         switch (col.key) {
@@ -646,7 +673,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
             totalRow.getCell(col.excelCol).value = totals.totalPrice;
 
             // totalRow.getCell(col.excelCol).style = styles.totalRowNumber;
-            totalRow.getCell(col.excelCol).font = {size:14, bold: true}
+            totalRow.getCell(col.excelCol).font = { size: 14, bold: true };
             totalRow.getCell(col.excelCol).numFmt = "#,##0.00";
             break;
 
@@ -654,7 +681,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
             totalRow.getCell(col.excelCol).value = totals.totalPurchase;
             totalRow.getCell(col.excelCol).numFmt = "#,##0.00";
             // totalRow.getCell(col.excelCol).style = styles.totalRowNumber;
-            totalRow.getCell(col.excelCol).font = {size:14, bold: true}
+            totalRow.getCell(col.excelCol).font = { size: 14, bold: true };
             break;
 
           case "total_income":

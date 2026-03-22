@@ -122,12 +122,27 @@ class FreeProductSerializer(serializers.ModelSerializer):
     gift_product_quantity = serializers.CharField(source="gift_product.quantity", read_only=True)
     gift_product_unit_name = serializers.CharField(source="gift_product.base_unit.name", read_only=True)
     # main_product не нужно передавать, задаём вручную в ProductSerializer
+    
+    def validate_discount_percent(self, value):
+        if value < 0 or value > 100:
+            raise serializers.ValidationError("Discount must be between 0 and 100")
+        return value
 
     class Meta:
         model = FreeProduct
         fields = ['id', 'gift_product', 'gift_product_name', 'quantity_per_unit', 'gift_product_quantity', 'gift_product_unit_name']
 
-   
+
+class ProductQuantityDiscountSerializer(serializers.ModelSerializer):
+    
+    id = serializers.IntegerField(read_only=True)
+    class Meta:
+        model = ProductQuantityDiscount
+        fields = ['id', 'min_quantity', 'discount_percent']
+        
+
+
+
 class ProductSerializer(serializers.ModelSerializer):
     category_name_obj = CategorySerializer(read_only=True, source='category')
     base_unit_obj = UnitOfMeasurementSerializer(read_only=True, source='base_unit')
@@ -156,6 +171,10 @@ class ProductSerializer(serializers.ModelSerializer):
     quantity_on_selected_warehouses = serializers.SerializerMethodField()
     turnover_data = serializers.SerializerMethodField()
     qty_in_drafts = serializers.SerializerMethodField()
+    
+    reserved_details = serializers.SerializerMethodField()
+    
+    quantity_discounts = ProductQuantityDiscountSerializer(many=True, required=False)
     
     # def get_qty_in_drafts(self, obj):
     #     warehouse_ids = self.context.get("warehouse_ids", [])
@@ -189,12 +208,18 @@ class ProductSerializer(serializers.ModelSerializer):
             'quantity_on_selected_warehouses',  
             "turnover_data",
             "qty_in_drafts",
+            "reserved_details",
+            'quantity_discounts',
             
         ]
     
     def get_turnover_data(self, obj):
         turnover_data = self.context.get("turnover_data", {})
         return turnover_data.get(obj.id, {"qty": 0, "sum": 0})
+    
+    def get_reserved_details(self, obj):
+        reserved_details = self.context.get("reserved_details", {})
+        return reserved_details.get(obj.id, [])
     
 
 
@@ -257,6 +282,7 @@ class ProductSerializer(serializers.ModelSerializer):
         units_data = validated_data.pop('units', [])
         warehouses_data = validated_data.pop('warehouses', [])
         free_items_data = validated_data.pop('free_items', [])
+        discount_rules_data = validated_data.pop('quantity_discounts', [])
 
         user = self.context['request'].user
 
@@ -274,14 +300,21 @@ class ProductSerializer(serializers.ModelSerializer):
 
         for free_item_data in free_items_data:
             FreeProduct.objects.create(main_product=product, **free_item_data)
+            
+        for rule_data in discount_rules_data:
+            ProductQuantityDiscount.objects.create(product=product, **rule_data)
 
         return product
+    
+        
 
     def update(self, instance, validated_data):
         tags_data = validated_data.pop('tags', None)
         units_data = validated_data.pop('units', None)
         warehouses_data = validated_data.pop('warehouses', None)
         free_items_data = validated_data.pop('free_items', None)
+        
+        discount_rules_data = validated_data.pop('quantity_discounts', None)
 
         user = self.context['request'].user
 
@@ -307,6 +340,12 @@ class ProductSerializer(serializers.ModelSerializer):
             instance.free_items.all().delete()
             for free_item_data in free_items_data:
                 FreeProduct.objects.create(main_product=instance, **free_item_data)
+                
+        if discount_rules_data is not None:
+            instance.quantity_discounts.all().delete()
+
+            for rule_data in discount_rules_data:
+                ProductQuantityDiscount.objects.create(product=instance, **rule_data)
 
         return instance
     

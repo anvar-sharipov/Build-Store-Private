@@ -754,7 +754,14 @@
   "product age days": "Возраст товара (дни)",
   "full list": "Полный список",
   "share": "Удельный вес %",
-  "cumulative percent": "Накопительный %"
+  "cumulative percent": "Накопительный %",
+  "Changing invoice type will clear items. Continue?": "Изменение типа фактуры очистит товары. Продолжить?",
+  "total requested": "Всего запрошено",
+  "gift": "Подарок",
+  "no discount rules": "Нет правил скидок",
+  "quantity discounts": "Скидки по количеству",
+  "quantity2": "Количество ≥",
+  "discount percent": "Процент скидки %"
 
 
  

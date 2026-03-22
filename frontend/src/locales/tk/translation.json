@@ -725,7 +725,14 @@
   "product age days": "Harydyň ýaşy (gün)",
   "full list": "Doly sanaw",
   "share": "Paý agramy %",
-  "cumulative percent": "Toplanan %"
+  "cumulative percent": "Toplanan %",
+  "Changing invoice type will clear items. Continue?": "Faktura görnüşini üýtgetmek harytlary arassalar. Dowam etmelimi?",
+  "total requested": "Jemi soralan",
+  "gift": "Sowgat",
+  "no discount rules": "Arzanladyş düzgünleri ýok",
+  "quantity discounts": "Mukdar boýunça arzanladyşlar",
+  "quantity2": "Mukdar ≥",
+  "discount percent": "Arzanladyş göterimi %"
 
 
 

@@ -14,6 +14,7 @@ const SettingsPrintVisible = ({ printVisibleColumns, setPrintVisibleColumns, use
     { key: "volume", label: "Объём (м³)", icon: "📦" },
     { key: "weight", label: "Вес (кг)", icon: "⚖️" },
     { key: "dimensions", label: "Размеры", icon: "📏" },
+    { key: "discount_percent", label: "Скидка %", icon: "🏷️" },
     // { key: "saldo", label: "Сальдо", icon: "$" },
   ];
 

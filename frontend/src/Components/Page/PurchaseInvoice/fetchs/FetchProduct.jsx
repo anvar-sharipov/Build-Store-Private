@@ -7,6 +7,7 @@ import myAxios from "../../../axios";
 import { formatNumber } from "../../../UI/formatNumber";
 import Notification from "../../../Notification";
 import { Loader2 } from "lucide-react";
+import calculateDiscount from "../../../UI/calculateDiscount";
 
 // const BASE_URL = import.meta.env.VITE_BASE_URL;
 const BASE_URL = import.meta.env.VITE_BASE_URL || "";
@@ -67,7 +68,8 @@ const FetchProduct = ({ refs, invoice_id = null }) => {
 
   const getProduct = async (productId, warehouseId, mainProductId) => {
     try {
-      const res = await myAxios.get("/get-product/", { params: { product_id: productId, warehouse_id: warehouseId, main_product_id: mainProductId } });
+      const res = await myAxios.get("/get-product/", { params: { product_id: productId, warehouse_id: warehouseId, main_product_id: mainProductId, invoice_id: invoice_id } });
+      // console.log("res.dataEEEEEEEEEE", res.data);
 
       return res.data; // важно
     } catch (error) {
@@ -76,69 +78,6 @@ const FetchProduct = ({ refs, invoice_id = null }) => {
     }
   };
 
-  // useEffect(() => {
-  //   const fetchProduct = async () => {
-
-  //     if (!query) return setProducts([]);
-  //     try {
-
-  //       const res = await myAxios.get(`search-products/?search=${query}&warehouse=${values.warehouse.id}`);
-  //       const activeProducts = res.data.filter((prod) => prod.is_active);
-
-  //       if (activeProducts.length === 1 && activeProducts[0].finded_from_QR) {
-  //         await handleAddProduct(activeProducts[0], values, setFieldValue, refs, showNotification, getProduct);
-  //         setProducts([]);
-  //         setQuery("");
-  //         sound_beep.currentTime = 0;
-  //         sound_beep.play();
-  //       } else {
-  //         setProducts(activeProducts);
-  //       }
-
-  //     } catch (error) {
-  //       console.log("oshibka pri query product", error);
-  //     } finally {
-  //     }
-  //   };
-  //   fetchProduct();
-  // }, [query]);
-
-  // useEffect(() => {
-  //   const controller = new AbortController();
-
-  //   const timeout = setTimeout(async () => {
-  //     if (!query || query.length < 2) return setProducts([]);
-  //     setLoading(true);
-
-  //     try {
-  //       console.log("invoice_idddd", invoice_id);
-  //       // const res = await myAxios.get(`search-products/?search=${query}&warehouse=${values.warehouse.id}`, { signal: controller.signal });
-  //       const res = await myAxios.get("search-products/", {
-  //         params: {
-  //           search: query,
-  //           warehouse: values.warehouse.id,
-  //           invoice_id: invoice_id || null,
-  //           wozwrat_or_prihod: values.wozwrat_or_prihod,
-  //         },
-  //         signal: controller.signal,
-  //       });
-
-  //       const activeProducts = res.data.filter((prod) => prod.is_active);
-  //       setProducts(activeProducts);
-  //     } catch (error) {
-  //       if (error.name !== "CanceledError") {
-  //         console.log("oshibka", error);
-  //       }
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }, 400);
-
-  //   return () => {
-  //     clearTimeout(timeout);
-  //     controller.abort(); // ← отменяем прошлый запрос
-  //   };
-  // }, [query]);
   useEffect(() => {
     const controller = new AbortController();
 
@@ -181,6 +120,8 @@ const FetchProduct = ({ refs, invoice_id = null }) => {
           time: Date.now(),
         };
 
+        // console.log("activeProductsEEEE", activeProducts);
+
         setProducts(activeProducts);
       } catch (error) {
         if (error.name !== "CanceledError") {
@@ -209,31 +150,75 @@ const FetchProduct = ({ refs, invoice_id = null }) => {
       return;
     }
 
-    const mainProduct = {
+    // console.log("productRTRT", product);
+    const price_type = values.type_price;
+    const discounts_data = calculateDiscount(product, 1, 0, price_type);
+
+    const { percent, price_after_discount, discount_amount } = discounts_data;
+    // console.log("price_after_discount RRRRRRRRRRRR", price_after_discount);
+    // console.log("dicount_percent RRRRRRRRRRRR", percent);
+    // console.log("price_after_discount RRRRRRRRRRRR", price_after_discount);
+    let mainProduct;
+    if (values.wozwrat_or_prihod === "rashod") {
+      mainProduct = {
+        ...product,
+        is_custom_price: false,
+        is_gift: false,
+
+        discount_percent: percent,
+        discount_auto: true,
+        price_after_discount: price_after_discount,
+        discount_amount: discount_amount,
+        selected_price: price_after_discount,
+      };
+    } else {
+      const basePrice = values.type_price === "wholesale_price" ? Number(product.wholesale_price) : Number(product.retail_price);
+      mainProduct = {
       ...product,
       is_custom_price: false,
       is_gift: false,
+
+      discount_percent: 0,
+      discount_auto: true,
+      price_after_discount: 0,
+      discount_amount: 0,
+      selected_price: basePrice,
     };
+    }
 
     let updatedProducts = [...(values.products || [])];
 
     // если у товара есть бесплатные позиции
     if (product.free_items && product.free_items.length > 0) {
       for (const free of product.free_items) {
+        const giftQtyRaw = Number(free.quantity_per_unit);
+        // console.log("free.quantity_per_unit", free.quantity_per_unit);
+
+        const giftQty = Math.floor(giftQtyRaw);
+
+        // if (giftQty < 1) {
+        //   continue;
+        // }
         const res = await getProduct(free.gift_product, values.warehouse?.id, product.id);
         if (res) {
           const existingGiftIndex = updatedProducts.findIndex((p) => p.is_gift && p.id === res.id);
           if (existingGiftIndex !== -1) {
             updatedProducts[existingGiftIndex] = {
               ...updatedProducts[existingGiftIndex],
-              selected_quantity: (Number(updatedProducts[existingGiftIndex].selected_quantity) || 0) + Number(free.quantity_per_unit),
+              selected_quantity: (Number(updatedProducts[existingGiftIndex].selected_quantity) || 0) + giftQty,
             };
           } else {
             updatedProducts.push({
               ...res,
+              selected_quantity: giftQty || 0,
               is_custom_price: false,
               is_gift: true,
               parent_id: product.id,
+
+              discount_percent: 0,
+              discount_auto: true,
+              price_after_discount: 0,
+              discount_amount: 0,
             });
           }
         }
@@ -249,12 +234,18 @@ const FetchProduct = ({ refs, invoice_id = null }) => {
       return a.is_gift ? 1 : -1;
     });
 
+    // console.log("LLLLLLLLLupdatedProducts", updatedProducts);
+
+    // console.log("updatedProducts RRRRRRRRRRRR", updatedProducts);
+
     setFieldValue("products", updatedProducts, false);
 
-    // очистка списка продуктов
+    // находим индекс добавленного основного товара
+    const newIndex = updatedProducts.findIndex((p) => p.id === product.id && !p.is_gift);
+
     setTimeout(() => {
       requestAnimationFrame(() => {
-        const input = refs.quantityRefs.current[product.id];
+        const input = refs.quantityRefs.current[newIndex];
         if (input) {
           input.focus();
           input.select();
@@ -306,8 +297,8 @@ const FetchProduct = ({ refs, invoice_id = null }) => {
                     refs.productListRef.current[0]?.focus();
                   }, 0);
                 } else if (values.products.length > 0) {
-                  refs.quantityRefs.current[values.products[0].id]?.focus();
-                  refs.quantityRefs.current[values.products[0].id]?.select();
+                  refs.quantityRefs.current[0]?.focus();
+                  refs.quantityRefs.current[0]?.select();
                 }
               } else if (e.key == "ArrowUp") {
                 e.preventDefault();
@@ -376,7 +367,7 @@ const FetchProduct = ({ refs, invoice_id = null }) => {
               }
 
               const imgSrc = product.images?.[0]?.image?.startsWith("http") ? product.images[0].image : `${BASE_URL}${product.images?.[0]?.image}`;
-              console.log("imgSrc", imgSrc);
+              // console.log("imgSrc", imgSrc);
 
               return (
                 <li

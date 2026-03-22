@@ -2,8 +2,9 @@ import { useFormikContext } from "formik";
 import { forwardRef, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { formatNumber } from "../../../UI/formatNumber";
+import calculateDiscount from "../../../UI/calculateDiscount";
 
-const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, setFocusedQuantityRow, setFocusedPriceRow, refs }, ref) => {
+const Quantity = forwardRef(({ product, index, onFocusQuantityRow, onBlurQuantityRow, setFocusedQuantityRow, setFocusedPriceRow, refs }, ref) => {
   const { values, setFieldValue } = useFormikContext();
   const { t } = useTranslation();
   // const [localErrorQuantity, setLocalErrorQuantity] = useState(() => {
@@ -21,7 +22,7 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
       Number(product.selected_quantity) > ((product.quantity_on_selected_warehouses || 0) - (product.qty_in_drafts || 0) || 0) &&
       (values.wozwrat_or_prihod === "rashod" || values.wozwrat_or_prihod === "transfer")
     ) {
-      setLocalErrorQuantity(`${t("OnStock")} ${(product.quantity_on_selected_warehouses || 0) - (product.qty_in_drafts || 0)}`);
+      setLocalErrorQuantity(`${t("available")}: ${(product.quantity_on_selected_warehouses || 0) - (product.qty_in_drafts || 0)}`);
       setFieldValue("send", false);
     }
     // else {
@@ -42,7 +43,8 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
 
   // console.log("fdfdfdfd", product);
 
-  const productIndex = values.products.findIndex((p) => p.id === product.id);
+  // const productIndex = values.products.findIndex((p) => p.id === product.id);
+  const productIndex = index;
 
   // useEffect(() => {
   //   if (Number(product.selected_quantity) > (product.quantity_on_selected_warehouses || 0)) {
@@ -71,9 +73,11 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
 
       if (productIndex > 0) {
         // Есть продукт выше - фокусируемся на нем
-        const prevProductId = values.products[productIndex - 1].id;
-        refs.quantityRefs.current[prevProductId]?.focus();
-        refs.quantityRefs.current[prevProductId]?.select();
+        // const prevProductId = values.products[productIndex - 1].id;
+        // refs.quantityRefs.current[prevProductId]?.focus();
+        // refs.quantityRefs.current[prevProductId]?.select();
+        refs.quantityRefs.current[productIndex - 1]?.focus();
+        refs.quantityRefs.current[productIndex - 1]?.select();
       } else {
         // Нет продукта выше - идем в поле поиска продуктов
         refs.productRef.current?.focus();
@@ -86,55 +90,64 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
 
       if (productIndex < values.products.length - 1) {
         // Есть продукт ниже - фокусируемся на нем
-        const nextProductId = values.products[productIndex + 1].id;
-        refs.quantityRefs.current[nextProductId]?.focus();
-        refs.quantityRefs.current[nextProductId]?.select();
+        // const nextProductId = values.products[productIndex + 1].id;
+        // refs.quantityRefs.current[nextProductId]?.focus();
+        // refs.quantityRefs.current[nextProductId]?.select();
+        refs.quantityRefs.current[productIndex + 1]?.focus();
+        refs.quantityRefs.current[productIndex + 1]?.select();
       }
       // Если это последний продукт, остаемся на месте (или можно добавить другую логику)
     } else if (e.key === "ArrowRight" && e.target.selectionStart === e.target.value.length) {
       e.preventDefault();
-      refs.priceRefs.current[product.id]?.focus();
-      refs.priceRefs.current[product.id]?.select();
+      // refs.priceRefs.current[product.id]?.focus();
+      // refs.priceRefs.current[product.id]?.select();
+      refs.priceRefs.current[productIndex]?.focus();
+      refs.priceRefs.current[productIndex]?.select();
     }
   };
 
-  const recalcGiftQuantities = (products) => {
-    const giftQuantities = {};
+  // function calculateDiscount(product, qty) {
+  //   let percent = 0;
 
-    // Проходим по всем main товарам
-    products.forEach((product) => {
-      if (!product.is_gift && product.free_items?.length > 0) {
-        // console.log("GGGGGGGGGGGGGGGGGG", product.selected_quantity);
+  //   const rules = [...(product.quantity_discounts || [])].sort((a, b) => Number(a.min_quantity) - Number(b.min_quantity));
 
-        const mainQty = Number(product.selected_quantity) || 0; // <-- используем quantity из values.products
-        product.free_items.forEach((free) => {
-          const giftId = free.gift_product;
-          const qtyPerUnit = Number(free.quantity_per_unit) || 0;
-          // console.log("GGGGGGGGGGGGGGGGGG", free.quantity_per_unit);
+  //   rules.forEach((rule) => {
+  //     if (qty >= Number(rule.min_quantity)) {
+  //       percent = Number(rule.discount_percent);
+  //     }
+  //   });
 
-          giftQuantities[giftId] = (giftQuantities[giftId] || 0) + mainQty * qtyPerUnit;
-        });
-      }
-    });
-    // console.log("GGGGGGGGGGGGGGGGGG", giftQuantities);
+  //   const price = Number(product.selected_price) || 0;
 
-    // Обновляем все gift товары
-    products.forEach((product, idx) => {
-      if (product.is_gift) {
-        const newQty = giftQuantities[product.id] || 0;
+  //   // const price_after_discount = price * (1 - percent / 100);
+  //   // const discount_amount = price - price_after_discount;
 
-        if (Number(product.selected_quantity) !== newQty) {
-          // console.log('tut');
-          // console.log('eeeee', values.products[idx]);
+  //   const price_after_discount = +(price * (1 - percent / 100)).toFixed(3);
+  //   const discount_amount = +(price - price_after_discount).toFixed(3);
 
-          setFieldValue(`products[${idx}].selected_quantity`, newQty);
-        }
-      }
-    });
-  };
+  //   // console.log("pricePPPPPPPPPPP", price);
+  //   // console.log("percentPPPPPPPPPPP", percent);
+
+  //   // console.log("selected_priceEEEEEEE", price);
+  //   // console.log("percentEEEEEEE", percent);
+  //   // console.log("price_after_discountEEEEEEE", price);
+  //   // console.log("discount_amountEEEEEEE", price);
+  //   // console.log("price_after_discountTTTTTTTTTTTT", price_after_discount);
+
+  //   return {
+  //     discount_percent: percent,
+  //     price_after_discount,
+  //     discount_amount,
+  //   };
+  // }
+
+  // console.log("product.selected_price II", product.selected_price);
 
   return (
-    <td className="p-0 m-0 text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400  print:!text-black print:!border-black text-center font-mono tabular-nums">
+    // <td className="p-0 m-0 text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400  print:!text-black print:!border-black text-center font-mono tabular-nums">
+    <td
+      className={`p-0 m-0 text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400  print:!text-black print:!border-black text-center font-mono tabular-nums ${product.stock_error ? "bg-red-100 dark:bg-red-900" : ""}`}
+    >
       <input
         ref={ref} // сюда приходит ref из родителя
         type="text"
@@ -143,16 +156,18 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
         value={localValue}
         onFocus={() => {
           onFocusQuantityRow(); // родительская функция
-          setFocusedQuantityRow(product.id);
+          setFocusedQuantityRow(productIndex);
           setFocusedPriceRow(null); // убрать подсветку price
         }}
         onBlur={() => {
           onBlurQuantityRow();
           setFocusedQuantityRow(null);
         }}
+        disabled={product.is_gift}
         // onChange={(e) => handleChangeQuantity(e.target.value)}
         onChange={(e) => {
           // console.log("product ===", product);
+          // console.log("tutuOOOOOOOOO");
 
           const rawValue = e.target.value;
           setLocalValue(rawValue); // всегда пишем то, что набрал пользователь
@@ -162,15 +177,14 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
           const qty = Number(normalizedValue);
           const isNumber = !isNaN(normalizedValue) && normalizedValue.trim() !== "";
 
-          // console.log("values.wozwrat_or_prihodEEEEEEEEEEEE", values.wozwrat_or_prihod);
+          let total_dostupno = (product.quantity_on_selected_warehouses || 0) - (product.qty_in_drafts || 0);
 
+          // console.log("values.wozwrat_or_prihodEEEEEEEEEEEE", values.wozwrat_or_prihod);
+          // console.log("product.qty_in_drafts", (product.quantity_on_selected_warehouses || 0) - product.qty_in_drafts);
           if (!isNumber) {
             setLocalErrorQuantity(`${t("quantity must be a digit")}`);
             setFieldValue("send", false);
-          } else if (qty > (product.quantity_on_selected_warehouses || 0) - (product.qty_in_drafts || 0) && (values.wozwrat_or_prihod === "rashod" || values.wozwrat_or_prihod === "transfer")) {
-            setLocalErrorQuantity(`${t("OnStock")} ${(product.quantity_on_selected_warehouses || 0) - (product.qty_in_drafts || 0)}`);
-            setFieldValue("send", false);
-            setFieldValue(`products[${productIndex}].selected_quantity`, qty);
+            // } else if (qty > (product.quantity_on_selected_warehouses || 0) - (product.qty_in_drafts || 0) && (values.wozwrat_or_prihod === "rashod" || values.wozwrat_or_prihod === "transfer")) {
           } else if (qty < 0.001) {
             setLocalErrorQuantity(`${t("only positive numbers")}`);
             setFieldValue("send", false);
@@ -180,9 +194,136 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
             // setFieldValue("send", true);
             setFieldValue(`products[${productIndex}].selected_quantity`, qty);
 
-            const updatedProducts = values.products.map((p, idx) => (idx === productIndex ? { ...p, selected_quantity: qty } : p));
+            // const test = calculateDiscount(product, qty);
+            // console.log("test", test);
 
-            recalcGiftQuantities(updatedProducts);
+            // const updatedProducts = values.products.map((p, idx) => (idx === productIndex ? { ...p, selected_quantity: qty } : p));
+
+            let updatedProducts = values.products.map((p, idx) => {
+              if (idx === productIndex) {
+                const discount = calculateDiscount(p, qty, 0, values.type_price);
+                
+
+                const basePrice = values.type_price === "retail_price" ? Number(product.retail_price) : Number(product.wholesale_price);
+                let selected_price = basePrice
+                if (discount.percent > 0) {
+                  selected_price = discount.price_after_discount
+                }
+                
+
+                // console.log("discount tutuOOOOOOOOO", discount);
+                if (values.wozwrat_or_prihod === "rashod") {
+                  return {
+                    ...p,
+                    selected_quantity: qty,
+                    price_after_discount: discount.price_after_discount,
+                    discount_percent: discount.percent,
+                    discount_amount: discount.discount_amount,
+                    selected_price:selected_price
+                  };
+                } else {
+                  return {
+                    ...p,
+                    selected_quantity: qty,
+                    price_after_discount: 0,
+                    discount_percent: 0,
+                    discount_amount: 0,
+                  };
+                }
+              }
+              return p;
+            });
+
+            // пересчитываем gift
+            const giftQuantities = {};
+
+            updatedProducts.forEach((p) => {
+              if (!p.is_gift && Array.isArray(p.free_items) && p.free_items?.length > 0) {
+                const mainQty = Number(p.selected_quantity) || 0;
+
+                p.free_items.forEach((free) => {
+                  const giftId = free.gift_product;
+                  const qtyPerUnit = Number(free.quantity_per_unit) || 0;
+
+                  const calculated = Math.floor(mainQty * qtyPerUnit);
+
+                  giftQuantities[giftId] = (giftQuantities[giftId] || 0) + calculated;
+                });
+              }
+            });
+
+            // обновляем gift
+            // const recalculatedProducts = updatedProducts.map((p) => {
+            //   if (p.is_gift) {
+            //     return {
+            //       ...p,
+            //       selected_quantity: giftQuantities[p.id] || 0,
+            //     };
+            //   }
+            //   return p;
+            // });
+
+            updatedProducts = updatedProducts.map((p) => {
+              if (p.is_gift) {
+                return {
+                  ...p,
+                  selected_quantity: giftQuantities[p.id] || 0,
+                };
+              }
+              return p;
+            });
+
+            // setFieldValue("products", recalculatedProducts);
+            // считаем ОБЩЕЕ количество товара (main + gift)
+            // const totalRequested = recalculatedProducts.filter((p) => p.id === product.id).reduce((sum, p) => sum + (Number(p.selected_quantity) || 0), 0);
+            const totalRequested = updatedProducts.filter((p) => p.id === product.id).reduce((sum, p) => sum + (Number(p.selected_quantity) || 0), 0);
+
+            // проверка склада
+            // if (totalRequested > total_dostupno && (values.wozwrat_or_prihod === "rashod" || values.wozwrat_or_prihod === "transfer")) {
+            //   setLocalErrorQuantity(`${t("OnStock")} ${total_dostupno}`);
+            //   setFieldValue("send", false);
+            //   return;
+            // }
+            if (totalRequested > total_dostupno && (values.wozwrat_or_prihod === "rashod" || values.wozwrat_or_prihod === "transfer")) {
+              setLocalErrorQuantity(`${t("available")}: ${total_dostupno}`);
+
+              setFieldValue("send", false);
+
+              // подсветим gift товары
+              // const errorProducts = recalculatedProducts.map((p) => {
+              //   if (p.id === product.id) {
+              //     return { ...p, stock_error: true };
+              //   }
+              //   return { ...p, stock_error: false };
+              // });
+              // const updatedProducts = recalculatedProducts.map((p) => {
+              //   if (p.id === product.id) {
+              //     return { ...p, stock_error: true };
+              //   }
+              //   return { ...p, stock_error: false };
+              // });
+
+              updatedProducts = updatedProducts.map((p) => {
+                if (p.id === product.id) {
+                  return { ...p, stock_error: true };
+                }
+                return { ...p, stock_error: false };
+              });
+
+              setFieldValue("products", updatedProducts);
+
+              return;
+            }
+
+            // ✅ ЕСЛИ ОШИБКИ НЕТ — СНИМАЕМ КРАСНЫЙ
+            updatedProducts = updatedProducts.map((p) => ({
+              ...p,
+              stock_error: false,
+            }));
+
+            setFieldValue("products", updatedProducts);
+
+            // recalcGiftQuantities(updatedProducts);
 
             let send = true;
             for (let i = 0; i < updatedProducts.length; i++) {
@@ -199,6 +340,19 @@ const Quantity = forwardRef(({ product, onFocusQuantityRow, onBlurQuantityRow, s
         onKeyDown={handleKeyNavigation}
       />
       <div className="hidden print:block">{formatNumber(localValue, 3)}</div>
+      {!product.is_gift && product.free_items?.length > 0 && (
+        <div className="text-[11px] text-gray-500 print:hidden">
+          {(() => {
+            const giftQty = values.products.filter((p) => p.is_gift && product.free_items.some((f) => f.gift_product === p.id)).reduce((sum, p) => sum + (Number(p.selected_quantity) || 0), 0);
+
+            if (giftQty > 0) {
+              return `(+${giftQty} ${t("gift")})`;
+            }
+
+            return null;
+          })()}
+        </div>
+      )}
       {localErrorQuantity && <div className="text-red-500 text-xs print:hidden">{localErrorQuantity}</div>}
     </td>
   );

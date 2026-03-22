@@ -37,7 +37,8 @@ const ProductAddModal = ({
     tags_obj: [],
     units: [],
     free_items: [],
-    warehouses: []
+    warehouses: [],
+    quantity_discounts: [],
   };
 
   return (

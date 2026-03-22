@@ -1859,6 +1859,7 @@ def get_trip(request):
                 grouped_products[product_key]['invoices'].append(invoice.id)
     
     # Преобразуем grouped_products в список для фронтенда
+    
     aggregated_products = []
     for product_key, product_data in grouped_products.items():
         aggregated_products.append({

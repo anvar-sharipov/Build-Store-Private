@@ -140,6 +140,13 @@ def apply_abcxyz(products):
 
 def get_result(date_from, date_to, warehouse_ids, last_days, sort_brend, brand_ids, category_ids, dont_show_zero, new_product_days_count, full_list, sort_field=None, sort_direction="desc"):
     
+    test_ab28 = WarehouseProduct.objects.filter(product__name = "AB-60, BOLOR-646 RASTWORITEL 0.5L (20)")
+    
+    # ic(test_ab28)
+    for i in test_ab28:
+        ic(i.product.name)
+        ic(i.quantity)
+    
     if sort_field == "abcxyz_category":
         sort_field = "abcxyz_priority"
     

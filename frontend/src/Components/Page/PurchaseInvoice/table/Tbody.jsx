@@ -9,6 +9,8 @@ import { MyDecimalPrice } from "../../../UI/MyDecimalPrice";
 import Decimal from "decimal.js";
 import { formatNumber2 } from "../../../UI/formatNumber2";
 import { useTranslation } from "react-i18next";
+import calculateDiscount from "../../../UI/calculateDiscount";
+import getNextDiscount from "../../../UI/getNextDiscount";
 
 // const BASE_URL = import.meta.env.VITE_BASE_URL;
 const BASE_URL = import.meta.env.VITE_BASE_URL || "";
@@ -34,6 +36,7 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
   const [focusedQuantityRow, setFocusedQuantityRow] = useState(null);
   const [focusedPriceRow, setFocusedPriceRow] = useState(null);
   const { t } = useTranslation();
+  const discountRefs = useRef([]);
 
   const recalcGiftQuantities = (products) => {
     const giftQuantities = {};
@@ -62,7 +65,7 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
 
     const updatedProducts = (products || []).filter((product) => Number(product.selected_quantity) > 0);
 
-    console.log("updatedProducts", updatedProducts);
+    // console.log("updatedProducts", updatedProducts);
 
     setFieldValue("products", updatedProducts);
 
@@ -75,8 +78,8 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
         break;
       }
     }
-    console.log("send", send);
-    
+    // console.log("send", send);
+
     // setFieldValue("send", true);
     setFieldValue("send", send);
   };
@@ -89,9 +92,15 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
     }
   }, [values.wozwrat_or_prihod]);
 
-  const handleRemove = (id) => {
-    const updatedProducts = values.products.filter((p) => p.id !== id);
-    // setFieldValue("products", updatedProducts);
+  // const handleRemove = (id) => {
+  //   const updatedProducts = values.products.filter((p) => p.id !== id);
+  //   // setFieldValue("products", updatedProducts);
+  //   recalcGiftQuantities(updatedProducts);
+  //   refs.productRef.current?.focus();
+  // };
+
+  const handleRemove = (index) => {
+    const updatedProducts = values.products.filter((_, i) => i !== index);
     recalcGiftQuantities(updatedProducts);
     refs.productRef.current?.focus();
   };
@@ -111,16 +120,32 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
         // const total_width = Number(product.width) * Number(product.selected_quantity);
         // const total_height = Number(product.height) * Number(product.selected_quantity);
 
-        const total_price = MyDecimalPrice(product.selected_quantity, product.selected_price);
+        let total_price = 0;
+        if (product.discount_percent > 0) {
+          total_price = MyDecimalPrice(product.selected_quantity, product.price_after_discount);
+        } else {
+          total_price = MyDecimalPrice(product.selected_quantity, product.selected_price);
+        }
 
         const total_purchase = MyDecimalPrice(product.selected_quantity, product.purchase_price);
 
         // const income_1pc = new Decimal(product.selected_price || 0).minus(product.purchase_price || 0);
 
         // const discount_1pc = new Decimal(product.selected_price || 0).minus(product.wholesale_price || 0).toDecimalPlaces(3, Decimal.ROUND_HALF_UP);
-        const income_1pc = safeDecimal(product.selected_price).minus(safeDecimal(product.purchase_price));
 
-        const discount_1pc = safeDecimal(product.selected_price).minus(safeDecimal(product.wholesale_price)).toDecimalPlaces(3, Decimal.ROUND_HALF_UP);
+        let income_1pc = 0;
+        if (product.discount_percent > 0) {
+          income_1pc = safeDecimal(product.price_after_discount).minus(safeDecimal(product.purchase_price));
+        } else {
+          income_1pc = safeDecimal(product.selected_price).minus(safeDecimal(product.purchase_price));
+        }
+
+        let discount_1pc = 0;
+        if (product.discount_percent > 0) {
+          discount_1pc = safeDecimal(product.price_after_discount).minus(safeDecimal(product.wholesale_price)).toDecimalPlaces(3, Decimal.ROUND_HALF_UP);
+        } else {
+          discount_1pc = safeDecimal(product.selected_price).minus(safeDecimal(product.wholesale_price)).toDecimalPlaces(3, Decimal.ROUND_HALF_UP);
+        }
 
         const income_total = MyDecimalPrice(product.selected_quantity, income_1pc);
 
@@ -132,19 +157,61 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
         const total_width = Number(product.width) * Number(product.selected_quantity);
         const total_height = Number(product.height) * Number(product.selected_quantity);
 
+        // console.log("productGGGGGG", product.quantity_discounts);
+
+        // console.log("product.quantity_discountsYYYYYYYYY", product.quantity_discounts);
+
+        const next_discount = getNextDiscount(product.selected_quantity, product.quantity_discounts);
+
+        // console.log("next_discount", next_discount);
+
+        // let disc_percent = 0;
+
+        // const rules = [...(product.quantity_discounts || [])].sort((a, b) => Number(a.min_quantity) - Number(b.min_quantity));
+
+        // console.log("values.products", values.products);
+
+        // rules.forEach((rule) => {
+        //   if (Number(product.selected_quantity) >= Number(rule.min_quantity)) {
+        //     disc_percent = Number(rule.discount_percent);
+        //   }
+        // });
+
+        // const price = Number(product.selected_price) || 0;
+        // const price_after_discount = price * (1 - disc_percent / 100);
+        // const discount_amount = price - price_after_discount;
+
+        // const updatedProducts = [...values.products];
+
+        // // обновляем строку
+        // updatedProducts[idx] = {
+        //   ...updatedProducts[idx],
+        //   discount_percent: disc_percent,
+        //   price_after_discount: price_after_discount,
+        //   discount_amount: discount_amount,
+        // };
+
+        // setFieldValue("products", updatedProducts)
+
+        // console.log("priceGGG", price);
+        // console.log("disc_percentGGG", disc_percent);
+        // console.log("price_after_discountGGG", price_after_discount);
+        // console.log("discount_amountGGG", discount_amount);
+        // console.log("values GGG", values);
+
         return (
           <tr
-            key={product.id}
+            key={`${product.id}_${idx}`}
             tabIndex={0}
             className={`focus:bg-indigo-200 dark:focus:bg-indigo-500 transition-colors ${
-              focusedQuantityRow === product.id || focusedPriceRow === product.id ? "bg-indigo-200 dark:bg-indigo-500" : "bg-white dark:bg-gray-900"
+              focusedQuantityRow === idx || focusedPriceRow === idx ? "bg-indigo-200 dark:bg-indigo-500" : "bg-white dark:bg-gray-900"
             }`}
           >
             <td className={`pl-1 pr-2 text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 print:!text-black print:!border-black`}>
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => handleRemove(product.id)} // здесь твоя логика удаления
+                  onClick={() => handleRemove(idx)} // здесь твоя логика удаления
                   className="ml-2 text-red-500 hover:text-red-700 print:hidden"
                 >
                   <HiX className="w-4 h-4" />
@@ -154,25 +221,36 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
             </td>
 
             <td className={`pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 print:!text-black print:!border-black`}>
-              <div className="flex justify-between">
-                <span>{product.name}</span>
+              <div className="flex justify-between items-center">
+                <span>
+                  {product.is_gift && "🎁"} {product.name}
+                </span>
                 <span className="ml-6 print:hidden mr-10 text-sm">
                   <div className="flex justify-between">
                     <div>{t("balance_ostatok")}:</div>
-                    <div className="font-medium pl-3">{product.quantity_on_selected_warehouses}</div>
+                    <div className="font-medium pl-3">{formatNumber2(product.quantity_on_selected_warehouses, 0)}</div>
                   </div>
 
-                  {Number(product.qty_in_drafts) > 0 && (
+                  {/* {Number(product.qty_in_drafts) > 0 && (
                     <div className="flex justify-between text-amber-600">
                       <div>{t("reserved")}:</div>
                       <div className="font-medium pl-3">{product.qty_in_drafts}</div>
+                    </div>
+                  )} */}
+                  {Number(product.qty_in_drafts) > 0 && (
+                    <div
+                      className="flex justify-between text-amber-600 cursor-pointer hover:text-amber-800"
+                      title={product.reserved_details?.length ? product.reserved_details.map((r) => `${t("faktura")} ${r.invoice_id}: ${r.qty}`).join("\n") : ""}
+                    >
+                      <div>{t("reserved")}:</div>
+                      <div className="font-medium pl-3">{formatNumber2(product.qty_in_drafts, 0)}</div>
                     </div>
                   )}
                   {Number(product.qty_in_drafts) > 0 && (
                     <div className="flex justify-between font-semibold">
                       <div>{t("available")}:</div>
                       <div className={product.quantity_on_selected_warehouses - product.qty_in_drafts <= 0 ? "text-red-600 pl-3" : "text-green-600 pl-3"}>
-                        {product.quantity_on_selected_warehouses - product.qty_in_drafts}
+                        {formatNumber2(product.quantity_on_selected_warehouses - product.qty_in_drafts, 0)}
                       </div>
                     </div>
                   )}
@@ -201,11 +279,13 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
             {/* ######################################################################################################################################################################################## quantity START */}
             <Quantity
               product={product}
-              onFocusQuantityRow={() => setFocusedQuantityRow(product.id)}
+              index={idx}
+              onFocusQuantityRow={() => setFocusedQuantityRow(idx)}
               onBlurQuantityRow={() => setFocusedQuantityRow(null)}
               setFocusedQuantityRow={setFocusedQuantityRow}
               setFocusedPriceRow={setFocusedPriceRow}
-              ref={(el) => (refs.quantityRefs.current[product.id] = el)}
+              // ref={(el) => (refs.quantityRefs.current[product.id] = el)}
+              ref={(el) => (refs.quantityRefs.current[idx] = el)}
               refs={refs}
             />
             {/* ######################################################################################################################################################################################## quantity END   */}
@@ -214,13 +294,161 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
             <td className="pl-1  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 print:!text-black print:!border-black">{product.unit_name_on_selected_warehouses}</td>
             <TDPrice
               product={product}
-              ref={(el) => (refs.priceRefs.current[product.id] = el)}
+              index={idx}
+              // ref={(el) => (refs.priceRefs.current[product.id] = el)}
+              ref={(el) => (refs.priceRefs.current[idx] = el)}
               refs={refs}
-              onFocusPriceRow={() => setFocusedPriceRow(product.id)}
+              onFocusPriceRow={() => setFocusedPriceRow(idx)}
               onBlurPriceRow={() => setFocusedPriceRow(null)}
               setFocusedPriceRow={setFocusedPriceRow}
               setFocusedQuantityRow={setFocusedQuantityRow}
             />
+
+            {/* discount_percent */}
+            <td
+              className={`pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400  text-left whitespace-nowrap font-mono tabular-nums ${
+                !visibleColumns.discount_percent || values.wozwrat_or_prihod !== "rashod" ? "hidden" : "table-cell"
+              } ${!printVisibleColumns.discount_percent || values.wozwrat_or_prihod !== "rashod" ? "print:hidden" : "print:table-cell"} print:!text-black print:!border-black`}
+            >
+              {product.is_gift ? (
+                <div className="ml-3">-</div>
+              ) : (
+                <div className="flex items-start gap-4 ml-3">
+                  <label className="flex items-center gap-2 text-[13px] cursor-pointer print:hidden">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 accent-blue-600"
+                      checked={values.products[idx]?.discount_auto}
+                      disabled={values.wozwrat_or_prihod !== "rashod"}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        
+                        setFieldValue(`products[${idx}].discount_auto`, checked);
+
+                        const current = values.products[idx];
+                        if (!checked) {
+                          const basePrice = values.type_price === "wholesale_price" ? Number(product.wholesale_price) : Number(product.retail_price);
+
+                          setFieldValue(`products[${idx}]`, {
+                            ...current,
+                            discount_auto: checked,
+                            discount_percent: 0,
+                            price_after_discount: 0,
+                            discount_amount: 0,
+                            selected_price: basePrice,
+                          });
+
+                          setTimeout(() => {
+                            const input = discountRefs.current[idx];
+                            if (input) {
+                              input.value = 0;
+                              input.focus();
+                              input.select();
+                            }
+                          }, 0);
+                        } else {
+                          const qty = product.selected_quantity;
+                          const { percent, price_after_discount, discount_amount } = calculateDiscount(product, qty, 0, values.type_price);
+                          const basePrice = values.type_price === "wholesale_price" ? Number(product.wholesale_price) : Number(product.retail_price);
+                          let paste_price = basePrice;
+                          // console.log("ewewewewew percent", percent);
+
+                          let is_custom_price = values.products[idx].is_custom_price;
+
+                          if (percent === 0) {
+                            paste_price = values.products[idx].selected_price;
+                          } else {
+                            is_custom_price = false;
+                          }
+                          // console.log("selected_price paste_price UUUUU", paste_price);
+                          setFieldValue(`products[${idx}]`, {
+                            ...current,
+                            discount_percent: percent,
+                            price_after_discount: price_after_discount,
+                            discount_auto: checked,
+                            selected_price: price_after_discount,
+                            is_custom_price: is_custom_price,
+                            discount_amount: discount_amount,
+                          });
+                        }
+                      }}
+                    />
+                    <span className="text-gray-700">Auto</span>
+                  </label>
+
+                  {values.products[idx]?.discount_auto ? (
+                    <div className="flex flex-col leading-tight">
+                      <div className="font-medium">{values.products[idx]?.discount_percent} %</div>
+
+                      {next_discount && (
+                        <div className="text-[11px] text-green-600 font-semibold">
+                          +{next_discount.need} → {next_discount.discount}%
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <input
+                      disabled={values.wozwrat_or_prihod !== "rashod"}
+                        value={values.products[idx].discount_percent}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const num = Number(value);
+                          console.log("num GGGGG", num);
+
+                          if (!Number.isNaN(num) && num >= 0 && num <= 100) {
+                            const qty = product.selected_quantity;
+
+                            let price_after_discount = product.selected_price;
+                            let discount_amount = 0;
+                            if (num > 0) {
+                              // console.log("values.type_price HHH", values.type_price);
+
+                              const data = calculateDiscount(product, qty, num, values.type_price);
+                              price_after_discount = data.price_after_discount;
+                              console.log("price_after_discount GGGGG", price_after_discount);
+                              
+                              discount_amount = data.discount_amount;
+
+                            }
+
+                            // let selected_price = values.products[idx].selected_price;
+                            let is_custom_price = values.products[idx].is_custom_price;
+                            if (num > 0) {
+                              // const originalPrice = values.type_price === "wholesale_price" ? Number(product.wholesale_price) : Number(product.retail_price);
+                              // selected_price = originalPrice;
+                              is_custom_price = false;
+                              // setFieldValue(`products[${idx}].is_custom_price`, false)
+                            }
+
+                            const current = values.products[idx];
+
+                            // console.log("selected_price UUUUU", selected_price);
+
+                            setFieldValue(`products[${idx}]`, {
+                              ...current,
+                              discount_percent: num,
+                              price_after_discount: price_after_discount,
+                              selected_price: price_after_discount,
+                              is_custom_price: is_custom_price,
+                              discount_amount: discount_amount,
+                            });
+                          }
+                        }}
+                        ref={(el) => (discountRefs.current[idx] = el)}
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        className="w-12 px-1 py-[1px] text-right text-sm rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-mono tabular-nums"
+                      />
+                      %
+                    </div>
+                  )}
+                </div>
+              )}
+            </td>
+            {/* цена всего */}
             <td className="pr-2  text-gray-800 dark:text-gray-200 border border-gray-900 dark:border-gray-400 print:!text-black print:!border-black text-right whitespace-nowrap font-mono tabular-nums">
               {formatNumber2(total_price, 2)}
             </td>

@@ -39,7 +39,17 @@ const MyDecimalPrice = (qty, price) => safeDecimal(qty).mul(safeDecimal(price)).
 const sumMoney = (items, priceKey, qtyKey) =>
   items
     .reduce((acc, item) => {
-      const price = safeDecimal(item[priceKey]);
+      let price = 0;
+      if (priceKey === "selected_price") {
+        if (item.price_after_discount > 0) {
+          price = safeDecimal(item["price_after_discount"]);
+        } else {
+          price = safeDecimal(item["selected_price"]);
+        }
+      } else {
+        price = safeDecimal(item[priceKey]);
+      }
+
       const qty = safeDecimal(item[qtyKey]);
 
       const rowSum = price.mul(qty).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
@@ -63,8 +73,21 @@ const sumMoney = (items, priceKey, qtyKey) =>
 const sumDiffMoney = (items, priceA, priceB, qtyKey) =>
   items
     .reduce((acc, item) => {
-      const a = safeDecimal(item[priceA]);
-      const b = safeDecimal(item[priceB]);
+      let a;
+      let b;
+      if (priceA == "selected_price") {
+        if (item.price_after_discount > 0) {
+          a = safeDecimal(item["price_after_discount"]);
+          b = safeDecimal(item[priceB]);
+        } else {
+          a = safeDecimal(item[priceA]);
+          b = safeDecimal(item[priceB]);
+        }
+      } else {
+        a = safeDecimal(item[priceA]);
+        b = safeDecimal(item[priceB]);
+      }
+
       const qty = safeDecimal(item[qtyKey]);
 
       return acc.plus(a.minus(b).mul(qty));

@@ -11,10 +11,12 @@ import HeaderForTabs from "./tabs/HeaderForTabs";
 import myAxios from "../../../../axios";
 import { CiNoWaitingSign } from "react-icons/ci";
 
-import { Package, Tag, DollarSign, Ruler, Image } from "lucide-react";
+import { Package, Tag, DollarSign, Ruler, Image, Percent } from "lucide-react";
 import { myClass } from "../../../../tailwindClasses";
 import ImagesTab from "./tabs/ImagesTab";
 import { useNotification } from "../../../../context/NotificationContext";
+
+import DiscountsTab from "./tabs/DiscountsTab";
 
 const ProductEditModal2 = ({
   setProducts,
@@ -38,6 +40,9 @@ const ProductEditModal2 = ({
 
   const { showNotification } = useNotification();
 
+  console.log("productGGG", product);
+  
+
   
 
   // console.log("product", product);
@@ -49,6 +54,7 @@ const ProductEditModal2 = ({
     { id: "dimensions", label: t("dimensions"), icon: Ruler },
     { id: "categories", label: t("categories"), icon: Tag },
     { id: "images", label: t("images"), icon: Image },
+    { id: "discounts", label: t("discounts"), icon: Percent },
   ];
 
   const initialValues = {
@@ -62,6 +68,7 @@ const ProductEditModal2 = ({
     retail_price: product.retail_price || 0,
     wholesale_price: product.wholesale_price || 0,
     firma_price: product.firma_price || 0,
+    quantity_discounts: product.quantity_discounts || [],
     weight: product.weight || "",
     volume: product.volume || "",
     length: product.length || "",
@@ -91,6 +98,7 @@ const ProductEditModal2 = ({
               quantity: 0,
             },
           ],
+    
   };
 
   const validationSchema = Yup.object({
@@ -144,6 +152,8 @@ const ProductEditModal2 = ({
       ...values,
       images: product.images ? product.images.map((img) => img.id) : [],
     };
+    console.log("payload", payload);
+    
     setLoadingModal(true);
     try {
       let res;
@@ -202,6 +212,8 @@ const ProductEditModal2 = ({
                   <CategoriesTab options={options} setOptions={setOptions} className={errors.category ? "bg-red-300" : ""} t={t} />
                 ) : activeTab === "images" ? (
                   <ImagesTab options={options} setOptions={setOptions} product={product} setProduct={setProduct} t={t} />
+                ) : activeTab === "discounts" ? (
+                  <DiscountsTab />
                 ) : null}
               </div>
 

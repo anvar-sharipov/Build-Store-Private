@@ -52,6 +52,8 @@ const ProductList = ({
   const dTo = searchParams.get("date_to");
   const warehouseTest = searchParams.get("warehouse");
 
+  // console.log("products", products);
+
   // console.log("dFrom", dFrom);
   // console.log("dTo", dTo);
   // console.log("warehouse", warehouseTest);
@@ -167,7 +169,10 @@ const ProductList = ({
           <AnimatePresence>
             {products.map((p, index) => {
               let unit_name = p.base_unit_obj.name;
-              let quantity = parseFloat(p.quantity_on_selected_warehouses || p.total_quantity || 0);
+              // console.log("p", p);
+              
+              // let quantity = parseFloat(p.quantity_on_selected_warehouses || p.total_quantity || 0);
+              let quantity = parseFloat(p.quantity_on_selected_warehouses || 0);
               const currency = p.warehouses_data[0].warehouse_currency;
 
               // console.log("ppppawqwd", p);
@@ -383,7 +388,13 @@ const ProductList = ({
 
                         {Number(p.qty_in_drafts) > 0 && (
                           <div className="flex items-center gap-1.5 px-2 py-1 bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 rounded-lg">
-                            <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">{t("reserved")}</span>
+                            {/* <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">{t("reserved")}</span> */}
+                            <span
+                              className="text-xs text-orange-600 dark:text-orange-400 font-medium"
+                              title={p.reserved_details?.map((r) => `${t("faktura")} ${r.invoice_id}: ${myFormatNumber(r.qty)}`).join("\n")}
+                            >
+                              {t("reserved")}
+                            </span>
                             <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">{myFormatNumber(p.qty_in_drafts)}</span>
                           </div>
                         )}

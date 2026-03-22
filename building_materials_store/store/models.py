@@ -112,6 +112,26 @@ class Product(models.Model):
             models.Index(fields=["category"]),
         ]
 
+    def get_discount_percent(self, quantity):
+        rule = (
+            self.quantity_discounts
+            .filter(min_quantity__lte=quantity)
+            .order_by('-min_quantity')
+            .first()
+        )
+
+        if rule:
+            return rule.discount_percent
+
+        return 0
+    
+    def get_price_with_discount(self, quantity, price):
+        discount = self.get_discount_percent(quantity)
+
+        if discount:
+            return price * (Decimal("1") - discount / Decimal("100"))
+
+        return price
 
 class Warehouse(models.Model):
     # CURRENCY_CHOICES = [
@@ -550,6 +570,11 @@ class InvoiceItem(models.Model):
     total_quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0) # 134
     unit_name_on_selected_warehouses = models.CharField(max_length=50, blank=True, null=True) # "metr"
     wholesale_price = models.DecimalField(max_digits=12, decimal_places=3, default=0)
+    
+    discount_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    discount_auto = models.BooleanField(default=True) # Чтобы понимать авто это или кассир изменил. пример: True  → система поставила, False → кассир изменил
+    price_after_discount = models.DecimalField(max_digits=12, decimal_places=3, default=0) # Очень полезно для аналитики, Можно хранить цену после скидки за 1 шт
+    discount_amount = models.DecimalField(max_digits=12, decimal_places=3, default=0) # ещё очень крутая оптимизация , пример: price = 200  discount = 10%   discount_amount = 10
     
 
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="items")
@@ -1027,3 +1052,60 @@ class DayReport(models.Model):
 
     def __str__(self):
         return f"{self.get_report_type_display()} | {self.date}"
+    
+    
+    
+
+class GiftRule(models.Model):
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="gift_rules"
+    )
+
+    gift_product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="gift_products"
+    )
+
+    buy_quantity = models.PositiveIntegerField()
+    gift_quantity = models.PositiveIntegerField()
+
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("product", "gift_product")
+        ordering = ["buy_quantity"]
+
+    def __str__(self):
+        return f"{self.product.name}: {self.buy_quantity} → {self.gift_quantity}"
+    
+    
+
+class ProductQuantityDiscount(models.Model):
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="quantity_discounts"
+    )
+
+    min_quantity = models.DecimalField(
+        max_digits=12,
+        decimal_places=2
+    )
+
+    discount_percent = models.DecimalField(
+        max_digits=5,
+        decimal_places=2
+    )
+
+    class Meta:
+        ordering = ["min_quantity"]
+        unique_together = ("product", "min_quantity")
+
+    def __str__(self):
+        return f"{self.product.name} | qty ≥ {self.min_quantity} → {self.discount_percent}%"

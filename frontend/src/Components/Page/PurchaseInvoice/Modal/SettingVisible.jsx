@@ -14,6 +14,7 @@ const SettingVisible = ({ visibleColumns, setVisibleColumns, adminVisibleColumns
     { key: "volume", label: "Объём (м³)", icon: "📦", color: "from-indigo-500 to-purple-500" },
     { key: "weight", label: "Вес (кг)", icon: "⚖️", color: "from-teal-500 to-cyan-500" },
     { key: "dimensions", label: "Размеры", icon: "📏", color: "from-amber-500 to-yellow-500" },
+    { key: "discount_percent", label: "Скидка %", icon: "🏷️", color: "from-green-500 to-emerald-500" },
   ];
 
   return (

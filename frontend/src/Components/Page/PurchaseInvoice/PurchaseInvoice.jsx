@@ -21,12 +21,9 @@ const PurchaseInvoice = () => {
   // const [query, setQuery] = useState("");
   const [query, setQuery] = useState(() => searchParams.get("query") || "");
 
-
-
   const { dateProwodok } = useContext(DateContext);
 
   const { authUser, authGroup } = useContext(AuthContext);
-
 
   useEffect(() => {
     document.title = `${t("faktura")}`; // название вкладки
@@ -72,6 +69,51 @@ const PurchaseInvoice = () => {
     listRefs: useRef({}),
   };
 
+  // useEffect(() => {
+  //   if (mainRefs) {
+  //     const test = localStorage.getItem("focusInvoiceId");
+  //     const el = mainRefs.listRefs.current[`large_${test}`];
+  //     console.log("test", test);
+  //     console.log("el", el);
+  //     console.log("mainRefs", mainRefs);
+  //     if (el) {
+  //       el.focus();
+  //       // setTimeout(() => {
+  //       //   localStorage.removeItem("focusInvoiceId");
+  //       // }, 1000);
+  //     }
+  //   }
+  // }, [mainRefs]);
+
+  const [focusInvoiceId, setFocusInvoiceId] = useState(localStorage.getItem("focusInvoiceId"));
+
+  useEffect(() => {
+    if (!focusInvoiceId) return;
+
+    const el = mainRefs.listRefs.current[`large_${focusInvoiceId}`];
+
+    if (el) {
+      el.focus();
+      localStorage.removeItem("focusInvoiceId");
+      setFocusInvoiceId(null);
+    } else {
+      // если элемент не найден — подгружаем следующую страницу
+      if (pagination.page < pagination.totalPages && !loading) {
+        fetchInvoices(true, pagination.page + 1);
+      }
+    }
+  }, [invoices]);
+
+  // useEffect(() => {
+  //   const test = localStorage.getItem("focusInvoiceId");
+  //   const el = mainRefs.listRefs.current[`large_${test}`];
+
+  //   if (el) {
+  //     el.focus();
+  //     localStorage.removeItem("focusInvoiceId");
+  //   }
+  // }, [invoices]);
+
   const fetchInvoices = async (append = false, page = pagination.page) => {
     if (loading) return; // защита от двойных запросов
     setLoading(true);
@@ -94,7 +136,7 @@ const PurchaseInvoice = () => {
         }, 30); // задержку можно подкорректировать
       }
       // console.log("total", res.data.total);
-      
+
       setPagination({
         page: res.data.page,
         totalPages: res.data.total_pages,
@@ -127,7 +169,6 @@ const PurchaseInvoice = () => {
   useEffect(() => {
     const newParams = new URLSearchParams(searchParams); // клонируем
 
-
     if (query) {
       newParams.set("query", query);
     } else {
@@ -157,7 +198,6 @@ const PurchaseInvoice = () => {
   const handleOpenInvoice = (id) => {
     sound_open_faktura.currentTime = 0;
     sound_open_faktura.play();
-
 
     if (id) {
       navigate(`/purchase-invoices/update/${id}`);

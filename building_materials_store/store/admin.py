@@ -99,6 +99,13 @@ class WarehouseProductInline(admin.TabularInline):
     available_quantity.short_description = 'Доступно'
 
 
+class ProductQuantityDiscountInline(admin.TabularInline):
+    model = ProductQuantityDiscount
+    extra = 1
+    fields = ("min_quantity", "discount_percent")
+    ordering = ("min_quantity",)
+    
+
 # Админка товаров
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
@@ -106,7 +113,15 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ('category', 'brand', 'is_active')
     search_fields = ('name', 'sku', 'qr_code')
     readonly_fields = ('created_at', 'updated_at', 'volume_calculated', 'total_quantity')
-    inlines = [ProductImageInline, ProductUnitInline, ProductTagsInline, PriceChangeHistoryInline, WarehouseProductInline]
+    # inlines = [ProductImageInline, ProductUnitInline, ProductTagsInline, PriceChangeHistoryInline, WarehouseProductInline]
+    inlines = [
+        ProductImageInline,
+        ProductUnitInline,
+        ProductTagsInline,
+        PriceChangeHistoryInline,
+        WarehouseProductInline,
+        ProductQuantityDiscountInline,
+    ]
     fieldsets = (
         ('Основная информация', {
             'fields': ('name', 'description', 'sku', 'qr_code', 'category', 'is_active')
@@ -989,3 +1004,47 @@ class DayReportAdmin(admin.ModelAdmin):
         if not change and not obj.created_by:
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
+        
+        
+        
+        
+# @admin.register(GiftRule)
+# class GiftRuleAdmin(admin.ModelAdmin):
+
+#     list_display = (
+#         "product",
+#         "gift_product",
+#         "buy_quantity",
+#         "gift_quantity",
+#         "is_active",
+#         "created_at",
+#     )
+
+#     list_filter = (
+#         "is_active",
+#         "product",
+#     )
+
+#     search_fields = (
+#         "product__name",
+#         "gift_product__name",
+#     )
+
+#     ordering = (
+#         "product",
+#         "buy_quantity",
+#     )
+
+#     autocomplete_fields = (
+#         "product",
+#         "gift_product",
+#     )
+
+#     list_editable = (
+#         "buy_quantity",
+#         "gift_quantity",
+#         "is_active",
+#     )
+    
+    
+    

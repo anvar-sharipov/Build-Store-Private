@@ -32,7 +32,6 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
   //   });
   // };
   // console.log("len invoices", invoices.length);
-  
 
   if (!invoices || invoices.length === 0) {
     return (
@@ -139,7 +138,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                 // console.log("invoice fff", invoice);
 
                 return (
-                  <motion.li
+                  <li
                     key={invoice.id}
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -148,7 +147,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                     className={`group relative overflow-hidden rounded-lg transition-all duration-300 
               hover:scale-[1.01] focus:scale-[1.01] 
               hover:shadow-md focus:shadow-md 
-              focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900
+              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900
               ${typeConfig.bg} ${typeConfig.border} cursor-pointer`}
                     ref={(el) => {
                       if (el) {
@@ -158,10 +157,14 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                       }
                     }}
                     tabIndex={0}
-                    onClick={() => handleOpenInvoice(invoice.id)}
+                    onClick={() => {
+                      localStorage.setItem("focusInvoiceId", invoice.id);
+                      handleOpenInvoice(invoice.id);
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
+                        localStorage.setItem("focusInvoiceId", invoice.id);
                         handleOpenInvoice(invoice.id);
                       } else if (e.key === "ArrowDown") {
                         e.preventDefault();
@@ -245,7 +248,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                         </div>
                       )}
                     </div>
-                  </motion.li>
+                  </li>
                 );
               })}
             </AnimatePresence>
@@ -295,7 +298,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                 }
 
                 return (
-                  <motion.li
+                  <li
                     key={invoice.id}
                     initial={{ opacity: 0, y: -15 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -304,7 +307,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                     className={`group relative overflow-hidden rounded-xl transition-all duration-300 
               hover:scale-[1.015] focus:scale-[1.015] 
               hover:shadow-lg focus:shadow-lg 
-              focus:outline-none focus-visible:ring-3 focus-visible:ring-blue-400 focus-visible:ring-offset-3 dark:focus-visible:ring-offset-gray-900
+              focus:outline-none focus:ring-3 focus:ring-blue-400 focus:ring-offset-3 dark:focus:ring-offset-gray-900
               ${typeConfig.bg} ${typeConfig.border} cursor-pointer`}
                     ref={(el) => {
                       if (el) {
@@ -314,10 +317,14 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                       }
                     }}
                     tabIndex={0}
-                    onClick={() => handleOpenInvoice(invoice.id)}
+                    onClick={() => {
+                      localStorage.setItem("focusInvoiceId", invoice.id);
+                      handleOpenInvoice(invoice.id);
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
+                        localStorage.setItem("focusInvoiceId", invoice.id);
                         handleOpenInvoice(invoice.id);
                       } else if (e.key === "ArrowDown") {
                         e.preventDefault();
@@ -449,7 +456,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
 
                     {/* Shimmer effect */}
                     <div className="absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/15 to-transparent skew-x-12 opacity-0 group-hover:opacity-100 group-focus:opacity-100 group-hover:left-full group-focus:left-full transition-all duration-800 ease-out"></div>
-                  </motion.li>
+                  </li>
                 );
               })}
             </AnimatePresence>
@@ -496,7 +503,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                 }
 
                 return (
-                  <motion.li
+                  <li
                     key={invoice.id}
                     initial={{ opacity: 0, x: -30 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -505,7 +512,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                     className={`group relative overflow-hidden rounded-2xl transition-all duration-300 
               hover:scale-[1.02] focus:scale-[1.02] 
               hover:shadow-2xl focus:shadow-2xl 
-              focus:outline-none focus-visible:ring-4 focus-visible:ring-purple-400 focus-visible:ring-offset-4 dark:focus-visible:ring-offset-gray-900
+              focus:outline-none focus:ring-4 focus:ring-purple-400 focus:ring-offset-4 dark:focus:ring-offset-gray-900
               ${typeConfig.bg} cursor-pointer border-2 border-transparent hover:border-white/30 dark:hover:border-gray-700/30`}
                     ref={(el) => {
                       if (el) {
@@ -515,10 +522,15 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                       }
                     }}
                     tabIndex={0}
-                    onClick={() => handleOpenInvoice(invoice.id)}
+                    // onDoubleClick={}
+                    onClick={() => {
+                      localStorage.setItem("focusInvoiceId", invoice.id);
+                      handleOpenInvoice(invoice.id);
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
+                        localStorage.setItem("focusInvoiceId", invoice.id);
                         handleOpenInvoice(invoice.id);
                       } else if (e.key === "ArrowDown") {
                         e.preventDefault();
@@ -722,7 +734,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
 
                     {/* Анимированный шиммер */}
                     <div className="absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/25 to-transparent skew-x-12 opacity-0 group-hover:opacity-100 group-focus:opacity-100 group-hover:left-full group-focus:left-full transition-all duration-1200 ease-out"></div>
-                  </motion.li>
+                  </li>
                 );
               })}
             </AnimatePresence>
@@ -764,7 +776,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                 }
 
                 return (
-                  <motion.li
+                  <li
                     key={invoice.id}
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -773,7 +785,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                     className={`group relative overflow-hidden rounded-xl transition-all duration-300 
     hover:scale-[1.01] focus:scale-[1.01] 
     hover:shadow-xl focus:shadow-xl 
-    focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900
+    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900
     ${typeConfig.bg} ${typeConfig.border} cursor-pointer`}
                     ref={(el) => {
                       if (el) {
@@ -783,10 +795,14 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
                       }
                     }}
                     tabIndex={0}
-                    onClick={() => handleOpenInvoice(invoice.id)}
+                    onClick={() => {
+                      localStorage.setItem("focusInvoiceId", invoice.id);
+                      handleOpenInvoice(invoice.id);
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
+                        localStorage.setItem("focusInvoiceId", invoice.id);
                         handleOpenInvoice(invoice.id);
                       } else if (e.key === "ArrowDown") {
                         e.preventDefault();
@@ -928,7 +944,7 @@ const InvoiceList = ({ invoices, mainRefs, handleOpenInvoice, pagination }) => {
 
                     {/* Шиммер эффект при hover */}
                     <div className="absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 opacity-0 group-hover:opacity-100 group-focus:opacity-100 group-hover:left-full group-focus:left-full transition-all duration-1000 ease-out"></div>
-                  </motion.li>
+                  </li>
                 );
               })}
             </AnimatePresence>

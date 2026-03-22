@@ -33,6 +33,7 @@ import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const userVisibleColumns = {
+  discount_percent: true,
   qr_code: false,
   image: true,
   purchase: false,
@@ -44,6 +45,7 @@ const userVisibleColumns = {
 };
 
 const adminVisibleColumns = {
+  discount_percent: true,
   qr_code: true,
   image: true,
   purchase: true,
@@ -55,6 +57,7 @@ const adminVisibleColumns = {
 };
 
 const userPrintVisibleColumns = {
+  discount_percent: true,
   qr_code: false,
   image: true,
   purchase: false,
@@ -66,6 +69,7 @@ const userPrintVisibleColumns = {
 };
 
 const adminPrintVisibleColumns = {
+  discount_percent: true,
   qr_code: true,
   image: true,
   purchase: true,
@@ -342,6 +346,29 @@ const MainPage = () => {
           //   showNotification(t("permission denied"), "error");
           //   return;
           // }
+
+          // console.log("valuesUUUUUUUUU", values);
+          // values.products.forEach((p, idx) => {
+          //   console.log("name", p.name);
+          //   console.log("discount_percent", p.discount_percent);
+          //   console.log("selected_price", p.selected_price);
+          //   console.log("price_after_discount", p.price_after_discount);
+          //   console.log("discount_auto", p.discount_auto);
+          //   console.log("discount_amount", p.discount_amount);
+          //   console.log("is_custom_price", p.is_custom_price);
+          //   console.log("wholesale_price", p.wholesale_price);
+          //   console.log("retail_price", p.retail_price);
+          //   console.log("quantity_discounts", p.quantity_discounts);
+          //   console.log("selected_quantity", p.selected_quantity);
+          //   console.log("=============================================================");
+          //   console.log("=============================================================");
+            
+
+
+            
+          // })
+          // return
+          
 
           try {
             const response = await myAxios.post("/save-invoice/", values, {

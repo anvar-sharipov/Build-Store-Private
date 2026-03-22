@@ -2,8 +2,138 @@ import MyModal2 from "../../../UI/MyModal2";
 import { useTranslation } from "react-i18next";
 import { ImageOff } from "lucide-react";
 import { formatNumber2 } from "../../../UI/formatNumber2";
+import * as ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
+
+const downloadExcel = async (lastDaysCount, selectedProductName, selectedProductId, sortedPartners, totals, selectedProductWholesalePrice) => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Partners");
+
+  worksheet.pageSetup = {
+    paperSize: 9, // A4
+    orientation: "portrait",
+
+    fitToPage: true,
+    fitToWidth: 1,
+    fitToHeight: 1,
+
+    margins: {
+      left: 1.5,
+      right: 0.5,
+      top: 0.5,
+      bottom: 0.5,
+      header: 0.3,
+      footer: 0.3,
+    },
+  };
+
+  const dateTo = new Date();
+  const dateFrom = new Date();
+  dateFrom.setDate(dateTo.getDate() - lastDaysCount);
+
+  const formatDate = (d) => d.toLocaleDateString("ru-RU");
+
+  const border = {
+    top: { style: "thin" },
+    left: { style: "thin" },
+    bottom: { style: "thin" },
+    right: { style: "thin" },
+  };
+
+  const grayFill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFE5E7EB" },
+  };
+
+  // HEADER INFO
+  // worksheet.addRow([selectedProductName]);
+  // worksheet.addRow([`Оптовая цена: ${formatNumber2(selectedProductWholesalePrice, 3)}`]);
+  // worksheet.addRow([`Анализ продаж за ${lastDaysCount} дней`]);
+  // worksheet.addRow([`Период: ${formatDate(dateFrom)} — ${formatDate(dateTo)}`]);
+  const r1 = worksheet.addRow([selectedProductName]);
+  worksheet.mergeCells("A1:F1");
+  r1.getCell(1).font = { bold: true, size: 14 };
+  r1.getCell(1).alignment = { horizontal: "center", vertical: "middle" };
+
+  const r2 = worksheet.addRow([`Оптовая цена: ${formatNumber2(selectedProductWholesalePrice, 3)}`]);
+  worksheet.mergeCells("A2:F2");
+  r2.getCell(1).font = { bold: true };
+  r2.getCell(1).alignment = { horizontal: "center", vertical: "middle" };
+
+  const r3 = worksheet.addRow([`Анализ продаж за ${lastDaysCount} дней`]);
+  worksheet.mergeCells("A3:F3");
+  r3.getCell(1).font = { bold: true };
+  r3.getCell(1).alignment = { horizontal: "center", vertical: "middle" };
+
+  const r4 = worksheet.addRow([`Период: ${formatDate(dateFrom)} — ${formatDate(dateTo)}`]);
+  worksheet.mergeCells("A4:F4");
+  r4.getCell(1).alignment = { horizontal: "center", vertical: "middle" };
+  worksheet.addRow([]);
+
+  // TABLE HEADER
+  const headerRow = worksheet.addRow(["№", "Клиент", "Агенты", "Фактур", "Кол-во", "Сумма"]);
+
+  headerRow.eachCell((cell) => {
+    cell.fill = grayFill;
+    cell.border = border;
+    cell.font = { bold: true };
+    cell.alignment = { vertical: "middle", horizontal: "center" };
+  });
+
+  // DATA
+  sortedPartners.forEach(([partner, info], index) => {
+    const row = worksheet.addRow([index + 1, partner, (info.agents || []).join(", "), info.faktura_count, info.selected_quantity, info.total_sum]);
+
+    row.eachCell((cell) => {
+      cell.border = border;
+    });
+
+    row.getCell(1).alignment = { horizontal: "center", vertical: "middle" };
+
+    row.getCell(2).alignment = {
+      horizontal: "left",
+      vertical: "middle",
+      wrapText: true,
+    };
+
+    row.getCell(3).alignment = {
+      horizontal: "left",
+      vertical: "middle",
+      wrapText: true,
+    };
+
+    row.getCell(4).alignment = { horizontal: "center", vertical: "middle" };
+    row.getCell(5).alignment = { horizontal: "center", vertical: "middle" };
+    row.getCell(6).alignment = { horizontal: "center", vertical: "middle" };
+  });
+
+  // TOTAL ROW
+  const totalRow = worksheet.addRow(["Итого", sortedPartners.length, totals.agents, totals.faktura, totals.qty, totals.sum]);
+
+  totalRow.eachCell((cell) => {
+    cell.fill = grayFill;
+    cell.border = border;
+    cell.font = { bold: true };
+    cell.alignment = { vertical: "middle", horizontal: "center" };
+  });
+
+  // COLUMN WIDTH
+  worksheet.columns = [
+    { width: 10 }, // A
+    { width: 45 }, // B
+    { width: 35 }, // C
+    { width: 13 }, // D
+    { width: 13 }, // E
+    { width: 13 }, // F
+  ];
+
+  const buffer = await workbook.xlsx.writeBuffer();
+
+  saveAs(new Blob([buffer]), `sales_analysis_${selectedProductId}.xlsx`);
+};
 
 const TablePartners = ({
   setPartnersModal,
@@ -66,7 +196,16 @@ const TablePartners = ({
                     </div>
 
                     <div className="flex-1 text-sm">
-                      <div className="font-semibold leading-tight">{selectedProductName}</div>
+                      <div className="flex items-center gap-6">
+                        <div className="font-semibold leading-tight">{selectedProductName}</div>
+
+                        <button
+                          onClick={() => downloadExcel(lastDaysCount, selectedProductName, selectedProductId, sortedPartners, totals, selectedProductWholesalePrice)}
+                          className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+                        >
+                          Excel
+                        </button>
+                      </div>
 
                       <div className="text-gray-500 text-xs">ID: {selectedProductId}</div>
 

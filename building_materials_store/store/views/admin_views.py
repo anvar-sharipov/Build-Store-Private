@@ -5,11 +5,110 @@ from django.http import JsonResponse
 from django.db import transaction as db_transaction
 from icecream import ic
 import json
-from ..models import Entry, Invoice, Transaction, PartnerBalanceSnapshot, Partner, DayClosing
+from ..models import Entry, Invoice, Transaction, PartnerBalanceSnapshot, Partner, DayClosing, WarehouseProduct, InvoiceItem
 from decimal import Decimal
 from collections import defaultdict
 from datetime import datetime
-from django.db.models import Sum
+from django.db.models import Sum, Q
+
+
+
+def check_warehouse_integrity(warehouse_ids, fix=False):
+
+    turnover_data = {}
+
+    items = InvoiceItem.objects.filter(
+        invoice__canceled_at__isnull=True,
+        invoice__is_entry=True
+    ).filter(
+        Q(invoice__warehouse_id__in=warehouse_ids) |
+        Q(invoice__warehouse2_id__in=warehouse_ids)
+    ).select_related(
+        "product", "invoice"
+    )
+
+    for item in items:
+
+        p = item.product
+        inv = item.invoice
+        qty = Decimal(item.selected_quantity)
+
+        if p.id not in turnover_data:
+            turnover_data[p.id] = {
+                "product": p,
+                "qty_from_docs": Decimal("0")
+            }
+
+        if inv.wozwrat_or_prihod == "prihod":
+            if inv.warehouse_id in warehouse_ids:
+                turnover_data[p.id]["qty_from_docs"] += qty
+
+        elif inv.wozwrat_or_prihod == "rashod":
+            if inv.warehouse_id in warehouse_ids:
+                turnover_data[p.id]["qty_from_docs"] -= qty
+
+        elif inv.wozwrat_or_prihod == "wozwrat":
+            if inv.warehouse_id in warehouse_ids:
+                turnover_data[p.id]["qty_from_docs"] += qty
+
+        elif inv.wozwrat_or_prihod == "transfer":
+
+            if inv.warehouse_id in warehouse_ids:
+                turnover_data[p.id]["qty_from_docs"] -= qty
+
+            elif inv.warehouse2_id in warehouse_ids:
+                turnover_data[p.id]["qty_from_docs"] += qty
+
+
+    print("========== CHECK WAREHOUSE ==========")
+
+    problems = []
+
+    for product_id, data in turnover_data.items():
+
+        p = data["product"]
+        qty_from_docs = data["qty_from_docs"]
+
+        wp = WarehouseProduct.objects.filter(
+            warehouse_id__in=warehouse_ids,
+            product_id=product_id
+        ).first()
+
+        if not wp:
+            continue
+
+        warehouse_qty = Decimal(wp.quantity)
+
+        if qty_from_docs != warehouse_qty:
+
+            diff = warehouse_qty - qty_from_docs
+
+            print("❌ MISMATCH")
+            print("PRODUCT:", p.id, p.name)
+            print("FROM DOCS:", qty_from_docs)
+            print("WAREHOUSE:", warehouse_qty)
+            print("DIFF:", diff)
+
+            if fix:
+                print("⚙ FIXING STOCK...")
+                wp.quantity = qty_from_docs
+                wp.save(update_fields=["quantity"])
+                print("✅ FIXED")
+
+            print("-------------------")
+
+            problems.append({
+                "product_id": p.id,
+                "product_name": p.name,
+                "qty_from_docs": qty_from_docs,
+                "warehouse_qty": warehouse_qty,
+                "diff": diff
+            })
+
+    print("========== RESULT ==========")
+    print("PROBLEMS:", len(problems))
+
+    return problems
 
 @csrf_exempt
 @api_view(['POST'])
@@ -48,21 +147,21 @@ def admin_universal(request):
     password = data.get("password")
     type_action = data.get("type")
     
-    test = Entry.objects.filter(partner__name="Koneurgench Nazar Dane Bazar +99364509001", transaction__date__date = "2026-02-16")
-    # ic(len(test))
-    test_count = 0
-    t = {}
-    for i in test:
-        if i.transaction.invoice:
-            if i.transaction.invoice.id == 4737:
-                test_count += i.debit
-                if i.product.name not in t:
-                    t[i.product.name] = 1
-                else:
-                    t[i.product.name] += 1
-                ic(i.account.number, i.partner.name, i.debit, i.transaction.date, i.product.name)
+    # test = Entry.objects.filter(partner__name="Koneurgench Nazar Dane Bazar +99364509001", transaction__date__date = "2026-02-16")
+    # # ic(len(test))
+    # test_count = 0
+    # t = {}
+    # for i in test:
+    #     if i.transaction.invoice:
+    #         if i.transaction.invoice.id == 4737:
+    #             test_count += i.debit
+    #             if i.product.name not in t:
+    #                 t[i.product.name] = 1
+    #             else:
+    #                 t[i.product.name] += 1
+    #             ic(i.account.number, i.partner.name, i.debit, i.transaction.date, i.product.name)
                 
-    ic(t)
+    # ic(t)
                 
     
     if password != "543569145637383":
@@ -201,6 +300,44 @@ def admin_universal(request):
         
         recalc_all_partner_snapshots()
         return JsonResponse({"message": "success recalc_all_partner_balance_snapshoots"})
+    
+    if type_action == "check stock qty and entry qty":
+        # faktura prihod 5400
+        # AB-60, BOLOR-646 RASTWORITEL 0.5L (20)     + 190 (bylo 331 prishlo 200 stalo 131 adoljno byt 531)
+        # AB-62, BOLOR-646 RASTWORITEL 3L (6)        + 120 (bylo 96 prishlo 60 stalo 36 a doljno byt 156)
+        # AB-27, AKRENK 1KG WHITE/AK (12)            + 300 (bylo 177 prishlo 300 stalo 177 a doljno byt 477)
+        # AB-20, AKRENK 1KG POL (12)                 + 300 (bylo 162 prishlo 300 stalo 162 a doljno byt 462)
+        # AB-102, AKRENK 1KG ANTHRACITE (12)         + 120 (bylo 60 prishlo 120 stalo 60 a doljno byt 180)
+        # AB-94, AKRENK 1KG GREY/SERY (12)           + 120 (bylo 78 prishlo 120 stalo 78 a doljno byt 198)
+        # AB-28, AKRENK 1KG LAK (12)                 + 360 (bylo 0 prishlo 360 stalo 0 a doljno byt 360)
+        # AB-48, AKRENK 1KG GOLDEN (12)              + 180 (bylo 0 prishlo 180 stalo 0 a doljno byt 180)
+        # AB-51, AKRENK AK-600 20KG PLASTIK EMULSIYA + 0 (prawilno) + 100 (bylo 0 prishlo 100 rashod 100 stalo 0 i doljno byt 0)
+        # AB-101, AKBOYA 15KG WHITE/AK               + 0 (prawilno) (bylo 29 prishlo 50 ushlo 50 stalo 29 i doljno byt 29)
+        # AB-29, AKRENK 3KG LAK (4)                  + 0 (prawilno) (bylo 0 prishlo 80 stalo 80 i doljno byt 80)
+        # AB-85, AKRENK 1KG SUPER TOPAS/POL (12)     + 0 (prawilno) (bylo 0 prishlo 120 stalo 120 i doljno byt 120)
+        # AB-72, AKRENK 3KG SUPER TOPAS/POL (4)      + 0 (prawilno) (bylo 0 prishlo 80 rashod 80 stalo 0 i doljno byt 0)
+        # AB-71, AKRENK 3KG SUPER WHITE/AK (4)       + 0 (prawilno) (bylo 0 prishlo 80 rashod 80 stalo 0 i doljno byt 0)
+        # AB-61, BOLOR-646 RASTWORITEL 1L (20)       + 0 (prawilno) (bylo 319 prishlo 300 stalo 619 i doljno byt 619)
+        
+        # faktura prihod 5411
+        # AB-100, AKBOYA 15KG TOPAS/POL              + 0 (prawilno) (bylo 7 prishlo 50 stalo 57 i doljno byt 57)
+        
+        # faktura prihod 5416 (poka bez prowodki)    posle prowodki wse prawilnye
+        # PS-1099, Emulsiya POLISEM-109, 9 kg        + 0 (prawilno)
+        # PS-10945, Emulsiya POLISEM-109, 4.5 kg     + 0 (prawilno)
+        # PS-4109, Emulsiya POLISEM-410, 9 kg        + 0 (prawilno)
+        # PS-41045, Emulsiya POLISEM-410, 4.5 kg     + 0 (prawilno)
+        # PS-11018, Emulsiya POLISEM-110, 18 kg      + 0 (prawilno)
+        
+        # faktura prihod 5427
+        # AB-104, AKRENK 1KG LAK (12)                 + 0 (prawilno)
+        check = check_warehouse_integrity([1])
+        return JsonResponse({"message": f"check stock qty and entry qty, mismatch count {len(check)}"})
+    
+    if type_action == "fix stock qty and entry qty":
+        with db_transaction.atomic():
+            fixed = check_warehouse_integrity([1], fix=True)
+        return JsonResponse({"message": f"success fix stock qty and entry qty, fixed count {len(fixed)}"})
 
 
     return JsonResponse({"message": "nothing to do"})

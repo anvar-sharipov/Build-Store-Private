@@ -7,7 +7,8 @@ def get_reserved_quantity(product, warehouse, exclude_invoice_id=None):
         product=product,
         invoice__warehouse_id=warehouse,
         invoice__is_entry=False,
-        invoice__canceled_at__isnull=True
+        invoice__canceled_at__isnull=True,
+        invoice__wozwrat_or_prihod__in=["rashod", "transfer"]
     )
 
     if exclude_invoice_id:

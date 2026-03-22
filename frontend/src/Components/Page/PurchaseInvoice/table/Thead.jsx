@@ -1,7 +1,9 @@
 import { useTranslation } from "react-i18next";
+import { useFormikContext } from "formik";
 
 const Thead = ({ printVisibleColumns, visibleColumns }) => {
   const { t } = useTranslation();
+  const { values } = useFormikContext();
 
   return (
     <thead className="sticky top-0 bg-gray-400 dark:bg-gray-900">
@@ -13,24 +15,32 @@ const Thead = ({ printVisibleColumns, visibleColumns }) => {
             <span className="pr-2">✓</span>
           </div>
         </th>
-        <th className={`px-1 text-left font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black`}>{t("name2")}</th>
+        <th className={`px-1 text-center font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black`}>{t("name2")}</th>
         <th
-          className={`px-1 text-left font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black ${!visibleColumns.image ? "hidden" : "table-cell"} ${
+          className={`px-1 text-center font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black ${!visibleColumns.image ? "hidden" : "table-cell"} ${
             !printVisibleColumns.image ? "print:hidden" : "print:table-cell"
           }`}
         >
           {t("image")}
         </th>
         <th
-          className={`px-1 text-left font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black ${!visibleColumns.qr_code ? "hidden" : "table-cell"} ${
+          className={`px-1 text-center font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black ${!visibleColumns.qr_code ? "hidden" : "table-cell"} ${
             !printVisibleColumns.qr_code ? "print:hidden" : "print:table-cell"
           }`}
         >
           QR
         </th>
-        <th className={`px-1 text-left font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black w-24 dark:border-gray-400 print:!border-black`}>{t("q-ty")}</th>
-        <th className={`px-1 text-left font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black`}>{t("un")}</th>
-        <th className={`px-1 text-left font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black w-24 dark:border-gray-400 print:!border-black`}>Цена за шт.</th>
+        <th className={`px-1 text-center font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black w-24 dark:border-gray-400 print:!border-black`}>{t("q-ty")}</th>
+        <th className={`px-1 text-center font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black`}>{t("un")}</th>
+        <th className={`px-1 text-center font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black w-24 dark:border-gray-400 print:!border-black`}>Цена за шт.</th>
+        <th
+          className={`px-1 text-center font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black 
+            ${!visibleColumns.discount_percent || values.wozwrat_or_prihod !== "rashod" ? "hidden" : "table-cell"} ${
+            !printVisibleColumns.discount_percent || values.wozwrat_or_prihod !== "rashod" ? "print:hidden" : "print:table-cell"
+          }`}
+        >
+          Скидка %
+        </th>
         <th className={`px-1 text-left font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black`}>Общая цена</th>
         <th
           className={`px-1 text-left font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black ${!visibleColumns.purchase ? "hidden" : "table-cell"} ${
@@ -39,6 +49,7 @@ const Thead = ({ printVisibleColumns, visibleColumns }) => {
         >
           Цена приход за шт.
         </th>
+
         <th
           className={`px-1 text-left font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black ${!visibleColumns.purchase ? "hidden" : "table-cell"} ${
             !printVisibleColumns.purchase ? "print:hidden" : "print:table-cell"

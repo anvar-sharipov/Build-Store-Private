@@ -18,6 +18,8 @@ const TFoot = ({ printVisibleColumns, visibleColumns }) => {
   const total_purchase = sumMoney(values.products, "purchase_price", "selected_quantity");
 
   const total_selected_price = sumMoney(values.products, "selected_price", "selected_quantity");
+  // console.log("total_selected_price TT", total_selected_price);
+  
 
   const total_income = sumDiffMoney(values.products, "selected_price", "purchase_price", "selected_quantity");
 
@@ -61,6 +63,11 @@ const TFoot = ({ printVisibleColumns, visibleColumns }) => {
         <th className={`px-1 text-right font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black w-24 dark:border-gray-400 print:!border-black`}></th>
         <th className={`px-1 text-right font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black`}></th>
         <th className={`px-1 text-right font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black`}></th>
+        <th
+          className={`px-1 text-right font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black whitespace-nowrap font-mono tabular-nums ${
+            !visibleColumns.discount_percent || values.wozwrat_or_prihod !== "rashod" ? "hidden" : "table-cell"
+          } ${!printVisibleColumns.discount_percent || values.wozwrat_or_prihod !== "rashod" ? "print:hidden" : "print:table-cell"}`}
+        ></th>
         <th
           className={`px-1 text-right font-semibold text-gray-700 dark:text-gray-400 border-b border border-black print:!text-black dark:border-gray-400 print:!border-black whitespace-nowrap font-mono tabular-nums`}
         >

@@ -7,6 +7,8 @@ const TypeFaktura = ({ setFakturaType, authGroup }) => {
   const { t } = useTranslation();
   const change_type = new Audio("/sounds/change_type.mp3");
 
+  console.log(values)
+
   return (
     <div>
       <fieldset disabled={values.already_entry || authGroup !== "admin" || values.canceled_at}>
@@ -19,9 +21,15 @@ const TypeFaktura = ({ setFakturaType, authGroup }) => {
               value="rashod"
               checked={values.wozwrat_or_prihod === "rashod"}
               onChange={(e) => {
+                if (values.products.length > 0) {
+                  if (!window.confirm(t("Changing invoice type will clear items. Continue?"))) {
+                    return;
+                  }
+                }
                 change_type.currentTime = 0;
                 change_type.play();
                 setFieldValue("wozwrat_or_prihod", e.target.value);
+                setFieldValue("products", []);
                 localStorage.setItem("wozwrat_or_prihod_purchase", e.target.value);
                 setFakturaType(e.target.value);
               }}
@@ -42,9 +50,15 @@ const TypeFaktura = ({ setFakturaType, authGroup }) => {
               value="prihod"
               checked={values.wozwrat_or_prihod === "prihod"}
               onChange={(e) => {
+                if (values.products.length > 0) {
+                  if (!window.confirm(t("Changing invoice type will clear items. Continue?"))) {
+                    return;
+                  }
+                }
                 change_type.currentTime = 0;
                 change_type.play();
                 setFieldValue("wozwrat_or_prihod", e.target.value);
+                setFieldValue("products", []);
                 localStorage.setItem("wozwrat_or_prihod_purchase", e.target.value);
                 setFakturaType(e.target.value);
               }}
@@ -65,9 +79,15 @@ const TypeFaktura = ({ setFakturaType, authGroup }) => {
               value="wozwrat"
               checked={values.wozwrat_or_prihod === "wozwrat"}
               onChange={(e) => {
-                change_type.currentTime = 0;
+                if (values.products.length > 0) {
+                  if (!window.confirm(t("Changing invoice type will clear items. Continue?"))) {
+                    return;
+                  }
+                }
+                            change_type.currentTime = 0;
                 change_type.play();
                 setFieldValue("wozwrat_or_prihod", e.target.value);
+                setFieldValue("products", []);
                 localStorage.setItem("wozwrat_or_prihod_purchase", e.target.value);
                 setFakturaType(e.target.value);
               }}
@@ -88,9 +108,15 @@ const TypeFaktura = ({ setFakturaType, authGroup }) => {
               value="transfer"
               checked={values.wozwrat_or_prihod === "transfer"}
               onChange={(e) => {
+                if (values.products.length > 0) {
+                  if (!window.confirm(t("Changing invoice type will clear items. Continue?"))) {
+                    return;
+                  }
+                }
                 change_type.currentTime = 0;
                 change_type.play();
                 setFieldValue("wozwrat_or_prihod", e.target.value);
+                setFieldValue("products", []);
                 localStorage.setItem("wozwrat_or_prihod_purchase", e.target.value);
                 setFakturaType(e.target.value);
               }}

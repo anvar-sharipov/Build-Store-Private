@@ -318,7 +318,7 @@ def search_products(request):
         # --- Формируем ответ ---
         data = []
         product_ids = [p.id for p in results]
-        reserved_map = get_reserved_quantity_map(product_ids, [warehouse], invoice_id)
+        reserved_map, reserved_details = get_reserved_quantity_map(product_ids, [warehouse], invoice_id)
         ic("tut22")
         warehouse_quantity_map = dict(
             WarehouseProduct.objects
@@ -335,6 +335,7 @@ def search_products(request):
             context={
                 "request": request,
                 "reserved_map": reserved_map,
+                "reserved_details": reserved_details,
                 "warehouse_quantity_map": warehouse_quantity_map,
             }
         )
@@ -411,13 +412,15 @@ def search_products(request):
 
             quantity = Decimal(quantity) / cf
             qty_in_drafts = Decimal(qty_in_drafts) / cf
+            # ic("GGGGGGGGGGGGGGGGGGGGGG")
+            # ic(reserved_details)
 
             data[i].update({
                 'quantity_on_selected_warehouses': quantity,
                 'unit_name_on_selected_warehouses': unit_name,
                 'base_quantity_in_stock': base_quantity_in_stock,
                 'selected_quantity': 1,
-                'selected_price': 1,
+                # 'selected_price': 11,
                 "finded_from_QR": finded_from_qr,
                 'qty_in_drafts': qty_in_drafts
             })
@@ -731,8 +734,8 @@ class ProductViewSet(viewsets.ModelViewSet):
         warehouse_ids = warehouse_ids.split(',') if warehouse_ids else []
         warehouse_ids = list(map(int, warehouse_ids))
         
-        reserved_map = get_reserved_quantity_map(product_ids, warehouse_ids)
-        ic(reserved_map)
+        reserved_map, reserved_details  = get_reserved_quantity_map(product_ids, warehouse_ids)
+        # ic(reserved_map)
         
         if not warehouse_ids:
             warehouse_ids = [w.id for w in Warehouse.objects.all()]
@@ -954,7 +957,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         #         "warehouse_ids": warehouse_ids,
         #     }
         # )
-        
+        ic("search tut")
         serializer = self.get_serializer(
             current_products,
             many=True,
@@ -962,6 +965,7 @@ class ProductViewSet(viewsets.ModelViewSet):
                 "request": request,
                 "turnover_data": turnover_data,
                 "reserved_map": reserved_map,
+                "reserved_details": reserved_details,
             }
         )
 

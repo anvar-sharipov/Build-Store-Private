@@ -223,9 +223,9 @@ const TDPrice = forwardRef(({ product, index, onFocusPriceRow, onBlurPriceRow, s
                     setFieldValue(`products[${productIndex}].discount_percent`, 0);
                   }
 
-                  console.log("newPrice rerere", newPrice);
-                  console.log("originalPrice rerere", originalPrice);
-                  console.log("originalPrice =====", originalPrice === newPrice);
+                  // console.log("newPrice rerere", newPrice);
+                  // console.log("originalPrice rerere", originalPrice);
+                  // console.log("originalPrice =====", originalPrice === newPrice);
 
                   // setFieldValue(`products[${productIndex}].discount_percent`, discountPercent.toFixed(2));
 
@@ -241,13 +241,19 @@ const TDPrice = forwardRef(({ product, index, onFocusPriceRow, onBlurPriceRow, s
               {localError && <div className="text-red-500 text-xs print:hidden">{localError}</div>}
             </div>
           ) : (
-            <div>
+            <div className="text-left pl-1 print:text-center">
               {values.type_price === "wholesale_price" ? (
                 <div>
-                  <div>{formatNumber2(values.products[index].wholesale_price)}</div>
+                  <div>
+                    <div className="line-through text-red-500 print:no-underline print:!text-black">{formatNumber2(values.products[index].wholesale_price)}</div>
+                    <div className="print:hidden">{values.products[index].selected_price}</div>
+                  </div>
                 </div>
               ) : (
-                <div>{formatNumber2(values.products[index].retail_price)}</div>
+                <div>
+                  <div className="line-through text-red-500 print:no-underline print:!text-black">{formatNumber2(values.products[index].retail_price)}</div>
+                  <div className="print:hidden">{values.products[index].selected_price}</div>
+                </div>
               )}
             </div>
           )}

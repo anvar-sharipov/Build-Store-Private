@@ -313,7 +313,7 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
               {product.is_gift ? (
                 <div className="ml-3">-</div>
               ) : (
-                <div className="flex items-start gap-4 ml-3">
+                <div className="flex items-start gap-4 ml-3 justify-between">
                   <label className="flex items-center gap-2 text-[13px] cursor-pointer print:hidden">
                     <input
                       type="checkbox"
@@ -377,24 +377,24 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
                   </label>
 
                   {values.products[idx]?.discount_auto ? (
-                    <div className="flex flex-col leading-tight">
-                      <div className="font-medium">{values.products[idx]?.discount_percent} %</div>
+                    <div className="flex flex-col leading-tight text-right">
+                      <div className="font-medium text-right">{values.products[idx]?.discount_percent} %</div>
 
                       {next_discount && (
                         <div className="text-[11px] text-green-600 font-semibold">
-                          +{next_discount.need} → {next_discount.discount}%
+                          +{next_discount.need} → {next_discount.discount}% 
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 justify-between">
                       <input
                       disabled={values.wozwrat_or_prihod !== "rashod"}
                         value={values.products[idx].discount_percent}
                         onChange={(e) => {
                           const value = e.target.value;
                           const num = Number(value);
-                          console.log("num GGGGG", num);
+                          // console.log("num GGGGG", num);
 
                           if (!Number.isNaN(num) && num >= 0 && num <= 100) {
                             const qty = product.selected_quantity;
@@ -406,7 +406,7 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
 
                               const data = calculateDiscount(product, qty, num, values.type_price);
                               price_after_discount = data.price_after_discount;
-                              console.log("price_after_discount GGGGG", price_after_discount);
+                              // console.log("price_after_discount GGGGG", price_after_discount);
                               
                               discount_amount = data.discount_amount;
 
@@ -440,9 +440,10 @@ const Tbody = ({ id, printVisibleColumns, visibleColumns, refs }) => {
                         min="0"
                         max="100"
                         step="0.01"
-                        className="w-12 px-1 py-[1px] text-right text-sm rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-mono tabular-nums"
+                        className="w-10 px-1 py-[1px] text-right rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-mono tabular-nums"
                       />
-                      %
+                      <span>%</span>
+                      
                     </div>
                   )}
                 </div>

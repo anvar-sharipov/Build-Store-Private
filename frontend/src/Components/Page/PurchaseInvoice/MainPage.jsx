@@ -294,8 +294,8 @@ const MainPage = () => {
   };
 
   const getSaldo = async (date, partnerId) => {
-    console.log("date", date);
-    console.log("partnerId", partnerId);
+    // console.log("date", date);
+    // console.log("partnerId", partnerId);
 
     try {
       const saldo = await myAxios.get("get_saldo_for_partner_for_selected_date", {
@@ -303,7 +303,7 @@ const MainPage = () => {
       });
 
       setSaldo(saldo.data.saldo);
-      console.log("saldo", saldo.data.saldo);
+      // console.log("saldo", saldo.data.saldo);
     } catch (error) {
       console.log("error get_saldo_for_partner_for_selected_date from fetchPartner", error);
     }
@@ -392,7 +392,7 @@ const MainPage = () => {
 
             handleOpenInvoice(response.data.id);
             if (values.partner?.id) {
-              console.log("dede");
+              // console.log("dede");
 
               // const getSaldo2 = async (partnerId, dateFrom, dateTo, invoice_date = false)
               // getSaldo(values.invoice_date2, values.partner?.id);

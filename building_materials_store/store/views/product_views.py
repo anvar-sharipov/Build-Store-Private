@@ -133,58 +133,7 @@ def search_products(request):
         
         
         
-        # # 🔹 1. Сначала ищем по qr_code
-        # results = Product.objects.filter(qr_code=query)
-        # not_qr_code = False
-  
-        
-        # # 🔹 2. Если по qr_code пусто → ищем по имени
-        # if not results.exists():
-        #     # dlya list product w sale invoice
-        #     results = Product.objects.annotate(
-        #         similarity=TrigramSimilarity("name", query)
-        #     ).filter(similarity__gt=0.2)
-        # else:
-        #     not_qr_code = True
-            
-        
 
-        # if warehouse:
-        #     results = results.filter(warehouse_products__warehouse_id=warehouse)
-
-        # if not not_qr_code:
-        #     results = results.order_by("-similarity")[:10]
-
-        # data = []
-        # for product in results:
-        #     if warehouse:
-        #         quantity = product.warehouse_products.filter(
-        #             warehouse_id=warehouse
-        #         ).aggregate(total=models.Sum('quantity'))['total'] or 0
-        #         base_quantity_in_stock = quantity
-        #     else:
-        #         quantity = product.get_total_quantity()
-
-        #     unit_name = product.base_unit.name if product.base_unit else ""
-        #     for unit in product.units.all():
-        #         if unit.is_default_for_sale and unit.conversion_factor:
-        #             # print('quantity', quantity)
-        #             # print('unit.conversion_factor', unit.conversion_factor)
-        #             quantity = float(quantity) / float(unit.conversion_factor)
-        #             unit_name = unit.unit.name
-        #             break
-
-        #     serialized = ProductSerializer(product).data
-        #     serialized.update({
-        #         'quantity_on_selected_warehouses': quantity,
-        #         'unit_name_on_selected_warehouses': unit_name,
-        #         'base_quantity_in_stock': base_quantity_in_stock,
-        #         'selected_quantity': 1,
-        #         'selected_price': 1,
-        #         "finded_from_QR": not_qr_code
-        #     })
-        #     data.append(serialized)
-        #     # print(product, unit_name, quantity)
         
         
         query = query.strip()
@@ -199,66 +148,7 @@ def search_products(request):
         if not finded_from_qr:
             
 
-            # # Создаём базовый queryset без slice
-            # tmp_results = Product.objects.annotate(
-            #     rank=Case(
-            #         # 1: Полное совпадение
-            #         When(name__iexact=query, then=Value(1)),
-            #         # 2: Начинается с query
-            #         When(name__istartswith=query, then=Value(2)),
-            #         # 3: Содержит query
-            #         When(name__icontains=query, then=Value(3)),
-            #         # 4: всё остальное — триграммы
-            #         default=Value(4),
-            #         output_field=IntegerField()
-            #     ),
-            #     similarity=TrigramSimilarity("name", query)
-            # ).filter(
-            #     Q(name__icontains=query) | Q(similarity__gt=0.1)
-            # ).order_by("rank", "-similarity")
-            
-            
-            
-            # tmp_results = Product.objects.annotate(
-            #         rank=Case(
-            #             When(name__iexact=query, then=Value(1)),
-            #             When(name__istartswith=query, then=Value(2)),
-            #             When(name__icontains=query, then=Value(3)),
-            #             output_field=IntegerField()
-            #         )
-            #     ).filter(
-            #         name__icontains=query
-            #     ).order_by("rank")
-            
-            
-            
-            # нормализация
-            # query2 = query.lower().strip()
-            # query2 = re.sub(r"[^\w\s]", " ", query2)
-            # words = query2.split()
-            
-            # ic("aga")
-
-            # # AND поиск по каждому слову
-            # q = Q()
-            # for word in words:
-            #     q &= Q(name__icontains=word)
-
-            # tmp_results = (
-            #     Product.objects
-            #     .annotate(
-            #         rank=Case(
-            #             When(name__icontains=query, then=Value(1)),
-            #             When(name__istartswith=query, then=Value(2)),
-            #             When(name__iexact=query, then=Value(3)),
-            #             default=Value(4),
-            #             output_field=IntegerField(),
-            #         )
-            #     )
-            #     .filter(q)
-            #     .order_by("rank", "name")
-            # )
-            
+           
             
             raw_query = query.strip()                # "ab-3"
             norm_query = raw_query.lower()
@@ -317,7 +207,8 @@ def search_products(request):
 
         # --- Формируем ответ ---
         data = []
-        product_ids = [p.id for p in results]
+        # product_ids = [p.id for p in results]
+        product_ids = list(results.values_list("id", flat=True))
         reserved_map, reserved_details = get_reserved_quantity_map(product_ids, [warehouse], invoice_id)
         ic("tut22")
         warehouse_quantity_map = dict(
@@ -326,8 +217,24 @@ def search_products(request):
             .values_list('product_id')
             .annotate(total=Sum('quantity'))
         )
+        ic("1")
         # unit_map = get_unit_map()
         unit_map = get_unit_map2(product_ids)
+        ic("2")
+        
+        results = results.select_related(
+            "category",
+            "base_unit",
+            "brand",
+            "model",
+        ).prefetch_related(
+            "tags",
+            "units",
+            "images",
+            "free_items",
+            "warehouse_products",
+            "quantity_discounts",
+        )
         
         serializer = ProductSerializer(
             results,
@@ -339,63 +246,11 @@ def search_products(request):
                 "warehouse_quantity_map": warehouse_quantity_map,
             }
         )
+        ic("3")
 
         data = serializer.data
-        
-        # for product in results:
+        ic("4")
        
-            
-        #     # qty_in_drafts = get_reserved_quantity(product, warehouse, invoice_id)
-            
-        #     qty_in_drafts = reserved_map.get(product.id, 0)
-            
-        
-
-        #     # Подсчёт количества
-        #     if warehouse:
-        #         # quantity = product.warehouse_products.filter(
-        #         #     warehouse_id=warehouse
-        #         # ).aggregate(total=models.Sum('quantity'))['total'] or 0
-        #         # base_quantity_in_stock = quantity
-        #         quantity = warehouse_quantity_map.get(product.id, 0)
-        #         base_quantity_in_stock = quantity
-        #     else:
-        #         quantity = product.get_total_quantity()
-        #         base_quantity_in_stock = quantity
-
-        #     # Конвертация по юнитам
-        #     # unit_name = product.base_unit.name if product.base_unit else ""
-        #     # for unit in product.units.all():
-        #     #     if unit.is_default_for_sale and unit.conversion_factor:
-        #     #         quantity = float(quantity) / float(unit.conversion_factor)
-        #     #         unit_name = unit.unit.name
-        #     #         break
-        #     unit_name, cf = get_unit_and_cf(unit_map, product)
-        #     qty_in_drafts = Decimal(qty_in_drafts) / cf
-        #     quantity = Decimal(quantity) / cf
-
-        #     # Сериализация
-        #     # serialized = ProductSerializer(product).data
-        #     serialized = ProductSerializer(
-        #         product,
-        #         context={
-        #             "request": request,
-        #             "reserved_map": reserved_map,
-        #             "warehouse_quantity_map": warehouse_quantity_map,
-        #         }
-        #     ).data
-
-        #     serialized.update({
-        #         'quantity_on_selected_warehouses': quantity,
-        #         'unit_name_on_selected_warehouses': unit_name,
-        #         'base_quantity_in_stock': base_quantity_in_stock,
-        #         'selected_quantity': 1,
-        #         'selected_price': 1,
-        #         "finded_from_QR": finded_from_qr,
-        #         'qty_in_drafts': qty_in_drafts
-        #     })
-
-        #     data.append(serialized)
         
         for i, product in enumerate(results):
 

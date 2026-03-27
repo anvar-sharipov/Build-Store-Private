@@ -121,12 +121,21 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
     columnMapping.push({ key: "unit", excelCol: colIndex++, title: t("un"), width: 8 });
     columnMapping.push({ key: "price", excelCol: colIndex++, title: "Цена за шт.", width: 11 });
 
-    columnMapping.push({
-      key: "discount_percent",
-      excelCol: colIndex++,
-      title: "Скидка %",
-      width: 10,
-    });
+    // columnMapping.push({
+    //   key: "discount_percent",
+    //   excelCol: colIndex++,
+    //   title: "Скидка %",
+    //   width: 10,
+    // });
+
+    if (values.wozwrat_or_prihod === "rashod") {
+      columnMapping.push({
+        key: "discount_percent",
+        excelCol: colIndex++,
+        title: "Скидка %",
+        width: 10,
+      });
+    }
 
     columnMapping.push({ key: "totalPrice", excelCol: colIndex++, title: "Общая цена", width: 15 });
 
@@ -521,7 +530,7 @@ const exportInvoiceWithSaldoToExcel = async (values, visibleColumns, printVisibl
             break;
 
           case "price":
-            console.log("show_price", show_price);
+            // console.log("show_price", show_price);
 
             cell.value = safeNumber(show_price);
             cell.numFmt = "#,##0.000";
